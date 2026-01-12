@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../schemas/skill-schemas/skill.json",
+  "name": "Conversation",
+  "bridge": "nodejs",
+  "version": "1.0.0",
+  "description": "A simple conversation skill where you can freely talk with Leon and get to know him better.",
+  "author": {
+    "name": "Louis Grenard",
+    "email": "louis@getleon.ai",
+    "url": "https://twitter.com/grenlouis"
+  }
+}

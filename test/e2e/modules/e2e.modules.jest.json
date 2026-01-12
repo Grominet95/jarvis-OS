@@ -1,0 +1,13 @@
+{
+  "bail": true,
+  "verbose": true,
+  "notify": false,
+  "collectCoverage": false,
+  "rootDir": "../../..",
+  "testMatch": ["<rootDir>/packages/**/*.spec.js"],
+  "setupFiles": ["jest-canvas-mock", "<rootDir>/test/paths.setup.js"],
+  "setupFilesAfterEnv": [
+    "jest-extended/all",
+    "<rootDir>/test/e2e/modules/e2e.modules.setup.js"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../../schemas/global-data/global-entity.json",
+  "options": {
+    "rouge": {
+      "synonyms": ["rouge"],
+      "data": {
+        "usage": ["..."]
+      }
+    },
+    "bleu": {
+      "synonyms": ["bleu"],
+      "data": {
+        "usage": ["..."]
+      }
+    }
+  }
+}

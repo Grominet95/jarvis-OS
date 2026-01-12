@@ -1,0 +1,8 @@
+if ! [ -x "$(command -v npm)" ]; then
+  echo "npm: command not found"
+  echo "If you use a version manager tool such as nvm and a git GUI such as GitKraken, please read: https://typicode.github.io/husky/how-to.html#node-version-managers-and-guis" >&2
+  exit 1
+else
+  npx tsx scripts/commit-msg.js
+fi
+

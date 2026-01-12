@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../schemas/skill-schemas/skill-config.json",
+  "actions": {
+    "setup": {
+      "type": "dialog",
+      "utterance_samples": ["Start a [chat|chit-chat|talk] loop"],
+      "answers": [
+        "Alright, let's chat! What do you want to talk about?",
+        "Sure, let's chat! What's on your mind?",
+        "Great! Happy to chat. What's up?",
+        "Glad you asked, anything you wanna talk about?"
+      ],
+      "next_action": "chit_chat"
+    },
+    "chit_chat": {
+      "type": "logic",
+      "disable_llm_nlg": true,
+      "loop": {
+        "expected_item": {
+          "type": "utterance",
+          "name": "message"
+        }
+      }
+    },
+    "converse": {
+      "type": "logic",
+      "disable_llm_nlg": true
+    }
+  },
+  "answers": {
+    "answer_message": ["%output%"]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../../schemas/skill-schemas/skill-config.json",
+  "actions": {
+    "run": {
+      "type": "logic",
+      "utterance_samples": ["Invoke playground"]
+    }
+  },
+  "answers": {
+    "default": ["..."]
+  },
+  "widget_contents": {
+    "select_music_provider": "Select your %adj% music provider %extra%",
+    "choose_provider": "I choose the %provider% provider"
+  }
+}

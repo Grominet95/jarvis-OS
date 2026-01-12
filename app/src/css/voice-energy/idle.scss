@@ -1,0 +1,59 @@
+/**
+ * IDLE status
+ */
+
+#voice-energy-container.idle {
+  .voice-particle {
+    visibility: hidden;
+    animation-play-state: paused;
+    opacity: 0;
+  }
+  .voice-neon {
+    margin: 0;
+  }
+  #purple-neon-blur {
+    transform: scale(1);
+  }
+  #purple-neon-blur circle {
+    filter: drop-shadow(0px 0px 64px mix(#ed297a, #1c75db));
+    animation: idleNeonBlurBreath 2.2s infinite alternate;
+  }
+  #pink-neon-1 {
+    transform: scale(1);
+    animation: idleBouncePinkNeon1 1.8s 1s infinite alternate;
+  }
+  #blue-neon-1 {
+    transform: scale(0.8);
+    animation: idleMoveBlueNeon1 1.8s infinite alternate;
+  }
+  #blue-neon-2 {
+    transform: scale(0.9);
+    animation: idleMoveBlueNeon2 1.8s 0.5s infinite alternate;
+  }
+}
+
+@keyframes idleNeonBlurBreath {
+  100% {
+    filter: drop-shadow(0px 0px 0px mix(#ed297a, #1c75db));
+  }
+}
+@keyframes idleBouncePurpleNeonBlur {
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes idleBouncePinkNeon1 {
+  100% {
+    transform: scale(1.1);
+  }
+}
+@keyframes idleMoveBlueNeon1 {
+  100% {
+    transform: scale(0.9);
+  }
+}
+@keyframes idleMoveBlueNeon2 {
+  100% {
+    transform: scale(1);
+  }
+}

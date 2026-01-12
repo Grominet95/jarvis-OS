@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../schemas/skill-schemas/skill.json",
+  "name": "Akinator",
+  "bridge": "python",
+  "version": "2.0.0",
+  "description": "Leon's friend, the Akinator genie will read your mind.",
+  "author": {
+    "name": "Louis Grenard",
+    "email": "louis@getleon.ai",
+    "url": "https://github.com/louistiti"
+  }
+}

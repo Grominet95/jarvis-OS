@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/img/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leon</title>
+    <style>
+      @import './css/style.scss';
+    </style>
+  </head>
+  <body class="settingup">
+    <div id="init"></div>
+    <div id="voice-overlay-bg">
+      <div id="voice-container">
+        <div>
+          <div id="voice-energy-container">
+            <svg
+              class="voice-neon"
+              id="pink-neon-1"
+              viewBox="0 0 237 237"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g filter="url(#filter0_i_6_16)">
+                <circle
+                  cx="118.5"
+                  cy="118.5"
+                  r="113.5"
+                  stroke="#FFF"
+                  stroke-width="10"
+                />
+              </g>
+              <defs>
+                <filter
+                  id="filter0_i_6_16"
+                  x="0"
+                  y="0"
+                  width="237"
+                  height="237"
+                  filterUnits="userSpaceOnUse"
+                  color-interpolation-filters="sRGB"
+                >
+                  <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="BackgroundImageFix"
+                    result="shape"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feMorphology
+                    radius="1"
+                    operator="erode"
+                    in="SourceAlpha"
+                    result="effect1_innerShadow_6_16"
+                  />
+                  <feOffset />
+                  <feGaussianBlur stdDeviation="1" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="arithmetic"
+                    k2="-1"
+                    k3="1"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0.929412 0 0 0 0 0.160784 0 0 0 0 0.478431 0 0 0 1 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="shape"
+                    result="effect1_innerShadow_6_16"
+                  />
+                </filter>
+              </defs>
+            </svg>
+
+            <svg
+              class="voice-neon"
+              id="blue-neon-1"
+              viewBox="0 0 237 237"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g filter="url(#filter0_i_6_24)">
+                <circle
+                  cx="118.5"
+                  cy="118.5"
+                  r="116.5"
+                  stroke="#FFF"
+                  stroke-width="4"
+                />
+              </g>
+              <defs>
+                <filter
+                  id="filter0_i_6_24"
+                  x="0"
+                  y="0"
+                  width="237"
+                  height="237"
+                  filterUnits="userSpaceOnUse"
+                  color-interpolation-filters="sRGB"
+                >
+                  <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="BackgroundImageFix"
+                    result="shape"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feMorphology
+                    radius="1"
+                    operator="erode"
+                    in="SourceAlpha"
+                    result="effect1_innerShadow_6_24"
+                  />
+                  <feOffset />
+                  <feGaussianBlur stdDeviation="1" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="arithmetic"
+                    k2="-1"
+                    k3="1"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0.109804 0 0 0 0 0.458824 0 0 0 0 0.858824 0 0 0 1 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="shape"
+                    result="effect1_innerShadow_6_24"
+                  />
+                </filter>
+              </defs>
+            </svg>
+
+            <svg
+              class="voice-neon"
+              id="blue-neon-2"
+              viewBox="0 0 237 237"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g filter="url(#filter0_i_6_24)">
+                <circle
+                  cx="118.5"
+                  cy="118.5"
+                  r="116.5"
+                  stroke="#FFF"
+                  stroke-width="4"
+                />
+              </g>
+              <defs>
+                <filter
+                  id="filter0_i_6_24"
+                  x="0"
+                  y="0"
+                  width="237"
+                  height="237"
+                  filterUnits="userSpaceOnUse"
+                  color-interpolation-filters="sRGB"
+                >
+                  <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="BackgroundImageFix"
+                    result="shape"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feMorphology
+                    radius="5"
+                    operator="erode"
+                    in="SourceAlpha"
+                    result="effect1_innerShadow_6_24"
+                  />
+                  <feOffset />
+                  <feGaussianBlur stdDeviation="1" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="arithmetic"
+                    k2="-1"
+                    k3="1"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0.109804 0 0 0 0 0.458824 0 0 0 0 0.858824 0 0 0 1 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="shape"
+                    result="effect1_innerShadow_6_24"
+                  />
+                </filter>
+              </defs>
+            </svg>
+
+            <svg
+              id="purple-neon-blur"
+              viewBox="0 0 341 341"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g opacity="0.72" filter="url(#filter0_f_18_61)">
+                <circle
+                  cx="170.5"
+                  cy="170.5"
+                  r="116.5"
+                  stroke="#ED297A"
+                  stroke-width="24"
+                />
+              </g>
+              <g opacity="0.72" filter="url(#filter1_f_18_61)">
+                <circle
+                  cx="170.5"
+                  cy="170.5"
+                  r="116.5"
+                  stroke="#1C75DB"
+                  stroke-width="24"
+                />
+              </g>
+              <defs>
+                <filter
+                  id="filter0_f_18_61"
+                  x="0"
+                  y="0"
+                  width="341"
+                  height="341"
+                  filterUnits="userSpaceOnUse"
+                  color-interpolation-filters="sRGB"
+                >
+                  <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="BackgroundImageFix"
+                    result="shape"
+                  />
+                  <feGaussianBlur
+                    stdDeviation="21"
+                    result="effect1_foregroundBlur_18_61"
+                  />
+                </filter>
+                <filter
+                  id="filter1_f_18_61"
+                  x="0"
+                  y="0"
+                  width="341"
+                  height="341"
+                  filterUnits="userSpaceOnUse"
+                  color-interpolation-filters="sRGB"
+                >
+                  <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="BackgroundImageFix"
+                    result="shape"
+                  />
+                  <feGaussianBlur
+                    stdDeviation="21"
+                    result="effect1_foregroundBlur_18_61"
+                  />
+                </filter>
+              </defs>
+            </svg>
+          </div>
+          <div id="voice-status"></div>
+          <div id="voice-tips">
+            It is recommended to use a headset for a better voice experience.
+            <br />
+            Otherwise, if your microphone is too sensitive or speakers are too
+            loud,
+            <br />
+            Leon may hear his own voice and get confused.
+          </div>
+        </div>
+        <p id="voice-speech"></p>
+      </div>
+    </div>
+    <main>
+      <div id="top-container">
+        <div id="mood"></div>
+        <button id="info">Info</button>
+      </div>
+      <div id="feed">
+        <p id="no-bubble" class="hide">
+          You can start to interact with Leon, don't be shy.
+        </p>
+      </div>
+      <div id="suggestions-container"></div>
+      <div id="is-typing">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+      </div>
+      <div id="input-container">
+        <div id="mic-container">
+          <button id="mic-button"></button>
+          <div id="sonar"></div>
+        </div>
+        <label for="utterance"></label>
+        <textarea id="utterance" autocomplete="off" autofocus></textarea>
+        <ul id="tip">
+          <li><kbd>enter</kbd> to submit.</li>
+          <li><kbd>shift</kbd> + <kbd>enter</kbd> for new line.</li>
+          <li>
+            <kbd>shift</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> to browse history.
+          </li>
+          <li><kbd>alt</kbd> / <kbd>cmd</kbd> + <kbd>c</kbd> to listen.</li>
+        </ul>
+      </div>
+    </main>
+    <footer>
+      <div id="logo"></div>
+      <br />
+      <div id="version">
+        <small>v</small>
+      </div>
+      <div id="discord">
+        <small class="italic">
+          <a href="https://discord.gg/MNQqqKg" target="_blank"
+            >Join us on Discord</a
+          >
+        </small>
+      </div>
+    </footer>
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

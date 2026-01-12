@@ -1,0 +1,22 @@
+{
+  "name": "leon-hotword",
+  "version": "0.2.0",
+  "description": "Hotword detection for Leon",
+  "author": {
+    "name": "Louis Grenard",
+    "email": "louis@getleon.ai",
+    "url": "https://twitter.com/grenlouis"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@bugsounet/snowboy": "^2.2.5",
+    "@mapbox/node-pre-gyp": "^1.0.10",
+    "node-record-lpcm16": "^0.3.1",
+    "socket.io-client": "^4.5.2",
+    "superagent": "^8.0.0"
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "$schema": "../../../../schemas/global-data/global-entity.json",
+  "options": {
+    "en-US": {
+      "synonyms": ["English", "British", "American"]
+    },
+    "zh-CN": {
+      "synonyms": ["Mandarin", "Chinese"]
+    },
+    "hi-IN": {
+      "synonyms": ["Hindi", "Indian"]
+    },
+    "es-ES": {
+      "synonyms": ["Spanish"]
+    },
+    "fr-FR": {
+      "synonyms": ["French"]
+    },
+    "ar-SA": {
+      "synonyms": ["Arabic"]
+    },
+    "ru-RU": {
+      "synonyms": ["Russian"]
+    },
+    "pt-PT": {
+      "synonyms": ["Portuguese"]
+    },
+    "bn-IN": {
+      "synonyms": ["Bengali"]
+    },
+    "in-ID": {
+      "synonyms": ["Indonesian"]
+    },
+    "ja-JP": {
+      "synonyms": ["Japanese"]
+    },
+    "de-DE": {
+      "synonyms": ["German"]
+    },
+    "ko-KR": {
+      "synonyms": ["Korean"]
+    },
+    "tr-TR": {
+      "synonyms": ["Turkish"]
+    },
+    "it-IT": {
+      "synonyms": ["Italian"]
+    },
+    "vi-VN": {
+      "synonyms": ["Vietnamese"]
+    },
+    "th-TH": {
+      "synonyms": ["Thai"]
+    },
+    "nl-NL": {
+      "synonyms": ["Dutch"]
+    },
+    "pl-PL": {
+      "synonyms": ["Polish"]
+    },
+    "sv-SE": {
+      "synonyms": ["Swedish"]
+    },
+    "da-DK": {
+      "synonyms": ["Danish"]
+    },
+    "fi-FI": {
+      "synonyms": ["Finnish"]
+    },
+    "no-NO": {
+      "synonyms": ["Norwegian"]
+    },
+    "cs-CZ": {
+      "synonyms": ["Czech"]
+    },
+    "hu-HU": {
+      "synonyms": ["Hungarian"]
+    },
+    "el-GR": {
+      "synonyms": ["Greek"]
+    },
+    "ro-RO": {
+      "synonyms": ["Romanian"]
+    },
+    "uk-UA": {
+      "synonyms": ["Ukrainian"]
+    },
+    "hr-HR": {
+      "synonyms": ["Croatian"]
+    },
+    "sr-RS": {
+      "synonyms": ["Serbian"]
+    },
+    "bg-BG": {
+      "synonyms": ["Bulgarian"]
+    },
+    "sk-SK": {
+      "synonyms": ["Slovak"]
+    },
+    "sl-SI": {
+      "synonyms": ["Slovenian"]
+    },
+    "et-EE": {
+      "synonyms": ["Estonian"]
+    },
+    "lv-LV": {
+      "synonyms": ["Latvian"]
+    },
+    "lt-LT": {
+      "synonyms": ["Lithuanian"]
+    },
+    "mt-MT": {
+      "synonyms": ["Maltese"]
+    },
+    "is-IS": {
+      "synonyms": ["Icelandic"]
+    },
+    "mk-MK": {
+      "synonyms": ["Macedonian"]
+    },
+    "sq-AL": {
+      "synonyms": ["Albanian"]
+    },
+    "bs-BA": {
+      "synonyms": ["Bosnian"]
+    },
+    "ur-PK": {
+      "synonyms": ["Urdu"]
+    }
+  }
+}

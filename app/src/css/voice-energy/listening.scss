@@ -1,0 +1,59 @@
+/**
+ * Listening status
+ */
+
+#voice-energy-container.listening {
+  .voice-particle {
+    visibility: hidden;
+    animation-play-state: paused;
+    opacity: 0;
+  }
+  .voice-neon {
+    margin: 0;
+  }
+  #purple-neon-blur {
+    transform: scale(1);
+  }
+  #purple-neon-blur circle {
+    filter: drop-shadow(0px 0px 64px mix(#ed297a, #1c75db));
+    animation: listeningNeonBlurBreath 0.7s infinite alternate;
+  }
+  #pink-neon-1 {
+    transform: scale(1);
+    animation: listeningBouncePinkNeon1 0.3s 1s infinite alternate;
+  }
+  #blue-neon-1 {
+    transform: scale(0.8);
+    animation: listeningMoveBlueNeon1 0.3s infinite alternate;
+  }
+  #blue-neon-2 {
+    transform: scale(0.9);
+    animation: listeningMoveBlueNeon2 0.3s 0.5s infinite alternate;
+  }
+}
+
+@keyframes listeningNeonBlurBreath {
+  100% {
+    filter: drop-shadow(0px 0px 0px mix(#ed297a, #1c75db));
+  }
+}
+@keyframes listeningBouncePurpleNeonBlur {
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes listeningBouncePinkNeon1 {
+  100% {
+    transform: scale(1.1);
+  }
+}
+@keyframes listeningMoveBlueNeon1 {
+  100% {
+    transform: scale(0.9);
+  }
+}
+@keyframes listeningMoveBlueNeon2 {
+  100% {
+    transform: scale(1);
+  }
+}

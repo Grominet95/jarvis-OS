@@ -1,0 +1,51 @@
+name: Tests
+
+on:
+  push:
+    # branches: [master, develop]
+    branches: [master]
+  pull_request:
+    # branches: [master, develop]
+    branches: [master]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+          cache: npm
+
+      - name: Install Pipenv
+        run: pip install --upgrade pip && pip install pipenv
+
+      - name: Install
+        run: npm install
+
+      - name: Run JSON tests
+        run: npm run test:json
+
+      - name: Run over HTTP tests
+        run: npm run test:over-http
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Install offline STT
+        run: npm run setup:offline-stt
+
+      - name: Install offline TTS
+        run: npm run setup:offline-tts
+
+      - name: Run unit tests
+        run: npm run test:unit

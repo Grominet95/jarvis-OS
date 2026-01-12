@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../schemas/skill-schemas/skill-config.json",
+  "actions": {
+    "run": {
+      "type": "logic",
+      "utterance_samples": [
+        "Is @url up?",
+        "Is @url online?",
+        "Is @url up or down?",
+        "Is @url up?",
+        "Is @url offline?",
+        "Can you tell me if @url is up?",
+        "Check if @url is up or down",
+        "Check if @url is down",
+        "Check if @url is up",
+        "Check if @url is working"
+      ],
+      "http_api": {
+        "entities": [
+          {
+            "entity": "url",
+            "resolution": ["value"]
+          }
+        ]
+      }
+    }
+  },
+  "answers": {
+    "up": [
+      "%website_name% is running correctly.",
+      "%website_name% is working correctly.",
+      "%website_name% is up."
+    ],
+    "down": [
+      "%website_name% is not running correctly.",
+      "%website_name% is having troubles.",
+      "%website_name% is down."
+    ],
+    "checking": [
+      "I'm checking %website_name% state.",
+      "I'm trying to reach %website_name%.",
+      "I am now requesting %website_name%."
+    ],
+    "errors": [
+      "There is an issue with the HTTP request for %website_name%. Please verify your local network or if the domain name is correct.",
+      "Bad news, the HTTP request is having troubles for %website_name%. You should check if the domain name is valid."
+    ],
+    "invalid_domain_name": [
+      "Please provide me at least one valid domain name.",
+      "You did not gave me a valid domain name."
+    ]
+  }
+}

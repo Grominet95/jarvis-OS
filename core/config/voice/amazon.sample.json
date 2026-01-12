@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../schemas/voice-config-schemas/amazon.json",
+  "credentials": {
+    "accessKeyId": "",
+    "secretAccessKey": ""
+  },
+  "region": "us-east-2"
+}

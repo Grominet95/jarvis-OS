@@ -1,0 +1,37 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = "3.11.9"
+
+[packages]
+# Setup
+setuptools = "*"
+wheel = "*"
+# Build
+cx-freeze = "==7.1.1"
+# Common
+python-dotenv = "==0.19.2"
+# TCP server
+spacy = "==3.5.4"
+geonamescache = "==2.0.0"
+# TCP server; TTS; ASR
+# PyTorch is installed via the setup script
+# torch = "*"
+# TTS
+transformers = "==4.27.4"
+g2p-en = "==2.1.0"
+gruut = {version = "==2.2.3", extras = ["de", "es", "fr"]}
+inflect = "==7.0.0"
+tqdm = "==4.66.4"
+soundfile = "==0.12.1"
+numba = "==0.59.1"
+# ASR
+faster-whisper = "==1.1.1"
+# Wake word
+numpy = "==1.26.4"
+openwakeword = "==0.6.0"
+# ASR + wake word
+pyaudio = "==0.2.14"

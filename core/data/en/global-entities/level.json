@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../../schemas/global-data/global-entity.json",
+  "options": {
+    "LOW": {
+      "synonyms": ["low"]
+    },
+    "MEDIUM": {
+      "synonyms": ["medium"]
+    },
+    "HIGH": {
+      "synonyms": ["high"]
+    }
+  }
+}

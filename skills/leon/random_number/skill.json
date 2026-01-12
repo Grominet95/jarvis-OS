@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../schemas/skill-schemas/skill.json",
+  "name": "Random Number",
+  "bridge": "python",
+  "version": "1.0.0",
+  "description": "Leon gives a random number.",
+  "author": {
+    "name": "Louis Grenard",
+    "email": "louis@getleon.ai",
+    "url": "https://github.com/louistiti"
+  }
+}

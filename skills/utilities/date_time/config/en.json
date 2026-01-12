@@ -1,0 +1,86 @@
+{
+  "$schema": "../../../../schemas/skill-schemas/skill-config.json",
+  "actions": {
+    "current_date_time": {
+      "type": "logic",
+      "utterance_samples": [
+        "What is the current date and time?",
+        "What is the date and time?",
+        "Tell me the time and date",
+        "What's the present date and time?"
+      ]
+    },
+    "current_date": {
+      "type": "logic",
+      "utterance_samples": [
+        "What's today date?",
+        "What is the date today?",
+        "What day is it?",
+        "What day of the week are we?",
+        "What day of the week is it?"
+      ]
+    },
+    "current_time": {
+      "type": "logic",
+      "utterance_samples": [
+        "What time is it?",
+        "Do you have the time?",
+        "Can you tell me the current time?",
+        "What's the time right now?"
+      ]
+    },
+    "current_week_number": {
+      "type": "logic",
+      "utterance_samples": [
+        "What week is it?",
+        "Which week of the year is it?",
+        "What week are we in right now?",
+        "What is this week's number?",
+        "What week of the year are we?",
+        "What's the current week number"
+      ]
+    },
+    "days_countdown": {
+      "type": "logic",
+      "utterance_samples": [
+        "How many days left until @date?",
+        "What is the number of days remaining until @date?",
+        "In how many days will it be @date?",
+        "Calculate the number until @date"
+      ]
+    },
+    "current_date_time_with_time_zone": {
+      "type": "logic",
+      "utterance_samples": [
+        "What is the time in @location:city?",
+        "What time is it in @location:city?",
+        "Can you tell me the current time in @location:city?",
+        "What's the time right now in @location:city?",
+        "What is the current date and time in @location:city?",
+        "What about @location:city?",
+        "How about @location:city?",
+        "And in @location:city?"
+      ]
+    }
+  },
+  "answers": {
+    "current_date_time": [
+      "It is %weekday%, %month% %day%, %year%, and it is %hours%:%minutes%:%seconds%."
+    ],
+    "current_date_time_with_time_zone": [
+      "Greetings from %city%, %country%! The local date and time is %weekday%, %month% %day%, %year%, and it is %hours%:%minutes%:%seconds%."
+    ],
+    "current_date": ["It is %weekday%, %month% %day%, %year%."],
+    "current_time": ["It is %hours%:%minutes%:%seconds%."],
+    "current_week_number": ["It is the %week_number% week of the year."],
+    "days_countdown": [
+      "There are %days% days between %month1% %day1%, %year1% and %month2% %day2%, %year2%."
+    ],
+    "days_countdown_error": [
+      "I'm sorry, I didn't understand the date you said."
+    ],
+    "city_not_found": [
+      "I'm sorry, I couldn't find the city you said. Please try again."
+    ]
+  }
+}

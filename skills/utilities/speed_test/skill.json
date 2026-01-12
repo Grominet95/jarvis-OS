@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../schemas/skill-schemas/skill.json",
+  "name": "Speed Test",
+  "bridge": "python",
+  "version": "1.0.0",
+  "description": "Gives info about your network speed.",
+  "author": {
+    "name": "Florian Bouché",
+    "url": "https://github.com/fkeloks"
+  }
+}

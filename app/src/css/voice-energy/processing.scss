@@ -1,0 +1,88 @@
+@use 'sass:math';
+
+/**
+ * Processing status
+ */
+
+#voice-energy-container.processing {
+  #purple-neon-blur {
+    animation: processingBouncePurpleNeonBlur 1s infinite alternate;
+  }
+  #pink-neon-1 {
+    animation: processingBouncePinkNeon1 0.5s infinite alternate;
+  }
+  #blue-neon-1 {
+    animation: processingMoveBlueNeon1 0.5s infinite alternate;
+  }
+  #blue-neon-2 {
+    animation: processingMoveBlueNeon2 0.5s infinite alternate;
+  }
+}
+
+@keyframes processingBouncePurpleNeonBlur {
+  50% {
+    transform: scale(1.07);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes processingBouncePinkNeon1 {
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes processingMoveBlueNeon1 {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  33% {
+    transform: translateY(-3px) translateX(-2px);
+  }
+  66% {
+    transform: translateY(-3px) translateX(3px);
+  }
+  100% {
+    transform: translateY(-3px) translateX(1px);
+  }
+}
+@keyframes processingMoveBlueNeon2 {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  33% {
+    transform: translateY(3px) translateX(2px);
+  }
+  66% {
+    transform: translateY(3px) translateX(3px);
+  }
+  100% {
+    transform: translateY(3px) translateX(-1px);
+  }
+}
+
+@for $i from 0 through 31 {
+  .processing .voice-particle[data-particle='#{$i}'] {
+    animation-delay: #{$i * 0.1}s;
+  }
+
+  .processing .voice-particle[data-particle='#{$i}'] {
+    animation-name: processingMoveParticle#{$i};
+  }
+
+  #voice-energy-container.processing {
+    @keyframes processingMoveParticle#{$i} {
+      75% {
+        opacity: 0.1;
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(math.cos(11.25deg * $i) * 110px)
+          translateY(math.sin(11.25deg * $i) * 110px);
+      }
+    }
+  }
+}

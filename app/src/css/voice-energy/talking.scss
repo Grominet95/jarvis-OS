@@ -1,0 +1,82 @@
+@use 'sass:math';
+
+/**
+ * Talking status
+ */
+
+#voice-energy-container.talking {
+  .voice-neon {
+    margin: 0;
+  }
+  #purple-neon-blur {
+    animation: talkingBouncePurpleNeonBlur 1s infinite alternate;
+  }
+  #pink-neon-1 {
+    transform: scale(1);
+    animation: talkingBouncePinkNeon1 0.5s 1s infinite alternate;
+  }
+  #blue-neon-1 {
+    transform: scale(0.8);
+    animation: talkingMoveBlueNeon1 0.5s infinite alternate;
+  }
+  #blue-neon-2 {
+    transform: scale(0.9);
+    animation: talkingMoveBlueNeon2 0.5s 0.3s infinite alternate;
+  }
+}
+
+@keyframes talkingBouncePurpleNeonBlur {
+  50% {
+    transform: scale(1.07);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes talkingBouncePinkNeon1 {
+  100% {
+    transform: scale(1.1);
+  }
+}
+@keyframes talkingMoveBlueNeon1 {
+  100% {
+    transform: scale(0.9);
+  }
+}
+@keyframes talkingMoveBlueNeon2 {
+  100% {
+    transform: scale(1);
+  }
+}
+
+.talking .voice-particle {
+  opacity: 0;
+  animation-duration: 2s;
+}
+@for $i from 0 through 31 {
+  .talking .voice-particle[data-particle='#{$i}'] {
+    animation-delay: #{$i * 0.2}s;
+    // animation-duration: #{$i * 0.5}s;
+  }
+
+  .talking .voice-particle[data-particle='#{$i}'] {
+    animation-name: talkingMoveParticle#{$i};
+  }
+
+  #voice-energy-container.talking {
+    @keyframes talkingMoveParticle#{$i} {
+      0% {
+        opacity: 1;
+        transform: translate(0);
+      }
+      50% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(math.cos(math.random() * 360deg))
+          translateY(math.sin(math.random() * 360deg));
+      }
+    }
+  }
+}

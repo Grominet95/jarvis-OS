@@ -1,0 +1,26 @@
+{
+  "bail": true,
+  "verbose": true,
+  "notify": false,
+  "collectCoverage": true,
+  "resetMocks": true,
+  "rootDir": "../..",
+  "testMatch": ["<rootDir>/test/unit/**/*.spec.js"],
+  "setupFiles": ["jest-canvas-mock", "<rootDir>/test/paths.setup.js"],
+  "setupFilesAfterEnv": [
+    "jest-extended/all",
+    "<rootDir>/test/unit/unit.setup.js"
+  ],
+  "coverageDirectory": "<rootDir>/test/coverage",
+  "collectCoverageFrom": [
+    "<rootDir>/server/src/**/*.js",
+    "!<rootDir>/server/src/core/http-server/api/**/*.js",
+    "!<rootDir>/server/src/core/http-server/plugins/**/*.js",
+    "!<rootDir>/server/src/stt/google-cloud-stt/**/*.js",
+    "!<rootDir>/server/src/stt/watson-stt/**/*.js",
+    "!<rootDir>/server/src/tts/amazon-polly/**/*.js",
+    "!<rootDir>/server/src/tts/google-cloud-tts/**/*.js",
+    "!<rootDir>/server/src/tts/watson-tts/**/*.js",
+    "!<rootDir>/server/src/index.js"
+  ]
+}
