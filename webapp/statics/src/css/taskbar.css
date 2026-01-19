@@ -1,0 +1,365 @@
+.taskbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.78) 100%);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    padding: 15px 26px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.65);
+    height: 64px;
+    box-shadow: 0 2px 22px rgba(0, 0, 0, 0.05),
+        0 1px 0 rgba(255, 255, 255, 0.85) inset,
+        0 -1px 0 rgba(91, 163, 245, 0.12) inset;
+    position: relative;
+    z-index: 10;
+    -webkit-app-region: drag;
+    user-select: none;
+    border-radius: 20px 20px 0 0;
+}
+
+.taskbar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(91, 163, 245, 0.2) 50%,
+            transparent 100%);
+    pointer-events: none;
+}
+
+.taskbar-left {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    -webkit-app-region: no-drag;
+}
+
+.app-title {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 33px;
+    font-weight: 700;
+    color: #5BA3F5;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 3px rgba(91, 163, 245, 0.25),
+        0 0 20px rgba(91, 163, 245, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-app-region: no-drag;
+    cursor: default;
+}
+
+.user-greeting {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: #666666;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-greeting.visible {
+    opacity: 1;
+}
+
+.taskbar-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.taskbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, rgba(250, 250, 250, 0.85) 0%, rgba(240, 240, 240, 0.65) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333333;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06),
+        0 1px 0 rgba(255, 255, 255, 0.65) inset,
+        0 -1px 0 rgba(0, 0, 0, 0.03) inset;
+    position: relative;
+    overflow: hidden;
+    -webkit-app-region: no-drag;
+}
+
+.taskbar-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent);
+    transition: left 0.5s ease;
+}
+
+.taskbar-btn:hover::before {
+    left: 100%;
+}
+
+.taskbar-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(232, 232, 232, 0.85) 100%);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1),
+        0 2px 0 rgba(255, 255, 255, 0.85) inset,
+        0 0 24px rgba(91, 163, 245, 0.12);
+    transform: translateY(-1px);
+}
+
+.taskbar-btn:active {
+    background: rgba(224, 224, 224, 0.9);
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.taskbar-btn.active {
+    background: linear-gradient(135deg, rgba(91, 163, 245, 0.15) 0%, rgba(91, 163, 245, 0.1) 100%);
+    color: #5BA3F5;
+    box-shadow: 0 2px 8px rgba(91, 163, 245, 0.15),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 0 20px rgba(91, 163, 245, 0.1);
+}
+
+.taskbar-btn.active .btn-icon svg {
+    color: #5BA3F5;
+}
+
+.btn-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.btn-text {
+    font-weight: 500;
+}
+
+.taskbar-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    -webkit-app-region: no-drag;
+}
+
+.mini-taskbar {
+    display: flex;
+    gap: 9px;
+}
+
+.mini-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(245, 245, 245, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #333333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07),
+        0 1px 0 rgba(255, 255, 255, 0.55) inset,
+        0 0 18px rgba(255, 255, 255, 0.25) inset;
+    position: relative;
+    overflow: hidden;
+    -webkit-app-region: no-drag;
+}
+
+.mini-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.mini-btn:hover::after {
+    width: 100px;
+    height: 100px;
+}
+
+.mini-btn svg {
+    opacity: 0.75;
+    width: 18px;
+    height: 18px;
+    transition: opacity 0.2s ease;
+}
+
+.mini-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14),
+        0 0 28px rgba(255, 255, 255, 0.45) inset,
+        0 0 32px rgba(255, 255, 255, 0.25);
+}
+
+.mini-btn:hover svg {
+    opacity: 1;
+}
+
+.mini-btn:active {
+    transform: translateY(0) scale(0.96);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+#mini-btn-1 {
+    background: rgba(232, 245, 233, 0.8);
+}
+
+#mini-btn-1:hover {
+    background: rgba(200, 230, 201, 0.95);
+}
+
+#mini-btn-2 {
+    background: rgba(255, 243, 224, 0.8);
+}
+
+#mini-btn-2:hover {
+    background: rgba(255, 224, 178, 0.95);
+}
+
+#mini-btn-3 {
+    background: rgba(252, 228, 236, 0.8);
+}
+
+#mini-btn-3:hover {
+    background: rgba(248, 187, 208, 0.95);
+}
+
+#mini-btn-4 {
+    background: rgba(243, 229, 245, 0.8);
+}
+
+#mini-btn-4:hover {
+    background: rgba(225, 190, 231, 0.95);
+}
+
+#mini-btn-5 {
+    background: rgba(227, 242, 253, 0.8);
+}
+
+#mini-btn-5:hover {
+    background: rgba(187, 222, 251, 0.95);
+}
+
+.system-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #666666;
+    -webkit-app-region: no-drag;
+}
+
+.window-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.window-control-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: linear-gradient(135deg, rgba(250, 250, 250, 0.85) 0%, rgba(240, 240, 240, 0.65) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: pointer;
+    color: #666666;
+    border-radius: 9px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06),
+        0 1px 0 rgba(255, 255, 255, 0.65) inset;
+    -webkit-app-region: no-drag;
+    user-select: none;
+}
+
+.window-control-btn svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+}
+
+.window-control-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12),
+        0 0 20px rgba(91, 163, 245, 0.15),
+        0 1px 0 rgba(255, 255, 255, 0.4) inset;
+}
+
+.window-control-btn:active {
+    transform: scale(0.95);
+}
+
+.minimize-btn:hover {
+    background: linear-gradient(135deg, rgba(91, 163, 245, 0.15) 0%, rgba(91, 163, 245, 0.1) 100%);
+    color: #5BA3F5;
+}
+
+.close-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.15) 0%, rgba(255, 77, 77, 0.1) 100%);
+    color: #ff4d4d;
+    box-shadow: 0 2px 8px rgba(255, 77, 77, 0.3),
+        0 0 20px rgba(255, 77, 77, 0.2),
+        0 1px 0 rgba(255, 255, 255, 0.4) inset;
+}
+
+.time {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    -webkit-app-region: no-drag;
+}
+
+.system-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.system-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+
+.close-btn:hover svg {
+    transform: rotate(90deg);
+}
+
+.close-btn:active {
+    background: rgba(255, 77, 77, 0.25);
+    transform: scale(0.97);
+}
