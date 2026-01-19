@@ -1,0 +1,51 @@
+.scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(91, 163, 245, 0.35) transparent;
+}
+
+.scrollable::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+            rgba(91, 163, 245, 0.4) 0%,
+            rgba(91, 163, 245, 0.5) 50%,
+            rgba(91, 163, 245, 0.4) 100%);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(91, 163, 245, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg,
+            rgba(91, 163, 245, 0.52) 0%,
+            rgba(91, 163, 245, 0.62) 50%,
+            rgba(91, 163, 245, 0.52) 100%);
+    background-clip: padding-box;
+    box-shadow: 0 3px 14px rgba(91, 163, 245, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.scrollable::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg,
+            rgba(91, 163, 245, 0.6) 0%,
+            rgba(91, 163, 245, 0.7) 50%,
+            rgba(91, 163, 245, 0.6) 100%);
+    background-clip: padding-box;
+    box-shadow: 0 4px 16px rgba(91, 163, 245, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.scrollable::-webkit-scrollbar-corner {
+    background: transparent;
+}

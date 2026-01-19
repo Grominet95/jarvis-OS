@@ -1,0 +1,126 @@
+.tabs,
+.plugins-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    flex-shrink: 0;
+}
+
+.tab-btn {
+    position: relative;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666666;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 12px 12px 0 0;
+}
+
+.tab-btn:hover {
+    color: #5BA3F5;
+    background: rgba(91, 163, 245, 0.06);
+}
+
+.tab-btn.active {
+    color: #5BA3F5;
+    border-bottom-color: #5BA3F5;
+}
+
+.tab-badge {
+    padding: 2px 8px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(91, 163, 245, 0.15);
+    color: #5BA3F5;
+}
+
+.tab-btn.active .tab-badge {
+    background: rgba(91, 163, 245, 0.25);
+}
+
+.tab-content {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+}
+
+.tab-content#tab-store {
+    padding: 24px 0 0 0;
+}
+
+.tab-content.active {
+    display: flex;
+    opacity: 1;
+}
+
+@media (max-width: 1024px) {
+    .tabs,
+    .plugins-tabs {
+        padding: 0 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tabs,
+    .plugins-tabs {
+        padding: 0 16px;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    
+    .tabs::-webkit-scrollbar,
+    .plugins-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+    
+    .tab-content {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tabs,
+    .plugins-tabs {
+        padding: 0 12px;
+    }
+    
+    .tab-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .tab-badge {
+        padding: 1px 6px;
+        font-size: 10px;
+    }
+    
+    .tab-content {
+        padding: 12px;
+    }
+}

@@ -1,0 +1,74 @@
+.search-box {
+    position: relative;
+    max-width: 400px;
+}
+
+.search-box .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.search-box .search-icon::before {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+}
+
+.search-box .search-icon::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 2px;
+    background: currentColor;
+    transform: rotate(45deg);
+    bottom: -2px;
+    right: -2px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 11px 14px 11px 40px;
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    border-radius: 14px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #333;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05),
+        0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: rgba(91, 163, 245, 0.35);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 2px 10px rgba(91, 163, 245, 0.18),
+        0 0 0 3px rgba(91, 163, 245, 0.12),
+        0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
+
+@media (max-width: 768px) {
+    .search-box {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-box input {
+        padding: 8px 10px 8px 34px;
+        font-size: 13px;
+    }
+}
