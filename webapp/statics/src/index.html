@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/scrollbar.css">
+    <link rel="stylesheet" href="css/search.css">
+    <link rel="stylesheet" href="css/tabs.css">
+    <link rel="stylesheet" href="css/filters.css">
+    <link rel="stylesheet" href="css/card.css">
+    <link rel="stylesheet" href="css/taskbar.css">
+    <link rel="stylesheet" href="css/visualizer.css">
+    <link rel="stylesheet" href="css/panels.css">
+    <link rel="stylesheet" href="css/plugins.css">
+    <link rel="stylesheet" href="css/onboarding.css">
+</head>
+
+<body>
+    <div id="onboarding-overlay" class="onboarding-overlay">
+        <div class="onboarding-window-controls">
+            <button class="window-control-btn minimize-btn" id="onboarding-minimize-btn" title="Minimiser">
+                <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 6 L10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <button class="window-control-btn close-btn" id="onboarding-close-btn" title="Fermer">
+                <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 3 L9 9 M9 3 L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="onboarding-container">
+            <div class="onboarding-welcome-animation" id="onboarding-welcome-animation">
+                <div class="welcome-visualizer">
+                    <div class="welcome-visualizer-side welcome-visualizer-left">
+                        <div class="welcome-visualizer-bar"></div>
+                        <div class="welcome-visualizer-bar"></div>
+                        <div class="welcome-visualizer-bar"></div>
+                    </div>
+                    <div class="welcome-visualizer-square">
+                        <div class="welcome-logo-text">J.A.R.V.I.S</div>
+                    </div>
+                    <div class="welcome-visualizer-side welcome-visualizer-right">
+                        <div class="welcome-visualizer-bar"></div>
+                        <div class="welcome-visualizer-bar"></div>
+                        <div class="welcome-visualizer-bar"></div>
+                    </div>
+                </div>
+                <h2 class="welcome-message">Bienvenue</h2>
+            </div>
+            
+            <div class="onboarding-step" id="step-name">
+                <h2 class="onboarding-title">Comment dois-je t'appeler ?</h2>
+                <p class="onboarding-subtitle">
+                    Je souhaite te connaître pour personnaliser ton expérience.
+                </p>
+                <div class="onboarding-form">
+                    <div class="onboarding-input-group">
+                        <label class="onboarding-label" for="onboarding-name-input">Ton prénom</label>
+                        <input 
+                            type="text" 
+                            id="onboarding-name-input" 
+                            class="onboarding-input" 
+                            placeholder="Entre ton prénom"
+                            autocomplete="given-name"
+                        >
+                    </div>
+                    <div class="onboarding-actions">
+                        <button class="onboarding-btn onboarding-btn-primary" id="onboarding-name-continue">
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="onboarding-step" id="step-email">
+                <h2 class="onboarding-title" id="step-email-title">Très bien <span id="step-email-name"></span>, il me faut juste ton adresse e-mail</h2>
+                <p class="onboarding-subtitle">
+                    Pour te tenir informé et personnaliser ton expérience.
+                </p>
+                <div class="onboarding-form">
+                    <div class="onboarding-input-group">
+                        <label class="onboarding-label" for="onboarding-email-input">Ton adresse e-mail</label>
+                        <input 
+                            type="email" 
+                            id="onboarding-email-input" 
+                            class="onboarding-input" 
+                            placeholder="ton.email@exemple.com"
+                            autocomplete="email"
+                        >
+                    </div>
+                    <div class="onboarding-actions">
+                        <button class="onboarding-btn onboarding-btn-primary" id="onboarding-email-continue">
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="onboarding-step" id="step-birthdate">
+                <h2 class="onboarding-title">Quelle est ta date de naissance ?</h2>
+                <p class="onboarding-subtitle">
+                    Pour mieux te connaître et adapter mes réponses.
+                </p>
+                <div class="onboarding-form">
+                    <div class="onboarding-input-group">
+                        <label class="onboarding-label" for="onboarding-birthdate-input">Date de naissance</label>
+                        <input 
+                            type="date" 
+                            id="onboarding-birthdate-input" 
+                            class="onboarding-input" 
+                            autocomplete="bday"
+                        >
+                    </div>
+                    <div class="onboarding-actions">
+                        <button class="onboarding-btn onboarding-btn-primary" id="onboarding-birthdate-continue">
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="onboarding-step" id="step-location">
+                <h2 class="onboarding-title">Où te trouves-tu ?</h2>
+                <p class="onboarding-subtitle">
+                    Pour adapter mes réponses à ton contexte local.
+                </p>
+                <div class="onboarding-form">
+                    <div class="onboarding-input-group">
+                        <label class="onboarding-label" for="onboarding-country-input">Pays</label>
+                        <input 
+                            type="text" 
+                            id="onboarding-country-input" 
+                            class="onboarding-input" 
+                            placeholder="France"
+                            autocomplete="country-name"
+                        >
+                    </div>
+                    <div class="onboarding-input-group">
+                        <label class="onboarding-label" for="onboarding-city-input">Ville</label>
+                        <input 
+                            type="text" 
+                            id="onboarding-city-input" 
+                            class="onboarding-input" 
+                            placeholder="Paris"
+                            autocomplete="address-level2"
+                        >
+                    </div>
+                    <div class="onboarding-actions">
+                        <button class="onboarding-btn onboarding-btn-primary" id="onboarding-location-continue">
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="onboarding-step" id="step-configuring">
+                <div class="configuring-visualizer">
+                    <div class="configuring-visualizer-side configuring-visualizer-left">
+                        <div class="configuring-visualizer-bar"></div>
+                        <div class="configuring-visualizer-bar"></div>
+                        <div class="configuring-visualizer-bar"></div>
+                    </div>
+                    <div class="configuring-visualizer-square">
+                        <div class="configuring-logo-text">J.A.R.V.I.S</div>
+                    </div>
+                    <div class="configuring-visualizer-side configuring-visualizer-right">
+                        <div class="configuring-visualizer-bar"></div>
+                        <div class="configuring-visualizer-bar"></div>
+                        <div class="configuring-visualizer-bar"></div>
+                    </div>
+                </div>
+                <h2 class="configuring-message">Configuration en cours...</h2>
+            </div>
+            
+            <div class="onboarding-progress">
+                <div class="onboarding-progress-dot active"></div>
+                <div class="onboarding-progress-dot"></div>
+                <div class="onboarding-progress-dot"></div>
+                <div class="onboarding-progress-dot"></div>
+            </div>
+            <button class="onboarding-skip-btn" id="onboarding-skip-all">J'ai déjà configuré mon assistant</button>
+        </div>
+    </div>
+    
+    <div class="app-container">
+        <header class="taskbar">
+            <div class="taskbar-left">
+                <h1 class="app-title">J.A.R.V.I.S</h1>
+                <span class="user-greeting" id="user-greeting"></span>
+                <div class="taskbar-buttons">
+                    <button class="taskbar-btn" id="btn-plugins">
+                        <span class="btn-icon"></span>
+                        <span class="btn-text"><span id="plugins-count">2</span> Plugins</span>
+                    </button>
+                    <button class="taskbar-btn" id="btn-devices">
+                        <span class="btn-icon"></span>
+                        <span class="btn-text"><span id="devices-count">3</span> Devices</span>
+                    </button>
+                </div>
+            </div>
+            <div class="taskbar-right">
+                <div class="mini-taskbar">
+                    <button class="mini-btn" id="mini-btn-1" title="Security"></button>
+                    <button class="mini-btn" id="mini-btn-2" title="Location"></button>
+                    <button class="mini-btn" id="mini-btn-3" title="Feedback"></button>
+                    <button class="mini-btn" id="mini-btn-4" title="Settings"></button>
+                    <button class="mini-btn" id="mini-btn-5" title="More"></button>
+                </div>
+                <div class="system-info">
+                    <span class="time" id="current-time">11:32 AM</span>
+                    <div class="window-controls">
+                        <button class="window-control-btn minimize-btn" id="minimize-btn" title="Minimiser">
+                            <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6 L10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <button class="window-control-btn close-btn" id="close-btn" title="Fermer">
+                            <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3 L9 9 M9 3 L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="page-home" class="page">
+                <div class="visualizer-container">
+                    <div class="visualizer" id="visualizer"></div>
+                </div>
+
+                <div class="panels-container">
+                    <div class="panel panel-left">
+                        <div class="panel-header">
+                            <h2>Input Visuel</h2>
+                        </div>
+                        <div class="panel-content">
+                            <div class="camera-frame" id="camera-frame">
+                                <div class="camera-placeholder"></div>
+                            </div>
+                            <button class="action-btn deactivate-btn" id="deactivate-btn">Désactiver</button>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-right">
+                        <div class="panel-header">
+                            <h2>Système</h2>
+                        </div>
+                        <div class="panel-content">
+                            <div class="chat-container scrollable" id="chat-container">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-plugins" class="page plugins-page" style="display: none;">
+                <div class="plugins-header">
+                    <div class="plugins-title-section">
+                        <h2>Plugins</h2>
+                        <p>Gérez vos plugins et découvrez-en de nouveaux</p>
+                    </div>
+                    <div class="plugins-search-container">
+                        <div class="search-box">
+                            <span class="search-icon"></span>
+                            <input type="text" id="plugins-search" placeholder="Rechercher un plugin...">
+                        </div>
+                    </div>
+                </div>
+                <div class="plugins-tabs tabs">
+                    <button class="tab-btn active" data-tab="installed">
+                        <span>Mes Plugins</span>
+                        <span class="tab-badge" id="installed-count">2</span>
+                    </button>
+                    <button class="tab-btn" data-tab="store">
+                        <span>Store</span>
+                        <span class="tab-badge" id="store-count">12</span>
+                    </button>
+                </div>
+                <div class="plugins-content">
+                    <div class="tab-content active" id="tab-installed">
+                        <div class="plugins-grid scrollable" id="plugins-grid">
+                        </div>
+                    </div>
+                    <div class="tab-content" id="tab-store">
+                        <div class="store-filters filters">
+                            <button class="filter-btn active" data-filter="all">Tous</button>
+                            <button class="filter-btn" data-filter="productivity">Productivité</button>
+                            <button class="filter-btn" data-filter="entertainment">Divertissement</button>
+                            <button class="filter-btn" data-filter="utilities">Utilitaires</button>
+                        </div>
+                        <div class="plugins-grid scrollable" id="store-grid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-devices" class="page" style="display: none;">
+                <div style="padding: 24px; text-align: center; color: #666;">
+                    <p>Page Devices - À venir</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/icons.js"></script>
+    <script src="js/time.js"></script>
+    <script src="js/visualizer.js"></script>
+    <script src="js/taskbar.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/onboarding.js"></script>
+</body>
+
+</html>
