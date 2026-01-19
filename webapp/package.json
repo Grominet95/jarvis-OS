@@ -1,0 +1,15 @@
+{
+  "name": "jarvis-webapp",
+  "version": "1.0.0",
+  "description": "J.A.R.V.I.S Desktop Application",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "electron electron/main.js"
+  },
+  "dependencies": {
+    "electron": "^32.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
