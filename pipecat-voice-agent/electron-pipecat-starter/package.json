@@ -1,0 +1,58 @@
+{
+  "name": "electron-pipecat-starter",
+  "version": "1.0.0",
+  "description": "Electron + Pipecat Client JS - Real-time voice chat starter",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "dev:all": "./start-all.sh",
+    "build": "tsc && vite build && electron-builder",
+    "start": "electron .",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pipecat-ai/client-js": "^1.5.0",
+    "@pipecat-ai/daily-transport": "^1.5.0",
+    "@pipecat-ai/small-webrtc-transport": "^1.8.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "siriwave": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vite-plugin-electron": "^0.28.0",
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vite-plugin-node-polyfills": "^0.25.0"
+  },
+  "build": {
+    "appId": "com.pipecat.electron-starter",
+    "productName": "Pipecat Voice Chat",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "author": "",
+  "license": "MIT"
+}
