@@ -30,7 +30,7 @@ Les scripts de démarrage gèrent automatiquement l'installation et la configura
    ```powershell
    # Windows
    cd C:\Users\VotreNom\Documents
-   git clone <url-du-repo>
+   git clone https://github.com/Grominet95/jarvis-OS.git
    cd pipecat-quickstart
    ```
    ```bash
