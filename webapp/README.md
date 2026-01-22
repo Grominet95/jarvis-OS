@@ -31,13 +31,13 @@ Les scripts de démarrage gèrent automatiquement l'installation et la configura
    # Windows
    cd C:\Users\VotreNom\Documents
    git clone https://github.com/Grominet95/jarvis-OS.git
-   cd pipecat-quickstart
+   cd webapp
    ```
    ```bash
    # Linux/macOS
    cd ~/Documents
    git clone <url-du-repo>
-   cd pipecat-quickstart
+   cd webapp
    ```
 
 2. **Lancer le script de démarrage** :
