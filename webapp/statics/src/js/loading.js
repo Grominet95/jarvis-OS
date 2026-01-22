@@ -1,0 +1,255 @@
+class LoadingManager {
+    constructor() {
+        this.processes = new Map();
+        this.loadingOverlay = document.getElementById('loading-overlay');
+        this.loadingMessage = document.getElementById('loading-message');
+        this.loadingProcesses = document.getElementById('loading-processes');
+        this.allProcessesReady = false;
+        this.voiceTimeoutId = null;
+        this.voiceTimeoutStarted = false;
+    }
+
+    init() {
+        console.log('[LOADING] Initializing LoadingManager');
+        this.addProcess('electron', 'electron main.js');
+        this.addProcess('starting-pipecat', 'Starting Pipecat backend...');
+        this.addProcess('loading-smart-turn', 'Loading Local Smart Turn Analyzer V3');
+        this.addProcess('loading-silero', 'Loading Silero VAD Model');
+        this.addProcess('start-server', 'Start server process');
+        this.addProcess('starting-server', 'Starting Pipecat server');
+        this.addProcess('loading-models', 'Loading models and imports');
+        this.addProcess('testing-webrtc', 'Testing WebRTC server');
+        
+        console.log('[LOADING] Processes added:', Array.from(this.processes.keys()));
+        console.log('[LOADING] electronAPI available?', !!window.electronAPI);
+        console.log('[LOADING] onLoadingProcess available?', !!(window.electronAPI && window.electronAPI.onLoadingProcess));
+        
+        if (window.electronAPI && window.electronAPI.onLoadingProcess) {
+            window.electronAPI.onLoadingProcess((processName, status, detail) => {
+                console.log('[LOADING] IPC Process update received:', processName, status, detail);
+                this.updateProcess(processName, status, detail);
+            });
+        } else {
+            console.warn('[LOADING] electronAPI.onLoadingProcess not available');
+        }
+    }
+
+    translateDetail(detail) {
+        if (!detail) return null;
+        
+        let translated = detail;
+        
+        if (translated.includes('Uvicorn running on')) {
+            translated = translated.replace('Uvicorn running on', 'Uvicorn en cours d\'exécution sur');
+        }
+        if (translated.includes('Uvicorn en cours d\'exécution sur')) {
+            return translated;
+        }
+        if (translated.includes('Local Smart Turn Analyzer V3 loaded')) {
+            return 'Local Smart Turn Analyzer V3 chargé';
+        }
+        if (translated.includes('Silero VAD model loaded')) {
+            return 'Modèle Silero VAD chargé';
+        }
+        if (translated.includes('Application startup complete')) {
+            return 'Démarrage de l\'application terminé';
+        }
+        if (translated.includes('WebRTC server testé avec succès')) {
+            return translated;
+        }
+        
+        return translated;
+    }
+
+    addProcess(name, label) {
+        const process = {
+            name,
+            label,
+            status: 'pending'
+        };
+        this.processes.set(name, process);
+        this.renderProcess(process);
+    }
+
+    updateProcess(name, status, detail = null) {
+        const process = this.processes.get(name);
+        if (process) {
+            const oldStatus = process.status;
+            process.status = status;
+            if (detail) {
+                process.label = this.translateDetail(detail) || detail;
+            }
+            console.log(`[LOADING] Updating ${name}: ${oldStatus} -> ${status} (${detail || 'no detail'})`);
+            console.log(`[LOADING] All processes status:`, Array.from(this.processes.entries()).map(([n, p]) => `${n}:${p.status}`).join(', '));
+            this.renderProcess(process);
+            
+            if (name === 'testing-webrtc' && status === 'completed') {
+                console.log('[LOADING] WebRTC is ready, closing overlay immediately');
+                if (!this.allProcessesReady) {
+                    this.allProcessesReady = true;
+                    if (this.voiceTimeoutId) {
+                        clearTimeout(this.voiceTimeoutId);
+                        this.voiceTimeoutId = null;
+                    }
+                    setTimeout(() => {
+                        this.hide();
+                    }, 200);
+                }
+            }
+            
+            this.checkAllReady();
+        } else {
+            console.warn(`[LOADING] Process ${name} not found, available processes:`, Array.from(this.processes.keys()));
+        }
+    }
+
+    renderProcess(process) {
+        const activeProcess = Array.from(this.processes.values()).find(p => p.status === 'active');
+        
+        if (!activeProcess) {
+            const pendingProcess = Array.from(this.processes.values()).find(p => p.status === 'pending');
+            if (pendingProcess && pendingProcess.name === process.name) {
+                return;
+            }
+            if (process.status === 'pending') {
+                return;
+            }
+        } else if (process.name !== activeProcess.name && process.status !== 'active') {
+            return;
+        }
+
+        const processToShow = activeProcess || process;
+        
+        let processEl = document.getElementById(`loading-process-current`);
+        
+        if (!processEl) {
+            processEl = document.createElement('div');
+            processEl.id = `loading-process-current`;
+            processEl.className = 'loading-process';
+            this.loadingProcesses.innerHTML = '';
+            this.loadingProcesses.appendChild(processEl);
+        }
+
+        const iconEl = processEl.querySelector('.loading-process-icon') || document.createElement('div');
+        iconEl.className = 'loading-process-icon';
+        
+        const textEl = processEl.querySelector('.loading-process-text') || document.createElement('div');
+        textEl.className = 'loading-process-text';
+        textEl.textContent = processToShow.label;
+
+        processEl.className = 'loading-process';
+        
+        if (processToShow.status === 'active') {
+            processEl.classList.add('active');
+            iconEl.classList.add('spinner');
+            this.loadingMessage.textContent = processToShow.label;
+        } else if (processToShow.status === 'completed') {
+            processEl.classList.add('completed');
+            iconEl.classList.remove('spinner');
+            iconEl.classList.add('check');
+            iconEl.textContent = '✓';
+        } else {
+            iconEl.classList.remove('spinner', 'check');
+        }
+
+        if (!iconEl.parentElement) {
+            processEl.appendChild(iconEl);
+        }
+        if (!textEl.parentElement) {
+            processEl.appendChild(textEl);
+        }
+    }
+
+    checkAllReady() {
+        const webrtcProcess = this.processes.get('testing-webrtc');
+        const allCompleted = Array.from(this.processes.values()).every(p => p.status === 'completed');
+        const statuses = Array.from(this.processes.values()).map(p => `${p.name}:${p.status}`).join(', ');
+        console.log(`[LOADING] Checking if all ready: ${allCompleted} (${statuses})`);
+        console.log(`[LOADING] allProcessesReady flag: ${this.allProcessesReady}`);
+        console.log(`[LOADING] WebRTC status: ${webrtcProcess ? webrtcProcess.status : 'not found'}`);
+        
+        if (webrtcProcess && webrtcProcess.status === 'completed' && !this.allProcessesReady) {
+            console.log('[LOADING] WebRTC is completed, closing overlay NOW');
+            this.allProcessesReady = true;
+            if (this.voiceTimeoutId) {
+                clearTimeout(this.voiceTimeoutId);
+                this.voiceTimeoutId = null;
+            }
+            setTimeout(() => {
+                this.hide();
+            }, 100);
+        } else if (allCompleted && !this.allProcessesReady) {
+            this.allProcessesReady = true;
+            if (this.voiceTimeoutId) {
+                clearTimeout(this.voiceTimeoutId);
+                this.voiceTimeoutId = null;
+            }
+            console.log('[LOADING] All processes completed, hiding overlay');
+            this.hide();
+        } else if (!allCompleted) {
+            const missing = Array.from(this.processes.values())
+                .filter(p => p.status !== 'completed')
+                .map(p => `${p.name}:${p.status}`);
+            console.log(`[LOADING] Not all ready yet. Missing:`, missing.join(', '));
+            
+            const webrtcProcess = this.processes.get('testing-webrtc');
+            if (webrtcProcess && webrtcProcess.status === 'active' && !this.voiceTimeoutStarted) {
+                this.voiceTimeoutStarted = true;
+                console.log('[LOADING] WebRTC process is active, starting 5s timeout to force complete');
+                this.voiceTimeoutId = setTimeout(() => {
+                    const wp = this.processes.get('testing-webrtc');
+                    if (wp && wp.status !== 'completed') {
+                        console.log('[LOADING] TIMEOUT: Force completing WebRTC process');
+                        this.updateProcess('testing-webrtc', 'completed', 'PipecatClient - Connecté');
+                    }
+                    this.voiceTimeoutId = null;
+                    this.voiceTimeoutStarted = false;
+                }, 5000);
+            }
+            
+            const allButWebRTC = Array.from(this.processes.entries())
+                .filter(([name]) => name !== 'testing-webrtc')
+                .every(([, p]) => p.status === 'completed');
+            
+            if (allButWebRTC && webrtcProcess && webrtcProcess.status === 'completed') {
+                console.log('[LOADING] All processes including WebRTC are completed');
+                if (!this.allProcessesReady) {
+                    this.allProcessesReady = true;
+                    console.log('[LOADING] Hiding overlay immediately');
+                    setTimeout(() => {
+                        this.hide();
+                    }, 300);
+                }
+            }
+        }
+    }
+
+    hide() {
+        console.log('[LOADING] hide() called');
+        if (this.loadingOverlay) {
+            console.log('[LOADING] Hiding overlay immediately');
+            this.loadingOverlay.style.opacity = '0';
+            this.loadingOverlay.style.pointerEvents = 'none';
+            this.loadingOverlay.classList.add('hidden');
+            this.loadingOverlay.style.display = 'none';
+            this.loadingOverlay.style.visibility = 'hidden';
+            console.log('[LOADING] Overlay hidden');
+        } else {
+            console.warn('[LOADING] loadingOverlay not found');
+        }
+    }
+}
+
+const loadingManager = new LoadingManager();
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        loadingManager.init();
+        loadingManager.updateProcess('electron', 'completed');
+    });
+} else {
+    loadingManager.init();
+    loadingManager.updateProcess('electron', 'completed');
+}
+
+window.loadingManager = loadingManager;

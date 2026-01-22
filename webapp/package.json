@@ -1,15 +1,25 @@
 {
-  "name": "jarvis-webapp",
+  "name": "jarvis-electron",
   "version": "1.0.0",
-  "description": "J.A.R.V.I.S Desktop Application",
+  "description": "Jarvis - Electron app for Pipecat bot",
   "main": "electron/main.js",
   "scripts": {
-    "dev": "electron electron/main.js"
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "postinstall": "electron-rebuild -f -w better-sqlite3"
+  },
+  "keywords": [
+    "electron",
+    "pipecat",
+    "jarvis"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
+    "electron": "^28.0.0"
   },
   "dependencies": {
-    "electron": "^32.0.0"
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3"
+    "better-sqlite3": "^11.0.0"
   }
 }

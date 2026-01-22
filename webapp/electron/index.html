@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.active {
+            background: #4caf50;
+        }
+
+        .status-indicator.starting {
+            background: #ff9800;
+        }
+
+        .status-indicator.connected {
+            background: #2196f3;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+        }
+
+        .message.assistant .message-avatar {
+            background: #4caf50;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #f5f5f5;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .message.user .message-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .voice-controls {
+            padding: 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mic-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: #667eea;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .mic-button.recording {
+            background: #f44336;
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        .mic-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .voice-status {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .log-container.show {
+            display: block;
+        }
+
+        .log-line {
+            margin: 2px 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Jarvis</h1>
+            <div class="status">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="statusText">Ready</span>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="startBtn" class="btn-primary">Start Bot</button>
+            <button id="stopBtn" class="btn-danger" disabled>Stop Bot</button>
+            <button id="connectBtn" class="btn-success" disabled>Connect</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chat-container">
+            <div class="loading-screen" id="loadingScreen">
+                <div class="spinner"></div>
+                <p id="loadingText">Waiting for bot to start...</p>
+            </div>
+            <div class="chat-messages" id="chatMessages" style="display: none;"></div>
+            <div class="voice-controls" id="voiceControls" style="display: none;">
+                <button class="mic-button" id="micButton" disabled>
+                    <span id="micIcon">🎤</span>
+                </button>
+                <div class="voice-status" id="voiceStatus">Click the microphone to start talking</div>
+            </div>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const connectBtn = document.getElementById('connectBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingText = document.getElementById('loadingText');
+        const chatMessages = document.getElementById('chatMessages');
+        const voiceControls = document.getElementById('voiceControls');
+        const micButton = document.getElementById('micButton');
+        const micIcon = document.getElementById('micIcon');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const logContainer = document.getElementById('logContainer');
+        const logContent = document.getElementById('logContent');
+
+        let botRunning = false;
+        let connected = false;
+        let pc = null;
+        let localStream = null;
+
+        function updateStatus(status, text) {
+            statusIndicator.className = 'status-indicator';
+            if (status === 'active') {
+                statusIndicator.classList.add('active');
+            } else if (status === 'starting') {
+                statusIndicator.classList.add('starting');
+            } else if (status === 'connected') {
+                statusIndicator.classList.add('connected');
+            }
+            statusText.textContent = text;
+        }
+
+        function addLog(message) {
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.textContent = message;
+            logContent.appendChild(line);
+            logContainer.classList.add('show');
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = isUser ? 'U' : 'J';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = text;
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = new Date().toLocaleTimeString();
+            
+            content.appendChild(time);
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function startBot() {
+            if (botRunning) return;
+
+            startBtn.disabled = true;
+            updateStatus('starting', 'Starting bot...');
+            addLog('Starting bot...');
+            loadingText.textContent = 'Starting bot...';
+
+            try {
+                const result = await window.electronAPI.startBot();
+                if (result.success) {
+                    botRunning = true;
+                    updateStatus('active', 'Bot running');
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    connectBtn.disabled = false;
+                    addLog('Bot started successfully');
+                    loadingText.textContent = 'Bot ready! Click Connect to start talking.';
+                } else {
+                    updateStatus('', 'Error: ' + result.error);
+                    addLog('Error: ' + result.error);
+                    startBtn.disabled = false;
+                    loadingText.textContent = 'Error: ' + result.error;
+                }
+            } catch (error) {
+                updateStatus('', 'Error: ' + error.message);
+                addLog('Error: ' + error.message);
+                startBtn.disabled = false;
+                loadingText.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function stopBot() {
+            if (!botRunning) return;
+
+            if (connected) {
+                await disconnect();
+            }
+
+            stopBtn.disabled = true;
+            updateStatus('starting', 'Stopping bot...');
+            addLog('Stopping bot...');
+
+            try {
+                const result = await window.electronAPI.stopBot();
+                if (result.success) {
+                    botRunning = false;
+                    connected = false;
+                    updateStatus('', 'Ready');
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    connectBtn.disabled = true;
+                    loadingScreen.style.display = 'flex';
+                    chatMessages.style.display = 'none';
+                    voiceControls.style.display = 'none';
+                    chatMessages.innerHTML = '';
+                    addLog('Bot stopped');
+                }
+            } catch (error) {
+                addLog('Error stopping bot: ' + error.message);
+            }
+        }
+
+        async function connect() {
+            if (!botRunning || connected) return;
+
+            try {
+                loadingText.textContent = 'Connecting to bot...';
+                addLog('Connecting to bot...');
+
+                const response = await fetch('http://localhost:7860/api/webrtc/offer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get WebRTC offer');
+                }
+
+                const data = await response.json();
+                
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
+
+                pc.ontrack = (event) => {
+                    const audio = new Audio();
+                    audio.srcObject = event.streams[0];
+                    audio.play();
+                };
+
+                await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+
+                const answerResponse = await fetch('http://localhost:7860/api/webrtc/answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answer: answer })
+                });
+
+                if (!answerResponse.ok) {
+                    throw new Error('Failed to send answer');
+                }
+
+                connected = true;
+                updateStatus('connected', 'Connected');
+                connectBtn.disabled = true;
+                micButton.disabled = false;
+                loadingScreen.style.display = 'none';
+                chatMessages.style.display = 'flex';
+                voiceControls.style.display = 'flex';
+                addMessage('Connected! You can now talk to Jarvis.', false);
+                addLog('Connected successfully');
+            } catch (error) {
+                addLog('Connection error: ' + error.message);
+                loadingText.textContent = 'Connection failed: ' + error.message;
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+                if (pc) {
+                    pc.close();
+                    pc = null;
+                }
+            }
+        }
+
+        async function disconnect() {
+            if (!connected) return;
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+
+            if (pc) {
+                pc.close();
+                pc = null;
+            }
+
+            connected = false;
+            updateStatus('active', 'Bot running');
+            connectBtn.disabled = false;
+            micButton.disabled = true;
+            micButton.classList.remove('recording');
+            voiceStatus.textContent = 'Click the microphone to start talking';
+            addLog('Disconnected');
+        }
+
+        let isRecording = false;
+
+        micButton.addEventListener('click', () => {
+            if (!connected) return;
+
+            isRecording = !isRecording;
+            
+            if (isRecording) {
+                micButton.classList.add('recording');
+                micIcon.textContent = '⏹';
+                voiceStatus.textContent = 'Listening...';
+                addMessage('You are speaking...', true);
+            } else {
+                micButton.classList.remove('recording');
+                micIcon.textContent = '🎤';
+                voiceStatus.textContent = 'Click the microphone to start talking';
+            }
+        });
+
+        startBtn.addEventListener('click', startBot);
+        stopBtn.addEventListener('click', stopBot);
+        connectBtn.addEventListener('click', connect);
+
+        window.electronAPI.onBotOutput((data) => {
+            addLog(data);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (connected) {
+                disconnect();
+            }
+            if (botRunning) {
+                window.electronAPI.stopBot();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -8,27 +8,32 @@ const Navigation = {
 
     setupListeners() {
         const appTitle = document.querySelector('.app-title');
-        const pluginsBtn = document.getElementById('btn-plugins');
-        const devicesBtn = document.getElementById('btn-devices');
+        const settingsBtn = document.getElementById('btn-settings');
 
         if (appTitle) {
             appTitle.style.cursor = 'pointer';
             appTitle.addEventListener('click', () => this.navigateTo('home'));
         }
 
-        if (pluginsBtn) {
-            pluginsBtn.addEventListener('click', () => this.navigateTo('plugins'));
-        }
-
-        if (devicesBtn) {
-            devicesBtn.addEventListener('click', () => this.navigateTo('devices'));
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                console.log('[NAV] Settings button clicked');
+                this.navigateTo('settings');
+            });
+        } else {
+            console.error('[NAV] Settings button not found!');
         }
     },
 
     navigateTo(page) {
         if (this.currentPage === page) return;
 
-        this.hidePage(this.currentPage);
+        const allPages = document.querySelectorAll('.page');
+        allPages.forEach(p => {
+            p.style.display = 'none';
+            p.style.opacity = '0';
+        });
+
         this.showPage(page);
         this.updateActiveButton(page);
         this.currentPage = page;
@@ -36,11 +41,25 @@ const Navigation = {
 
     showPage(page) {
         const pageElement = document.getElementById(`page-${page}`);
+        console.log(`[NAV] Showing page: ${page}`, pageElement);
         if (pageElement) {
-            pageElement.style.display = 'flex';
-            setTimeout(() => {
+            if (page === 'settings') {
+                pageElement.style.display = 'block';
                 pageElement.style.opacity = '1';
-            }, 10);
+                console.log('[NAV] Initializing settings manager...');
+                setTimeout(() => {
+                    if (window.settingsManager) {
+                        window.settingsManager.init();
+                    } else {
+                        console.error('[NAV] SettingsManager not available!');
+                    }
+                }, 50);
+            } else {
+                pageElement.style.display = 'flex';
+                pageElement.style.opacity = '1';
+            }
+        } else {
+            console.error(`[NAV] Page element not found: page-${page}`);
         }
     },
 
@@ -55,17 +74,15 @@ const Navigation = {
     },
 
     updateActiveButton(page) {
-        const buttons = document.querySelectorAll('.taskbar-btn');
+        const buttons = document.querySelectorAll('.mini-btn');
         buttons.forEach(btn => {
             btn.classList.remove('active');
         });
 
-        if (page === 'home') {
-            return;
-        } else if (page === 'plugins') {
-            document.getElementById('btn-plugins')?.classList.add('active');
-        } else if (page === 'devices') {
-            document.getElementById('btn-devices')?.classList.add('active');
+        if (page === 'settings') {
+            document.getElementById('btn-settings')?.classList.add('active');
         }
     }
 };
+
+window.Navigation = Navigation;

@@ -165,6 +165,9 @@
 .mini-taskbar {
     display: flex;
     gap: 9px;
+    position: relative;
+    z-index: 10000;
+    pointer-events: auto;
 }
 
 .mini-btn {
@@ -175,7 +178,7 @@
     background: rgba(245, 245, 245, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    cursor: pointer;
+    cursor: pointer !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,7 +189,9 @@
         0 0 18px rgba(255, 255, 255, 0.25) inset;
     position: relative;
     overflow: hidden;
-    -webkit-app-region: no-drag;
+    -webkit-app-region: no-drag !important;
+    pointer-events: auto !important;
+    z-index: 10001 !important;
 }
 
 .mini-btn::after {
@@ -230,44 +235,71 @@
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
 }
 
-#mini-btn-1 {
-    background: rgba(232, 245, 233, 0.8);
-}
-
-#mini-btn-1:hover {
-    background: rgba(200, 230, 201, 0.95);
-}
-
-#mini-btn-2 {
-    background: rgba(255, 243, 224, 0.8);
-}
-
-#mini-btn-2:hover {
-    background: rgba(255, 224, 178, 0.95);
-}
-
-#mini-btn-3 {
-    background: rgba(252, 228, 236, 0.8);
-}
-
-#mini-btn-3:hover {
-    background: rgba(248, 187, 208, 0.95);
-}
-
-#mini-btn-4 {
+#btn-settings {
     background: rgba(243, 229, 245, 0.8);
 }
 
-#mini-btn-4:hover {
+#btn-settings:hover {
     background: rgba(225, 190, 231, 0.95);
 }
 
-#mini-btn-5 {
-    background: rgba(227, 242, 253, 0.8);
+#voice-mic-btn.connected {
+    background: rgba(232, 245, 233, 0.8);
 }
 
-#mini-btn-5:hover {
-    background: rgba(187, 222, 251, 0.95);
+#voice-mic-btn.connected:hover {
+    background: rgba(200, 230, 201, 0.95);
+}
+
+#voice-mic-btn.connecting {
+    background: rgba(255, 243, 224, 0.8);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+#voice-mic-btn.disconnected {
+    background: rgba(245, 245, 245, 0.75);
+    opacity: 0.6;
+}
+
+#voice-mic-btn.muted {
+    opacity: 0.5;
+    position: relative;
+}
+
+#voice-mic-btn.muted::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 2px;
+    height: 24px;
+    background: #ff4d4d;
+    z-index: 10;
+}
+
+#voice-mic-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#voice-connect-btn {
+    min-width: 100px;
+    padding: 8px 16px;
+}
+
+#voice-connect-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
 }
 
 .system-info {

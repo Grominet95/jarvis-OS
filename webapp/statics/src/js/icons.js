@@ -33,9 +33,30 @@ const Icons = {
         <path d="M6 6 L8 8 L10 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`,
     
-    settings: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-        <path d="M8 1 L8 3 M8 13 L8 15 M15 8 L13 8 M3 8 L1 8 M13.5 3.5 L12 5 M4 11 L2.5 12.5 M13.5 12.5 L12 11 M4 5 L2.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    settings: `<svg width="16" height="16" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <path fill="currentColor" d="M102.4,222.1H68.5V51.2h33.9V222.1z M68.5,460.8h33.9V358.4H68.5V460.8z M238.7,460.8h33.9V256h-33.9V460.8z M409.6,460.8h33.9v-68.5h-33.9V460.8z M443.5,51.2h-33.9V256h33.9V51.2z M273.3,51.2h-33.9v68.5h33.9V51.2z M136.3,256H33.9C15,256,0,271,0,289.9s15,33.9,33.9,33.9h102.4c18.9,0,33.9-15,33.9-33.9S155.2,256,136.3,256z M307.2,153.6H204.8c-18.9,0-33.9,15-33.9,33.9s15,33.9,33.9,33.9h102.4c18.9,0,33.9-15,33.9-33.9S326.1,153.6,307.2,153.6z M478.1,289.9H375.7c-18.9,0-33.9,15-33.9,33.9s15,33.9,33.9,33.9h102.4c18.9,0,33.9-15,33.9-33.9S497,289.9,478.1,289.9z"/>
+    </svg>`,
+    
+    microphone: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 1.5 C6.6 1.5 5.5 2.6 5.5 4 L5.5 7.5 C5.5 8.9 6.6 10 8 10 C9.4 10 10.5 8.9 10.5 7.5 L10.5 4 C10.5 2.6 9.4 1.5 8 1.5 Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        <path d="M4 7 L4 7.5 C4 9.4 5.4 11 7.2 11.3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M12 7 L12 7.5 C12 9.4 10.6 11 8.8 11.3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <line x1="8" y1="12.5" x2="8" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="5.5" y1="14.5" x2="10.5" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    
+    audio: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 2 L9 16 M3 6 L3 12 M15 6 L15 12 M6 4 L6 14 M12 4 L12 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    
+    general: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="3" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        <path d="M6 7 L12 7 M6 9 L12 9 M6 11 L9 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    
+    advanced: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        <path d="M9 3 L9 5 M9 13 L9 15 M15 9 L13 9 M5 9 L3 9 M13.5 4.5 L12.2 5.8 M5.8 12.2 L4.5 13.5 M13.5 13.5 L12.2 12.2 M5.8 5.8 L4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg>`,
     
     more: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

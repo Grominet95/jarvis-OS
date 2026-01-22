@@ -16,9 +16,654 @@
     <link rel="stylesheet" href="css/panels.css">
     <link rel="stylesheet" href="css/plugins.css">
     <link rel="stylesheet" href="css/onboarding.css">
+    <link rel="stylesheet" href="css/loading.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <script src="js/siriwave.umd.js"></script>
+    <script>
+        (async function() {
+            let modulesLoaded = false;
+            
+            const checkServerReady = async () => {
+                try {
+                    const response = await fetch('http://localhost:7860/', { method: 'GET' });
+                    return response.ok || response.status === 404 || response.status === 405;
+                } catch {
+                    return false;
+                }
+            };
+            
+            const createPipecatModulesStub = () => {
+                const clients = new Map();
+                let clientIdCounter = 0;
+                
+                const createPipecatClient = (transportOptions, clientOptions) => {
+                    const clientId = `client_${++clientIdCounter}`;
+                    const pc = new RTCPeerConnection(transportOptions.iceServers || []);
+                    
+                    const remoteStream = new MediaStream();
+                    const remoteAudio = new Audio();
+                    remoteAudio.autoplay = true;
+                    
+                    const audioState = {
+                        localAudioContext: null,
+                        remoteAudioContext: null,
+                        localAnalyser: null,
+                        remoteAnalyser: null,
+                        localDataArray: null,
+                        remoteDataArray: null,
+                        audioLevelInterval: null
+                    };
+                    
+                    const startAudioAnalysis = () => {
+                        if (audioState.audioLevelInterval) {
+                            console.log('[PIPECAT STUB] Audio analysis already started');
+                            return;
+                        }
+                        
+                        console.log('[PIPECAT STUB] Starting audio analysis, localAnalyser:', !!audioState.localAnalyser, 'remoteAnalyser:', !!audioState.remoteAnalyser);
+                        
+                        let lastLocalLevel = 0;
+                        let lastRemoteLevel = 0;
+                        let userSpeaking = false;
+                        let botSpeaking = false;
+                        
+                        const analyzeAudio = () => {
+                            const dispatchEvent = (eventName, data) => {
+                                if (window._pipecatEventCallback) {
+                                    window._pipecatEventCallback(eventName, data);
+                                }
+                                window.dispatchEvent(new CustomEvent('pipecat-stub-event', {
+                                    detail: { eventName, data }
+                                }));
+                            };
+                            
+                            if (audioState.localAnalyser && audioState.localDataArray) {
+                                audioState.localAnalyser.getByteFrequencyData(audioState.localDataArray);
+                                const localLevel = Math.max(...audioState.localDataArray) / 255;
+                                
+                                if (Math.abs(localLevel - lastLocalLevel) > 0.01 || localLevel > 0.05) {
+                                    dispatchEvent('onLocalAudioLevel', { level: localLevel });
+                                    lastLocalLevel = localLevel;
+                                }
+                                
+                                if (localLevel > 0.05 && !userSpeaking) {
+                                    userSpeaking = true;
+                                    dispatchEvent('onUserStartedSpeaking', {});
+                                } else if (localLevel <= 0.05 && userSpeaking) {
+                                    userSpeaking = false;
+                                    dispatchEvent('onUserStoppedSpeaking', {});
+                                }
+                            }
+                            
+                            if (audioState.remoteAnalyser && audioState.remoteDataArray) {
+                                audioState.remoteAnalyser.getByteFrequencyData(audioState.remoteDataArray);
+                                const remoteLevel = Math.max(...audioState.remoteDataArray) / 255;
+                                
+                                if (Math.abs(remoteLevel - lastRemoteLevel) > 0.01 || remoteLevel > 0.05) {
+                                    dispatchEvent('onRemoteAudioLevel', { level: remoteLevel });
+                                    lastRemoteLevel = remoteLevel;
+                                }
+                                
+                                if (remoteLevel > 0.05 && !botSpeaking) {
+                                    botSpeaking = true;
+                                    dispatchEvent('onBotStartedSpeaking', {});
+                                } else if (remoteLevel <= 0.05 && botSpeaking) {
+                                    botSpeaking = false;
+                                    dispatchEvent('onBotStoppedSpeaking', {});
+                                }
+                            }
+                        };
+                        
+                        audioState.audioLevelInterval = setInterval(analyzeAudio, 100);
+                        console.log('[PIPECAT STUB] Audio analysis interval started');
+                    };
+                    
+                    const stopAudioAnalysis = () => {
+                        if (audioState.audioLevelInterval) {
+                            clearInterval(audioState.audioLevelInterval);
+                            audioState.audioLevelInterval = null;
+                        }
+                        if (audioState.localAudioContext) {
+                            audioState.localAudioContext.close().catch(() => {});
+                            audioState.localAudioContext = null;
+                        }
+                        if (audioState.remoteAudioContext) {
+                            audioState.remoteAudioContext.close().catch(() => {});
+                            audioState.remoteAudioContext = null;
+                        }
+                    };
+                    
+                    let connectionEventsTriggered = false;
+                    const triggerConnectionEvents = () => {
+                        if (connectionEventsTriggered) {
+                            return;
+                        }
+                        connectionEventsTriggered = true;
+                        console.log('[PIPECAT STUB] Triggering connection events for client:', clientId);
+                        const trigger = () => {
+                            if (window._pipecatEventCallback) {
+                                console.log('[PIPECAT STUB] Callback found, triggering events');
+                                window._pipecatEventCallback('onBotReady', {});
+                                window._pipecatEventCallback('onBotConnected', {});
+                            } else {
+                                console.log('[PIPECAT STUB] Callback not found, dispatching custom events');
+                                window.dispatchEvent(new CustomEvent('pipecat-stub-event', { 
+                                    detail: { eventName: 'onBotReady', data: {} } 
+                                }));
+                                window.dispatchEvent(new CustomEvent('pipecat-stub-event', { 
+                                    detail: { eventName: 'onBotConnected', data: {} } 
+                                }));
+                            }
+                        };
+                        
+                        if (window._pipecatEventCallback) {
+                            trigger();
+                        } else {
+                            trigger();
+                            const checkCallback = setInterval(() => {
+                                if (window._pipecatEventCallback) {
+                                    clearInterval(checkCallback);
+                                    if (!connectionEventsTriggered) {
+                                        connectionEventsTriggered = true;
+                                        trigger();
+                                    }
+                                }
+                            }, 50);
+                            
+                            setTimeout(() => {
+                                clearInterval(checkCallback);
+                            }, 2000);
+                        }
+                    };
+                    
+                    pc.ontrack = (event) => {
+                        console.log('[PIPECAT STUB] Track received:', event.track.kind);
+                        event.streams[0].getTracks().forEach(track => {
+                            if (!remoteStream.getTracks().find(t => t.id === track.id)) {
+                                remoteStream.addTrack(track);
+                                if (track.kind === 'audio') {
+                                    remoteAudio.srcObject = remoteStream;
+                                    remoteAudio.play().catch(err => console.warn('[PIPECAT STUB] Audio play error:', err));
+                                    
+                                    try {
+                                        audioState.remoteAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                                        audioState.remoteAnalyser = audioState.remoteAudioContext.createAnalyser();
+                                        audioState.remoteAnalyser.fftSize = 256;
+                                        audioState.remoteAnalyser.smoothingTimeConstant = 0.8;
+                                        audioState.remoteDataArray = new Uint8Array(audioState.remoteAnalyser.frequencyBinCount);
+                                        const remoteSource = audioState.remoteAudioContext.createMediaStreamSource(remoteStream);
+                                        remoteSource.connect(audioState.remoteAnalyser);
+                                        console.log('[PIPECAT STUB] Remote audio analysis setup complete, tracks:', remoteStream.getAudioTracks().length);
+                                        if (!audioState.audioLevelInterval) {
+                                            startAudioAnalysis();
+                                        }
+                                    } catch (err) {
+                                        console.warn('[PIPECAT STUB] Error setting up remote audio analysis:', err);
+                                    }
+                                    
+                                    triggerConnectionEvents();
+                                }
+                            }
+                        });
+                    };
+                    
+                    pc.oniceconnectionstatechange = () => {
+                        console.log('[PIPECAT STUB] ICE connection state:', pc.iceConnectionState);
+                        if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+                            triggerConnectionEvents();
+                        }
+                    };
+                    
+                    pc.ondatachannel = (event) => {
+                        console.log('[PIPECAT STUB] ===== DATA CHANNEL RECEIVED =====');
+                        console.log('[PIPECAT STUB] Channel label:', event.channel.label);
+                        console.log('[PIPECAT STUB] Channel readyState:', event.channel.readyState);
+                        console.log('[PIPECAT STUB] Channel protocol:', event.channel.protocol);
+                        console.log('[PIPECAT STUB] Channel id:', event.channel.id);
+                        const channel = event.channel;
+                        channel.onmessage = (msg) => {
+                            console.log('[PIPECAT STUB] Raw data channel message:', msg.data);
+                            try {
+                                let data;
+                                if (typeof msg.data === 'string') {
+                                    data = JSON.parse(msg.data);
+                                } else {
+                                    data = msg.data;
+                                }
+                                console.log('[PIPECAT STUB] Parsed data channel message:', data);
+                                
+                                const dispatchEvent = (eventName, eventData) => {
+                                    if (window._pipecatEventCallback) {
+                                        window._pipecatEventCallback(eventName, eventData);
+                                    }
+                                    window.dispatchEvent(new CustomEvent('pipecat-stub-event', {
+                                        detail: { eventName, data: eventData }
+                                    }));
+                                };
+                                
+                                if (data.type === 'transcript' && data.role === 'user') {
+                                    console.log('[PIPECAT STUB] Server data channel - User transcript:', data.text);
+                                    dispatchEvent('onUserTranscript', { text: data.text, final: data.final || false });
+                                } else if (data.type === 'transcript' && data.role === 'assistant') {
+                                    dispatchEvent('onBotOutput', { text: data.text });
+                                } else if (data.type === 'user_transcript' || data.event === 'user_transcript') {
+                                    console.log('[PIPECAT STUB] Server data channel - User transcript (alt format):', data.text || data.transcript);
+                                    dispatchEvent('onUserTranscript', { text: data.text || data.transcript, final: data.final || false });
+                                } else if (data.type === 'bot_transcript' || data.type === 'assistant_transcript' || data.event === 'bot_transcript') {
+                                    dispatchEvent('onBotOutput', { text: data.text || data.transcript });
+                                } else if (data.role === 'user' && data.text) {
+                                    console.log('[PIPECAT STUB] Server data channel - User text:', data.text);
+                                    dispatchEvent('onUserTranscript', { text: data.text, final: data.final || false });
+                                } else if (data.role === 'assistant' && data.text) {
+                                    dispatchEvent('onBotOutput', { text: data.text });
+                                } else if (data.type === 'audio_level') {
+                                    if (data.role === 'user') {
+                                        dispatchEvent('onLocalAudioLevel', { level: data.level });
+                                    } else {
+                                        dispatchEvent('onRemoteAudioLevel', { level: data.level });
+                                    }
+                                } else if (data.type === 'speaking') {
+                                    if (data.role === 'assistant' && data.speaking) {
+                                        dispatchEvent('onBotStartedSpeaking', {});
+                                    } else if (data.role === 'assistant' && !data.speaking) {
+                                        dispatchEvent('onBotStoppedSpeaking', {});
+                                    } else if (data.role === 'user' && data.speaking) {
+                                        dispatchEvent('onUserStartedSpeaking', {});
+                                    } else if (data.role === 'user' && !data.speaking) {
+                                        dispatchEvent('onUserStoppedSpeaking', {});
+                                    }
+                                } else {
+                                    console.log('[PIPECAT STUB] Unknown data channel message format:', data);
+                                }
+                            } catch (e) {
+                                console.warn('[PIPECAT STUB] Error parsing data channel message:', e, 'raw:', msg.data);
+                                if (typeof msg.data === 'string' && msg.data.trim()) {
+                                    console.log('[PIPECAT STUB] Trying to handle as plain text transcript');
+                                    if (window._pipecatEventCallback) {
+                                        window._pipecatEventCallback('onBotOutput', { text: msg.data });
+                                    }
+                                }
+                            }
+                        };
+                        channel.onopen = () => {
+                            console.log('[PIPECAT STUB] Data channel opened:', channel.label);
+                            triggerConnectionEvents();
+                        };
+                        channel.onerror = (error) => {
+                            console.error('[PIPECAT STUB] Data channel error:', error);
+                        };
+                        channel.onclose = () => {
+                            console.log('[PIPECAT STUB] Data channel closed:', channel.label);
+                        };
+                    };
+                    
+                    setTimeout(() => {
+                        const channels = pc.getDataChannels ? pc.getDataChannels() : [];
+                        console.log('[PIPECAT STUB] Checking for data channels, current channels:', channels.length);
+                        channels.forEach((ch, idx) => {
+                            console.log(`[PIPECAT STUB] Data channel ${idx}:`, ch.label, 'readyState:', ch.readyState);
+                        });
+                    }, 3000);
+                    
+                    setTimeout(() => {
+                        const channels = pc.getDataChannels ? pc.getDataChannels() : [];
+                        console.log('[PIPECAT STUB] Checking for data channels again (5s), current channels:', channels.length);
+                        channels.forEach((ch, idx) => {
+                            console.log(`[PIPECAT STUB] Data channel ${idx}:`, ch.label, 'readyState:', ch.readyState);
+                        });
+                    }, 5000);
+                    
+                    pc.onconnectionstatechange = () => {
+                        console.log('[PIPECAT STUB] Connection state changed:', pc.connectionState);
+                    };
+                    
+                    clients.set(clientId, { 
+                        pc, 
+                        remoteStream, 
+                        remoteAudio, 
+                        options: clientOptions, 
+                        transportOptions, 
+                        triggerConnectionEvents,
+                        localStream: null,
+                        audioState,
+                        startAudioAnalysis,
+                        stopAudioAnalysis
+                    });
+                    return clientId;
+                };
+                
+                const connect = async (clientId, options) => {
+                    const client = clients.get(clientId);
+                    if (!client) throw new Error('Client not found');
+                    
+                    const baseUrl = 'http://localhost:7860';
+                    const possibleOfferUrls = [
+                        `${baseUrl}/api/webrtc/offer`,
+                        `${baseUrl}/api/offer`,
+                        `${baseUrl}/webrtc/offer`,
+                        `${baseUrl}/offer`
+                    ];
+                    
+                    let offerUrl = null;
+                    let offerData = null;
+                    
+                    for (const url of possibleOfferUrls) {
+                        try {
+                            console.log('[PIPECAT STUB] Trying offer URL:', url);
+                            
+                            let localStream = null;
+                            if (client.options.enableMic) {
+                                try {
+                                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                                    console.log('[PIPECAT STUB] Got user media, tracks:', localStream.getAudioTracks().length);
+                                    localStream.getAudioTracks().forEach(track => {
+                                        console.log('[PIPECAT STUB] Adding track:', track.id, 'enabled:', track.enabled);
+                                        client.pc.addTrack(track, localStream);
+                                    });
+                                    client.localStream = localStream;
+                                    console.log('[PIPECAT STUB] Local stream stored in client');
+                                } catch (err) {
+                                    console.error('[PIPECAT STUB] Error getting user media:', err);
+                                }
+                            }
+                            
+                            const dataChannel = client.pc.createDataChannel('messages', {
+                                ordered: true
+                            });
+                            
+                            dataChannel.onopen = () => {
+                                console.log('[PIPECAT STUB] Client data channel opened');
+                            };
+                            
+                            dataChannel.onmessage = (event) => {
+                                console.log('[PIPECAT STUB] Client data channel message:', event.data);
+                                
+                                const dispatchEvent = (eventName, eventData) => {
+                                    if (window._pipecatEventCallback) {
+                                        window._pipecatEventCallback(eventName, eventData);
+                                    }
+                                    window.dispatchEvent(new CustomEvent('pipecat-stub-event', {
+                                        detail: { eventName, data: eventData }
+                                    }));
+                                };
+                                
+                                try {
+                                    const message = JSON.parse(event.data);
+                                    console.log('[PIPECAT STUB] Parsed RTVI message:', message);
+                                    
+                                    if (message.type === 'bot-output' && message.data && message.data.text) {
+                                        const text = message.data.text;
+                                        const needsSpace = message.data.aggregated_by === 'word' && text && !text.match(/^[.,!?;:]\s*$/);
+                                        dispatchEvent('onBotOutput', { text: needsSpace ? ' ' + text : text });
+                                    } else if (message.type === 'bot-tts-text' && message.data && message.data.text) {
+                                    } else if (message.type === 'bot-llm-text' && message.data && message.data.text) {
+                                        const text = message.data.text;
+                                        const needsSpace = text && !text.match(/^[.,!?;:]\s*$/);
+                                        dispatchEvent('onBotOutput', { text: needsSpace ? ' ' + text : text });
+                                    } else if (message.type === 'bot-transcription' && message.data && message.data.text) {
+                                        dispatchEvent('onBotOutput', { text: message.data.text });
+                                    } else if (message.type === 'bot-stopped-speaking') {
+                                        dispatchEvent('onBotStoppedSpeaking', {});
+                                    } else if (message.type === 'bot-started-speaking') {
+                                        dispatchEvent('onBotStartedSpeaking', {});
+                                    } else if (message.type === 'user-transcription' && message.data && message.data.text) {
+                                        console.log('[PIPECAT STUB] User transcription received:', message.data.text, 'final:', message.data.final);
+                                        dispatchEvent('onUserTranscript', { text: message.data.text, final: message.data.final || false });
+                                    } else if (message.type === 'user-transcript' && message.data && message.data.text) {
+                                        console.log('[PIPECAT STUB] User transcript received:', message.data.text, 'final:', message.data.final);
+                                        dispatchEvent('onUserTranscript', { text: message.data.text, final: message.data.final || false });
+                                    } else if (message.type === 'user-output' && message.data && message.data.text) {
+                                        console.log('[PIPECAT STUB] User output received:', message.data.text);
+                                        dispatchEvent('onUserTranscript', { text: message.data.text, final: message.data.final || false });
+                                    } else if (message.type === 'user-stt-text' && message.data && message.data.text) {
+                                        console.log('[PIPECAT STUB] User STT text received:', message.data.text);
+                                        dispatchEvent('onUserTranscript', { text: message.data.text, final: message.data.final || false });
+                                    } else if (message.type === 'user-stopped-speaking') {
+                                        dispatchEvent('onUserStoppedSpeaking', {});
+                                    } else if (message.type === 'user-started-speaking') {
+                                        dispatchEvent('onUserStartedSpeaking', {});
+                                    } else {
+                                        console.log('[PIPECAT STUB] Unknown RTVI message type:', message.type, 'full message:', message);
+                                    }
+                                } catch (e) {
+                                    console.warn('[PIPECAT STUB] Error parsing RTVI message:', e, 'raw:', event.data);
+                                }
+                            };
+                            
+                            dataChannel.onerror = (error) => {
+                                console.error('[PIPECAT STUB] Client data channel error:', error);
+                            };
+                            
+                            const offer = await client.pc.createOffer();
+                            await client.pc.setLocalDescription(offer);
+                            
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ sdp: offer.sdp, type: offer.type })
+                            });
+                            
+                            if (response.ok) {
+                                offerUrl = url;
+                                offerData = await response.json();
+                                console.log('[PIPECAT STUB] Successfully got answer from:', url);
+                                
+                                if (localStream) {
+                                    client.localStream = localStream;
+                                    
+                                    try {
+                                        client.audioState.localAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                                        client.audioState.localAnalyser = client.audioState.localAudioContext.createAnalyser();
+                                        client.audioState.localAnalyser.fftSize = 256;
+                                        client.audioState.localAnalyser.smoothingTimeConstant = 0.8;
+                                        client.audioState.localDataArray = new Uint8Array(client.audioState.localAnalyser.frequencyBinCount);
+                                        const localSource = client.audioState.localAudioContext.createMediaStreamSource(localStream);
+                                        localSource.connect(client.audioState.localAnalyser);
+                                        console.log('[PIPECAT STUB] Local audio analysis setup complete, tracks:', localStream.getAudioTracks().length);
+                                        if (!client.audioState.audioLevelInterval) {
+                                            client.startAudioAnalysis();
+                                        }
+                                    } catch (err) {
+                                        console.warn('[PIPECAT STUB] Error setting up local audio analysis:', err);
+                                    }
+                                }
+                                
+                                const answerSdp = offerData.answer || offerData;
+                                await client.pc.setRemoteDescription(new RTCSessionDescription(answerSdp));
+                                
+                                console.log('[PIPECAT STUB] Remote description set, triggering connection events immediately');
+                                console.log('[PIPECAT STUB] Current ICE state:', client.pc.iceConnectionState);
+                                
+                                if (client.triggerConnectionEvents) {
+                                    client.triggerConnectionEvents();
+                                    
+                                    client.pc.oniceconnectionstatechange = () => {
+                                        console.log('[PIPECAT STUB] ICE connection state changed:', client.pc.iceConnectionState);
+                                        if ((client.pc.iceConnectionState === 'connected' || client.pc.iceConnectionState === 'completed') && client.triggerConnectionEvents) {
+                                            client.triggerConnectionEvents();
+                                        }
+                                    };
+                                }
+                                
+                                return;
+                            } else {
+                                const errorText = await response.text().catch(() => '');
+                                console.log(`[PIPECAT STUB] ${url} returned ${response.status}: ${errorText.substring(0, 100)}`);
+                                if (localStream) {
+                                    localStream.getTracks().forEach(track => track.stop());
+                                }
+                                client.pc.close();
+                                client.pc = new RTCPeerConnection(client.transportOptions.iceServers || []);
+                                const remoteStream = new MediaStream();
+                                const remoteAudio = new Audio();
+                                remoteAudio.autoplay = true;
+                                client.pc.ontrack = (event) => {
+                                    event.streams[0].getTracks().forEach(track => {
+                                        if (!remoteStream.getTracks().find(t => t.id === track.id)) {
+                                            remoteStream.addTrack(track);
+                                            if (track.kind === 'audio') {
+                                                remoteAudio.srcObject = remoteStream;
+                                                remoteAudio.play().catch(err => console.warn('[PIPECAT STUB] Audio play error:', err));
+                                            }
+                                        }
+                                    });
+                                };
+                                client.pc.oniceconnectionstatechange = () => {
+                                    console.log('[PIPECAT STUB] ICE connection state:', client.pc.iceConnectionState);
+                                    if (client.pc.iceConnectionState === 'connected' || client.pc.iceConnectionState === 'completed') {
+                                        if (window.electronAPI && window.electronAPI.onPipecatEvent) {
+                                            window.electronAPI.onPipecatEvent('onBotReady', {});
+                                            window.electronAPI.onPipecatEvent('onBotConnected', {});
+                                        }
+                                    }
+                                };
+                                client.remoteStream = remoteStream;
+                                client.remoteAudio = remoteAudio;
+                            }
+                        } catch (error) {
+                            console.log(`[PIPECAT STUB] Error trying ${url}:`, error.message);
+                        }
+                    }
+                    
+                    throw new Error(`Failed to connect using client-offer approach. Tried: ${possibleOfferUrls.join(', ')}`);
+                };
+                
+                const disconnect = async (clientId) => {
+                    const client = clients.get(clientId);
+                    if (client) {
+                        if (client.stopAudioAnalysis) {
+                            client.stopAudioAnalysis();
+                        }
+                        if (client.localStream) {
+                            client.localStream.getTracks().forEach(track => track.stop());
+                        }
+                        if (client.remoteAudio) {
+                            client.remoteAudio.pause();
+                            client.remoteAudio.srcObject = null;
+                        }
+                        client.pc.close();
+                        clients.delete(clientId);
+                    }
+                };
+                
+                const muteMic = async (clientId) => {
+                    const client = clients.get(clientId);
+                    if (client && client.localStream) {
+                        client.localStream.getAudioTracks().forEach(track => track.enabled = false);
+                    }
+                };
+                
+                const unmuteMic = async (clientId) => {
+                    const client = clients.get(clientId);
+                    if (client && client.localStream) {
+                        client.localStream.getAudioTracks().forEach(track => track.enabled = true);
+                    }
+                };
+                
+                const isMicEnabled = (clientId) => {
+                    const client = clients.get(clientId);
+                    if (!client) {
+                        console.log('[PIPECAT STUB] isMicEnabled: client not found, returning true');
+                        return true;
+                    }
+                    
+                    if (client.localStream) {
+                        const tracks = client.localStream.getAudioTracks();
+                        if (tracks.length > 0) {
+                            const enabled = tracks[0].enabled;
+                            console.log('[PIPECAT STUB] isMicEnabled check:', enabled, 'tracks:', tracks.length);
+                            return enabled;
+                        }
+                    }
+                    
+                    if (client.options && client.options.enableMic !== false) {
+                        console.log('[PIPECAT STUB] isMicEnabled: enableMic is true, returning true (default)');
+                        return true;
+                    }
+                    
+                    console.log('[PIPECAT STUB] isMicEnabled: enableMic is false, returning false');
+                    return false;
+                };
+                
+                const enableSpeaker = async (clientId) => {
+                    return true;
+                };
+                
+                const destroyPipecatClient = (clientId) => {
+                    disconnect(clientId);
+                };
+                
+                return {
+                    createPipecatClient,
+                    connect,
+                    disconnect,
+                    muteMic,
+                    unmuteMic,
+                    isMicEnabled,
+                    enableSpeaker,
+                    destroyPipecatClient
+                };
+            };
+            
+            const loadPipecatModules = async () => {
+                if (modulesLoaded) return;
+                
+                const serverReady = await checkServerReady();
+                if (!serverReady) {
+                    console.log('[PIPECAT] Server not ready yet, retrying...');
+                    setTimeout(loadPipecatModules, 2000);
+                    return;
+                }
+                
+                console.log('[PIPECAT] Creating modules stub...');
+                window.pipecatModules = createPipecatModulesStub();
+                modulesLoaded = true;
+                window.dispatchEvent(new Event('pipecat-modules-loaded'));
+                console.log('[PIPECAT] Modules stub created and ready');
+            };
+            
+            const init = () => {
+                if (window.electronAPI && window.electronAPI.onBackendReady) {
+                    window.electronAPI.onBackendReady(() => {
+                        console.log('[PIPECAT] Backend ready, loading modules...');
+                        setTimeout(loadPipecatModules, 500);
+                    });
+                }
+                setTimeout(loadPipecatModules, 2000);
+            };
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
 </head>
 
 <body>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-visualizer">
+            <div class="loading-visualizer-side loading-visualizer-left">
+                <div class="loading-visualizer-bar"></div>
+                <div class="loading-visualizer-bar"></div>
+                <div class="loading-visualizer-bar"></div>
+            </div>
+            <div class="loading-visualizer-square">
+                <div class="loading-logo-text">J.A.R.V.I.S</div>
+            </div>
+            <div class="loading-visualizer-side loading-visualizer-right">
+                <div class="loading-visualizer-bar"></div>
+                <div class="loading-visualizer-bar"></div>
+                <div class="loading-visualizer-bar"></div>
+            </div>
+        </div>
+        <div class="loading-status">
+            <div class="loading-message" id="loading-message">Initialisation en cours...</div>
+            <div class="loading-processes" id="loading-processes"></div>
+        </div>
+    </div>
+    
     <div id="onboarding-overlay" class="onboarding-overlay">
         <div class="onboarding-window-controls">
             <button class="window-control-btn minimize-btn" id="onboarding-minimize-btn" title="Minimiser">
@@ -191,24 +836,14 @@
             <div class="taskbar-left">
                 <h1 class="app-title">J.A.R.V.I.S</h1>
                 <span class="user-greeting" id="user-greeting"></span>
-                <div class="taskbar-buttons">
-                    <button class="taskbar-btn" id="btn-plugins">
-                        <span class="btn-icon"></span>
-                        <span class="btn-text"><span id="plugins-count">2</span> Plugins</span>
-                    </button>
-                    <button class="taskbar-btn" id="btn-devices">
-                        <span class="btn-icon"></span>
-                        <span class="btn-text"><span id="devices-count">3</span> Devices</span>
-                    </button>
-                </div>
             </div>
             <div class="taskbar-right">
                 <div class="mini-taskbar">
-                    <button class="mini-btn" id="mini-btn-1" title="Security"></button>
-                    <button class="mini-btn" id="mini-btn-2" title="Location"></button>
-                    <button class="mini-btn" id="mini-btn-3" title="Feedback"></button>
-                    <button class="mini-btn" id="mini-btn-4" title="Settings"></button>
-                    <button class="mini-btn" id="mini-btn-5" title="More"></button>
+                    <button class="taskbar-btn" id="voice-connect-btn" title="Se connecter">
+                        <span class="btn-text">Connexion</span>
+                    </button>
+                    <button class="mini-btn" id="voice-mic-btn" title="Activer/Désactiver le micro"></button>
+                    <button class="mini-btn" id="btn-settings" title="Paramètres"></button>
                 </div>
                 <div class="system-info">
                     <span class="time" id="current-time">11:32 AM</span>
@@ -305,6 +940,134 @@
                     <p>Page Devices - À venir</p>
                 </div>
             </div>
+
+            <div id="page-settings" class="page" style="display: none;">
+                <div class="settings-wrapper">
+                    <div class="settings-sidebar">
+                        <button class="settings-back-btn" id="settings-back-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Retour
+                        </button>
+                        <div class="settings-sidebar-title">Paramètres</div>
+                        <nav class="settings-nav">
+                            <button class="settings-nav-item active" data-category="audio">
+                                <span class="settings-nav-icon" data-icon="audio"></span>
+                                <span class="settings-nav-label">Audio</span>
+                            </button>
+                            <button class="settings-nav-item" data-category="general">
+                                <span class="settings-nav-icon" data-icon="general"></span>
+                                <span class="settings-nav-label">Général</span>
+                            </button>
+                            <button class="settings-nav-item" data-category="advanced">
+                                <span class="settings-nav-icon" data-icon="advanced"></span>
+                                <span class="settings-nav-label">Avancé</span>
+                            </button>
+                        </nav>
+                    </div>
+                    
+                    <div class="settings-content">
+                        <div class="settings-category" id="settings-category-audio">
+                            <h2 class="settings-category-title">Audio</h2>
+                            
+                            <div class="settings-section">
+                                <h3 class="settings-section-title">Périphériques audio</h3>
+                                
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-audio-input">Microphone</label>
+                                    <select id="settings-audio-input" class="settings-select">
+                                        <option value="">Chargement...</option>
+                                    </select>
+                                </div>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-audio-output">Haut-parleurs</label>
+                                    <select id="settings-audio-output" class="settings-select">
+                                        <option value="">Chargement...</option>
+                                    </select>
+                                </div>
+
+                                <div class="settings-actions">
+                                    <button id="settings-refresh-btn" class="settings-btn settings-btn-secondary">
+                                        Actualiser les périphériques
+                                    </button>
+                                    <button id="settings-save-btn" class="settings-btn settings-btn-primary">
+                                        Enregistrer
+                                    </button>
+                                </div>
+
+                                <div id="settings-message" class="settings-message" style="display: none;"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-category" id="settings-category-general" style="display: none;">
+                            <h2 class="settings-category-title">Général</h2>
+                            
+                            <div class="settings-section">
+                                <h3 class="settings-section-title">Profil utilisateur</h3>
+                                
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-first-name">Prénom</label>
+                                    <input type="text" id="settings-first-name" class="settings-input" placeholder="Votre prénom">
+                                </div>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-birth-date">Date de naissance</label>
+                                    <input type="date" id="settings-birth-date" class="settings-input">
+                                </div>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-country">Pays</label>
+                                    <input type="text" id="settings-country" class="settings-input" placeholder="Votre pays">
+                                </div>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-city">Ville</label>
+                                    <input type="text" id="settings-city" class="settings-input" placeholder="Votre ville">
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <h3 class="settings-section-title">Clés API</h3>
+                                
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-api-openai">OpenAI API Key</label>
+                                    <input type="password" id="settings-api-openai" class="settings-input" placeholder="sk-...">
+                                    <small class="settings-hint">Utilisée pour le LLM (GPT-4o-mini)</small>
+                                </div>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-api-deepgram">Deepgram API Key</label>
+                                    <input type="password" id="settings-api-deepgram" class="settings-input" placeholder="Votre clé Deepgram">
+                                    <small class="settings-hint">Utilisée pour la reconnaissance vocale (STT)</small>
+                                </div>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-api-cartesia">Cartesia API Key</label>
+                                    <input type="password" id="settings-api-cartesia" class="settings-input" placeholder="Votre clé Cartesia">
+                                    <small class="settings-hint">Utilisée pour la synthèse vocale (TTS)</small>
+                                </div>
+
+                                <div class="settings-actions">
+                                    <button id="settings-save-api-btn" class="settings-btn settings-btn-primary">
+                                        Enregistrer les clés API
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-category" id="settings-category-advanced" style="display: none;">
+                            <h2 class="settings-category-title">Avancé</h2>
+                            <div class="settings-section">
+                                <p style="color: #666; text-align: center; padding: 40px;">
+                                    Paramètres avancés à venir
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -315,6 +1078,10 @@
     <script src="js/navigation.js"></script>
     <script src="js/plugins.js"></script>
     <script src="js/onboarding.js"></script>
+    <script src="js/loading.js"></script>
+    <script src="js/pipecatAdapter.js"></script>
+    <script src="js/voice.js"></script>
+    <script src="js/settings.js"></script>
 </body>
 
 </html>

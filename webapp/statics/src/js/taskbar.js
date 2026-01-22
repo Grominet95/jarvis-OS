@@ -1,12 +1,6 @@
 function initTaskbar() {
-    setIcon(document.querySelector('#btn-plugins .btn-icon'), 'plugins');
-    setIcon(document.querySelector('#btn-devices .btn-icon'), 'devices');
-
-    setIcon(document.querySelector('#mini-btn-1'), 'security');
-    setIcon(document.querySelector('#mini-btn-2'), 'location');
-    setIcon(document.querySelector('#mini-btn-3'), 'feedback');
-    setIcon(document.querySelector('#mini-btn-4'), 'settings');
-    setIcon(document.querySelector('#mini-btn-5'), 'more');
+    setIcon(document.querySelector('#voice-mic-btn'), 'microphone');
+    setIcon(document.querySelector('#btn-settings'), 'settings');
 
     setIcon(document.querySelector('.camera-placeholder'), 'camera');
 
@@ -57,19 +51,6 @@ function initTaskbar() {
         }
     }
 
-    const taskbarButtons = document.querySelectorAll('.taskbar-btn');
-    taskbarButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            console.log('Taskbar button clicked:', btn.id);
-        });
-    });
-
-    const miniButtons = document.querySelectorAll('.mini-btn');
-    miniButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            console.log('Mini button clicked:', btn.id);
-        });
-    });
 
     const deactivateBtn = document.getElementById('deactivate-btn');
     if (deactivateBtn) {

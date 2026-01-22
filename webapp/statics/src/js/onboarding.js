@@ -9,6 +9,33 @@ const Onboarding = {
         city: ''
     },
 
+    async checkFirstInstall() {
+        try {
+            if (window.electronAPI && window.electronAPI.isFirstInstall) {
+                const isFirst = await window.electronAPI.isFirstInstall();
+                if (isFirst) {
+                    setTimeout(() => {
+                        this.show();
+                    }, 300);
+                } else {
+                    this.hide();
+                }
+            } else {
+                const hasCompletedOnboarding = localStorage.getItem('jarvis_onboarding_completed');
+                if (!hasCompletedOnboarding) {
+                    setTimeout(() => {
+                        this.show();
+                    }, 300);
+                } else {
+                    this.hide();
+                }
+            }
+        } catch (error) {
+            console.error('Error checking first install:', error);
+            this.hide();
+        }
+    },
+
     init() {
         const minimizeBtn = document.getElementById('onboarding-minimize-btn');
         const closeBtn = document.getElementById('onboarding-close-btn');
@@ -32,15 +59,7 @@ const Onboarding = {
             }
         }
 
-        const hasCompletedOnboarding = localStorage.getItem('jarvis_onboarding_completed');
-
-        if (!hasCompletedOnboarding) {
-            setTimeout(() => {
-                this.show();
-            }, 300);
-        } else {
-            this.hide();
-        }
+        this.checkFirstInstall();
     },
 
     show() {
@@ -363,22 +382,36 @@ const Onboarding = {
         }, 500);
     },
 
-    completeOnboarding() {
-        localStorage.setItem('jarvis_onboarding_completed', 'true');
-        if (this.userData.name) {
-            localStorage.setItem('jarvis_user_name', this.userData.name);
-        }
-        if (this.userData.email) {
-            localStorage.setItem('jarvis_user_email', this.userData.email);
-        }
-        if (this.userData.birthdate) {
-            localStorage.setItem('jarvis_user_birthdate', this.userData.birthdate);
-        }
-        if (this.userData.country) {
-            localStorage.setItem('jarvis_user_country', this.userData.country);
-        }
-        if (this.userData.city) {
-            localStorage.setItem('jarvis_user_city', this.userData.city);
+    async completeOnboarding() {
+        try {
+            if (window.electronAPI && window.electronAPI.updateUserProfile) {
+                const profile = {
+                    first_name: this.userData.name || '',
+                    birth_date: this.userData.birthdate || '',
+                    country: this.userData.country || '',
+                    city: this.userData.city || ''
+                };
+                await window.electronAPI.updateUserProfile(profile);
+            } else {
+                localStorage.setItem('jarvis_onboarding_completed', 'true');
+                if (this.userData.name) {
+                    localStorage.setItem('jarvis_user_name', this.userData.name);
+                }
+                if (this.userData.email) {
+                    localStorage.setItem('jarvis_user_email', this.userData.email);
+                }
+                if (this.userData.birthdate) {
+                    localStorage.setItem('jarvis_user_birthdate', this.userData.birthdate);
+                }
+                if (this.userData.country) {
+                    localStorage.setItem('jarvis_user_country', this.userData.country);
+                }
+                if (this.userData.city) {
+                    localStorage.setItem('jarvis_user_city', this.userData.city);
+                }
+            }
+        } catch (error) {
+            console.error('Error completing onboarding:', error);
         }
 
         const overlay = document.getElementById('onboarding-overlay');
