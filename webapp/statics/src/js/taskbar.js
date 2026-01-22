@@ -2,8 +2,6 @@ function initTaskbar() {
     setIcon(document.querySelector('#voice-mic-btn'), 'microphone');
     setIcon(document.querySelector('#btn-settings'), 'settings');
 
-    setIcon(document.querySelector('.camera-placeholder'), 'camera');
-
     const hasCompletedOnboarding = localStorage.getItem('jarvis_onboarding_completed');
     if (hasCompletedOnboarding) {
         const appContainer = document.querySelector('.app-container');
@@ -18,14 +16,6 @@ function initTaskbar() {
             setTimeout(() => {
                 userGreeting.classList.add('visible');
             }, 300);
-        }
-
-        const chatContainer = document.getElementById('chat-container');
-        if (chatContainer && chatContainer.children.length === 0) {
-            const welcomeMessage = document.createElement('div');
-            welcomeMessage.className = 'message system-message';
-            welcomeMessage.innerHTML = `<p>Bonjour ${userName || 'Utilisateur'} ! Comment puis-je t'aider aujourd'hui ?</p>`;
-            chatContainer.appendChild(welcomeMessage);
         }
     }
 
@@ -49,14 +39,6 @@ function initTaskbar() {
         if (windowControls) {
             windowControls.style.display = 'none';
         }
-    }
-
-
-    const deactivateBtn = document.getElementById('deactivate-btn');
-    if (deactivateBtn) {
-        deactivateBtn.addEventListener('click', () => {
-            console.log('Deactivate button clicked');
-        });
     }
 }
 

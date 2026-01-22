@@ -438,7 +438,6 @@ const Onboarding = {
     },
 
     showWelcomeMessage() {
-        const chatContainer = document.getElementById('chat-container');
         const userGreeting = document.getElementById('user-greeting');
         const userName = this.userData.name || localStorage.getItem('jarvis_user_name') || 'Utilisateur';
 
@@ -447,19 +446,6 @@ const Onboarding = {
             setTimeout(() => {
                 userGreeting.classList.add('visible');
             }, 300);
-        }
-
-        if (chatContainer) {
-            setTimeout(() => {
-                const welcomeMessage = document.createElement('div');
-                welcomeMessage.className = 'message system-message';
-                welcomeMessage.innerHTML = `<p>Bonjour ${userName} ! Comment puis-je t'aider aujourd'hui ?</p>`;
-                chatContainer.appendChild(welcomeMessage);
-
-                setTimeout(() => {
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                }, 100);
-            }, 500);
         }
     }
 };
