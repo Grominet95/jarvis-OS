@@ -4,19 +4,35 @@
     left: 0;
     right: 0;
     bottom: 0;
+    width: 100%;
     background: linear-gradient(135deg, rgba(252, 252, 252, 0.99) 0%, rgba(250, 250, 250, 0.96) 50%, rgba(245, 247, 250, 0.96) 100%);
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
     z-index: 10000;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 40px;
     opacity: 1;
     transition: opacity 0.5s ease-out;
     border-radius: 20px;
     overflow: hidden;
+    box-sizing: border-box;
+}
+
+.loading-overlay-inner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    width: 90%;
+    max-width: 520px;
+    padding: 0 24px;
+    box-sizing: border-box;
 }
 
 .loading-overlay.hidden {
@@ -34,6 +50,7 @@
     justify-content: center;
     gap: 50px;
     padding: 0 40px;
+    margin: 0 auto;
 }
 
 .loading-visualizer-square {
@@ -74,7 +91,8 @@
             rgba(91, 163, 245, 0.35) 270deg,
             rgba(91, 163, 245, 0.25) 275deg,
             transparent 360deg);
-    animation: loadingRotate 3s linear infinite;
+    animation: loadingRotate 2.7s linear infinite;
+    animation-delay: 0s;
     will-change: transform;
     transform: translateZ(0) rotate(0deg);
 }
@@ -83,6 +101,7 @@
     0% {
         transform: translateZ(0) rotate(0deg);
     }
+
     100% {
         transform: translateZ(0) rotate(360deg);
     }
@@ -103,10 +122,13 @@
 }
 
 @keyframes loadingTextGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         text-shadow: 0 2px 10px rgba(91, 163, 245, 0.4),
             0 0 25px rgba(91, 163, 245, 0.3);
     }
+
     50% {
         text-shadow: 0 2px 15px rgba(91, 163, 245, 0.6),
             0 0 35px rgba(91, 163, 245, 0.5);
@@ -149,7 +171,8 @@
             rgba(91, 163, 245, 0.8) 50%,
             rgba(91, 163, 245, 0.6) 70%,
             transparent 100%);
-    animation: loadingBarSweep 2.5s ease-in-out infinite;
+    animation: loadingBarSweep 2.3s ease-in-out infinite;
+    animation-delay: 0.6s;
     box-shadow: 0 0 12px rgba(91, 163, 245, 0.5);
 }
 
@@ -158,15 +181,19 @@
         left: -70%;
         opacity: 0;
     }
+
     20% {
         opacity: 0.9;
     }
+
     50% {
         opacity: 1;
     }
+
     80% {
         opacity: 0.9;
     }
+
     100% {
         left: 170%;
         opacity: 0;
@@ -202,8 +229,8 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    max-width: 500px;
     width: 100%;
+    text-align: center;
 }
 
 .loading-message {
@@ -212,11 +239,13 @@
     font-weight: 600;
     color: #333;
     text-align: center;
+    width: 100%;
 }
 
 .loading-processes {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 12px;
     width: 100%;
 }
@@ -224,6 +253,7 @@
 .loading-process {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     padding: 12px 16px;
     background: rgba(255, 255, 255, 0.6);
@@ -232,6 +262,19 @@
     border-radius: 12px;
     border: 1px solid rgba(91, 163, 245, 0.1);
     transition: all 0.3s ease;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.loading-process-icon-wrap {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .loading-process.active {
@@ -250,25 +293,30 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-.loading-process-icon.spinner {
+.loading-process-spinner {
     border: 2px solid rgba(91, 163, 245, 0.2);
     border-top-color: #5BA3F5;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: loadingSpin 1.1s linear infinite;
 }
 
-@keyframes spin {
+@keyframes loadingSpin {
     to {
         transform: rotate(360deg);
     }
 }
 
-.loading-process-icon.check {
+.loading-process-check {
     color: #5BA3F5;
     font-size: 16px;
     font-weight: bold;
+    animation: none;
+    transform: none;
 }
 
 .loading-process-text {
@@ -277,6 +325,7 @@
     font-size: 14px;
     color: #333;
     font-weight: 500;
+    text-align: left;
 }
 
 .loading-process.active .loading-process-text {

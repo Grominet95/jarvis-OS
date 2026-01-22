@@ -126,37 +126,45 @@ class LoadingManager {
             processEl = document.createElement('div');
             processEl.id = `loading-process-current`;
             processEl.className = 'loading-process';
+            const spinnerEl = document.createElement('div');
+            spinnerEl.className = 'loading-process-icon loading-process-spinner';
+            const checkEl = document.createElement('div');
+            checkEl.className = 'loading-process-icon loading-process-check';
+            checkEl.textContent = '\u2713';
+            const textEl = document.createElement('div');
+            textEl.className = 'loading-process-text';
+            const iconWrap = document.createElement('div');
+            iconWrap.className = 'loading-process-icon-wrap';
+            iconWrap.appendChild(spinnerEl);
+            iconWrap.appendChild(checkEl);
+            processEl.appendChild(iconWrap);
+            processEl.appendChild(textEl);
             this.loadingProcesses.innerHTML = '';
             this.loadingProcesses.appendChild(processEl);
         }
 
-        const iconEl = processEl.querySelector('.loading-process-icon') || document.createElement('div');
-        iconEl.className = 'loading-process-icon';
-        
-        const textEl = processEl.querySelector('.loading-process-text') || document.createElement('div');
-        textEl.className = 'loading-process-text';
+        const iconWrap = processEl.querySelector('.loading-process-icon-wrap');
+        const spinnerEl = processEl.querySelector('.loading-process-spinner');
+        const checkEl = processEl.querySelector('.loading-process-check');
+        const textEl = processEl.querySelector('.loading-process-text');
         textEl.textContent = processToShow.label;
 
         processEl.className = 'loading-process';
+        spinnerEl.style.display = 'none';
+        checkEl.style.display = 'none';
         
         if (processToShow.status === 'active') {
             processEl.classList.add('active');
-            iconEl.classList.add('spinner');
+            spinnerEl.style.display = '';
             this.loadingMessage.textContent = processToShow.label;
         } else if (processToShow.status === 'completed') {
             processEl.classList.add('completed');
-            iconEl.classList.remove('spinner');
-            iconEl.classList.add('check');
-            iconEl.textContent = '✓';
-        } else {
-            iconEl.classList.remove('spinner', 'check');
+            checkEl.style.display = '';
+            this.loadingMessage.textContent = processToShow.label;
         }
 
-        if (!iconEl.parentElement) {
-            processEl.appendChild(iconEl);
-        }
-        if (!textEl.parentElement) {
-            processEl.appendChild(textEl);
+        if (!iconWrap.parentElement) {
+            processEl.insertBefore(iconWrap, textEl);
         }
     }
 
