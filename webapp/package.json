@@ -6,7 +6,16 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "postinstall": "electron-rebuild -f -w better-sqlite3"
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "prepare-build": "node scripts/prepare-build.js",
+    "download-uv": "node scripts/download-uv.js",
+    "download-uv:all": "node scripts/download-uv.js --all",
+    "prebuild": "npm run prepare-build && npm run download-uv",
+    "build": "npm run prebuild && electron-builder",
+    "build:win": "npm run prebuild && electron-builder --win",
+    "build:linux": "npm run prebuild && electron-builder --linux",
+    "build:mac": "npm run prebuild && electron-builder --mac",
+    "build:all": "npm run prepare-build && npm run download-uv:all && electron-builder --win --linux --mac"
   },
   "keywords": [
     "electron",
@@ -15,9 +24,26 @@
   ],
   "author": "",
   "license": "MIT",
+  "build": {
+    "appId": "ai.jarvis.electron",
+    "productName": "Jarvis",
+    "directories": { "output": "dist" },
+    "files": ["electron/**/*", "statics/**/*", "package.json"],
+    "extraResources": [
+      { "from": "resources/bin", "to": "bin" },
+      { "from": "resources/python-project", "to": "python-project" }
+    ],
+    "win": { "target": ["nsis", "portable"] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "linux": { "target": ["AppImage", "deb"], "category": "Utility" },
+    "mac": { "target": ["dmg"], "category": "public.app-category.utilities" }
+  },
   "devDependencies": {
     "@electron/rebuild": "^3.7.2",
-    "electron": "^28.0.0"
+    "electron": "^28.0.0",
+    "electron-builder": "^25.0.0",
+    "extract-zip": "^2.0.1",
+    "tar": "^6.2.0"
   },
   "dependencies": {
     "better-sqlite3": "^11.0.0"

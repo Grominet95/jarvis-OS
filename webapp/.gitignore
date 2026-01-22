@@ -204,6 +204,8 @@ __marimo__/
 
 # Node.js / Electron
 node_modules/
+resources/bin/
+resources/python-project/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
