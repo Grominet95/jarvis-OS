@@ -1,327 +1,225 @@
-<div align="center">
-
 # Jarvis OS
 
-**Assistant personnel intelligent multi-devices**
+Assistant vocal personnel : application Electron avec interface graphique, propulsée par Pipecat (WebRTC), OpenAI, Deepgram et Cartesia.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D22.13.1-brightgreen.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
-[![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](https://www.python.org/)
-
-<a href="https://discord.gg/STEdPHu6Sx">
-  <img src="src/images/gg.png" alt="Rejoindre le Discord officiel">
-</a>
-
-</div>
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 
 ---
 
-Jarvis est un assistant personnel intelligent conçu pour fonctionner sur plusieurs devices, des lunettes connectées aux ordinateurs, en passant par d'autres interfaces. L'objectif est de créer une plateforme d'assistant capable de comprendre la voix, la vision et le contexte, puis d'agir via des outils et des skills modulaires, tout en proposant une interface riche avec des widgets sur écran.
+## Vision
+
+Jarvis est un **assistant vocal desktop** : tu parles, il répond par la voix. L’app embarque un bot Pipecat (STT, LLM, TTS) et une interface moderne pour te connecter, configurer les clés API et les paramètres (audio, voix, langue). On peut construire une version installable (Windows, Linux, macOS) : au premier lancement, l’app installe elle-même Python, uv et les dépendances, et affiche les étapes dans l’écran de chargement.
 
 ---
 
 ## Table des matières
 
-- [Jarvis OS](#jarvis-os)
-  - [Table des matières](#table-des-matières)
-  - [Vision](#vision)
-  - [Architecture](#architecture)
-    - [1. Noyau intelligent (server/orchestrator)](#1-noyau-intelligent-serverorchestrator)
-    - [2. Architecture multi-clients](#2-architecture-multi-clients)
-    - [3. Plateforme ouverte](#3-plateforme-ouverte)
-  - [Technologies](#technologies)
-    - [Stack principale](#stack-principale)
-  - [Installation](#installation)
-    - [Prérequis](#prérequis)
-    - [Setup](#setup)
-    - [Configuration](#configuration)
-    - [Démarrage](#démarrage)
-  - [Skills](#skills)
-    - [Skills disponibles](#skills-disponibles)
-    - [Créer un skill](#créer-un-skill)
-  - [Widgets](#widgets)
-    - [Exemple d'utilisation](#exemple-dutilisation)
-  - [Structure du projet](#structure-du-projet)
-  - [Développement](#développement)
-    - [Scripts disponibles](#scripts-disponibles)
-    - [Architecture technique](#architecture-technique)
-  - [Roadmap](#roadmap)
-  - [Communauté](#communauté)
-  - [Contribution](#contribution)
-  - [Créateur](#créateur)
-  - [Licence](#licence)
-  - [Remerciements](#remerciements)
+- [Technologies](#technologies)
+- [Prérequis](#prérequis)
+- [Installation et build](#installation-et-build)
+  - [Utilisateurs : installer l’app](#utilisateurs--installer-lapp)
+  - [Développeurs : lancer en dev](#développeurs--lancer-en-dev)
+- [Configuration](#configuration)
+- [Utilisation](#utilisation)
+- [Structure du projet](#structure-du-projet)
+- [Build multi-plateformes](#build-multi-plateformes)
+- [Dépannage](#dépannage)
+- [Contribution](#contribution)
+- [Créateur](#créateur)
+- [Licence](#licence)
 
-## Vision
-
-> **Jarvis vise à devenir un véritable assistant personnel programmable, orienté produit et non simple démo technique.**
-
-Le projet a une ambition de commercialisation tout en conservant une forte dimension communautaire et open-source.
-
-**L'idée centrale** : construire une plateforme où les développeurs peuvent créer des "apps" (skills) pour étendre les capacités de Jarvis, avec un système de widgets déclaratifs pour afficher des interfaces dynamiques. À terme, Jarvis devrait être l'assistant personnel que vous pouvez personnaliser et programmer selon vos besoins.
-
-## Architecture
-
-Le projet repose sur **trois piliers fondamentaux** qui forment l'ossature de Jarvis :
-
-### 1. Noyau intelligent (server/orchestrator)
-
-**Le cerveau de Jarvis**
-
-Le serveur central gère la voix (STT/TTS), la vision et la logique IA. Il orchestre les actions via des tools et des skills, conçu pour être rapide, extensible et commercialisable.
-
-| Fonctionnalité | Description |
-| -------------- | ----------- |
-| **Traitement du langage naturel** | Classification d'intentions, extraction d'entités, gestion du contexte conversationnel |
-| **Gestion de la voix** | Reconnaissance vocale (STT) et synthèse vocale (TTS) avec support de multiples providers |
-| **Orchestration** | Routage des requêtes vers les skills appropriés, gestion des sessions multi-clients |
-| **LLM** | Support pour modèles locaux et cloud (Groq, etc.) |
-
-### 2. Architecture multi-clients
-
-**Une session partagée, plusieurs interfaces**
-
-Les différents devices se connectent au même serveur et partagent la même session :
-
-| Device | Rôle |
-| ------ | ---- |
-| **Lunettes connectées** | Interface vocale et visuelle légère |
-| **Ordinateur** | Cockpit avec interface graphique complète et widgets |
-| **Autres devices** | Architecture extensible pour de nouveaux types d'interfaces |
-
-> La communication se fait via **Socket.io** pour le temps réel et **HTTP** pour les API REST.
-
-### 3. Plateforme ouverte
-
-**Extensible par la communauté**
-
-Système d'applications (skills) permettant aux développeurs de créer des extensions :
-
-- **Skills modulaires** : Chaque skill est indépendant et peut être développé en Python ou TypeScript
-- **Widgets déclaratifs** : Système de widgets basé sur Aurora pour afficher des interfaces dynamiques
-- **Bridges** : SDK pour Node.js et Python facilitant le développement de nouveaux skills
-- **Tools** : Système d'outils réutilisables pour les skills
+---
 
 ## Technologies
 
-### Stack principale
+| Rôle | Stack |
+|------|--------|
+| **Desktop** | Electron |
+| **Voix (STT)** | Deepgram |
+| **LLM** | OpenAI (GPT-4o-mini) |
+| **Voix (TTS)** | Cartesia |
+| **Pipeline vocal** | Pipecat (WebRTC) |
+| **Python** | uv, pyproject.toml |
 
-| Catégorie | Technologies |
-| --------- | ----------- |
-| **Backend** | ![Node.js](https://img.shields.io/badge/Node.js-22+-green) ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue) |
-| **Frontend** | ![React](https://img.shields.io/badge/React-18.3-61dafb) ![Vite](https://img.shields.io/badge/Vite-4.5-646cff) |
-| **Python** | Serveur TCP pour STT/TTS/ASR, skills Python |
-| **Communication** | ![Socket.io](https://img.shields.io/badge/Socket.io-4.7-010101) ![Fastify](https://img.shields.io/badge/Fastify-4.26-000000) |
-| **NLP** | node-nlp, spaCy |
-| **LLM** | Support local (node-llama-cpp) et cloud (Groq) |
-| **Widgets** | Aurora component library |
+L’UI est en HTML/CSS/JS (vanilla) dans `webapp/statics/`. Données locales (profil, clés API, paramètres) en SQLite via `better-sqlite3`.
 
-## Installation
+---
 
-### Prérequis
+## Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
+**Pour utiliser l’app buildée :** aucun. L’installer, la lancer : au premier démarrage, elle installe Python, uv et `uv sync` et affiche les étapes.
 
-- **Node.js** >= 22.13.1
-- **npm** >= 10.9.2
-- **Python** 3.x avec Pipenv
-- **FFmpeg** (pour le traitement audio)
+**Pour développer :**
 
-### Setup
+- **Node.js** >= 18 (avec npm)
+- **Python** 3.10+
+- **uv** – [Installation](https://docs.astral.sh/uv/getting-started/installation)
 
-```bash
-# Cloner le repository
-git clone https://github.com/votre-username/jarvis-OS.git
-cd jarvis-OS
+**Clés API (obligatoires pour le bot) :**
 
-# Installer les dépendances
-npm install
+- **OpenAI** – [Clé](https://platform.openai.com/api-keys)
+- **Deepgram** – [Clé](https://console.deepgram.com/signup)
+- **Cartesia** – [Clé](https://play.cartesia.ai/sign-up)
 
-# Le postinstall configurera automatiquement l'environnement Python
-# Si besoin, configurer manuellement :
-npm run setup:python-bridge
-npm run setup:tcp-server
+Elles se configurent dans **Paramètres > Général > Clés API** (stockées en base).
 
-# Entraîner les modèles NLP
-npm run train
+---
 
-# Générer les endpoints des skills
-npm run generate:skills-endpoints
-```
+## Installation et build
 
-### Configuration
+Tout se fait depuis le dossier **`webapp/`**.
 
-Créer un fichier `.env` à la racine avec vos configurations (voir `.env.example` si disponible).
+### Utilisateurs : installer l’app
 
-### Démarrage
+1. Cloner le dépôt, aller dans `webapp` :
+   ```bash
+   git clone https://github.com/votre-username/jarvis-OS.git
+   cd jarvis-OS/webapp
+   ```
 
-```bash
-# Mode développement (serveur + app)
-npm run dev:server
-npm run dev:app
+2. Construire selon ta plateforme :
+   ```bash
+   npm install
+   npm run build:win    # Windows
+   npm run build:linux  # Linux
+   npm run build:mac    # macOS
+   ```
 
-# Mode production
-npm run build
-npm start
-```
+3. Installer et lancer :
+   - **Windows** : `dist/Jarvis Setup 1.0.0.exe` (NSIS) ou `dist/Jarvis 1.0.0.exe` (portable)
+   - **Linux** : `dist/*.AppImage` ou `dist/*.deb`
+   - **macOS** : `dist/*.dmg`
 
-## Skills
+Au **premier lancement**, l’app va :
 
-Les skills sont des modules indépendants qui étendent les capacités de Jarvis.
+1. Vérifier / installer **uv**
+2. Installer **Python** (via uv)
+3. Lancer **uv sync** (dépendances du bot)
 
-### Skills disponibles
+Tu vois ces étapes dans l’écran de chargement. Ensuite, onboarding (profil) puis interface principale.
 
-| Skill | Description |
-| ----- | ----------- |
-| **Todo List** | Gestion de listes de tâches avec widgets interactifs |
-| **Timer** | Minuteries et rappels |
-| **News** | Actualités (GitHub Trends, Product Hunt, etc.) |
-| **Weather** | Météo |
-| **Translator** | Traduction de texte et vidéos |
-| **Games** | Jeux interactifs (Akinator, etc.) |
-| **Utilities** | Outils divers (date/time, speed test, etc.) |
+### Développeurs : lancer en dev
 
-### Créer un skill
+1. Dans `webapp/` :
+   ```bash
+   npm install
+   ```
 
-Les skills peuvent être développés en Python ou TypeScript. Consultez la documentation des bridges pour plus d'informations :
+2. Préparer le bot Python (uv, venv, deps) :
+   ```bash
+   uv sync
+   ```
+   Depuis la racine de `webapp` (où se trouve `pyproject.toml`).
 
-- [Bridge Python](bridges/python/README.md)
-- [Bridge Node.js](bridges/nodejs/README.md)
+3. Lancer l’app Electron :
+   ```bash
+   npm run dev
+   ```
 
-## Widgets
+En dev, pas d’étape “setup” (Python/uv) : on suppose que uv et le venv sont déjà prêts. Le bot est lancé via `python start_bot.py` (qui fait `uv run bot.py`).
 
-Le système de widgets permet aux skills d'afficher des interfaces riches et interactives. Les widgets sont déclaratifs et basés sur les composants Aurora.
+---
 
-### Exemple d'utilisation
+## Configuration
 
-**Dans un skill Python :**
+- **Clés API** : Paramètres > Général > Clés API. Enregistrer OpenAI, Deepgram, Cartesia.
+- **Audio** : Paramètres > Audio. Choix du micro et des haut-parleurs.
+- **Jarvis** : Paramètres > Général > Jarvis. Voix (ex. Femme) et langue (ex. Anglais) pour l’assistant.
 
-```python
-from leon import Leon
-from leon.widgets import Widget, WidgetOptions
+Le fichier `.env` est généré automatiquement à partir des clés stockées en base (ne pas éditer à la main). Profil, clés et paramètres sont stockés dans une SQLite locale (userData Electron : `%APPDATA%\jarvis-electron\` sur Windows, `~/.config/jarvis-electron/` sur Linux, `~/Library/Application Support/jarvis-electron/` sur macOS).
 
-class MyWidget(Widget):
-    def render(self):
-        return WidgetComponent(...)
-```
+---
+
+## Utilisation
+
+1. Lancer l’app (installée ou `npm run dev`).
+2. Attendre la fin du chargement (et du setup au premier lancement).
+3. Configurer les clés API si ce n’est pas déjà fait.
+4. Cliquer sur **Connexion** pour établir la session WebRTC avec le bot.
+5. Parler : l’assistant répond par la voix. Les échanges apparaissent dans le chat “Système”.
+
+Boutons utiles : connexion/déconnexion, mute micro.
+
+---
 
 ## Structure du projet
 
-```text
+```
 jarvis-OS/
-├── server/          # Serveur principal (TypeScript)
-├── app/             # Application web (React)
-├── tcp_server/      # Serveur TCP Python (STT/TTS/ASR)
-├── bridges/          # SDK pour développer des skills
-│   ├── nodejs/      # Bridge Node.js/TypeScript
-│   └── python/      # Bridge Python
-├── skills/          # Skills disponibles
-├── core/            # Configuration et données
-└── hotword/         # Détection de mot-clé
+├── webapp/                    # Application Jarvis (Electron + Pipecat)
+│   ├── electron/              # Process main, preload, DB
+│   │   ├── main.js
+│   │   ├── preload.js
+│   │   └── database.js
+│   ├── statics/src/           # UI (HTML, CSS, JS)
+│   │   ├── index.html
+│   │   ├── css/
+│   │   └── js/                # voice, loading, onboarding, settings, etc.
+│   ├── scripts/               # Build
+│   │   ├── prepare-build.js   # Copie bot + pyproject, uv lock
+│   │   └── download-uv.js     # Télécharge uv par plateforme
+│   ├── bot.py                 # Bot Pipecat (STT/LLM/TTS)
+│   ├── start_bot.py           # Lance uv run bot.py
+│   ├── pyproject.toml
+│   ├── package.json
+│   └── README.md
+├── README.md                  # Ce fichier
+└── LICENSE.md
 ```
 
-## Développement
+Le reste du dépôt (ex. `server/`, `skills/`, `bridges/`) peut exister pour d’anciens usages ; l’app actuelle tourne entièrement dans **`webapp/`**.
 
-### Scripts disponibles
+---
 
-| Commande | Description |
-| -------- | ----------- |
-| `npm run dev:server` | Démarrer le serveur en mode développement |
-| `npm run dev:app` | Démarrer l'application web en mode développement |
-| `npm run train` | Entraîner les modèles NLP |
-| `npm run test` | Lancer les tests |
-| `npm run lint` | Vérifier le code avec ESLint |
+## Build multi-plateformes
 
-### Architecture technique
+| Commande | Rôle |
+|----------|------|
+| `npm run build:win` | Build Windows (NSIS + portable) |
+| `npm run build:linux` | Build Linux (AppImage, deb) |
+| `npm run build:mac` | Build macOS (dmg) |
+| `npm run build:all` | Download uv pour toutes les plateformes puis build Win + Linux + Mac |
 
-**Serveur principal** (`server/`)
+En pratique, construire Windows sous Windows, Linux sous Linux, macOS sous macOS. `build:all` est utile en CI.
 
-- Communication avec les clients (Socket.io)
-- Traitement NLP et classification d'intentions
-- Orchestration des skills
-- Gestion de la voix (via le serveur TCP Python)
+---
 
-**Serveur TCP Python** (`tcp_server/`)
+## Dépannage
 
-- Reconnaissance vocale (ASR)
-- Synthèse vocale (TTS)
-- Extraction d'entités avec spaCy
+**Le bot ne démarre pas**
 
-## Roadmap
+- Vérifier que le port **7860** est libre (`netstat -ano | findstr :7860` sur Windows, `lsof -i :7860` sur Linux/macOS).
+- Vérifier les clés API dans Paramètres > Général.
 
-| Fonctionnalité | Statut |
-| -------------- | ------ |
-| Support complet de la vision (analyse d'images) | À venir |
-| Amélioration du système de widgets | À venir |
-| Marketplace de skills | À venir |
-| Support de plus de devices (smartphones, etc.) | À venir |
-| Amélioration de la gestion multi-langues | À venir |
-| Optimisations de performance | À venir |
+**Erreur `better-sqlite3`**
 
-## Communauté
+- `npx electron-rebuild` ou `npm install` dans `webapp/`.
 
-Rejoignez notre communauté Discord pour discuter, poser des questions et partager vos créations :
+**Pas de son / TTS**
 
-<div align="center">
+- Vérifier la clé **Cartesia** et le périphérique de sortie dans Paramètres > Audio.
 
-<a href="https://discord.gg/STEdPHu6Sx">
-  <img src="src/images/gg.png" alt="Rejoindre le Discord officiel">
-</a>
+**Micro inopérant**
 
-</div>
+- Autoriser le micro dans l’OS, choisir le bon périphérique dans Paramètres > Audio.
+
+---
 
 ## Contribution
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
-
-- Ouvrir une [issue](https://github.com/votre-username/jarvis-OS/issues) pour signaler un bug
-- Proposer une nouvelle fonctionnalité
-- Soumettre une [pull request](https://github.com/votre-username/jarvis-OS/pulls)
-- Rejoindre notre [Discord](https://discord.gg/STEdPHu6Sx) pour discuter du projet
+Issues et pull requests bienvenues. Voir [CONTRIBUTING](.github/CONTRIBUTING.md).  
+Discord : [Rejoindre le serveur](https://discord.gg/STEdPHu6Sx).
 
 ---
 
 ## Créateur
 
-Jarvis est créé et maintenu par **Barth**.
-
-<div align="center" style="width: 100%;">
-
-<a href="https://www.youtube.com/@BarthH95" style="text-decoration: none; display: inline-block; width: 100%;">
-  <table style="width: 100%; margin: 0 auto;">
-    <tr>
-      <td style="width: 200px;">
-        <img src="src/images/barth_yt_pdp.jpg" alt="Barth" width="200" height="200" style="border-radius: 50%; display: block;">
-      </td>
-      <td style="padding-left: 30px; vertical-align: middle;">
-        <div style="font-size: 48px; font-weight: bold; margin: 0;">@barthH95</div>
-        <div style="font-size: 24px; color: #666; margin-top: 10px;">Youtube</div>
-      </td>
-    </tr>
-  </table>
-</a>
-
-</div>
+**Barth** – [YouTube @barthH95](https://www.youtube.com/@BarthH95)
 
 ---
 
 ## Licence
 
-Ce projet est dérivé du projet open-source [Leon](https://github.com/leon-ai/leon).
-
-Voir [LICENSE.md](LICENSE.md) pour plus d'informations.
-
----
-
-## Remerciements
-
-Jarvis OS est basé sur le travail de [Leon](https://github.com/leon-ai/leon) par Louis Grenard, avec des modifications significatives pour les objectifs du projet Jarvis.
-
----
-
-<div align="center">
-
-**Fait avec passion pour créer l'assistant personnel de demain**
-
-</div>
+MIT. Voir [LICENSE.md](LICENSE.md).
