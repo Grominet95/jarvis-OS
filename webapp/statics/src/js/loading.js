@@ -12,7 +12,10 @@ class LoadingManager {
     init() {
         console.log('[LOADING] Initializing LoadingManager');
         this.addProcess('electron', 'electron main.js');
-        this.addProcess('starting-pipecat', 'Starting Pipecat backend...');
+        this.addProcess('setup-uv', 'Verification de uv');
+        this.addProcess('setup-python', 'Installation de Python');
+        this.addProcess('setup-sync', 'Installation des dependances');
+        this.addProcess('starting-pipecat', 'Demarrage du backend Pipecat');
         this.addProcess('loading-smart-turn', 'Loading Local Smart Turn Analyzer V3');
         this.addProcess('loading-silero', 'Loading Silero VAD Model');
         this.addProcess('start-server', 'Start server process');
@@ -36,29 +39,16 @@ class LoadingManager {
 
     translateDetail(detail) {
         if (!detail) return null;
-        
-        let translated = detail;
-        
-        if (translated.includes('Uvicorn running on')) {
-            translated = translated.replace('Uvicorn running on', 'Uvicorn en cours d\'exécution sur');
-        }
-        if (translated.includes('Uvicorn en cours d\'exécution sur')) {
-            return translated;
-        }
-        if (translated.includes('Local Smart Turn Analyzer V3 loaded')) {
-            return 'Local Smart Turn Analyzer V3 chargé';
-        }
-        if (translated.includes('Silero VAD model loaded')) {
-            return 'Modèle Silero VAD chargé';
-        }
-        if (translated.includes('Application startup complete')) {
-            return 'Démarrage de l\'application terminé';
-        }
-        if (translated.includes('WebRTC server testé avec succès')) {
-            return translated;
-        }
-        
-        return translated;
+        let t = detail;
+        if (t.includes('Uvicorn running on')) t = t.replace('Uvicorn running on', 'Uvicorn en cours d\'execution sur');
+        if (t.includes('Local Smart Turn Analyzer V3 loaded')) return 'Local Smart Turn Analyzer V3 charge';
+        if (t.includes('Silero VAD model loaded')) return 'Modele Silero VAD charge';
+        if (t.includes('Application startup complete')) return 'Demarrage de l\'application termine';
+        if (t === 'uv pret' || t === 'Python installe' || t === 'Dependances installees') return t;
+        if (t.includes('Verification de uv')) return t;
+        if (t.includes('Installation de Python')) return t;
+        if (t.includes('Installation des dependances')) return t;
+        return t;
     }
 
     addProcess(name, label) {

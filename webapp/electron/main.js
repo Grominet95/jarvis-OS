@@ -1,13 +1,43 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const http = require('http');
-const os = require('os');
 const db = require('./database');
 
+function getResourcesPath() {
+  return app.isPackaged ? process.resourcesPath : path.join(__dirname, '..');
+}
+
+function getUvPath() {
+  if (!app.isPackaged) return null;
+  const res = getResourcesPath();
+  const plat = process.platform;
+  const arch = process.arch;
+  const key = plat === 'win32' ? 'win32-x64' : plat + '-' + arch;
+  const sub = path.join(res, 'bin', key);
+  const exe = plat === 'win32' ? path.join(sub, 'uv.exe') : path.join(sub, 'uv');
+  return fs.existsSync(exe) ? exe : null;
+}
+
+function getPythonProjectPath() {
+  if (app.isPackaged) {
+    const p = path.join(app.getPath('userData'), 'jarvis-project');
+    if (fs.existsSync(p)) return p;
+    return path.join(getResourcesPath(), 'python-project');
+  }
+  return path.join(__dirname, '..');
+}
+
+function getPythonProjectSourcePath() {
+  if (app.isPackaged) {
+    return path.join(getResourcesPath(), 'python-project');
+  }
+  return path.join(__dirname, '..');
+}
+
 function findPipecatModulesPath() {
-  const projectRoot = path.join(__dirname, '..');
+  const projectRoot = getPythonProjectPath();
   const venvPaths = [
     path.join(projectRoot, '.venv', 'Lib', 'site-packages'),
     path.join(projectRoot, '.venv', 'lib', 'site-packages')
@@ -91,16 +121,20 @@ function createWindow() {
       webSecurity: false
     },
     backgroundColor: '#00000000',
-    icon: path.join(__dirname, '..', 'assets', 'icon.png')
+    icon: fs.existsSync(path.join(__dirname, '..', 'assets', 'icon.png'))
+      ? path.join(__dirname, '..', 'assets', 'icon.png')
+      : undefined
   });
 
-  const staticPath = path.join(__dirname, '..', 'statics', 'src', 'index.html');
+  const appRoot = path.join(__dirname, '..');
+  const staticPath = path.join(appRoot, 'statics', 'src', 'index.html');
   if (fs.existsSync(staticPath)) {
     mainWindow.loadFile(staticPath, {
-      query: { basePath: path.join(__dirname, '..', 'statics', 'src').replace(/\\/g, '/') }
+      query: { basePath: path.join(appRoot, 'statics', 'src').replace(/\\/g, '/') }
     });
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    const fallback = path.join(__dirname, 'index.html');
+    if (fs.existsSync(fallback)) mainWindow.loadFile(fallback);
   }
 
   mainWindow.on('closed', () => {
@@ -164,17 +198,92 @@ function checkServer(url, maxAttempts = 30, interval = 1000) {
 }
 
 function createEnvFile() {
-  const envPath = path.join(__dirname, '..', '.env');
+  const projectDir = getPythonProjectPath();
+  const envPath = path.join(projectDir, '.env');
   const apiKeys = db.getAllApiKeys();
-  
   const envContent = [
     `DEEPGRAM_API_KEY=${apiKeys.deepgram || ''}`,
     `OPENAI_API_KEY=${apiKeys.openai || ''}`,
     `CARTESIA_API_KEY=${apiKeys.cartesia || ''}`
   ].join('\n');
-  
   fs.writeFileSync(envPath, envContent, 'utf8');
-  console.log('[MAIN] .env file created/updated with API keys from database');
+  console.log('[MAIN] .env created at', envPath);
+}
+
+function isEnvReady() {
+  return db.getSetting('env_ready') === 'true';
+}
+
+function setEnvReady(value) {
+  db.setSetting('env_ready', value ? 'true' : 'false');
+}
+
+function runCommand(exe, args, cwd, env = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(exe, args, {
+      cwd,
+      env: { ...process.env, ...env },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false
+    });
+    let out = '';
+    let err = '';
+    if (child.stdout) child.stdout.on('data', (d) => { out += d.toString(); });
+    if (child.stderr) child.stderr.on('data', (d) => { err += d.toString(); });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) resolve({ stdout: out, stderr: err });
+      else reject(new Error(err || out || `Exit ${code}`));
+    });
+  });
+}
+
+function copyDirRecursive(src, dst) {
+  fs.mkdirSync(dst, { recursive: true });
+  for (const name of fs.readdirSync(src)) {
+    const s = path.join(src, name);
+    const d = path.join(dst, name);
+    if (fs.statSync(s).isDirectory()) {
+      copyDirRecursive(s, d);
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+
+async function runEnvSetup() {
+  const uvPath = getUvPath();
+  const srcDir = getPythonProjectSourcePath();
+  const projectDir = path.join(app.getPath('userData'), 'jarvis-project');
+  const uvHome = path.join(app.getPath('userData'), 'uv');
+  fs.mkdirSync(uvHome, { recursive: true });
+  const env = { UV_HOME: uvHome };
+
+  if (!uvPath || !fs.existsSync(uvPath)) {
+    throw new Error('Bundled uv not found');
+  }
+
+  sendLoadingProcess('setup-uv', 'active', 'Verification de uv...');
+  await new Promise((r) => setTimeout(r, 300));
+  sendLoadingProcess('setup-uv', 'completed', 'uv pret');
+
+  if (!fs.existsSync(projectDir)) {
+    copyDirRecursive(srcDir, projectDir);
+  }
+
+  sendLoadingProcess('setup-python', 'active', 'Installation de Python...');
+  try {
+    await runCommand(uvPath, ['python', 'install', '3.12'], projectDir, env);
+  } catch (e) {
+    console.warn('[MAIN] uv python install:', e.message);
+  }
+  sendLoadingProcess('setup-python', 'completed', 'Python installe');
+
+  sendLoadingProcess('setup-sync', 'active', 'Installation des dependances...');
+  await runCommand(uvPath, ['sync'], projectDir, env);
+  sendLoadingProcess('setup-sync', 'completed', 'Dependances installees');
+
+  setEnvReady(true);
 }
 
 function startBot() {
@@ -187,21 +296,27 @@ function startBot() {
 
     createEnvFile();
 
-    const isWindows = process.platform === 'win32';
-    const scriptPath = path.join(__dirname, '..', 'start_bot.py');
-
-    if (!fs.existsSync(scriptPath)) {
-      reject(new Error('start_bot.py not found'));
+    const projectDir = getPythonProjectPath();
+    const botPy = path.join(projectDir, 'bot.py');
+    if (!fs.existsSync(botPy)) {
+      reject(new Error('bot.py not found in ' + projectDir));
       return;
     }
 
-    const pythonCmd = isWindows ? 'python' : 'python3';
+    const uvPath = getUvPath();
+    const useUv = app.isPackaged && uvPath && fs.existsSync(uvPath);
+    const uvHome = app.isPackaged ? path.join(app.getPath('userData'), 'uv') : null;
+    const spawnEnv = { ...process.env };
+    if (uvHome) spawnEnv.UV_HOME = uvHome;
 
-    botProcess = spawn(pythonCmd, [scriptPath], {
-      cwd: path.join(__dirname, '..'),
+    const cmd = useUv ? uvPath : (process.platform === 'win32' ? 'python' : 'python3');
+    const args = useUv ? ['run', 'bot.py'] : [path.join(projectDir, 'start_bot.py')];
+
+    botProcess = spawn(cmd, args, {
+      cwd: projectDir,
       stdio: 'pipe',
-      shell: isWindows,
-      env: { ...process.env }
+      shell: process.platform === 'win32' && !useUv,
+      env: spawnEnv
     });
 
     let errorOutput = '';
@@ -320,9 +435,20 @@ app.whenReady().then(() => {
 
   setTimeout(async () => {
     try {
-      sendLoadingProcess('starting-pipecat', 'active', 'Starting Pipecat backend...');
+      const packaged = app.isPackaged;
+      const ready = isEnvReady();
+
+      if (packaged && !ready) {
+        await runEnvSetup();
+      } else {
+        sendLoadingProcess('setup-uv', 'completed', 'uv pret');
+        sendLoadingProcess('setup-python', 'completed', 'Python installe');
+        sendLoadingProcess('setup-sync', 'completed', 'Dependances installees');
+      }
+
+      sendLoadingProcess('starting-pipecat', 'active', 'Démarrage du backend Pipecat...');
       await startBot();
-      sendLoadingProcess('starting-pipecat', 'completed', 'Pipecat backend started');
+      sendLoadingProcess('starting-pipecat', 'completed', 'Backend Pipecat démarré');
     } catch (error) {
       sendLoadingProcess('starting-pipecat', 'error', error.message);
       console.error('Auto-start bot failed:', error);
