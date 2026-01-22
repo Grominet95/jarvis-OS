@@ -993,6 +993,33 @@
 
                         <div class="settings-category" id="settings-category-general" style="display: none;">
                             <h2 class="settings-category-title">Général</h2>
+
+                            <div class="settings-section">
+                                <h3 class="settings-section-title">Jarvis</h3>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-jarvis-voice">Voix</label>
+                                    <select id="settings-jarvis-voice" class="settings-select">
+                                        <option value="femme">Femme</option>
+                                    </select>
+                                    <small class="settings-hint">Voix de synthèse (TTS)</small>
+                                </div>
+
+                                <div class="settings-group">
+                                    <label class="settings-label" for="settings-jarvis-language">Langue</label>
+                                    <select id="settings-jarvis-language" class="settings-select">
+                                        <option value="en">Anglais</option>
+                                    </select>
+                                    <small class="settings-hint">Langue de Jarvis</small>
+                                </div>
+
+                                <div class="settings-actions">
+                                    <button id="settings-save-jarvis-btn" class="settings-btn settings-btn-primary">
+                                        Enregistrer
+                                    </button>
+                                </div>
+                                <div id="settings-jarvis-message" class="settings-message" style="display: none;"></div>
+                            </div>
                             
                             <div class="settings-section">
                                 <h3 class="settings-section-title">Profil utilisateur</h3>

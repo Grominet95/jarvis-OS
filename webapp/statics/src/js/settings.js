@@ -8,6 +8,10 @@ class SettingsManager {
             input: null,
             output: null
         };
+        this.jarvisSettings = {
+            voice: 'femme',
+            language: 'en'
+        };
         this.initialized = false;
         this.listenersSetup = false;
         this.currentCategory = 'audio';
@@ -48,9 +52,11 @@ class SettingsManager {
         try {
             await this.loadAudioDevices();
             await this.loadSavedSettings();
+            await this.loadJarvisSettings();
             await this.loadUserProfile();
             await this.loadApiKeys();
             this.render();
+            this.renderJarvis();
             console.log('[SETTINGS] SettingsManager initialized, devices:', {
                 input: this.audioDevices.input.length,
                 output: this.audioDevices.output.length
@@ -163,6 +169,57 @@ class SettingsManager {
         }
     }
 
+    async loadJarvisSettings() {
+        try {
+            if (window.electronAPI && window.electronAPI.getSetting) {
+                const savedVoice = await window.electronAPI.getSetting('jarvis_voice');
+                const savedLanguage = await window.electronAPI.getSetting('jarvis_language');
+                if (savedVoice) this.jarvisSettings.voice = savedVoice;
+                if (savedLanguage) this.jarvisSettings.language = savedLanguage;
+            } else {
+                const v = localStorage.getItem('jarvis_voice');
+                const l = localStorage.getItem('jarvis_language');
+                if (v) this.jarvisSettings.voice = v;
+                if (l) this.jarvisSettings.language = l;
+            }
+        } catch (error) {
+            console.error('Error loading Jarvis settings:', error);
+        }
+    }
+
+    async saveJarvisSettings() {
+        try {
+            const voiceSelect = document.getElementById('settings-jarvis-voice');
+            const languageSelect = document.getElementById('settings-jarvis-language');
+            const voice = voiceSelect ? voiceSelect.value : 'femme';
+            const language = languageSelect ? languageSelect.value : 'en';
+            this.jarvisSettings.voice = voice;
+            this.jarvisSettings.language = language;
+
+            if (window.electronAPI && window.electronAPI.setSetting) {
+                await window.electronAPI.setSetting('jarvis_voice', voice);
+                await window.electronAPI.setSetting('jarvis_language', language);
+            } else {
+                localStorage.setItem('jarvis_voice', voice);
+                localStorage.setItem('jarvis_language', language);
+            }
+
+            this.showJarvisMessage('Voix et langue enregistrées', true);
+        } catch (error) {
+            console.error('Error saving Jarvis settings:', error);
+            this.showJarvisMessage('Erreur lors de la sauvegarde', false);
+        }
+    }
+
+    showJarvisMessage(message, success) {
+        const el = document.getElementById('settings-jarvis-message');
+        if (!el) return;
+        el.textContent = message;
+        el.className = 'settings-message ' + (success ? 'settings-message-success' : 'settings-message-error');
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+
     async saveSettings() {
         try {
             if (window.electronAPI && window.electronAPI.setSetting) {
@@ -217,6 +274,13 @@ class SettingsManager {
         if (saveApiBtn) {
             saveApiBtn.addEventListener('click', () => {
                 this.saveApiKeys();
+            });
+        }
+
+        const saveJarvisBtn = document.getElementById('settings-save-jarvis-btn');
+        if (saveJarvisBtn) {
+            saveJarvisBtn.addEventListener('click', () => {
+                this.saveJarvisSettings();
             });
         }
 
@@ -325,6 +389,13 @@ class SettingsManager {
         }
         
         console.log('[SETTINGS] Render complete - Input options:', inputSelect.options.length, 'Output options:', outputSelect.options.length);
+    }
+
+    renderJarvis() {
+        const voiceSelect = document.getElementById('settings-jarvis-voice');
+        const languageSelect = document.getElementById('settings-jarvis-language');
+        if (voiceSelect) voiceSelect.value = this.jarvisSettings.voice || 'femme';
+        if (languageSelect) languageSelect.value = this.jarvisSettings.language || 'en';
     }
 
     showSuccessMessage(message) {
