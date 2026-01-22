@@ -134,6 +134,12 @@ const Onboarding = {
                 overlay.style.display = 'none';
             }, 400);
         }
+        
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer && !appContainer.classList.contains('visible')) {
+            console.log('[ONBOARDING] Force adding visible class to app-container');
+            appContainer.classList.add('visible');
+        }
     },
 
     showStep(stepIndex) {

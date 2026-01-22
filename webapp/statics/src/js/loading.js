@@ -235,6 +235,12 @@ class LoadingManager {
         } else {
             console.warn('[LOADING] loadingOverlay not found');
         }
+        
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer && !appContainer.classList.contains('visible')) {
+            console.log('[LOADING] Force adding visible class to app-container');
+            appContainer.classList.add('visible');
+        }
     }
 }
 

@@ -19,6 +19,14 @@ function initTaskbar() {
         }
     }
 
+    setTimeout(() => {
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer && !appContainer.classList.contains('visible')) {
+            console.log('[TASKBAR] Safety timeout: Force adding visible class to app-container');
+            appContainer.classList.add('visible');
+        }
+    }, 5000);
+
     const minimizeBtn = document.getElementById('minimize-btn');
     const closeBtn = document.getElementById('close-btn');
     const windowControls = document.querySelector('.window-controls');

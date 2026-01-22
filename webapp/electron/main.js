@@ -143,6 +143,23 @@ function createWindow() {
 
   mainWindow.webContents.on('did-finish-load', () => {
     console.log('[PIPECAT] Window loaded, modules will be loaded from server once ready');
+    if (!mainWindow.isVisible()) {
+      console.log('[MAIN] Window not visible, forcing show');
+      mainWindow.show();
+    }
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isVisible()) {
+        console.log('[MAIN] Window still not visible after 2s, forcing show again');
+        mainWindow.show();
+      }
+    }, 2000);
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      console.log('[MAIN] Window ready but not visible, showing');
+      mainWindow.show();
+    }
   });
 }
 
