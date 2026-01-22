@@ -140,7 +140,7 @@ Les clés API peuvent être configurées de deux manières :
 #### Méthode 1 : Via l'interface graphique (recommandé)
 
 1. Lancez l'application
-2. Allez dans **Paramètres** (icône en bas à droite)
+2. Allez dans **Paramètres** (icône en haut à droite)
 3. Cliquez sur **Général** dans le menu latéral
 4. Remplissez les champs dans la section **Clés API** :
    - **OpenAI API Key** (obligatoire)
