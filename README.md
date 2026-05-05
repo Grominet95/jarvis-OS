@@ -162,6 +162,25 @@ Tous les fichiers mémoire vivent dans `memory_data/` qui est gitignorés — il
 
 ---
 
+## Dashboard Monde (World Monitor)
+
+L'onglet **Intel Monde** de l'interface Jarvis affiche [World Monitor](https://github.com/Grominet95/dashboard_monde) — un tableau de bord géopolitique temps réel (globe 3D, flux d'actualités IA, radars financiers, suivi d'infrastructures).
+
+**Prérequis :** Node.js 18+
+
+```bash
+git clone https://github.com/Grominet95/dashboard_monde.git
+cd dashboard_monde
+npm install
+npm run dev -- --port 3000
+```
+
+Une fois lancé sur `http://localhost:3000`, l'onglet Intel Monde de Jarvis l'affiche automatiquement via iframe. Les deux serveurs peuvent tourner simultanément.
+
+> World Monitor fonctionne sans aucune variable d'environnement pour un usage de base. Des clés API optionnelles (Groq, OpenRouter…) permettent d'activer les fonctionnalités IA avancées — voir le `.env.example` du repo.
+
+---
+
 ## Moteur proactif
 
 Le moteur proactif tourne en arrière-plan et pousse des notifications au client connecté via WebSocket. Collectors intégrés :
