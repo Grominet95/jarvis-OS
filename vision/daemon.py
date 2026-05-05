@@ -21,6 +21,14 @@ from loguru import logger
 from config.settings import settings
 from vision.object_detector import ObjectDetector
 from vision.objects_queue import get_vision_objects_queue
+from vision.face_recognizer import FaceRecognizer
+
+_face_recognizer: FaceRecognizer | None = None
+
+
+def get_face_recognizer() -> FaceRecognizer | None:
+    """Retourne l'instance FaceRecognizer active (ou None si désactivé)."""
+    return _face_recognizer
 
 _JARVIS_WEBHOOK = "http://localhost:8000/api/webhooks"
 _TARGET_FPS = 2
@@ -37,6 +45,14 @@ async def run_vision_daemon() -> None:
 
     detector = ObjectDetector(confidence=settings.vision_yolo_confidence)
     objects_q = get_vision_objects_queue()
+
+    global _face_recognizer
+    face_recognizer: FaceRecognizer | None = None
+    _last_recognition_state: bool = False
+    if settings.face_recognition_enabled:
+        face_recognizer = FaceRecognizer()
+        _face_recognizer = face_recognizer
+        logger.info("FaceRecognizer activé dans le daemon vision")
 
     cap = cv2.VideoCapture(settings.vision_webcam_index)
     if not cap.isOpened():
@@ -90,6 +106,34 @@ async def run_vision_daemon() -> None:
                             "all_objects": [o.label for o in result.objects],
                         },
                     )
+
+            # ── Face recognition ─────────────────────────────────────────────
+            if face_recognizer is not None:
+                rec = await loop.run_in_executor(None, face_recognizer.process, frame)
+
+                if rec.recognized != _last_recognition_state:
+                    _last_recognition_state = rec.recognized
+                    await _send_event(client, "face_recognition", {
+                        "recognized": rec.recognized,
+                        "name": rec.name,
+                        "confidence": round(rec.confidence, 2),
+                    })
+
+                if rec.face_locations:
+                    color_bgr = (153, 211, 54) if rec.recognized else (68, 68, 239)
+                    label = f"{rec.name} {rec.confidence:.0%}"
+                    import cv2 as _cv2_face
+                    for (top, right, bottom, left) in rec.face_locations:
+                        _cv2_face.rectangle(
+                            frame,
+                            (left * 4, top * 4), (right * 4, bottom * 4),
+                            color_bgr, 2,
+                        )
+                        _cv2_face.putText(
+                            frame, label,
+                            (left * 4, top * 4 - 8),
+                            _cv2_face.FONT_HERSHEY_SIMPLEX, 0.5, color_bgr, 1,
+                        )
 
             elapsed = loop.time() - loop_start
             await asyncio.sleep(max(0.0, _FRAME_INTERVAL - elapsed))

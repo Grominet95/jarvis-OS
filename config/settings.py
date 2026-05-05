@@ -190,6 +190,46 @@ class Settings(BaseSettings):
         description="Timeout max par step Docker en secondes.",
     )
 
+    # ── Imprimante 3D (BambuLab) ──────────────────────────────
+    printer_ip: str = Field(
+        default="",
+        description="IP locale de la BambuLab.",
+    )
+    printer_serial: str = Field(
+        default="",
+        description="Numéro de série BambuLab (ex: 01P00A123456789).",
+    )
+    printer_access_code: str = Field(
+        default="",
+        description="Code d'accès BambuLab — 8 chiffres dans Bambu Studio → Settings → Printer.",
+    )
+
+    # ── Fusion 360 MCP ────────────────────────────────────────
+    fusion_mcp_port: int = Field(
+        default=27182,
+        description="Port du serveur MCP Fusion 360 (visible dans Fusion → Préférences → Add-Ins).",
+    )
+
+    # ── Face Recognition ──────────────────────────────────────
+    face_recognition_enabled: bool = Field(
+        default=False,
+        description="Active la reconnaissance faciale dans le daemon vision.",
+    )
+    face_recognition_threshold: float = Field(
+        default=0.45,
+        description="Distance max pour une correspondance (plus bas = plus strict).",
+    )
+
+    # ── Clap Detection ────────────────────────────────────────
+    clap_detection_enabled: bool = Field(
+        default=False,
+        description="Active la détection de double clap pour le wake up.",
+    )
+    clap_amplitude_threshold: float = Field(
+        default=0.35,
+        description="Seuil d'amplitude pour détecter un clap (0.0-1.0).",
+    )
+
     # ── Logging ───────────────────────────────────────────────
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(default="DEBUG")
 

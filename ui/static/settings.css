@@ -1476,3 +1476,15 @@ html, body {
   margin-top: auto;
 }
 .unsaved-indicator.visible { display: block; }
+
+/* ── APPROVAL SUBSECTION LABEL ──────────────────────────────── */
+
+.params-subsection {
+  font: 500 8px/1 'DM Mono', monospace;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(74, 158, 255, 0.55);
+  padding: 10px 0 4px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  margin-top: 4px;
+}

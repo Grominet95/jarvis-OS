@@ -31,6 +31,7 @@ from background.scheduler import Scheduler
 from background.worker import BackgroundWorker
 from config.settings import settings
 from core.agent import Agent
+from core.approval_checker import ApprovalChecker
 from core.gateway import Gateway
 from core.session import SessionManager
 from llm.api import AnthropicProvider
@@ -50,6 +51,8 @@ from tools.filesystem import FindFilesTool, ReadFileTool
 from tools.memory import MemoryTopicWriteTool
 from tools.notion import NotionTasksTool
 from tools.registry import ToolRegistry
+from tools.fusion import FusionTool
+from tools.printer import Printer3DTool
 from tools.spotify import SpotifyTool
 from tools.weather import WeatherTool
 
@@ -105,6 +108,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         ),
         NotionTasksTool(),
         MemoryTopicWriteTool(),
+        Printer3DTool(),
+        FusionTool(),
         SpotifyTool(),
         GmailListTool(
             credentials_path=Path(settings.google_credentials_path),
@@ -141,6 +146,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     notifications = NotificationQueue()
     proactive_queue = ProactiveQueue()
+    approval_checker = ApprovalChecker(broadcast_event=proactive_queue.broadcast_event)
     orchestrator = ProjectOrchestrator(broadcast_event=proactive_queue.broadcast_event)
     worker = BackgroundWorker(llm=llm, notifications=notifications, tool_registry=tool_registry)
     worker_task = asyncio.create_task(worker.run_loop(), name="background-worker")
@@ -148,6 +154,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     if settings.vision_object_detection:
         from vision.daemon import run_vision_daemon
         asyncio.create_task(run_vision_daemon(), name="vision-daemon")
+
+    if settings.clap_detection_enabled:
+        from audio.clap_detector import ClapDetector
+
+        async def _on_clap() -> None:
+            proactive_queue.broadcast_event({"type": "wake_up", "trigger": "clap"})
+            logger.info("Wake up triggered by clap")
+
+        clap_detector = ClapDetector(callback=_on_clap)
+        asyncio.create_task(clap_detector.start(), name="clap-detector")
+        logger.info("ClapDetector started")
 
     scheduler = Scheduler(
         proactive=proactive_queue,
@@ -210,6 +227,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.scheduler = scheduler
     app.state.notifications = notifications
     app.state.proactive_engine = proactive_engine
+    app.state.approval_checker = approval_checker
+    from core.approval_checker import set_approval_checker
+    set_approval_checker(approval_checker)
 
     logger.info(
         "Jarvis démarré",

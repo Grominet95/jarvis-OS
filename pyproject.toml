@@ -41,6 +41,9 @@ dependencies = [
     "livekit-plugins-google>=1.5.1",
     "livekit-plugins-elevenlabs>=1.5.1",
     "livekit-api>=1.1.0",
+    "sounddevice>=0.5.5",
+    "face-recognition>=1.3.0",
+    "bambulabs-api>=2.6.6",
 ]
 
 [project.optional-dependencies]

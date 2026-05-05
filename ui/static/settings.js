@@ -869,8 +869,53 @@ function paintParams() {
     _row('Environnement', `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim)">${_esc(jarvis.environment||'development')}</span>`),
   ].join(''));
 
+  const appr = p.approvals || {};
+  const _appr = (cat, label) => _row(label, _approvalSelect(cat, appr[cat] || 'ask'));
+  html += _section('approvals', '▼ APPROBATIONS', false, [
+    '<div class="params-subsection">Système</div>',
+    _appr('system_shutdown', 'Éteindre / Veille'),
+    _appr('system_restart',  'Redémarrage'),
+    '<div class="params-subsection">Fichiers</div>',
+    _appr('file_write',  'Écrire des fichiers'),
+    _appr('file_delete', 'Supprimer des fichiers'),
+    '<div class="params-subsection">Communications</div>',
+    _appr('email_draft', 'Rédiger un email'),
+    _appr('email_send',  'Envoyer un email'),
+    '<div class="params-subsection">Web</div>',
+    _appr('web_agent', 'Automatisation browser'),
+    '<div class="params-subsection">Matériel</div>',
+    _appr('printer_slice', 'Slicer un modèle 3D'),
+    _appr('printer_print', 'Lancer une impression'),
+    _appr('fusion_create', 'Créer dans Fusion 360'),
+    _appr('fusion_modify', 'Modifier dans Fusion 360'),
+    _appr('fusion_delete', 'Supprimer dans Fusion 360'),
+    '<div class="params-subsection">Code / Agent</div>',
+    _appr('code_write',    'Écrire du code'),
+    _appr('agent_mission', 'Lancer une mission agent'),
+  ].join(''));
+
   _content().innerHTML = html;
 }
+
+function _approvalSelect(category, value) {
+  const opts = [['always','Toujours'],['ask','Demander'],['never','Jamais']];
+  const sel = opts.map(([v, l]) =>
+    `<option value="${v}" ${v === value ? 'selected' : ''}>${l}</option>`
+  ).join('');
+  return `<select class="params-select" onchange="window._sUpdateApproval('${_esc(category)}', this.value)">${sel}</select>`;
+}
+
+window._sUpdateApproval = async (category, mode) => {
+  try {
+    const r = await fetch(`/api/approvals/config/${encodeURIComponent(category)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    toast(`${category} → ${mode}`, 'success');
+  } catch (e) { toast(`Erreur: ${e.message}`, 'error'); }
+};
 
 window._sUpdateSetting = async (key, value) => {
   try {

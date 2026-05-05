@@ -2516,25 +2516,41 @@
     }
 
     function _showApproval(msg) {
-      _pendingApproval = { project_id: msg.project_id, step_id: msg.step_id };
       const modal = document.getElementById('approval-modal');
-      const proj = _projects[msg.project_id] || {};
-      document.getElementById('approval-project-title').textContent = proj.title || msg.project_id;
-      document.getElementById('approval-step-desc').textContent = msg.description || msg.step_id;
+      if (msg.action_id) {
+        // Approbation catégorielle (ApprovalChecker)
+        _pendingApproval = { action_id: msg.action_id };
+        document.getElementById('approval-project-title').textContent = msg.category || 'action';
+        document.getElementById('approval-step-desc').textContent = msg.description || '';
+      } else {
+        // Approbation projet (orchestrateur)
+        _pendingApproval = { project_id: msg.project_id, step_id: msg.step_id };
+        const proj = _projects[msg.project_id] || {};
+        document.getElementById('approval-project-title').textContent = proj.title || msg.project_id;
+        document.getElementById('approval-step-desc').textContent = msg.description || msg.step_id;
+      }
       modal.style.display = 'block';
     }
 
     async function resolveApproval(approved) {
       if (!_pendingApproval) return;
-      const { project_id, step_id } = _pendingApproval;
+      const pending = _pendingApproval;
       _pendingApproval = null;
       document.getElementById('approval-modal').style.display = 'none';
       try {
-        await fetch(`/api/projects/${project_id}/approve`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ step_id, approved }),
-        });
+        if (pending.action_id) {
+          await fetch(`/api/approvals/${pending.action_id}/resolve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ approved }),
+          });
+        } else {
+          await fetch(`/api/projects/${pending.project_id}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ step_id: pending.step_id, approved }),
+          });
+        }
       } catch (e) { console.warn('approval error', e); }
     }
 

@@ -1,0 +1,23 @@
+{
+  "system_shutdown": "ask",
+  "system_restart": "ask",
+  "file_read": "always",
+  "file_write": "ask",
+  "file_delete": "ask",
+  "app_launch": "always",
+  "app_close": "always",
+  "web_search": "always",
+  "web_navigate": "always",
+  "web_agent": "ask",
+  "email_draft": "always",
+  "email_send": "ask",
+  "code_write": "ask",
+  "agent_mission": "always",
+  "printer_slice": "ask",
+  "printer_print": "ask",
+  "fusion_create": "always",
+  "fusion_modify": "ask",
+  "fusion_delete": "ask",
+  "smart_home_read": "always",
+  "smart_home_write": "always"
+}
