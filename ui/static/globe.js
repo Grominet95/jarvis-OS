@@ -9,7 +9,6 @@
   let _layersAdded = false;
   let _autoRotate = true;
   let _interacting = false;
-  let _rotInterval = null;
   let _resumeTimer = null;
 
   let _fetchTimer = null;
@@ -65,38 +64,46 @@
     _map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
     _map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
-    _map.on('dragstart',  () => { _interacting = true;  _autoRotate = false; });
-    _map.on('dragend',    () => { _interacting = false; _scheduleResume(); });
-    _map.on('zoomstart',  () => { _interacting = true;  _autoRotate = false; });
-    _map.on('zoomend',    () => { _interacting = false; _scheduleResume(); });
-    _map.on('touchstart', () => { _interacting = true;  _autoRotate = false; });
+    _map.on('mousedown',  () => { _interacting = true;  _map.stop(); _autoRotate = false; });
+    _map.on('mouseup',    () => { _interacting = false; _scheduleResume(); });
+    _map.on('touchstart', () => { _interacting = true;  _map.stop(); _autoRotate = false; });
     _map.on('touchend',   () => { _interacting = false; _scheduleResume(); });
+    _map.on('wheel',      () => { _map.stop(); _autoRotate = false; _scheduleResume(); });
+    _map.on('moveend',    () => { _spinGlobe(); });
 
     _map.on('style.load', () => {
-      _map.setFog(null);
+      _map.setFog({
+        color:            'rgb(6, 8, 13)',
+        'high-color':     'rgb(20, 65, 150)',
+        'horizon-blend':  0.04,
+        'space-color':    'rgb(6, 8, 13)',
+        'star-intensity': 0,
+      });
       _addLayers();
       _mapReady = true;
-      if (_visible) { _startData(); _startRotation(); }
+      if (_visible) { _startData(); _spinGlobe(); }
     });
   }
 
-  // ── Auto-rotation ────────────────────────────────────────────────
+  // ── Auto-rotation (pattern officiel Mapbox globe) ────────────────
   function _scheduleResume() {
     if (_resumeTimer) clearTimeout(_resumeTimer);
-    _resumeTimer = setTimeout(() => { _autoRotate = true; }, 8000);
+    _resumeTimer = setTimeout(() => { _autoRotate = true; _spinGlobe(); }, 5000);
   }
 
-  function _startRotation() {
-    if (_rotInterval) return;
-    _rotInterval = setInterval(() => {
-      if (!_visible || !_map || !_autoRotate || _interacting || _map.getZoom() >= 4) return;
-      const c = _map.getCenter();
-      _map.setCenter([c.lng + 0.02, c.lat]);
-    }, 50);
+  function _spinGlobe() {
+    if (!_map || !_autoRotate || _interacting || _map.getZoom() >= 4) return;
+    const center = _map.getCenter();
+    center.lng -= 1.5; // °/s (easeTo duration = 1000ms)
+    _map.easeTo({ center, duration: 1000, easing: n => n });
   }
+
+  function _startRotation() { _spinGlobe(); }
 
   function _stopRotation() {
-    if (_rotInterval) { clearInterval(_rotInterval); _rotInterval = null; }
+    _autoRotate = false;
+    if (_resumeTimer) { clearTimeout(_resumeTimer); _resumeTimer = null; }
+    _map?.stop();
   }
 
   // ── GeoJSON layers ───────────────────────────────────────────────

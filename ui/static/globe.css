@@ -449,6 +449,14 @@ body.intel-mode #settings-nav-btn {
   backdrop-filter: blur(8px);
 }
 
+/* ── Globe mode : laisser passer les clics vers Mapbox ──────────── */
+body.globe-mode .layout {
+  pointer-events: none;
+}
+body.globe-mode .panel-left {
+  pointer-events: auto;
+}
+
 /* ── Legacy floating legend (unused in globe-mode) ─────────────── */
 #globe-legend {
   display: none;
