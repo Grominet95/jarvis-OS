@@ -89,10 +89,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     skill_registry = SkillRegistry(Path(settings.skills_dir))
 
     # ── Tool registry ────────────────────────────────────────
+    _root = Path(__file__).parent
+    _google_creds = (_root / settings.google_credentials_path).resolve()
+    _gmail_token = (_root / "config/google_gmail_token.json").resolve()
+    _calendar_token = (_root / settings.google_token_path).resolve()
+
     allowed_roots = [Path(r).expanduser().resolve() for r in settings.file_search_roots]
     calendar_list_tool = CalendarListTool(
-        credentials_path=Path(settings.google_credentials_path),
-        token_path=Path(settings.google_token_path),
+        credentials_path=_google_creds,
+        token_path=_calendar_token,
     )
     tool_registry = ToolRegistry()
     tool_registry.register(
@@ -105,8 +110,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         ExecuteCLITool(),
         calendar_list_tool,
         CalendarCreateTool(
-            credentials_path=Path(settings.google_credentials_path),
-            token_path=Path(settings.google_token_path),
+            credentials_path=_google_creds,
+            token_path=_calendar_token,
         ),
         NotionTasksTool(),
         MemoryTopicWriteTool(),
@@ -114,8 +119,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         FusionTool(),
         SpotifyTool(),
         GmailListTool(
-            credentials_path=Path(settings.google_credentials_path),
-            token_path=Path(settings.google_token_path).parent / "google_gmail_token.json",
+            credentials_path=_google_creds,
+            token_path=_gmail_token,
         ),
     )
 

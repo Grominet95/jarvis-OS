@@ -11,7 +11,10 @@ from loguru import logger
 
 from tools.base import Tool, ToolResult
 
-_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
+]
 _GMAIL_BASE = "https://gmail.googleapis.com/gmail/v1/users/me"
 
 try:
@@ -35,14 +38,20 @@ def _load_gmail_creds(credentials_path: Path, token_path: Path) -> "Credentials"
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception:
+                token_path.unlink(missing_ok=True)
+                creds = None
+
+        if not creds or not creds.valid:
             if not credentials_path.exists():
                 raise FileNotFoundError(
                     f"Credentials Google manquants : {credentials_path}."
                 )
             flow = InstalledAppFlow.from_client_secrets_file(str(credentials_path), _SCOPES)
             creds = flow.run_local_server(port=0)
+
         token_path.write_text(creds.to_json())
 
     return creds
@@ -138,29 +147,9 @@ class GmailListTool(Tool):
 
 # ── Send email ────────────────────────────────────────────────────────────────
 
-_SEND_SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-
-
 def _load_gmail_send_creds(credentials_path: Path, token_path: Path):  # noqa: ANN202
-    """Credentials avec scope send (on ré-utilise le token readonly s'il inclut le scope)."""
-    try:
-        from google.auth.transport.requests import Request
-        from google.oauth2.credentials import Credentials
-    except ImportError:
-        raise RuntimeError("google-api-python-client non installé.")
-
-    if token_path.exists():
-        creds = Credentials.from_authorized_user_file(str(token_path), _SEND_SCOPES)
-        if creds and creds.valid:
-            return creds
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            token_path.write_text(creds.to_json())
-            return creds
-    raise RuntimeError(
-        "Token Gmail send introuvable ou invalide. "
-        "Revérifiez que le scope gmail.send est activé sur le token."
-    )
+    """Réutilise le même token unifié (readonly + send) que _load_gmail_creds."""
+    return _load_gmail_creds(credentials_path, token_path)
 
 
 def _parse_draft(draft_content: str) -> tuple[str, str, str | None, str]:

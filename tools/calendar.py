@@ -33,8 +33,13 @@ def _load_creds(token_path: Path, credentials_path: Path) -> "Credentials":
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception:
+                token_path.unlink(missing_ok=True)
+                creds = None
+
+        if not creds or not creds.valid:
             if not credentials_path.exists():
                 raise FileNotFoundError(
                     f"Credentials Google manquants : {credentials_path}. "
@@ -42,6 +47,7 @@ def _load_creds(token_path: Path, credentials_path: Path) -> "Credentials":
                 )
             flow = InstalledAppFlow.from_client_secrets_file(str(credentials_path), _SCOPES)
             creds = flow.run_local_server(port=0)
+
         token_path.write_text(creds.to_json())
 
     return creds
