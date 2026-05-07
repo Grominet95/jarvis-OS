@@ -432,13 +432,10 @@ async def list_tools_endpoint(request: Request) -> list[dict]:
     registry = getattr(request.app.state, "tool_registry", None)
     if not registry:
         return []
-    out = []
-    for s in registry.schemas():
-        out.append({
-            "name":        s.get("name", ""),
-            "description": s.get("description", ""),
-        })
-    return out
+    return [
+        {"name": s.get("name", ""), "description": s.get("description", "")}
+        for s in registry.core_schemas()
+    ]
 
 
 # ── System API ────────────────────────────────────────────────────────────────

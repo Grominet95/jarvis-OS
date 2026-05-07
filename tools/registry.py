@@ -35,6 +35,14 @@ class ToolRegistry:
         """Retourne les schémas Claude de tous les outils enregistrés."""
         return [t.to_claude_schema() for t in self._tools.values()]
 
+    def core_schemas(self) -> list[dict]:
+        """Retourne uniquement les schémas des outils natifs (hors skills)."""
+        return [
+            t.to_claude_schema()
+            for name, t in self._tools.items()
+            if name not in self._skill_tool_names
+        ]
+
     async def call(self, name: str, inputs: dict) -> ToolResult:
         """Exécute un outil par nom. Retourne une ToolResult d'erreur si inconnu."""
         tool = self._tools.get(name)
