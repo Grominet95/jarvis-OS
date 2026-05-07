@@ -1051,6 +1051,39 @@ async def get_devices() -> list:
         "type": "host",
     })
 
+    try:
+        from keypad.usb import usb_status
+
+        st = usb_status()
+        hid = bool(st.get("hidPresent"))
+        boot = bool(st.get("bootloaderPresent"))
+        if hid:
+            mp_status = "Connected"
+            mp_col = "green"
+            a_pair = ("Mode", "HID")
+            b_pair = ("Firmware", "Keypad Studio")
+        elif boot:
+            mp_status = "Nearby"
+            mp_col = "accent"
+            a_pair = ("Mode", "Bootloader")
+            b_pair = ("Flash", "USB prêt")
+        else:
+            mp_status = "Nearby"
+            mp_col = "muted"
+            a_pair = ("Mode", "—")
+            b_pair = ("Studio", "Ajouter via Keypad")
+        devices.insert(1, {
+            "name": "Macropad 2K",
+            "id": "macropad · Le Labo",
+            "status": mp_status,
+            "col": mp_col,
+            "a": list(a_pair),
+            "b": list(b_pair),
+            "type": "macropad",
+        })
+    except Exception:
+        pass
+
     # ── Bluetooth ─────────────────────────────────────────────────────────────
     if sys_name == "Darwin":
         try:

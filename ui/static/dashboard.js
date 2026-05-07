@@ -255,6 +255,15 @@
     if (nearbyCount) statParts.push(nearbyCount + " à proximité");
     root.innerHTML = "";
     root.appendChild(secHd("04", "Devices", "Tes appareils", statParts.join(" · ") || "—"));
+    root.appendChild(el("div", {
+      style: { display: "flex", justifyContent: "flex-end", marginBottom: "14px" },
+    }, [
+      el("button", {
+        class: "btn-accent",
+        text: "Ajouter un appareil",
+        onclick: () => { window.location.href = "/keypad"; },
+      }),
+    ]));
     if (data.length === 0) {
       root.appendChild(el("div", { class: "j-empty", text: "Aucun appareil détecté" }));
       return;
