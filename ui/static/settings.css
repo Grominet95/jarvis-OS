@@ -74,11 +74,16 @@
 .mem-view-hd-r { display: flex; gap: 6px; }
 
 .mem-md { padding: 22px 26px; overflow-y: auto; flex: 1; line-height: 1.6; color: var(--fg-1); font-size: 13px; }
-.mem-md h1 { font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--fg-0); letter-spacing: -0.02em; margin: 0 0 14px; }
-.mem-md h2 { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin: 22px 0 8px; }
-.mem-md p  { margin: 8px 0; }
-.mem-md ul { margin: 8px 0 12px; padding-left: 18px; }
-.mem-md ul li { margin: 4px 0; }
+.mem-md-body h1 { font-family: var(--serif); font-weight: 500; font-size: 20px; color: var(--fg-0); letter-spacing: -0.02em; margin: 0 0 14px; }
+.mem-md-body h2 { font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin: 24px 0 8px; border-bottom: 1px solid var(--line-1); padding-bottom: 4px; }
+.mem-md-body h3 { font-size: 13px; font-weight: 600; color: var(--fg-0); margin: 16px 0 6px; }
+.mem-md-body p  { margin: 6px 0; }
+.mem-md-body ul { margin: 6px 0 12px; padding-left: 18px; list-style: none; }
+.mem-md-body ul li { margin: 5px 0; position: relative; padding-left: 4px; }
+.mem-md-body ul li::before { content: "–"; position: absolute; left: -14px; color: var(--fg-3); }
+.mem-md-body code { font-family: var(--mono); font-size: 11.5px; background: var(--bg-2); border: 1px solid var(--line-1); border-radius: 4px; padding: 1px 5px; color: var(--accent); }
+.mem-md-body strong { color: var(--fg-0); font-weight: 600; }
+.mem-md-body em { color: var(--fg-2); font-style: italic; }
 .mem-md .frontmatter {
   background: var(--bg-2); border: 1px solid var(--line-1); border-radius: 8px;
   padding: 12px 14px; margin: 6px 0 22px;

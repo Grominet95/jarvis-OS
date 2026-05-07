@@ -203,6 +203,47 @@
     }, list));
   }
 
+  /* ───────── Markdown renderer ───────── */
+  function mdToHtml(text) {
+    function esc(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    function inline(s) {
+      s = esc(s);
+      s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+      s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+      return s;
+    }
+    const lines = text.split("\n");
+    const out = [];
+    let inList = false;
+    for (const raw of lines) {
+      const line = raw.trimEnd();
+      const t = line.trim();
+      if (t.startsWith("### ")) {
+        if (inList) { out.push("</ul>"); inList = false; }
+        out.push("<h3>" + inline(t.slice(4)) + "</h3>");
+      } else if (t.startsWith("## ")) {
+        if (inList) { out.push("</ul>"); inList = false; }
+        out.push("<h2>" + inline(t.slice(3)) + "</h2>");
+      } else if (t.startsWith("# ")) {
+        if (inList) { out.push("</ul>"); inList = false; }
+        out.push("<h1>" + inline(t.slice(2)) + "</h1>");
+      } else if (t.startsWith("- ") || t.startsWith("* ")) {
+        if (!inList) { out.push("<ul>"); inList = true; }
+        out.push("<li>" + inline(t.slice(2)) + "</li>");
+      } else if (!t) {
+        if (inList) { out.push("</ul>"); inList = false; }
+      } else {
+        if (inList) { out.push("</ul>"); inList = false; }
+        out.push("<p>" + inline(t) + "</p>");
+      }
+    }
+    if (inList) out.push("</ul>");
+    return out.join("");
+  }
+
   /* ───────── Memory ───────── */
   async function renderMemory(root) {
     // SHAPE EXPECTED (MEM_FILES): [{ id, group, name, path, size, pin, body:{title,fm,sections} }]
@@ -263,17 +304,16 @@
     const filesWithGroup = memFiles.map(f => Object.assign({ group: "global" }, f));
 
     async function loadFileContent(file) {
-      if (file.body) return;  // already loaded
+      if (file.body) return;
       try {
-        // SHAPE EXPECTED: { name, content } from GET /api/memory/topics/{name}
         const data = await J.api.get("/api/memory/topics/" + encodeURIComponent(file.name));
         file.body = {
           title: file.name,
           fm: { Fichier: file.name, Taille: file.size },
-          sections: [{ p: [data.content || ""] }],
+          raw: data.content || "",
         };
       } catch (_) {
-        file.body = { title: file.name, fm: {}, sections: [{ p: ["Contenu non disponible."] }] };
+        file.body = { title: file.name, fm: {}, raw: "_Contenu non disponible._" };
       }
     }
 
@@ -303,7 +343,6 @@
       ]);
       viewCol.appendChild(vhd);
       const md = el("div", { class: "mem-md" });
-      md.appendChild(el("h1", { text: file.body.title }));
       if (Object.keys(file.body.fm).length > 0) {
         const dl = el("dl", { class: "frontmatter" });
         Object.keys(file.body.fm).forEach(k => {
@@ -314,15 +353,9 @@
         });
         md.appendChild(dl);
       }
-      file.body.sections.forEach(s => {
-        if (s.h) md.appendChild(el("h2", { text: s.h }));
-        if (s.p) s.p.forEach(p => md.appendChild(el("p", { text: p })));
-        if (s.list) {
-          const ul = el("ul");
-          s.list.forEach(li => ul.appendChild(el("li", { text: li })));
-          md.appendChild(ul);
-        }
-      });
+      const content = el("div", { class: "mem-md-body" });
+      content.innerHTML = mdToHtml(file.body.raw || "");
+      md.appendChild(content);
       viewCol.appendChild(md);
     }
 
