@@ -1,6 +1,6 @@
 """
 Script de validation Phase 1 — appelle LLMProvider.complete() et affiche la réponse.
-Usage : uv run python scripts/test_llm.py [--stream] [--provider anthropic|mistral|ollama]
+Usage : uv run python scripts/test_llm.py [--stream] [--provider anthropic|openai|mistral|ollama]
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from loguru import logger
 
-from llm.api import AnthropicProvider, MistralProvider
+from llm.api import AnthropicProvider, MistralProvider, OpenAIProvider
 from llm.factory import get_llm_provider
 from llm.local import OllamaProvider
 
@@ -22,6 +22,7 @@ from llm.local import OllamaProvider
 async def run(provider_name: str, stream: bool) -> None:
     providers = {
         "anthropic": AnthropicProvider,
+        "openai": OpenAIProvider,
         "mistral": MistralProvider,
         "ollama": OllamaProvider,
         "auto": None,
@@ -64,7 +65,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Test LLM Provider — Jarvis Phase 1")
     parser.add_argument(
         "--provider",
-        choices=["anthropic", "mistral", "ollama", "auto"],
+        choices=["anthropic", "openai", "mistral", "ollama", "auto"],
         default="auto",
         help="Provider à tester (défaut: auto, lit LLM_PROVIDER dans .env)",
     )

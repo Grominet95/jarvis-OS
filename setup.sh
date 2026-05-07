@@ -199,24 +199,37 @@ step "Installation des dépendances Python"
 run_task "uv sync (pyproject.toml)" uv sync
 badge_info ".venv/ prêt"
 
-# ── STEP 3 — Clé API obligatoire ────────────────────────────────
+# ── STEP 3 — LLM principal ───────────────────────────────────────
 step "Configuration — LLM principal (obligatoire)"
 
 nl
-echo -e "  ${TC_CYAN}${BOLD}Anthropic${RESET} ${TC_GRAY}est le LLM principal de JARVIS.${RESET}"
-echo -e "  ${TC_GRAY}Obtiens ta clé sur ${TC_WHITE}console.anthropic.com${RESET}"
+echo -e "  ${TC_CYAN}${BOLD}Choisis ton backend API principal${RESET}"
+echo -e "  ${TC_GRAY}Anthropic (Claude) ou OpenAI.${RESET}"
 nl
 
+API_BACKEND="anthropic"
 ANTHROPIC_API_KEY=""
-while [[ -z "$ANTHROPIC_API_KEY" ]]; do
-  ask_secret "Clé API Anthropic  (sk-ant-...)" ANTHROPIC_API_KEY
-  if [[ -z "$ANTHROPIC_API_KEY" ]]; then
-    badge_warn "La clé Anthropic est obligatoire pour faire fonctionner JARVIS."
-  fi
-done
-badge_ok "Clé Anthropic enregistrée"
-
 ANTHROPIC_MODEL="claude-sonnet-4-6"
+OPENAI_API_KEY=""
+OPENAI_MODEL="gpt-4o-mini"
+if ask_yesno "Utiliser OpenAI comme LLM principal ?" "n"; then
+  API_BACKEND="openai"
+  while [[ -z "$OPENAI_API_KEY" ]]; do
+    ask_secret "Clé API OpenAI  (sk-...)" OPENAI_API_KEY
+    if [[ -z "$OPENAI_API_KEY" ]]; then
+      badge_warn "La clé OpenAI est obligatoire avec ce backend."
+    fi
+  done
+  badge_ok "Backend principal → OpenAI"
+else
+  while [[ -z "$ANTHROPIC_API_KEY" ]]; do
+    ask_secret "Clé API Anthropic  (sk-ant-...)" ANTHROPIC_API_KEY
+    if [[ -z "$ANTHROPIC_API_KEY" ]]; then
+      badge_warn "La clé Anthropic est obligatoire avec ce backend."
+    fi
+  done
+  badge_ok "Backend principal → Anthropic"
+fi
 
 # ── STEP 4 — Identité utilisateur ───────────────────────────────
 step "Ton identité"
@@ -367,8 +380,11 @@ USER_FIRSTNAME=${USER_FIRSTNAME}
 
 # ── LLM ──────────────────────────────────────────────────────────
 LLM_PROVIDER=api
+API_BACKEND=${API_BACKEND}
 ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
 ANTHROPIC_MODEL=${ANTHROPIC_MODEL}
+OPENAI_API_KEY=${OPENAI_API_KEY}
+OPENAI_MODEL=${OPENAI_MODEL}
 
 # ── Serveur ───────────────────────────────────────────────────────
 HOST=0.0.0.0
