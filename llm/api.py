@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 import anthropic
+from openai import AsyncOpenAI
 from loguru import logger
 from mistralai.client import Mistral
 
@@ -283,8 +284,64 @@ class MistralProvider(LLMProvider):
             return False
 
 
-def get_api_provider(backend: str = "anthropic") -> LLMProvider:
+class OpenAIProvider(LLMProvider):
+    """Provider OpenAI API via SDK officiel."""
+
+    def __init__(self, model: str | None = None) -> None:
+        self._client = AsyncOpenAI(api_key=settings.openai_api_key)
+        self._model = model or settings.openai_model
+
+    async def complete(
+        self,
+        messages: list[dict],
+        system: str,
+        tools: list[dict] | None = None,
+        stream: bool = False,
+        context: str = "",
+    ) -> str | AsyncIterator[str]:
+        full_messages = [{"role": "system", "content": system}, *messages]
+
+        if stream:
+            return self._stream(full_messages)
+
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=full_messages,
+        )
+        text = response.choices[0].message.content or ""
+        logger.debug("OpenAI complete", model=self._model)
+        return text
+
+    async def _stream(self, messages: list[dict]) -> AsyncIterator[str]:
+        stream = await self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            stream=True,
+        )
+        async for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
+
+    async def health_check(self) -> bool:
+        try:
+            await self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": "ping"}],
+                max_tokens=1,
+            )
+            return True
+        except Exception as e:
+            logger.error("OpenAI health check failed", error=str(e))
+            return False
+
+
+def get_api_provider(backend: str = "anthropic", max_tokens: int = 2048) -> LLMProvider:
     """Retourne le provider API selon le backend demandé."""
     if backend == "mistral":
         return MistralProvider()
-    return AnthropicProvider()
+    if backend == "openai":
+        return OpenAIProvider()
+    return AnthropicProvider(max_tokens=max_tokens)
