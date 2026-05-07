@@ -108,14 +108,15 @@ class UsageTracker:
         total_tokens = 0
         total_calls = 0
         total_cost = 0.0
-
         total_tts_chars = 0
+
         for e in entries:
             provider = e.get("provider", "unknown")
             model = e.get("model", "unknown")
 
             if provider not in providers:
-                providers[provider] = {"models": {}, "total_cost": 0.0, "calls": 0}
+                providers[provider] = {"models": {},
+                                       "total_cost": 0.0, "calls": 0}
 
             prov = providers[provider]
             if model not in prov["models"]:
@@ -130,20 +131,21 @@ class UsageTracker:
                 }
 
             m = prov["models"][model]
-            m["input_tokens"]  += e.get("input_tokens", 0)
+            m["input_tokens"] += e.get("input_tokens", 0)
             m["output_tokens"] += e.get("output_tokens", 0)
-            m["characters"]    += e.get("characters", 0)
+            m["characters"] += e.get("characters", 0)
             m["audio_minutes"] += e.get("audio_minutes", 0.0)
-            m["images"]        += e.get("images", 0)
-            m["calls"]         += 1
-            m["cost"]          += e.get("cost_usd", 0.0)
+            m["images"] += e.get("images", 0)
+            m["calls"] += 1
+            m["cost"] += e.get("cost_usd", 0.0)
 
-            prov["calls"]      += 1
+            prov["calls"] += 1
             prov["total_cost"] += e.get("cost_usd", 0.0)
 
-            total_tokens += e.get("input_tokens", 0) + e.get("output_tokens", 0)
-            total_calls  += 1
-            total_cost   += e.get("cost_usd", 0.0)
+            total_tokens += e.get("input_tokens", 0) + \
+                e.get("output_tokens", 0)
+            total_calls += 1
+            total_cost += e.get("cost_usd", 0.0)
             total_tts_chars += e.get("characters", 0)
 
         return {
@@ -152,33 +154,6 @@ class UsageTracker:
             "total_cost_usd":  round(total_cost, 4),
             "total_tts_chars": total_tts_chars,
             "providers":       providers,
-        }
-
-    def get_monthly_totals(self) -> dict:
-        """Totaux depuis le début du mois courant."""
-        today = date.today()
-        first_day = today.replace(day=1)
-        total_cost = 0.0
-        total_tokens = 0
-        total_tts_chars = 0
-        total_calls = 0
-
-        d = first_day
-        while d <= today:
-            entries = self._read_day(d)
-            for e in entries:
-                total_cost += e.get("cost_usd", 0.0)
-                total_tokens += e.get("input_tokens", 0) + e.get("output_tokens", 0)
-                total_tts_chars += e.get("characters", 0)
-                total_calls += 1
-            d = d + timedelta(days=1)
-
-        return {
-            "total_cost_usd":  round(total_cost, 4),
-            "total_tokens":    total_tokens,
-            "total_tts_chars": total_tts_chars,
-            "total_api_calls": total_calls,
-            "month":           today.strftime("%B %Y"),
         }
 
     def get_daily_totals(self, days: int = 7) -> list[dict]:
@@ -219,7 +194,8 @@ class UsageTracker:
             for e in entries:
                 p = e.get("provider", "")
                 if p in row:
-                    row[p] += e.get("input_tokens", 0) + e.get("output_tokens", 0)
+                    row[p] += e.get("input_tokens", 0) + \
+                        e.get("output_tokens", 0)
             result.append(row)
         return result
 

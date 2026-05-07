@@ -38,20 +38,15 @@ def _load_gmail_creds(credentials_path: Path, token_path: Path) -> "Credentials"
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            try:
-                creds.refresh(Request())
-            except Exception:
-                token_path.unlink(missing_ok=True)
-                creds = None
-
-        if not creds or not creds.valid:
+            creds.refresh(Request())
+        else:
             if not credentials_path.exists():
                 raise FileNotFoundError(
                     f"Credentials Google manquants : {credentials_path}."
                 )
-            flow = InstalledAppFlow.from_client_secrets_file(str(credentials_path), _SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                str(credentials_path), _SCOPES)
             creds = flow.run_local_server(port=0)
-
         token_path.write_text(creds.to_json())
 
     return creds
@@ -130,11 +125,13 @@ class GmailListTool(Tool):
 
             lines = []
             for msg in metas:
-                hdrs = {h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])}
-                sender  = hdrs.get("From", "?")
+                hdrs = {h["name"]: h["value"]
+                        for h in msg.get("payload", {}).get("headers", [])}
+                sender = hdrs.get("From", "?")
                 subject = hdrs.get("Subject", "(sans sujet)")
                 snippet = msg.get("snippet", "")[:120]
-                lines.append(f"De : {sender}\nSujet : {subject}\nAperçu : {snippet}")
+                lines.append(
+                    f"De : {sender}\nSujet : {subject}\nAperçu : {snippet}")
 
             content = "\n\n---\n\n".join(lines)
             logger.debug("Gmail emails listed", count=len(lines))
@@ -177,9 +174,9 @@ def _parse_draft(draft_content: str) -> tuple[str, str, str | None, str]:
             key, _, val = line.partition(":")
             headers[key.strip().lower()] = val.strip()
 
-    to      = headers.get("à", headers.get("to", ""))
+    to = headers.get("à", headers.get("to", ""))
     subject = headers.get("sujet", headers.get("subject", ""))
-    body    = "\n".join(body_lines).strip()
+    body = "\n".join(body_lines).strip()
     return to, subject, thread_id, body
 
 
@@ -196,9 +193,9 @@ async def send_gmail_draft(
     creds = await asyncio.to_thread(_load_gmail_send_creds, credentials_path, token_path)
 
     msg = MIMEText(body, "plain", "utf-8")
-    msg["To"]      = to
+    msg["To"] = to
     msg["Subject"] = subject
-    msg["From"]    = "me"
+    msg["From"] = "me"
 
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode("ascii")
     payload: dict = {"raw": raw}
@@ -214,5 +211,6 @@ async def send_gmail_draft(
         resp.raise_for_status()
 
     sent_id: str = resp.json().get("id", "")
-    logger.info(f"Gmail message sent", to=to, subject=subject, message_id=sent_id)
+    logger.info(f"Gmail message sent", to=to,
+                subject=subject, message_id=sent_id)
     return sent_id

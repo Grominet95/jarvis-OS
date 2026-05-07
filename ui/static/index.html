@@ -6,9 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Jarvis</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400&family=Inter:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="/globe.css">
   <link rel="stylesheet" href="/dashboard.css">
@@ -123,7 +122,7 @@
       font: 500 22px/1 'Landasans', 'Syne', sans-serif;
       letter-spacing: 0.24em;
       color: #fff;
-      text-shadow: 0 0 18px rgba(255,255,255,0.25);
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.25);
     }
 
     .brand-status {
@@ -275,14 +274,19 @@
       scrollbar-color: rgba(74, 158, 255, 0.08) transparent;
     }
 
-    .left-scroll::-webkit-scrollbar { width: 2px; }
+    .left-scroll::-webkit-scrollbar {
+      width: 2px;
+    }
+
     .left-scroll::-webkit-scrollbar-thumb {
       background: rgba(74, 158, 255, 0.10);
       border-radius: 2px;
     }
 
     /* ── Permissions ──────────────────────────────────────────────── */
-    .perms-section { flex-shrink: 0; }
+    .perms-section {
+      flex-shrink: 0;
+    }
 
     .perms-grid {
       display: grid;
@@ -322,13 +326,22 @@
       border-color: rgba(74, 158, 255, 0.70);
       animation: mic-pulse 1.4s ease-in-out infinite;
     }
+
     #perm-microphone[data-state="processing"],
     #perm-microphone[data-state="responding"] {
       border-color: rgba(74, 158, 255, 0.50);
     }
+
     @keyframes mic-pulse {
-      0%, 100% { box-shadow: 0 0 6px rgba(74, 158, 255, 0.10); }
-      50%       { box-shadow: 0 0 18px rgba(74, 158, 255, 0.35), 0 0 36px rgba(74, 158, 255, 0.12); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 6px rgba(74, 158, 255, 0.10);
+      }
+
+      50% {
+        box-shadow: 0 0 18px rgba(74, 158, 255, 0.35), 0 0 36px rgba(74, 158, 255, 0.12);
+      }
     }
 
     .perm-label {
@@ -364,7 +377,9 @@
       user-select: none;
     }
 
-    .cam-win-hd:active { cursor: grabbing; }
+    .cam-win-hd:active {
+      cursor: grabbing;
+    }
 
     .cam-win-title {
       font: 500 9px/1 'DM Mono', monospace;
@@ -373,7 +388,10 @@
       color: rgba(100, 168, 255, 0.80);
     }
 
-    .cam-win-btns { display: flex; gap: 4px; }
+    .cam-win-btns {
+      display: flex;
+      gap: 4px;
+    }
 
     .cam-ctrl-btn {
       background: none;
@@ -394,14 +412,17 @@
       background: rgba(74, 158, 255, 0.08);
     }
 
-    .cam-body { position: relative; }
+    .cam-body {
+      position: relative;
+    }
 
     #cam-video {
       display: block;
       width: 100%;
       aspect-ratio: 4/3;
       object-fit: cover;
-      transform: scaleX(-1); /* miroir naturel */
+      transform: scaleX(-1);
+      /* miroir naturel */
     }
 
     .cam-live-pill {
@@ -423,12 +444,15 @@
 
     .cam-live-pill .dot {
       background: #ef4444;
-      width: 5px; height: 5px;
+      width: 5px;
+      height: 5px;
       box-shadow: 0 0 5px rgba(239, 68, 68, 0.7);
       animation: blink 1.4s step-start infinite;
     }
 
-    .cam-win.minimized .cam-body { display: none; }
+    .cam-win.minimized .cam-body {
+      display: none;
+    }
 
     /* ── MediaPipe overlays ───────────────────────────────────────── */
     #cam-canvas {
@@ -437,7 +461,8 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      transform: scaleX(-1); /* miroir = même sens que la vidéo */
+      transform: scaleX(-1);
+      /* miroir = même sens que la vidéo */
     }
 
     .mp-status {
@@ -447,8 +472,14 @@
       color: rgba(74, 158, 255, 0.32);
       transition: color 0.3s;
     }
-    .mp-status.active { color: var(--green); }
-    .mp-status.error  { color: #ef4444; }
+
+    .mp-status.active {
+      color: var(--green);
+    }
+
+    .mp-status.error {
+      color: #ef4444;
+    }
 
     #mp-gesture-label {
       position: absolute;
@@ -468,6 +499,7 @@
       white-space: nowrap;
       pointer-events: none;
     }
+
     #mp-gesture-label.triggered {
       color: var(--green);
       border-color: rgba(54, 211, 153, 0.40);
@@ -590,7 +622,10 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    #voice-status.visible { opacity: 1; }
+
+    #voice-status.visible {
+      opacity: 1;
+    }
 
     /* ── Right: clock ────────────────────────────────────────────── */
     .clock-wrap {
@@ -921,16 +956,31 @@
 
     /* ── Session switcher ────────────────────────────────────────── */
     .session-btn {
-      background: none; border: none; cursor: pointer;
-      display: flex; align-items: center; gap: 5px; padding: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0;
       color: rgba(100, 168, 255, 0.80);
       font: 500 9px/1 'DM Mono', monospace;
-      letter-spacing: 0.30em; text-transform: uppercase;
+      letter-spacing: 0.30em;
+      text-transform: uppercase;
       transition: color 0.15s;
     }
-    .session-btn:hover { color: var(--blue-bright); }
-    .session-btn svg { transition: transform 0.18s; }
-    .session-btn.open svg { transform: rotate(180deg); }
+
+    .session-btn:hover {
+      color: var(--blue-bright);
+    }
+
+    .session-btn svg {
+      transition: transform 0.18s;
+    }
+
+    .session-btn.open svg {
+      transform: rotate(180deg);
+    }
 
     .session-sub {
       font: 400 8px/1 'DM Mono', monospace;
@@ -938,7 +988,9 @@
       color: rgba(74, 158, 255, 0.42);
       text-transform: none;
       max-width: 160px;
-      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .session-drop {
@@ -954,60 +1006,117 @@
     }
 
     .sdrop-new {
-      display: flex; align-items: center; gap: 9px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
       padding: 10px 16px 10px 14px;
       font: 500 8.5px/1 'DM Mono', monospace;
-      letter-spacing: 0.20em; text-transform: uppercase;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
       color: var(--green);
-      background: none; border: none; cursor: pointer;
-      width: 100%; text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
       border-bottom: 1px solid rgba(74, 158, 255, 0.08);
       transition: background 0.12s;
     }
-    .sdrop-new:hover { background: rgba(54, 211, 153, 0.06); }
+
+    .sdrop-new:hover {
+      background: rgba(54, 211, 153, 0.06);
+    }
+
     .sdrop-plus {
-      width: 15px; height: 15px; border-radius: 4px;
+      width: 15px;
+      height: 15px;
+      border-radius: 4px;
       border: 1px solid rgba(54, 211, 153, 0.40);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; line-height: 1; flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      line-height: 1;
+      flex-shrink: 0;
       color: var(--green);
     }
 
-    .sdrop-list { max-height: 210px; overflow-y: auto; }
-    .sdrop-list::-webkit-scrollbar { width: 2px; }
-    .sdrop-list::-webkit-scrollbar-thumb { background: rgba(74, 158, 255, 0.10); }
+    .sdrop-list {
+      max-height: 210px;
+      overflow-y: auto;
+    }
+
+    .sdrop-list::-webkit-scrollbar {
+      width: 2px;
+    }
+
+    .sdrop-list::-webkit-scrollbar-thumb {
+      background: rgba(74, 158, 255, 0.10);
+    }
 
     .sdrop-item {
-      display: flex; align-items: flex-start; gap: 9px;
-      padding: 8px 14px; width: 100%;
-      border: none; background: none; cursor: pointer; text-align: left;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 8px 14px;
+      width: 100%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      text-align: left;
       border-bottom: 1px solid rgba(74, 158, 255, 0.06);
       transition: background 0.12s;
     }
-    .sdrop-item:hover { background: rgba(74, 158, 255, 0.05); }
-    .sdrop-item.active { background: rgba(74, 158, 255, 0.08); }
-    .sdrop-item:last-child { border-bottom: none; }
+
+    .sdrop-item:hover {
+      background: rgba(74, 158, 255, 0.05);
+    }
+
+    .sdrop-item.active {
+      background: rgba(74, 158, 255, 0.08);
+    }
+
+    .sdrop-item:last-child {
+      border-bottom: none;
+    }
 
     .sdrop-dot {
-      width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
       background: rgba(74, 158, 255, 0.18);
     }
-    .sdrop-dot.on { background: var(--green); box-shadow: 0 0 5px rgba(54,211,153,0.55); }
+
+    .sdrop-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 5px rgba(54, 211, 153, 0.55);
+    }
 
     .sdrop-preview {
       font: 400 11.5px/1.3 'DM Sans', sans-serif;
       color: rgba(210, 228, 255, 0.80);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .sdrop-item.active .sdrop-preview { color: #fff; }
+
+    .sdrop-item.active .sdrop-preview {
+      color: #fff;
+    }
+
     .sdrop-meta {
       font: 400 8px/1 'DM Mono', monospace;
       color: rgba(90, 130, 190, 0.45);
-      margin-top: 3px; letter-spacing: 0.08em;
+      margin-top: 3px;
+      letter-spacing: 0.08em;
     }
 
     /* ── Projects / Missions ─────────────────────────────────────── */
-    .missions { padding: 4px 12px 8px; }
+    .missions {
+      padding: 4px 12px 8px;
+    }
 
     .proj-card {
       padding: 9px 10px 8px;
@@ -1017,7 +1126,9 @@
       margin-bottom: 6px;
     }
 
-    .proj-card:last-child { margin-bottom: 0; }
+    .proj-card:last-child {
+      margin-bottom: 0;
+    }
 
     .proj-row1 {
       display: flex;
@@ -1045,11 +1156,35 @@
       flex-shrink: 0;
     }
 
-    .proj-badge.running  { color: var(--blue-bright); border-color: rgba(74,158,255,0.35); background: rgba(74,158,255,0.10); }
-    .proj-badge.done     { color: var(--green);        border-color: rgba(54,211,153,0.35); background: rgba(54,211,153,0.10); }
-    .proj-badge.failed   { color: #ef4444;             border-color: rgba(239,68,68,0.35);  background: rgba(239,68,68,0.10); }
-    .proj-badge.killed   { color: rgba(150,170,200,0.6); border-color: rgba(150,170,200,0.2); background: rgba(150,170,200,0.06); }
-    .proj-badge.planning { color: var(--gold);         border-color: rgba(184,150,62,0.35); background: rgba(184,150,62,0.10); }
+    .proj-badge.running {
+      color: var(--blue-bright);
+      border-color: rgba(74, 158, 255, 0.35);
+      background: rgba(74, 158, 255, 0.10);
+    }
+
+    .proj-badge.done {
+      color: var(--green);
+      border-color: rgba(54, 211, 153, 0.35);
+      background: rgba(54, 211, 153, 0.10);
+    }
+
+    .proj-badge.failed {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.10);
+    }
+
+    .proj-badge.killed {
+      color: rgba(150, 170, 200, 0.6);
+      border-color: rgba(150, 170, 200, 0.2);
+      background: rgba(150, 170, 200, 0.06);
+    }
+
+    .proj-badge.planning {
+      color: var(--gold);
+      border-color: rgba(184, 150, 62, 0.35);
+      background: rgba(184, 150, 62, 0.10);
+    }
 
     .proj-kill {
       background: none;
@@ -1063,7 +1198,11 @@
       flex-shrink: 0;
       line-height: 1;
     }
-    .proj-kill:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+
+    .proj-kill:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.08);
+    }
 
     .proj-row2 {
       display: flex;
@@ -1086,8 +1225,13 @@
       transition: width 0.4s ease;
     }
 
-    .proj-prog-fill.done  { background: var(--green); }
-    .proj-prog-fill.failed { background: #ef4444; }
+    .proj-prog-fill.done {
+      background: var(--green);
+    }
+
+    .proj-prog-fill.failed {
+      background: #ef4444;
+    }
 
     .proj-steps {
       font: 400 9px/1 'DM Mono', monospace;
@@ -1107,13 +1251,18 @@
       align-items: center;
       justify-content: center;
     }
-    #mindmap-modal.open { display: flex; animation: fadeIn .18s ease; }
+
+    #mindmap-modal.open {
+      display: flex;
+      animation: fadeIn .18s ease;
+    }
+
     #mindmap-container {
       position: relative;
       background: rgba(8, 12, 28, 0.97);
       border: 1px solid rgba(74, 158, 255, 0.22);
       border-radius: 14px;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(74,158,255,0.08);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(74, 158, 255, 0.08);
       padding: 24px;
       width: 92vw;
       height: 88vh;
@@ -1121,30 +1270,44 @@
       flex-direction: column;
       overflow: hidden;
     }
+
     #mindmap-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
     }
+
     #mindmap-toolbar span {
       font: 700 10px/1 'DM Mono', monospace;
       letter-spacing: .12em;
-      color: rgba(74,158,255,0.6);
+      color: rgba(74, 158, 255, 0.6);
     }
-    #mindmap-toolbar-btns { display: flex; gap: 8px; }
+
+    #mindmap-toolbar-btns {
+      display: flex;
+      gap: 8px;
+    }
+
     .mindmap-btn {
-      background: rgba(74,158,255,0.08);
-      border: 1px solid rgba(74,158,255,0.20);
+      background: rgba(74, 158, 255, 0.08);
+      border: 1px solid rgba(74, 158, 255, 0.20);
       border-radius: 6px;
-      color: rgba(74,158,255,0.8);
+      color: rgba(74, 158, 255, 0.8);
       font: 500 11px/1 'DM Sans', sans-serif;
       padding: 5px 10px;
       cursor: pointer;
       transition: background .15s;
     }
-    .mindmap-btn:hover { background: rgba(74,158,255,0.16); }
-    .mindmap-btn.close { color: rgba(220,232,255,0.4); }
+
+    .mindmap-btn:hover {
+      background: rgba(74, 158, 255, 0.16);
+    }
+
+    .mindmap-btn.close {
+      color: rgba(220, 232, 255, 0.4);
+    }
+
     #mindmap-render {
       flex: 1;
       overflow: auto;
@@ -1152,6 +1315,7 @@
       align-items: center;
       justify-content: center;
     }
+
     #mindmap-render svg {
       width: 100%;
       height: 100%;
@@ -1169,15 +1333,22 @@
       border: 1px solid rgba(184, 150, 62, 0.45);
       border-radius: 10px;
       background: rgba(8, 10, 24, 0.96);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(184,150,62,0.10);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(184, 150, 62, 0.10);
       padding: 14px 16px 12px;
       display: none;
       animation: fadeUp 0.2s ease;
     }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .approval-hd {
@@ -1187,7 +1358,9 @@
       margin-bottom: 8px;
     }
 
-    .approval-icon { font-size: 14px; }
+    .approval-icon {
+      font-size: 14px;
+    }
 
     .approval-label {
       font: 500 8px/1 'DM Mono', monospace;
@@ -1213,7 +1386,10 @@
       background: rgba(74, 158, 255, 0.04);
     }
 
-    .approval-btns { display: flex; gap: 8px; }
+    .approval-btns {
+      display: flex;
+      gap: 8px;
+    }
 
     .approval-btn {
       flex: 1;
@@ -1232,6 +1408,7 @@
       border-color: rgba(54, 211, 153, 0.35);
       color: var(--green);
     }
+
     .approval-btn.approve:hover {
       background: rgba(54, 211, 153, 0.20);
     }
@@ -1241,6 +1418,7 @@
       border-color: rgba(239, 68, 68, 0.28);
       color: #ef4444;
     }
+
     .approval-btn.reject:hover {
       background: rgba(239, 68, 68, 0.16);
     }
@@ -1306,23 +1484,35 @@
       padding: 0;
       transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
     }
+
     #panels-toggle:hover {
       color: rgba(220, 232, 255, 0.7);
       border-color: rgba(74, 158, 255, 0.3);
       background: rgba(6, 8, 13, 0.9);
     }
-    #panels-toggle svg { transition: transform 300ms ease; }
-    #panels-toggle.hidden-state svg { transform: rotate(180deg); }
+
+    #panels-toggle svg {
+      transition: transform 300ms ease;
+    }
+
+    #panels-toggle.hidden-state svg {
+      transform: rotate(180deg);
+    }
 
     /* ── Mapbox attribution tweaks ───────────────────────────────── */
-    .mapboxgl-ctrl-bottom-right { bottom: 36px !important; }
+    .mapboxgl-ctrl-bottom-right {
+      bottom: 36px !important;
+    }
 
     /* ── GSAP view transition overlay ──────────────────────────── */
     #transition-overlay {
-      position: fixed; inset: 0; z-index: 9999;
-      pointer-events: none; opacity: 1; background: #000;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 1;
+      background: #000;
     }
-
   </style>
 </head>
 
@@ -1344,44 +1534,48 @@
 
   <button id="panels-toggle" title="Masquer les panneaux">
     <svg width="12" height="24" viewBox="0 0 12 24">
-      <polyline points="10,4 2,12 10,20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <polyline points="10,4 2,12 10,20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" />
     </svg>
   </button>
 
   <!-- Nav buttons — 5 boutons centrés, ordre : Jarvis · Pilotage · Globe · Intel · Système -->
   <button id="jarvis-toggle" onclick="handleSphereClick()" title="Jarvis">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="12" cy="12" r="9"/>
-      <circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/>
-      <circle cx="7.5" cy="9" r="1" fill="currentColor" stroke="none"/>
-      <circle cx="16.5" cy="9" r="1" fill="currentColor" stroke="none"/>
-      <circle cx="7.5" cy="15" r="1" fill="currentColor" stroke="none"/>
-      <circle cx="16.5" cy="15" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none" />
+      <circle cx="7.5" cy="9" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16.5" cy="9" r="1" fill="currentColor" stroke="none" />
+      <circle cx="7.5" cy="15" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16.5" cy="15" r="1" fill="currentColor" stroke="none" />
     </svg>
   </button>
   <button id="dashboard-nav-btn" onclick="openDashboard()" title="Pilotage">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="18" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
   </button>
   <button id="globe-toggle" onclick="handleGlobeClick()" title="Globe mondial">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="2" y1="12" x2="22" y2="12"/>
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
   </button>
   <button id="intel-toggle" onclick="handleIntelClick()" title="Intel Monde">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <path d="M13 2L4.09 13H11L10 22L19.91 11H13V2Z"/>
+      <path d="M13 2L4.09 13H11L10 22L19.91 11H13V2Z" />
     </svg>
   </button>
   <button id="settings-nav-btn" onclick="openSettings()" title="Système">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path
+        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   </button>
 
@@ -1443,42 +1637,23 @@
     </div>
     <div id="dashboard-body">
       <nav id="dashboard-sidebar">
-        <div class="dash-nav-group-label">Pilotage</div>
+        <div class="dash-nav-group-label">PILOTAGE</div>
         <button class="dash-nav-item active" data-section="initiatives" onclick="loadDashboardSection('initiatives')">
-          <svg class="dash-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          <span>Initiatives</span>
+          <span>⚡</span><span>Initiatives</span>
         </button>
         <button class="dash-nav-item" data-section="missions" onclick="loadDashboardSection('missions')">
-          <svg class="dash-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
-          </svg>
-          <span>Missions</span>
+          <span>⚙</span><span>Missions</span>
         </button>
         <button class="dash-nav-item disabled" data-section="domotique" onclick="loadDashboardSection('domotique')">
-          <svg class="dash-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-          <span>Domotique</span><span class="dash-soon">bientôt</span>
+          <span>🏠</span><span>Domotique</span><span class="dash-soon">bientôt</span>
         </button>
         <button class="dash-nav-item disabled" data-section="devices" onclick="loadDashboardSection('devices')">
-          <svg class="dash-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
-            <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
-            <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
-            <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
-            <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
-          </svg>
-          <span>Devices</span><span class="dash-soon">bientôt</span>
+          <span>🤖</span><span>Devices</span><span class="dash-soon">bientôt</span>
         </button>
         <div class="dash-nav-sep"></div>
-        <div class="dash-nav-group-label">Analyse</div>
+        <div class="dash-nav-group-label">ANALYSE</div>
         <button class="dash-nav-item" data-section="analytics" onclick="loadDashboardSection('analytics')">
-          <svg class="dash-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-          <span>Analytics</span>
+          <span>📊</span><span>Analytics</span>
         </button>
       </nav>
       <main id="dashboard-main">
@@ -1568,26 +1743,22 @@
             <span class="gdp-section-label">Vols en direct</span>
             <span class="gdp-section-count" id="gdp-flight-count">—</span>
             <label class="gdp-switch" title="Afficher / masquer les vols">
-              <input type="checkbox" id="gdp-flights-check"
-                     onchange="Globe.toggleLayer('flights')">
+              <input type="checkbox" id="gdp-flights-check" onchange="Globe.toggleLayer('flights')">
               <span class="gdp-switch-track"></span>
             </label>
           </div>
           <div class="gdp-search-row">
-            <input id="gdp-flight-search" class="gdp-search-input"
-                   type="text" placeholder="N° de vol — ex: AF447"
-                   oninput="Globe.searchFlight(this.value)"
-                   autocomplete="off" spellcheck="false">
+            <input id="gdp-flight-search" class="gdp-search-input" type="text" placeholder="N° de vol — ex: AF447"
+              oninput="Globe.searchFlight(this.value)" autocomplete="off" spellcheck="false">
             <button class="gdp-search-clear"
-                    onclick="document.getElementById('gdp-flight-search').value=''; Globe.searchFlight('')"
-                    title="Effacer">✕</button>
+              onclick="document.getElementById('gdp-flight-search').value=''; Globe.searchFlight('')"
+              title="Effacer">✕</button>
           </div>
           <!-- Couche nuageuse -->
           <div class="gdp-switch-row">
             <span class="gdp-switch-label">☁ Nuages</span>
             <label class="gdp-switch" title="Activer la couche nuageuse">
-              <input type="checkbox" id="gdp-clouds-check"
-                     onchange="Globe.toggleClouds()">
+              <input type="checkbox" id="gdp-clouds-check" onchange="Globe.toggleClouds()">
               <span class="gdp-switch-track"></span>
             </label>
           </div>
@@ -1600,8 +1771,7 @@
             <span class="gdp-section-label">Navires</span>
             <span class="gdp-section-count" id="gdp-vessel-count">—</span>
             <label class="gdp-switch" title="Afficher / masquer les navires">
-              <input type="checkbox" id="gdp-vessels-check" checked
-                     onchange="Globe.toggleVessels()">
+              <input type="checkbox" id="gdp-vessels-check" checked onchange="Globe.toggleVessels()">
               <span class="gdp-switch-track"></span>
             </label>
           </div>
@@ -1672,20 +1842,22 @@
           </div>
           <div class="controls-row">
             <button class="ctrl-btn" id="sp-prev" onclick="spotifyAction('previous')" title="Précédent">
-              <svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12,1 4.5,5.5 12,10" fill="currentColor" stroke="none"/>
-                <line x1="1" y1="1" x2="1" y2="10"/>
+              <svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.3"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12,1 4.5,5.5 12,10" fill="currentColor" stroke="none" />
+                <line x1="1" y1="1" x2="1" y2="10" />
               </svg>
             </button>
             <button class="ctrl-btn play" id="sp-play" onclick="spotifyToggle()" title="Lecture / Pause">
               <svg id="sp-play-svg" width="12" height="13" viewBox="0 0 12 13" fill="currentColor">
-                <polygon points="1,1 11,6.5 1,12"/>
+                <polygon points="1,1 11,6.5 1,12" />
               </svg>
             </button>
             <button class="ctrl-btn" id="sp-next" onclick="spotifyAction('next')" title="Suivant">
-              <svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="1,1 8.5,5.5 1,10" fill="currentColor" stroke="none"/>
-                <line x1="12" y1="1" x2="12" y2="10"/>
+              <svg width="13" height="11" viewBox="0 0 13 11" fill="none" stroke="currentColor" stroke-width="1.3"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1,1 8.5,5.5 1,10" fill="currentColor" stroke="none" />
+                <line x1="12" y1="1" x2="12" y2="10" />
               </svg>
             </button>
           </div>
@@ -1700,35 +1872,41 @@
         <div class="perms-grid">
 
           <button class="perm-btn" id="perm-microphone" onclick="togglePerm('microphone')" title="Micro — mode vocal">
-            <svg width="14" height="19" viewBox="0 0 14 19" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3.5" y="1" width="7" height="10" rx="3.5"/>
-              <path d="M1 9c0 3.3 2.7 6 6 6s6-2.7 6-6"/>
-              <line x1="7" y1="15" x2="7" y2="18"/>
-              <line x1="4" y1="18" x2="10" y2="18"/>
+            <svg width="14" height="19" viewBox="0 0 14 19" fill="none" stroke="currentColor" stroke-width="1.35"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3.5" y="1" width="7" height="10" rx="3.5" />
+              <path d="M1 9c0 3.3 2.7 6 6 6s6-2.7 6-6" />
+              <line x1="7" y1="15" x2="7" y2="18" />
+              <line x1="4" y1="18" x2="10" y2="18" />
             </svg>
             <span class="perm-label">Micro</span>
           </button>
 
           <button class="perm-btn active" id="perm-screen" onclick="togglePerm('screen')" title="Capture d'écran">
-            <svg width="18" height="15" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="1" width="16" height="10" rx="2"/>
-              <line x1="5.5" y1="14" x2="12.5" y2="14"/>
-              <line x1="9" y1="11" x2="9" y2="14"/>
+            <svg width="18" height="15" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.35"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="1" width="16" height="10" rx="2" />
+              <line x1="5.5" y1="14" x2="12.5" y2="14" />
+              <line x1="9" y1="11" x2="9" y2="14" />
             </svg>
             <span class="perm-label">Écran</span>
           </button>
 
           <button class="perm-btn active" id="perm-camera" onclick="togglePerm('camera')" title="Caméra">
-            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 4H2.4L3.8 2H14.2L15.6 4H17C17.6 4 18 4.4 18 5V12C18 12.6 17.6 13 17 13H1C0.4 13 0 12.6 0 12V5C0 4.4 0.4 4 1 4Z"/>
-              <circle cx="9" cy="8.5" r="2.7"/>
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.35"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M1 4H2.4L3.8 2H14.2L15.6 4H17C17.6 4 18 4.4 18 5V12C18 12.6 17.6 13 17 13H1C0.4 13 0 12.6 0 12V5C0 4.4 0.4 4 1 4Z" />
+              <circle cx="9" cy="8.5" r="2.7" />
             </svg>
             <span class="perm-label">Caméra</span>
           </button>
 
           <button class="perm-btn active" id="perm-files" onclick="togglePerm('files')" title="Accès fichiers">
-            <svg width="18" height="15" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 3.5C1 2.9 1.4 2.5 2 2.5H6L8 4.5H16C16.6 4.5 17 4.9 17 5.5V12.5C17 13.1 16.6 13.5 16 13.5H2C1.4 13.5 1 13.1 1 12.5V3.5Z"/>
+            <svg width="18" height="15" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.35"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M1 3.5C1 2.9 1.4 2.5 2 2.5H6L8 4.5H16C16.6 4.5 17 4.9 17 5.5V12.5C17 13.1 16.6 13.5 16 13.5H2C1.4 13.5 1 13.1 1 12.5V3.5Z" />
             </svg>
             <span class="perm-label">Fichiers</span>
           </button>
@@ -1760,11 +1938,13 @@
             <button class="session-btn" id="session-btn" onclick="toggleSessionDrop()">
               <span>SESSION</span>
               <span class="session-sub" id="session-label">NOUVEAU</span>
-              <svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="1,1 4,4 7,1"/>
+              <svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,1 4,4 7,1" />
               </svg>
             </button>
-            <span class="conv-live" style="margin-left:auto"><span class="dot" id="ws-dot" style="background:var(--text-dim)"></span>EN DIRECT</span>
+            <span class="conv-live" style="margin-left:auto"><span class="dot" id="ws-dot"
+                style="background:var(--text-dim)"></span>EN DIRECT</span>
           </div>
 
           <div class="conv-messages" id="chat"></div>
@@ -1794,14 +1974,16 @@
       </div>
       <div class="cam-win-btns">
         <button class="cam-ctrl-btn" onclick="camToggleMinimize()" title="Réduire">
-          <svg width="10" height="2" viewBox="0 0 10 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-            <line x1="0.5" y1="1" x2="9.5" y2="1"/>
+          <svg width="10" height="2" viewBox="0 0 10 2" fill="none" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round">
+            <line x1="0.5" y1="1" x2="9.5" y2="1" />
           </svg>
         </button>
         <button class="cam-ctrl-btn" onclick="camCloseBtn()" title="Fermer">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-            <line x1="1" y1="1" x2="9" y2="9"/>
-            <line x1="9" y1="1" x2="1" y2="9"/>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round">
+            <line x1="1" y1="1" x2="9" y2="9" />
+            <line x1="9" y1="1" x2="1" y2="9" />
           </svg>
         </button>
       </div>
@@ -1821,7 +2003,9 @@
       Nouvelle session
     </button>
     <div class="sdrop-list" id="sdrop-list">
-      <div style="padding:10px 14px;font:400 10px/1 'DM Mono',monospace;color:rgba(74,158,255,0.30);letter-spacing:.1em">Chargement…</div>
+      <div
+        style="padding:10px 14px;font:400 10px/1 'DM Mono',monospace;color:rgba(74,158,255,0.30);letter-spacing:.1em">
+        Chargement…</div>
     </div>
   </div>
 
@@ -1835,7 +2019,7 @@
     <div class="approval-desc" id="approval-step-desc"></div>
     <div class="approval-btns">
       <button class="approval-btn approve" onclick="resolveApproval(true)">Approuver ✓</button>
-      <button class="approval-btn reject"  onclick="resolveApproval(false)">Rejeter ✗</button>
+      <button class="approval-btn reject" onclick="resolveApproval(false)">Rejeter ✗</button>
     </div>
   </div>
 
@@ -1884,28 +2068,28 @@
     function makeParticleTex(size) {
       const c = document.createElement('canvas'); c.width = c.height = size;
       const ctx = c.getContext('2d');
-      const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-      g.addColorStop(0,    'rgba(255,255,255,1)');
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
       g.addColorStop(0.28, 'rgba(255,255,255,0.88)');
       g.addColorStop(0.55, 'rgba(180,210,255,0.22)');
-      g.addColorStop(1,    'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
       return new THREE.CanvasTexture(c);
     }
     function makeGlowTex(size) {
       const c = document.createElement('canvas'); c.width = c.height = size;
       const ctx = c.getContext('2d');
-      const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-      g.addColorStop(0,    'rgba(74,158,255,0.50)');
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, 'rgba(74,158,255,0.50)');
       g.addColorStop(0.40, 'rgba(50,120,210,0.15)');
       g.addColorStop(0.75, 'rgba(30, 80,160,0.04)');
-      g.addColorStop(1,    'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
       return new THREE.CanvasTexture(c);
     }
 
-    const PT  = makeParticleTex(32);
-    const GT  = makeGlowTex(512);
+    const PT = makeParticleTex(32);
+    const GT = makeGlowTex(512);
     const GT2 = makeGlowTex(256);
 
     // ── Background halo ───────────────────────────────────────────
@@ -1930,7 +2114,7 @@
     scene.add(sphereGroup);
 
     // ── Two-tier Fibonacci sphere ─────────────────────────────────
-    const R    = 150;
+    const R = 150;
     const N_SM = 12000;  // small dense particles
     const N_BG = 3000;   // larger sparkle particles
 
@@ -1938,24 +2122,24 @@
       const pos = new Float32Array(n * 3);
       const golden = Math.PI * (3 - Math.sqrt(5));
       for (let i = 0; i < n; i++) {
-        const y   = 1 - (i / (n - 1)) * 2;
+        const y = 1 - (i / (n - 1)) * 2;
         const rho = Math.sqrt(Math.max(0, 1 - y * y));
-        const th  = golden * i;
-        pos[i*3]   = Math.cos(th) * rho * radius;
-        pos[i*3+1] = y * radius;
-        pos[i*3+2] = Math.sin(th) * rho * radius;
+        const th = golden * i;
+        pos[i * 3] = Math.cos(th) * rho * radius;
+        pos[i * 3 + 1] = y * radius;
+        pos[i * 3 + 2] = Math.sin(th) * rho * radius;
       }
       return pos;
     }
 
-    const baseSM  = fibSphere(N_SM, R);
-    const baseBG  = fibSphere(N_BG, R);
-    const curSM   = baseSM.slice();
-    const curBG   = baseBG.slice();
-    const velSM   = new Float32Array(N_SM * 3);
-    const velBG   = new Float32Array(N_BG * 3);
-    const phaseSM = Float32Array.from({length: N_SM}, () => Math.random() * Math.PI * 2);
-    const phaseBG = Float32Array.from({length: N_BG}, () => Math.random() * Math.PI * 2);
+    const baseSM = fibSphere(N_SM, R);
+    const baseBG = fibSphere(N_BG, R);
+    const curSM = baseSM.slice();
+    const curBG = baseBG.slice();
+    const velSM = new Float32Array(N_SM * 3);
+    const velBG = new Float32Array(N_BG * 3);
+    const phaseSM = Float32Array.from({ length: N_SM }, () => Math.random() * Math.PI * 2);
+    const phaseBG = Float32Array.from({ length: N_BG }, () => Math.random() * Math.PI * 2);
 
     // ── Vertex colors — Lambertian shading ────────────────────────
     const colSM = new Float32Array(N_SM * 3);
@@ -1963,26 +2147,26 @@
 
     function recomputeColors(base, col, N, Lx, Ly, Lz, litR, litG, litB, shadR, shadG, shadB) {
       for (let i = 0; i < N; i++) {
-        const nx = base[i*3]/R, ny = base[i*3+1]/R, nz = base[i*3+2]/R;
-        const lit = Math.max(0, nx*Lx + ny*Ly + nz*Lz);
-        col[i*3]   = shadR + (litR - shadR) * lit;
-        col[i*3+1] = shadG + (litG - shadG) * lit;
-        col[i*3+2] = shadB + (litB - shadB) * lit;
+        const nx = base[i * 3] / R, ny = base[i * 3 + 1] / R, nz = base[i * 3 + 2] / R;
+        const lit = Math.max(0, nx * Lx + ny * Ly + nz * Lz);
+        col[i * 3] = shadR + (litR - shadR) * lit;
+        col[i * 3 + 1] = shadG + (litG - shadG) * lit;
+        col[i * 3 + 2] = shadB + (litB - shadB) * lit;
       }
     }
 
     // ── Geometries ─────────────────────────────────────────────────
-    const geoSM     = new THREE.BufferGeometry();
+    const geoSM = new THREE.BufferGeometry();
     const attrPosSM = new THREE.BufferAttribute(curSM, 3);
     const attrColSM = new THREE.BufferAttribute(colSM, 3);
     geoSM.setAttribute('position', attrPosSM);
-    geoSM.setAttribute('color',    attrColSM);
+    geoSM.setAttribute('color', attrColSM);
 
-    const geoBG     = new THREE.BufferGeometry();
+    const geoBG = new THREE.BufferGeometry();
     const attrPosBG = new THREE.BufferAttribute(curBG, 3);
     const attrColBG = new THREE.BufferAttribute(colBG, 3);
     geoBG.setAttribute('position', attrPosBG);
-    geoBG.setAttribute('color',    attrColBG);
+    geoBG.setAttribute('color', attrColBG);
 
     const matSM = new THREE.PointsMaterial({
       size: 3.5, map: PT, vertexColors: true,
@@ -2000,28 +2184,28 @@
 
     // ── State configs ─────────────────────────────────────────────
     const STATES = {
-      IDLE:      { Lx:-0.50, Ly:0.68, Lz:0.54, litR:1.00, litG:1.00, litB:1.00, shadR:0.25, shadG:0.42, shadB:0.74, rotY:0.0018, bAmp:0.010, bFreq:0.38, wAmp:0.004, wFreq:0.20, goldOp:0,    bgCol:0x4A9EFF, bgOp:0.65 },
-      LISTENING: { Lx:-0.42, Ly:0.78, Lz:0.42, litR:0.95, litG:0.98, litB:1.00, shadR:0.20, shadG:0.34, shadB:0.64, rotY:0.0038, bAmp:0.024, bFreq:1.80, wAmp:0.011, wFreq:0.65, goldOp:0,    bgCol:0x4A9EFF, bgOp:0.80 },
-      THINKING:  { Lx: 0.48, Ly:0.62, Lz:0.62, litR:1.00, litG:0.92, litB:0.55, shadR:0.26, shadG:0.17, shadB:0.07, rotY:0.0105, bAmp:0.012, bFreq:1.40, wAmp:0.008, wFreq:0.95, goldOp:0.55, bgCol:0xA07010, bgOp:0.52 },
-      SPEAKING:  { Lx:-0.30, Ly:0.80, Lz:0.52, litR:0.95, litG:0.98, litB:1.00, shadR:0.22, shadG:0.38, shadB:0.70, rotY:0.0045, bAmp:0.018, bFreq:3.00, wAmp:0.013, wFreq:1.35, goldOp:0,    bgCol:0x3A9EFF, bgOp:0.75 },
+      IDLE: { Lx: -0.50, Ly: 0.68, Lz: 0.54, litR: 1.00, litG: 1.00, litB: 1.00, shadR: 0.25, shadG: 0.42, shadB: 0.74, rotY: 0.0018, bAmp: 0.010, bFreq: 0.38, wAmp: 0.004, wFreq: 0.20, goldOp: 0, bgCol: 0x4A9EFF, bgOp: 0.65 },
+      LISTENING: { Lx: -0.42, Ly: 0.78, Lz: 0.42, litR: 0.95, litG: 0.98, litB: 1.00, shadR: 0.20, shadG: 0.34, shadB: 0.64, rotY: 0.0038, bAmp: 0.024, bFreq: 1.80, wAmp: 0.011, wFreq: 0.65, goldOp: 0, bgCol: 0x4A9EFF, bgOp: 0.80 },
+      THINKING: { Lx: 0.48, Ly: 0.62, Lz: 0.62, litR: 1.00, litG: 0.92, litB: 0.55, shadR: 0.26, shadG: 0.17, shadB: 0.07, rotY: 0.0105, bAmp: 0.012, bFreq: 1.40, wAmp: 0.008, wFreq: 0.95, goldOp: 0.55, bgCol: 0xA07010, bgOp: 0.52 },
+      SPEAKING: { Lx: -0.30, Ly: 0.80, Lz: 0.52, litR: 0.95, litG: 0.98, litB: 1.00, shadR: 0.22, shadG: 0.38, shadB: 0.70, rotY: 0.0045, bAmp: 0.018, bFreq: 3.00, wAmp: 0.013, wFreq: 1.35, goldOp: 0, bgCol: 0x3A9EFF, bgOp: 0.75 },
     };
 
     // ── Mouse — projection sur plan z=0 ──────────────────────────
-    const _plane      = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    const _ray        = new THREE.Raycaster();
-    const _m2d        = new THREE.Vector2();
-    const _hit        = new THREE.Vector3();
+    const _plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const _ray = new THREE.Raycaster();
+    const _m2d = new THREE.Vector2();
+    const _hit = new THREE.Vector3();
     const _worldMouse = new THREE.Vector3(9999, 9999, 9999);
 
     // Large zone, gentle push, slow elastic return
     const INFLUENCE_R = 115;
-    const PUSH_STR    = 4.0;
-    const SPRING_K    = 0.032;
-    const DAMPING     = 0.93;
+    const PUSH_STR = 4.0;
+    const SPRING_K = 0.032;
+    const DAMPING = 0.93;
 
     window.addEventListener('mousemove', (e) => {
-      _m2d.x = (e.clientX / window.innerWidth)  *  2 - 1;
-      _m2d.y = -(e.clientY / window.innerHeight) *  2 + 1;
+      _m2d.x = (e.clientX / window.innerWidth) * 2 - 1;
+      _m2d.y = -(e.clientY / window.innerHeight) * 2 + 1;
       _ray.setFromCamera(_m2d, camera);
       if (_ray.ray.intersectPlane(_plane, _hit)) _worldMouse.copy(_hit);
     });
@@ -2035,31 +2219,31 @@
     function stepParticles(base, cur, vel, phase, N, C, t, mlx, mly, mlz, breathOff, IR2) {
       for (let i = 0; i < N; i++) {
         const i3 = i * 3;
-        const bx = base[i3], by = base[i3+1], bz = base[i3+2];
+        const bx = base[i3], by = base[i3 + 1], bz = base[i3 + 2];
         // Target: rest + breathing + very subtle shimmer
         const shimmer = Math.sin(phase[i] + t * C.wFreq) * C.wAmp;
-        const r  = 1 + breathOff + shimmer;
+        const r = 1 + breathOff + shimmer;
         const tx = bx * r, ty = by * r, tz = bz * r;
         // Spring toward target
-        let fx = (tx - cur[i3])   * SPRING_K;
-        let fy = (ty - cur[i3+1]) * SPRING_K;
-        let fz = (tz - cur[i3+2]) * SPRING_K;
+        let fx = (tx - cur[i3]) * SPRING_K;
+        let fy = (ty - cur[i3 + 1]) * SPRING_K;
+        let fz = (tz - cur[i3 + 2]) * SPRING_K;
         // Mouse push — large zone, gentle force
-        const dx = cur[i3] - mlx, dy = cur[i3+1] - mly, dz = cur[i3+2] - mlz;
-        const d2 = dx*dx + dy*dy + dz*dz;
+        const dx = cur[i3] - mlx, dy = cur[i3 + 1] - mly, dz = cur[i3 + 2] - mlz;
+        const d2 = dx * dx + dy * dy + dz * dz;
         if (d2 < IR2 && d2 > 0.01) {
-          const d   = Math.sqrt(d2);
+          const d = Math.sqrt(d2);
           const str = PUSH_STR * (1 - d / INFLUENCE_R) / d;
           fx += dx * str;
           fy += dy * str;
           fz += dz * str;
         }
-        vel[i3]   = (vel[i3]   + fx) * DAMPING;
-        vel[i3+1] = (vel[i3+1] + fy) * DAMPING;
-        vel[i3+2] = (vel[i3+2] + fz) * DAMPING;
-        cur[i3]   += vel[i3];
-        cur[i3+1] += vel[i3+1];
-        cur[i3+2] += vel[i3+2];
+        vel[i3] = (vel[i3] + fx) * DAMPING;
+        vel[i3 + 1] = (vel[i3 + 1] + fy) * DAMPING;
+        vel[i3 + 2] = (vel[i3 + 2] + fz) * DAMPING;
+        cur[i3] += vel[i3];
+        cur[i3 + 1] += vel[i3 + 1];
+        cur[i3 + 2] += vel[i3 + 2];
       }
     }
 
@@ -2084,11 +2268,11 @@
       sphereGroup.rotation.y += C.rotY * (window._sphereRotationMultiplier ?? 1.0);
 
       // Transform world mouse → sphere local space (undo Y rotation)
-      const ry    = -sphereGroup.rotation.y;
+      const ry = -sphereGroup.rotation.y;
       const cosRy = Math.cos(ry), sinRy = Math.sin(ry);
-      const mlx   = _worldMouse.x * cosRy - _worldMouse.z * sinRy;
-      const mly   = _worldMouse.y;
-      const mlz   = _worldMouse.x * sinRy + _worldMouse.z * cosRy;
+      const mlx = _worldMouse.x * cosRy - _worldMouse.z * sinRy;
+      const mly = _worldMouse.y;
+      const mlz = _worldMouse.x * sinRy + _worldMouse.z * cosRy;
 
       const breathOff = Math.sin(t * C.bFreq) * C.bAmp;
       const IR2 = INFLUENCE_R * INFLUENCE_R;
@@ -2100,7 +2284,7 @@
       attrPosBG.needsUpdate = true;
 
       bgGlowMat.opacity = C.bgOp + Math.sin(t * 0.72) * 0.05;
-      goldMat.opacity   = C.goldOp * (0.26 + 0.10 * Math.sin(t * 2.6));
+      goldMat.opacity = C.goldOp * (0.26 + 0.10 * Math.sin(t * 2.6));
 
       renderer.render(scene, camera);
     }
@@ -2109,20 +2293,20 @@
     // ── Sleep mode — contrôle depuis wakeup.js ────────────────────────────
     window._sphereRotationMultiplier = 1.0;
 
-    window.sphereSetSleepMode = function(sleeping) {
+    window.sphereSetSleepMode = function (sleeping) {
       window._sphereRotationMultiplier = sleeping ? 0.05 : 1.0;
       if (sleeping) {
         if (typeof gsap !== 'undefined') {
-          gsap.to(matSM,     { opacity: 0.08, duration: 2.0 });
-          gsap.to(matBG,     { opacity: 0.05, duration: 2.0 });
+          gsap.to(matSM, { opacity: 0.08, duration: 2.0 });
+          gsap.to(matBG, { opacity: 0.05, duration: 2.0 });
           gsap.to(bgGlowMat, { opacity: 0.12, duration: 2.0 });
         } else {
           matSM.opacity = 0.08; matBG.opacity = 0.05;
         }
       } else {
         if (typeof gsap !== 'undefined') {
-          gsap.to(matSM,     { opacity: 0.95, duration: 1.0 });
-          gsap.to(matBG,     { opacity: 0.75, duration: 1.0 });
+          gsap.to(matSM, { opacity: 0.95, duration: 1.0 });
+          gsap.to(matBG, { opacity: 0.75, duration: 1.0 });
           gsap.to(bgGlowMat, { opacity: 0.68, duration: 1.0 });
         } else {
           matSM.opacity = 0.95; matBG.opacity = 0.75;
@@ -2138,10 +2322,10 @@
     // Each particle flies on a curved Bézier arc from a far random position to
     // its sphere target. Spring is neutralised (baseSM = curSM each frame).
     // Staggered delays create a streaming "nebula condensing" visual.
-    window.spherePlayFormationAnim = function(onComplete) {
-      const DURATION   = 4.8; // seconds — long enough to enjoy the animation
-      const STAGGER    = 1.6; // max random delay before a particle starts moving
-      const TRAVEL     = 2.2; // seconds for one particle to reach its target
+    window.spherePlayFormationAnim = function (onComplete) {
+      const DURATION = 4.8; // seconds — long enough to enjoy the animation
+      const STAGGER = 1.6; // max random delay before a particle starts moving
+      const TRAVEL = 2.2; // seconds for one particle to reach its target
 
       const N_SM = curSM.length / 3;
       const N_BG = curBG.length / 3;
@@ -2154,26 +2338,26 @@
         for (let i = 0; i < N; i++) {
           // Start on distant random shell — correct Y-up spherical coords
           const theta = Math.random() * Math.PI * 2;
-          const phi   = Math.acos(2 * Math.random() - 1);
-          const r     = 5.5 + Math.random() * 3.5;
+          const phi = Math.acos(2 * Math.random() - 1);
+          const r = 5.5 + Math.random() * 3.5;
           const sx = r * Math.sin(phi) * Math.cos(theta);
           const sy = r * Math.cos(phi);                      // Y is up
           const sz = r * Math.sin(phi) * Math.sin(theta);
-          const ex = orig[i*3], ey = orig[i*3+1], ez = orig[i*3+2];
+          const ex = orig[i * 3], ey = orig[i * 3 + 1], ez = orig[i * 3 + 2];
 
           // Control point = midpoint + perpendicular offset (cross-product method)
-          const dx = ex-sx, dy = ey-sy, dz = ez-sz;
-          const ax = Math.random()-0.5, ay = Math.random()-0.5, az = Math.random()-0.5;
-          let cpx = dy*az - dz*ay, cpy = dz*ax - dx*az, cpz = dx*ay - dy*ax;
-          const cpl = Math.sqrt(cpx*cpx + cpy*cpy + cpz*cpz) + 0.001;
+          const dx = ex - sx, dy = ey - sy, dz = ez - sz;
+          const ax = Math.random() - 0.5, ay = Math.random() - 0.5, az = Math.random() - 0.5;
+          let cpx = dy * az - dz * ay, cpy = dz * ax - dx * az, cpz = dx * ay - dy * ax;
+          const cpl = Math.sqrt(cpx * cpx + cpy * cpy + cpz * cpz) + 0.001;
           const curve = 1.8 + Math.random() * 3.0;
-          const mx = (sx+ex)*0.5, my = (sy+ey)*0.5, mz = (sz+ez)*0.5;
+          const mx = (sx + ex) * 0.5, my = (sy + ey) * 0.5, mz = (sz + ez) * 0.5;
 
-          bez[i*7]   = sx;  bez[i*7+1] = sy;  bez[i*7+2] = sz;
-          bez[i*7+3] = mx + (cpx/cpl)*curve;
-          bez[i*7+4] = my + (cpy/cpl)*curve;
-          bez[i*7+5] = mz + (cpz/cpl)*curve;
-          bez[i*7+6] = Math.random() * STAGGER; // random stagger delay
+          bez[i * 7] = sx; bez[i * 7 + 1] = sy; bez[i * 7 + 2] = sz;
+          bez[i * 7 + 3] = mx + (cpx / cpl) * curve;
+          bez[i * 7 + 4] = my + (cpy / cpl) * curve;
+          bez[i * 7 + 5] = mz + (cpz / cpl) * curve;
+          bez[i * 7 + 6] = Math.random() * STAGGER; // random stagger delay
         }
       }
       fillBez(N_SM, _origSM, bezSM);
@@ -2181,14 +2365,14 @@
 
       // Place particles at start positions, zero spring velocities
       for (let i = 0; i < N_SM; i++) {
-        const i3 = i*3;
-        curSM[i3] = bezSM[i*7]; curSM[i3+1] = bezSM[i*7+1]; curSM[i3+2] = bezSM[i*7+2];
-        baseSM[i3] = curSM[i3]; baseSM[i3+1] = curSM[i3+1]; baseSM[i3+2] = curSM[i3+2];
+        const i3 = i * 3;
+        curSM[i3] = bezSM[i * 7]; curSM[i3 + 1] = bezSM[i * 7 + 1]; curSM[i3 + 2] = bezSM[i * 7 + 2];
+        baseSM[i3] = curSM[i3]; baseSM[i3 + 1] = curSM[i3 + 1]; baseSM[i3 + 2] = curSM[i3 + 2];
       }
       for (let i = 0; i < N_BG; i++) {
-        const i3 = i*3;
-        curBG[i3] = bezBG[i*7]; curBG[i3+1] = bezBG[i*7+1]; curBG[i3+2] = bezBG[i*7+2];
-        baseBG[i3] = curBG[i3]; baseBG[i3+1] = curBG[i3+1]; baseBG[i3+2] = curBG[i3+2];
+        const i3 = i * 3;
+        curBG[i3] = bezBG[i * 7]; curBG[i3 + 1] = bezBG[i * 7 + 1]; curBG[i3 + 2] = bezBG[i * 7 + 2];
+        baseBG[i3] = curBG[i3]; baseBG[i3 + 1] = curBG[i3 + 1]; baseBG[i3 + 2] = curBG[i3 + 2];
       }
       velSM.fill(0); velBG.fill(0);
       attrPosSM.needsUpdate = true; attrPosBG.needsUpdate = true;
@@ -2196,8 +2380,8 @@
       // Fade in gradually so particles appear to materialise
       matSM.opacity = 0; matBG.opacity = 0; bgGlowMat.opacity = 0;
       if (typeof gsap !== 'undefined') {
-        gsap.to(matSM,     { opacity: 0.95, duration: 1.0, delay: 0.25, ease: 'power1.in' });
-        gsap.to(matBG,     { opacity: 0.75, duration: 1.0, delay: 0.25, ease: 'power1.in' });
+        gsap.to(matSM, { opacity: 0.95, duration: 1.0, delay: 0.25, ease: 'power1.in' });
+        gsap.to(matBG, { opacity: 0.75, duration: 1.0, delay: 0.25, ease: 'power1.in' });
         gsap.to(bgGlowMat, { opacity: 0.68, duration: 1.3, delay: 0.5 });
       }
 
@@ -2210,37 +2394,37 @@
         const sec = (performance.now() - t0) * 0.001;
 
         for (let i = 0; i < N_SM; i++) {
-          const i3 = i*3;
-          const lt = (sec - bezSM[i*7+6]) / TRAVEL;
+          const i3 = i * 3;
+          const lt = (sec - bezSM[i * 7 + 6]) / TRAVEL;
           let px, py, pz;
           if (lt <= 0) {
-            px = bezSM[i*7]; py = bezSM[i*7+1]; pz = bezSM[i*7+2];
+            px = bezSM[i * 7]; py = bezSM[i * 7 + 1]; pz = bezSM[i * 7 + 2];
           } else {
-            const t  = lt >= 1 ? 1 : 1 - Math.pow(1 - lt, 3); // ease-out cubic
+            const t = lt >= 1 ? 1 : 1 - Math.pow(1 - lt, 3); // ease-out cubic
             const t1 = 1 - t;
-            px = t1*t1*bezSM[i*7]   + 2*t1*t*bezSM[i*7+3] + t*t*_origSM[i3];
-            py = t1*t1*bezSM[i*7+1] + 2*t1*t*bezSM[i*7+4] + t*t*_origSM[i3+1];
-            pz = t1*t1*bezSM[i*7+2] + 2*t1*t*bezSM[i*7+5] + t*t*_origSM[i3+2];
+            px = t1 * t1 * bezSM[i * 7] + 2 * t1 * t * bezSM[i * 7 + 3] + t * t * _origSM[i3];
+            py = t1 * t1 * bezSM[i * 7 + 1] + 2 * t1 * t * bezSM[i * 7 + 4] + t * t * _origSM[i3 + 1];
+            pz = t1 * t1 * bezSM[i * 7 + 2] + 2 * t1 * t * bezSM[i * 7 + 5] + t * t * _origSM[i3 + 2];
           }
-          curSM[i3] = px; curSM[i3+1] = py; curSM[i3+2] = pz;
-          baseSM[i3] = px; baseSM[i3+1] = py; baseSM[i3+2] = pz;
+          curSM[i3] = px; curSM[i3 + 1] = py; curSM[i3 + 2] = pz;
+          baseSM[i3] = px; baseSM[i3 + 1] = py; baseSM[i3 + 2] = pz;
         }
 
         for (let i = 0; i < N_BG; i++) {
-          const i3 = i*3;
-          const lt = (sec - bezBG[i*7+6]) / TRAVEL;
+          const i3 = i * 3;
+          const lt = (sec - bezBG[i * 7 + 6]) / TRAVEL;
           let px, py, pz;
           if (lt <= 0) {
-            px = bezBG[i*7]; py = bezBG[i*7+1]; pz = bezBG[i*7+2];
+            px = bezBG[i * 7]; py = bezBG[i * 7 + 1]; pz = bezBG[i * 7 + 2];
           } else {
-            const t  = lt >= 1 ? 1 : 1 - Math.pow(1 - lt, 3);
+            const t = lt >= 1 ? 1 : 1 - Math.pow(1 - lt, 3);
             const t1 = 1 - t;
-            px = t1*t1*bezBG[i*7]   + 2*t1*t*bezBG[i*7+3] + t*t*_origBG[i3];
-            py = t1*t1*bezBG[i*7+1] + 2*t1*t*bezBG[i*7+4] + t*t*_origBG[i3+1];
-            pz = t1*t1*bezBG[i*7+2] + 2*t1*t*bezBG[i*7+5] + t*t*_origBG[i3+2];
+            px = t1 * t1 * bezBG[i * 7] + 2 * t1 * t * bezBG[i * 7 + 3] + t * t * _origBG[i3];
+            py = t1 * t1 * bezBG[i * 7 + 1] + 2 * t1 * t * bezBG[i * 7 + 4] + t * t * _origBG[i3 + 1];
+            pz = t1 * t1 * bezBG[i * 7 + 2] + 2 * t1 * t * bezBG[i * 7 + 5] + t * t * _origBG[i3 + 2];
           }
-          curBG[i3] = px; curBG[i3+1] = py; curBG[i3+2] = pz;
-          baseBG[i3] = px; baseBG[i3+1] = py; baseBG[i3+2] = pz;
+          curBG[i3] = px; curBG[i3 + 1] = py; curBG[i3 + 2] = pz;
+          baseBG[i3] = px; baseBG[i3 + 1] = py; baseBG[i3 + 2] = pz;
         }
 
         attrPosSM.needsUpdate = true; attrPosBG.needsUpdate = true;
@@ -2259,7 +2443,7 @@
     };
 
     // ── Shockwave — onde de choc depuis la sphère au démarrage ───────────
-    window.sphereTriggerShockwave = function() {
+    window.sphereTriggerShockwave = function () {
       const flash = document.createElement('div');
       flash.style.cssText = 'position:fixed;inset:0;z-index:5;pointer-events:none;'
         + 'background:radial-gradient(circle at center,rgba(74,158,255,0.22) 0%,transparent 52%);';
@@ -2307,9 +2491,9 @@
       const hd = document.getElementById('conv-hd');
       const drop = document.getElementById('session-drop');
       const rect = hd.getBoundingClientRect();
-      drop.style.top    = rect.bottom + 'px';
-      drop.style.left   = rect.left + 'px';
-      drop.style.width  = rect.width + 'px';
+      drop.style.top = rect.bottom + 'px';
+      drop.style.left = rect.left + 'px';
+      drop.style.width = rect.width + 'px';
       drop.style.display = 'block';
       document.getElementById('session-btn').classList.add('open');
       _dropOpen = true;
@@ -2365,7 +2549,7 @@
     }
 
     // Expose pour panel.js : met à jour le titre d'une session dans le cache + header
-    window._convUpdateTitle = function(id, title) {
+    window._convUpdateTitle = function (id, title) {
       const s = _sessCache.find(x => x.id === id);
       if (s) s.title = title;
       _updateSessionLabel();
@@ -2376,7 +2560,7 @@
     window._convSwitchSession = switchSession;
 
     function _esc(str) {
-      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function newSession() {
@@ -2570,7 +2754,7 @@
     }
 
     // Helpers accessibles depuis mediapipe_vision.js (let n'est pas sur window)
-    window._jarvisWsSend    = data => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data)); };
+    window._jarvisWsSend = data => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data)); };
     window._jarvisSessionId = () => sessionId;
 
     loadPermissions();
@@ -2616,7 +2800,7 @@
           _camStopStream();
           window._perms.camera = false;
           _updatePermBtn('camera', false);
-          fetch('/api/permissions/camera', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: false }) }).catch(() => {});
+          fetch('/api/permissions/camera', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: false }) }).catch(() => { });
         });
     }
 
@@ -2626,7 +2810,7 @@
       if (window._perms.camera) {
         window._perms.camera = false;
         _updatePermBtn('camera', false);
-        fetch('/api/permissions/camera', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: false }) }).catch(() => {});
+        fetch('/api/permissions/camera', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: false }) }).catch(() => { });
       }
     }
 
@@ -2649,7 +2833,7 @@
         sL = win.offsetLeft; sT = win.offsetTop;
         const onMove = e => {
           win.style.left = Math.max(0, sL + e.clientX - sX) + 'px';
-          win.style.top  = Math.max(0, sT + e.clientY - sY) + 'px';
+          win.style.top = Math.max(0, sT + e.clientY - sY) + 'px';
         };
         const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
         document.addEventListener('mousemove', onMove);
@@ -2924,228 +3108,219 @@
   <script src="/dashboard.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script>
-  // ── GSAP slide transitions + Intel Monde view ─────────────────
-  (function () {
-    const ov = document.getElementById('transition-overlay');
-    const ui = '.layout'; // #nav-bar excluded — has translateX(-50%) that conflicts with x-slide
-
-    window._prevIntelView = 'sphere';
-
-    // Direction set by the leaving page, read on enter
-    const dir = sessionStorage.getItem('tx-dir') || 'forward';
-    const xIn = dir === 'back' ? -40 : 40;
-    sessionStorage.removeItem('tx-dir');
-
-    // Enter: overlay opacity 1 → 0, layout slides in from the side
-    window.addEventListener('load', () => {
-      gsap.timeline()
-        .to(ov, { duration: 0.2, opacity: 0, ease: 'power2.out' })
-        .from(ui, { duration: 0.4, x: xIn, opacity: 0, filter: 'blur(6px)', ease: 'power2.out', clearProps: 'all' }, '<0.05');
-    });
-
-    // Open settings overlay
-    // ── Helpers ────────────────────────────────────────────────────────
-
-    const _VIEW_IDX = { sphere: 0, dashboard: 1, globe: 2, intel: 3, settings: 4 };
-
-    // Active le bouton de la vue, désactive tous les autres
-    function _setView(view) {
-      const map = { sphere: 'jarvis-toggle', dashboard: 'dashboard-nav-btn', globe: 'globe-toggle', intel: 'intel-toggle', settings: 'settings-nav-btn' };
-      Object.values(map).forEach(id => document.getElementById(id)?.classList.remove('active'));
-      if (map[view]) document.getElementById(map[view])?.classList.add('active');
-      window._currentView = view;
-    }
-
-    // +1 = navigation vers la droite (slide gauche), -1 = vers la gauche (slide droite)
-    function _txDir(from, to) {
-      return (_VIEW_IDX[to] ?? 2) >= (_VIEW_IDX[from] ?? 2) ? 1 : -1;
-    }
-
-    function _settingsIsOpen() {
-      const o = document.getElementById('settings-overlay');
-      return o && o.style.display === 'block';
-    }
-    function _closeSettingsIfOpen() {
-      if (_settingsIsOpen()) window.closeSettings();
-    }
-
-    window._setView = _setView;
-    _setView('sphere');
-
-    // ── Settings ────────────────────────────────────────────────────────
-    window.openSettings = function () {
-      if (window._currentView === 'settings') return;
-      const overlay = document.getElementById('settings-overlay');
-      const iframe  = document.getElementById('settings-iframe');
-      if (!overlay) return;
-      window._prevSettingsView = window._currentView;
-      _setView('settings');
-      iframe.src = '/settings?v=' + Date.now();
-      overlay.style.display = 'block';
-      gsap.fromTo(overlay, { opacity: 0, x: 24 }, { duration: 0.28, opacity: 1, x: 0, ease: 'power3.out' });
-    };
-
-    window.closeSettings = function () {
-      const overlay = document.getElementById('settings-overlay');
-      if (!overlay || overlay.style.display === 'none') return;
-      _setView(window._prevSettingsView || 'sphere');
-      gsap.to(overlay, { duration: 0.22, opacity: 0, x: 24, ease: 'power3.in', onComplete: () => {
-        overlay.style.display = 'none'; gsap.set(overlay, { x: 0 });
-      }});
-    };
-
-    window.addEventListener('message', e => {
-      if (e.data === 'jarvis:close-settings') window.closeSettings();
-    });
-
-    window.goToSettings = window.openSettings;
-    if (!window.openDashboard)  window.openDashboard  = () => {};
-    if (!window.closeDashboard) window.closeDashboard = () => {};
-
-    window.transitionTo = function (href, dir) {
-      dir = dir || 'forward';
-      sessionStorage.setItem('tx-dir', dir);
-      gsap.set(ov, { pointerEvents: 'all' });
-      gsap.timeline({ onComplete: () => { window.location.href = href; } })
-        .to(ui, { duration: 0.28, x: dir === 'forward' ? -44 : 44, opacity: 0, filter: 'blur(5px)', ease: 'power2.in' })
-        .to(ov, { duration: 0.22, opacity: 1, ease: 'power2.in' }, '<');
-    };
-
-    // ─────────────────────────────────────────────────────────────────────
-    // Transitions sans overlay : slide + crossfade direct, pas de flash noir
-    // ─────────────────────────────────────────────────────────────────────
-
-    const DUR_OUT = 0.26;   // durée slide-out du panneau UI
-    const DUR_IN  = 0.34;   // durée slide-in du panneau UI
-    const DUR_OVL = 0.28;   // durée fade de l'overlay Intel
-    const EASE_OUT = 'power2.in';
-    const EASE_IN  = 'power3.out';
-
-    function _slideOut(d) {
-      gsap.to(ui, { duration: DUR_OUT, x: -48 * d, opacity: 0, filter: 'blur(4px)', ease: EASE_OUT, overwrite: true });
-    }
-    function _slideIn(d, delay) {
-      gsap.fromTo(ui,
-        { x: 48 * d, opacity: 0, filter: 'blur(4px)' },
-        { duration: DUR_IN, x: 0, opacity: 1, filter: 'blur(0px)', ease: EASE_IN, clearProps: 'all', delay: delay ?? 0, overwrite: true }
-      );
-    }
-
-    // ── Globe ───────────────────────────────────────────────────────────
-    window.handleGlobeClick = function () {
-      _closeSettingsIfOpen();
-      if (window._currentView === 'globe') return;
-      if (window._currentView === 'intel') { window.navigateFromIntel('globe'); return; }
-      if (window._currentView === 'dashboard') {
-        window._previousView = 'sphere'; window.closeDashboard();
-        setTimeout(() => { if (typeof Globe !== 'undefined') Globe.show(); _setView('globe'); }, 280);
-        return;
-      }
-      const d = _txDir(window._currentView, 'globe');
-      _slideOut(d);
-      setTimeout(() => {
-        if (typeof Globe !== 'undefined') Globe.show();
-        _setView('globe');
-        gsap.to(ui, { duration: 0.35, opacity: 1, x: 0, filter: 'blur(0px)', ease: 'power2.out' });
-      }, DUR_OUT * 1000 * 0.6);
-    };
-
-    // ── Intel ────────────────────────────────────────────────────────────
-    window.handleIntelClick = function () {
-      _closeSettingsIfOpen();
-      if (window._currentView === 'intel') return;
-      if (window._currentView === 'dashboard') {
-        window._previousView = 'sphere'; window.closeDashboard();
-        setTimeout(() => window.handleIntelClick(), 280);
-        return;
-      }
-      if (window._currentView === 'globe' && typeof Globe !== 'undefined') Globe.hide();
-      const d = _txDir(window._currentView, 'intel');
-      window._prevIntelView = window._currentView;
-      const io = document.getElementById('intel-overlay');
-      if (io) gsap.set(io, { opacity: 0 });
-      _slideOut(d);
-      const _iframe = document.getElementById('intel-iframe');
-      const _fallback = document.getElementById('intel-fallback');
-      const _ctrl = new AbortController();
-      setTimeout(() => _ctrl.abort(), 2500);
-      fetch('http://localhost:3000', { mode: 'no-cors', cache: 'no-store', signal: _ctrl.signal })
-        .then(() => {
-          if (_iframe) { _iframe.style.display = 'block'; if (!_iframe.src || _iframe.src === window.location.href) _iframe.src = 'http://localhost:3000'; }
-          if (_fallback) _fallback.classList.remove('visible');
-        })
-        .catch(() => {
-          if (_iframe) { _iframe.style.display = 'none'; _iframe.src = ''; }
-          if (_fallback) _fallback.classList.add('visible');
-        });
-      setTimeout(() => {
-        document.body.classList.add('intel-mode');
-        _setView('intel');
-        if (io) gsap.to(io, { duration: DUR_OVL, opacity: 1, ease: EASE_IN });
-      }, DUR_OUT * 1000 * 0.7);
-    };
-
-    // ── Sortir de Intel ──────────────────────────────────────────────────
-    window.navigateFromIntel = function (target) {
-      if (window._currentView !== 'intel') return;
-      if (target === 'dashboard') { document.body.classList.remove('intel-mode'); _setView('sphere'); window.openDashboard(); return; }
-      if (target === 'globe' && typeof Globe !== 'undefined') Globe.show();
-      const d = _txDir('intel', target);
-      const io = document.getElementById('intel-overlay');
-      if (io) gsap.to(io, { duration: DUR_OVL * 0.8, opacity: 0, ease: EASE_OUT, onComplete: () => {
-        document.body.classList.remove('intel-mode'); gsap.set(io, { opacity: '' });
-      }});
-      else document.body.classList.remove('intel-mode');
-      _setView(target);
-      _slideIn(d, target === 'globe' ? 0 : DUR_OVL * 0.5);
-    };
-
-    // ── Jarvis / home ────────────────────────────────────────────────────
-    window.handleSphereClick = function () {
-      _closeSettingsIfOpen();
-      if (window._currentView === 'sphere') return;
-      if (window._currentView === 'intel') { window.navigateFromIntel('sphere'); return; }
-      if (window._currentView === 'dashboard') { window._previousView = 'sphere'; window.closeDashboard(); return; }
-      if (window._currentView === 'globe') {
-        const d = _txDir('globe', 'sphere'); // -1
-        if (typeof Globe !== 'undefined') Globe.hide();
-        _setView('sphere');
-        _slideIn(d, 0.06);
-      }
-    };
-
-    // Escape
-    document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape') return;
-      if (_settingsIsOpen()) { e.stopImmediatePropagation(); window.closeSettings(); return; }
-      if (window._currentView === 'intel') { e.stopImmediatePropagation(); window.navigateFromIntel(window._prevIntelView || 'sphere'); }
-    }, { capture: true });
-
-    // Empêche l'iframe Intel de voler le premier clic sur les boutons nav
-    document.addEventListener('mousedown', function (e) {
-      if (!document.body.classList.contains('intel-mode')) return;
-      if (!e.target.closest('#jarvis-toggle, #globe-toggle, #intel-toggle, #dashboard-nav-btn, #settings-nav-btn')) return;
-      const iframe = document.getElementById('intel-iframe');
-      if (iframe) { iframe.style.pointerEvents = 'none'; requestAnimationFrame(() => { iframe.style.pointerEvents = ''; }); }
-    }, true);
-
-    // ── Toggle panneaux latéraux ────────────────────────────────────────────
+    // ── GSAP slide transitions + Intel Monde view ─────────────────
     (function () {
-      let _panelsVisible = true;
-      const toggle = document.getElementById('panels-toggle');
-      if (!toggle) return;
-      toggle.addEventListener('click', () => {
-        _panelsVisible = !_panelsVisible;
-        const lp = document.getElementById('panel-left');
-        const rp = document.getElementById('panel-right');
-        gsap.to(lp,     { duration: 0.3, x: _panelsVisible ? 0 : -310, opacity: _panelsVisible ? 1 : 0, ease: 'power2.inOut' });
-        gsap.to(rp,     { duration: 0.3, x: _panelsVisible ? 0 :  370, opacity: _panelsVisible ? 1 : 0, ease: 'power2.inOut' });
-        gsap.to(toggle, { duration: 0.3, left: _panelsVisible ? '292px' : '-8px', ease: 'power2.inOut' });
-        toggle.classList.toggle('hidden-state', !_panelsVisible);
-      });
-    })();
+      const ov = document.getElementById('transition-overlay');
+      const ui = '.layout'; // #nav-bar excluded — has translateX(-50%) that conflicts with x-slide
 
-  })();
+      window._prevIntelView = 'sphere';
+
+      // Direction set by the leaving page, read on enter
+      const dir = sessionStorage.getItem('tx-dir') || 'forward';
+      const xIn = dir === 'back' ? -40 : 40;
+      sessionStorage.removeItem('tx-dir');
+
+      // Enter: overlay opacity 1 → 0, layout slides in from the side
+      window.addEventListener('load', () => {
+        gsap.timeline()
+          .to(ov, { duration: 0.2, opacity: 0, ease: 'power2.out' })
+          .from(ui, { duration: 0.4, x: xIn, opacity: 0, filter: 'blur(6px)', ease: 'power2.out', clearProps: 'all' }, '<0.05');
+      });
+
+      // Open settings overlay
+      // ── Helpers ────────────────────────────────────────────────────────
+
+      const _VIEW_IDX = { sphere: 0, dashboard: 1, globe: 2, intel: 3, settings: 4 };
+
+      // Active le bouton de la vue, désactive tous les autres
+      function _setView(view) {
+        const map = { sphere: 'jarvis-toggle', dashboard: 'dashboard-nav-btn', globe: 'globe-toggle', intel: 'intel-toggle', settings: 'settings-nav-btn' };
+        Object.values(map).forEach(id => document.getElementById(id)?.classList.remove('active'));
+        if (map[view]) document.getElementById(map[view])?.classList.add('active');
+        window._currentView = view;
+      }
+
+      // +1 = navigation vers la droite (slide gauche), -1 = vers la gauche (slide droite)
+      function _txDir(from, to) {
+        return (_VIEW_IDX[to] ?? 2) >= (_VIEW_IDX[from] ?? 2) ? 1 : -1;
+      }
+
+      function _settingsIsOpen() {
+        const o = document.getElementById('settings-overlay');
+        return o && o.style.display === 'block';
+      }
+      function _closeSettingsIfOpen() {
+        if (_settingsIsOpen()) window.closeSettings();
+      }
+
+      window._setView = _setView;
+      _setView('sphere');
+
+      // ── Settings ────────────────────────────────────────────────────────
+      window.openSettings = function () {
+        if (window._currentView === 'settings') return;
+        const overlay = document.getElementById('settings-overlay');
+        const iframe = document.getElementById('settings-iframe');
+        if (!overlay) return;
+        window._prevSettingsView = window._currentView;
+        _setView('settings');
+        if (!iframe.src || iframe.src === window.location.href) iframe.src = '/settings';
+        overlay.style.display = 'block';
+        gsap.fromTo(overlay, { opacity: 0, x: 24 }, { duration: 0.28, opacity: 1, x: 0, ease: 'power3.out' });
+      };
+
+      window.closeSettings = function () {
+        const overlay = document.getElementById('settings-overlay');
+        if (!overlay || overlay.style.display === 'none') return;
+        _setView(window._prevSettingsView || 'sphere');
+        gsap.to(overlay, {
+          duration: 0.22, opacity: 0, x: 24, ease: 'power3.in', onComplete: () => {
+            overlay.style.display = 'none'; gsap.set(overlay, { x: 0 });
+          }
+        });
+      };
+
+      window.addEventListener('message', e => {
+        if (e.data === 'jarvis:close-settings') window.closeSettings();
+      });
+
+      window.goToSettings = window.openSettings;
+      if (!window.openDashboard) window.openDashboard = () => { };
+      if (!window.closeDashboard) window.closeDashboard = () => { };
+
+      window.transitionTo = function (href, dir) {
+        dir = dir || 'forward';
+        sessionStorage.setItem('tx-dir', dir);
+        gsap.set(ov, { pointerEvents: 'all' });
+        gsap.timeline({ onComplete: () => { window.location.href = href; } })
+          .to(ui, { duration: 0.28, x: dir === 'forward' ? -44 : 44, opacity: 0, filter: 'blur(5px)', ease: 'power2.in' })
+          .to(ov, { duration: 0.22, opacity: 1, ease: 'power2.in' }, '<');
+      };
+
+      // ─────────────────────────────────────────────────────────────────────
+      // Transitions sans overlay : slide + crossfade direct, pas de flash noir
+      // ─────────────────────────────────────────────────────────────────────
+
+      const DUR_OUT = 0.26;   // durée slide-out du panneau UI
+      const DUR_IN = 0.34;   // durée slide-in du panneau UI
+      const DUR_OVL = 0.28;   // durée fade de l'overlay Intel
+      const EASE_OUT = 'power2.in';
+      const EASE_IN = 'power3.out';
+
+      function _slideOut(d) {
+        gsap.to(ui, { duration: DUR_OUT, x: -48 * d, opacity: 0, filter: 'blur(4px)', ease: EASE_OUT, overwrite: true });
+      }
+      function _slideIn(d, delay) {
+        gsap.fromTo(ui,
+          { x: 48 * d, opacity: 0, filter: 'blur(4px)' },
+          { duration: DUR_IN, x: 0, opacity: 1, filter: 'blur(0px)', ease: EASE_IN, clearProps: 'all', delay: delay ?? 0, overwrite: true }
+        );
+      }
+
+      // ── Globe ───────────────────────────────────────────────────────────
+      window.handleGlobeClick = function () {
+        _closeSettingsIfOpen();
+        if (window._currentView === 'globe') return;
+        if (window._currentView === 'intel') { window.navigateFromIntel('globe'); return; }
+        if (window._currentView === 'dashboard') {
+          window._previousView = 'sphere'; window.closeDashboard();
+          setTimeout(() => { if (typeof Globe !== 'undefined') Globe.show(); _setView('globe'); }, 280);
+          return;
+        }
+        const d = _txDir(window._currentView, 'globe');
+        _slideOut(d);
+        setTimeout(() => {
+          if (typeof Globe !== 'undefined') Globe.show();
+          _setView('globe');
+          gsap.to(ui, { duration: 0.35, opacity: 1, x: 0, filter: 'blur(0px)', ease: 'power2.out' });
+        }, DUR_OUT * 1000 * 0.6);
+      };
+
+      // ── Intel ────────────────────────────────────────────────────────────
+      window.handleIntelClick = function () {
+        _closeSettingsIfOpen();
+        if (window._currentView === 'intel') return;
+        if (window._currentView === 'dashboard') {
+          window._previousView = 'sphere'; window.closeDashboard();
+          setTimeout(() => window.handleIntelClick(), 280);
+          return;
+        }
+        if (window._currentView === 'globe' && typeof Globe !== 'undefined') Globe.hide();
+        const d = _txDir(window._currentView, 'intel');
+        window._prevIntelView = window._currentView;
+        const io = document.getElementById('intel-overlay');
+        if (io) gsap.set(io, { opacity: 0 });
+        _slideOut(d);
+        setTimeout(() => {
+          document.body.classList.add('intel-mode');
+          _setView('intel');
+          if (io) gsap.to(io, { duration: DUR_OVL, opacity: 1, ease: EASE_IN });
+        }, DUR_OUT * 1000 * 0.7);
+      };
+
+      // ── Sortir de Intel ──────────────────────────────────────────────────
+      window.navigateFromIntel = function (target) {
+        if (window._currentView !== 'intel') return;
+        if (target === 'dashboard') { document.body.classList.remove('intel-mode'); _setView('sphere'); window.openDashboard(); return; }
+        if (target === 'globe' && typeof Globe !== 'undefined') Globe.show();
+        const d = _txDir('intel', target);
+        const io = document.getElementById('intel-overlay');
+        if (io) gsap.to(io, {
+          duration: DUR_OVL * 0.8, opacity: 0, ease: EASE_OUT, onComplete: () => {
+            document.body.classList.remove('intel-mode'); gsap.set(io, { opacity: '' });
+          }
+        });
+        else document.body.classList.remove('intel-mode');
+        _setView(target);
+        _slideIn(d, target === 'globe' ? 0 : DUR_OVL * 0.5);
+      };
+
+      // ── Jarvis / home ────────────────────────────────────────────────────
+      window.handleSphereClick = function () {
+        _closeSettingsIfOpen();
+        if (window._currentView === 'sphere') return;
+        if (window._currentView === 'intel') { window.navigateFromIntel('sphere'); return; }
+        if (window._currentView === 'dashboard') { window._previousView = 'sphere'; window.closeDashboard(); return; }
+        if (window._currentView === 'globe') {
+          const d = _txDir('globe', 'sphere'); // -1
+          if (typeof Globe !== 'undefined') Globe.hide();
+          _setView('sphere');
+          _slideIn(d, 0.06);
+        }
+      };
+
+      // Escape
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        if (_settingsIsOpen()) { e.stopImmediatePropagation(); window.closeSettings(); return; }
+        if (window._currentView === 'intel') { e.stopImmediatePropagation(); window.navigateFromIntel(window._prevIntelView || 'sphere'); }
+      }, { capture: true });
+
+      // Empêche l'iframe Intel de voler le premier clic sur les boutons nav
+      document.addEventListener('mousedown', function (e) {
+        if (!document.body.classList.contains('intel-mode')) return;
+        if (!e.target.closest('#jarvis-toggle, #globe-toggle, #intel-toggle, #dashboard-nav-btn, #settings-nav-btn')) return;
+        const iframe = document.getElementById('intel-iframe');
+        if (iframe) { iframe.style.pointerEvents = 'none'; requestAnimationFrame(() => { iframe.style.pointerEvents = ''; }); }
+      }, true);
+
+      // ── Toggle panneaux latéraux ────────────────────────────────────────────
+      (function () {
+        let _panelsVisible = true;
+        const toggle = document.getElementById('panels-toggle');
+        if (!toggle) return;
+        toggle.addEventListener('click', () => {
+          _panelsVisible = !_panelsVisible;
+          const lp = document.getElementById('panel-left');
+          const rp = document.getElementById('panel-right');
+          gsap.to(lp, { duration: 0.3, x: _panelsVisible ? 0 : -310, opacity: _panelsVisible ? 1 : 0, ease: 'power2.inOut' });
+          gsap.to(rp, { duration: 0.3, x: _panelsVisible ? 0 : 370, opacity: _panelsVisible ? 1 : 0, ease: 'power2.inOut' });
+          gsap.to(toggle, { duration: 0.3, left: _panelsVisible ? '292px' : '-8px', ease: 'power2.inOut' });
+          toggle.classList.toggle('hidden-state', !_panelsVisible);
+        });
+      })();
+
+    })();
   </script>
 
   <!-- Mindmap modal -->
@@ -3204,64 +3379,64 @@
   </div>
 
   <script>
-  // ── Mindmap ───────────────────────────────────────────────────────────────
-  mermaid.initialize({ startOnLoad: false, theme: 'dark', darkMode: true });
+    // ── Mindmap ───────────────────────────────────────────────────────────────
+    mermaid.initialize({ startOnLoad: false, theme: 'dark', darkMode: true });
 
-  const MINDMAP_RE = /\[MINDMAP\]([\s\S]*?)\[\/MINDMAP\]/;
+    const MINDMAP_RE = /\[MINDMAP\]([\s\S]*?)\[\/MINDMAP\]/;
 
-  function checkForMindmapRaw(el, rawText) {
-    const match = rawText.match(MINDMAP_RE);
-    if (!match) return;
-    let mermaidCode = match[1].trim();
-    mermaidCode = mermaidCode.replace(/^```mermaid\s*/i, '').replace(/```\s*$/, '').trim();
-    const before = rawText.replace(MINDMAP_RE, '').trim();
-    el.textContent = before ? before + ' ↗' : '↗ Carte mentale';
-    renderMindmap(mermaidCode);
-  }
-
-  // Compat voice.js (lit textContent directement)
-  function checkForMindmap(el) {
-    checkForMindmapRaw(el, el.textContent || '');
-  }
-
-  async function renderMindmap(code) {
-    const modal = document.getElementById('mindmap-modal');
-    const container = document.getElementById('mindmap-render');
-    try {
-      const { svg } = await mermaid.render('mindmap-svg-' + Date.now(), code);
-      container.innerHTML = svg;
-      // Appliquer palette Jarvis
-      container.querySelectorAll('svg circle, svg rect, svg ellipse').forEach(el => {
-        if (!el.style.fill || el.style.fill === 'none') return;
-        el.style.fill = 'rgba(45,125,210,0.15)';
-        el.style.stroke = '#4A9EFF';
-      });
-      const svgEl = container.querySelector('svg');
-      if (svgEl) svgEl.style.background = 'transparent';
-      modal.classList.add('open');
-    } catch (e) {
-      console.error('Mermaid render error', e);
+    function checkForMindmapRaw(el, rawText) {
+      const match = rawText.match(MINDMAP_RE);
+      if (!match) return;
+      let mermaidCode = match[1].trim();
+      mermaidCode = mermaidCode.replace(/^```mermaid\s*/i, '').replace(/```\s*$/, '').trim();
+      const before = rawText.replace(MINDMAP_RE, '').trim();
+      el.textContent = before ? before + ' ↗' : '↗ Carte mentale';
+      renderMindmap(mermaidCode);
     }
-  }
 
-  document.getElementById('mindmap-close-btn').addEventListener('click', () => {
-    document.getElementById('mindmap-modal').classList.remove('open');
-  });
+    // Compat voice.js (lit textContent directement)
+    function checkForMindmap(el) {
+      checkForMindmapRaw(el, el.textContent || '');
+    }
 
-  document.getElementById('mindmap-modal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-  });
+    async function renderMindmap(code) {
+      const modal = document.getElementById('mindmap-modal');
+      const container = document.getElementById('mindmap-render');
+      try {
+        const { svg } = await mermaid.render('mindmap-svg-' + Date.now(), code);
+        container.innerHTML = svg;
+        // Appliquer palette Jarvis
+        container.querySelectorAll('svg circle, svg rect, svg ellipse').forEach(el => {
+          if (!el.style.fill || el.style.fill === 'none') return;
+          el.style.fill = 'rgba(45,125,210,0.15)';
+          el.style.stroke = '#4A9EFF';
+        });
+        const svgEl = container.querySelector('svg');
+        if (svgEl) svgEl.style.background = 'transparent';
+        modal.classList.add('open');
+      } catch (e) {
+        console.error('Mermaid render error', e);
+      }
+    }
 
-  document.getElementById('mindmap-export-btn').addEventListener('click', () => {
-    const svg = document.querySelector('#mindmap-render svg');
-    if (!svg) return;
-    const xml = new XMLSerializer().serializeToString(svg);
-    const blob = new Blob([xml], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'mindmap.svg'; a.click();
-    URL.revokeObjectURL(url);
-  });
+    document.getElementById('mindmap-close-btn').addEventListener('click', () => {
+      document.getElementById('mindmap-modal').classList.remove('open');
+    });
+
+    document.getElementById('mindmap-modal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+    });
+
+    document.getElementById('mindmap-export-btn').addEventListener('click', () => {
+      const svg = document.querySelector('#mindmap-render svg');
+      if (!svg) return;
+      const xml = new XMLSerializer().serializeToString(svg);
+      const blob = new Blob([xml], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'mindmap.svg'; a.click();
+      URL.revokeObjectURL(url);
+    });
   </script>
   <!-- Wake Up sequence (Phase 0 — veille + timer, phases 1-5 à venir) -->
   <!-- Chargé en dernier car dépend de GSAP -->

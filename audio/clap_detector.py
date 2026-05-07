@@ -23,12 +23,12 @@ class ClapDetector:
       - COOLDOWN            : délai minimum entre deux déclenchements
     """
 
-    MAX_CLAP_DURATION  = 0.15   # Un clap dure moins de 150ms
+    MAX_CLAP_DURATION = 0.15   # Un clap dure moins de 150ms
     DOUBLE_CLAP_WINDOW = 0.8    # Les deux claps arrivent en moins de 800ms
-    COOLDOWN           = 2.0    # Minimum 2s entre deux wake ups
+    COOLDOWN = 2.0    # Minimum 2s entre deux wake ups
 
     SAMPLE_RATE = 16000
-    BLOCK_SIZE  = 512           # ~32ms par bloc
+    BLOCK_SIZE = 512           # ~32ms par bloc
 
     def __init__(self, callback):
         """

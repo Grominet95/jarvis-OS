@@ -1,17 +1,14 @@
 <div align="center">
 
+![Jarvis OS](Cover_Jarvis_Github.png)
+
 # Jarvis OS
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![LiveKit](https://img.shields.io/badge/LiveKit-voice-F5A623?style=flat-square)](https://livekit.io)
 [![Claude](https://img.shields.io/badge/Claude-Anthropic-8B5CF6?style=flat-square)](https://anthropic.com)
-[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red?style=flat-square)](LICENSE)
-
-[![Jarvis OS](https://img.shields.io/badge/Jarvis_OS-repo-0F172A?style=for-the-badge&logo=github)](https://github.com/Grominet95/jarvis-OS)
-[![Dashboard Monde](https://img.shields.io/badge/Dashboard_Monde-repo-1E3A5F?style=for-the-badge&logo=github)](https://github.com/Grominet95/dashboard_monde)
-
-![Jarvis OS](Cover_Jarvis_Github.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=flat-square)](LICENSE)
 
 Assistant personnel IA, texte & voix temps réel, self-hosted, stack open source.
 
@@ -169,7 +166,7 @@ Tous les fichiers mémoire vivent dans `memory_data/` qui est gitignorés, ils r
 
 ## Dashboard Monde (World Monitor)
 
-L'onglet **Intel Monde** de l'interface Jarvis affiche un **Dashboard Monde**, un tableau de bord géopolitique temps réel (globe 3D, flux d'actualités IA, radars financiers, suivi d'infrastructures).
+L'onglet **Intel Monde** de l'interface Jarvis affiche [World Monitor](https://github.com/Grominet95/dashboard_monde), un tableau de bord géopolitique temps réel (globe 3D, flux d'actualités IA, radars financiers, suivi d'infrastructures).
 
 **Prérequis :** Node.js 18+
 
@@ -230,4 +227,4 @@ uv run python scripts/test_llm.py --provider mistral
 
 ## Licence
 
-Proprietary - voir [LICENSE](LICENSE) pour les conditions d'utilisation.
+MIT
