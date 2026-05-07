@@ -167,77 +167,60 @@ async def voice_speak(body: dict) -> dict:
 
 # ── Skills API ────────────────────────────────────────────────────────────────
 
-class SkillItem(BaseModel):
-    name: str
-    description: str
+@router.get("/api/skills/catalog")
+async def get_skills_catalog() -> dict:
+    """Catalogue des skills disponibles (GitHub + état installé)."""
+    from skills.installer import skill_installer
+    skills = await skill_installer.fetch_catalog()
+    offline = any(s.get("offline") for s in skills)
+    return {"skills": skills, "offline": offline}
 
 
-class InstallRequest(BaseModel):
-    source: str  # "clawhub" | "local"
-    value: str   # slug ClawHub ou chemin local
+@router.get("/api/skills/installed")
+async def get_installed_skills() -> dict:
+    """Liste des skills installés localement."""
+    from skills.registry import skill_registry
+    return {"skills": skill_registry.list_installed()}
 
 
-class InstallResponse(BaseModel):
-    success: bool
-    message: str
+@router.post("/api/skills/install/{skill_name}")
+async def install_skill(skill_name: str, request: Request) -> dict:
+    """Installe un skill depuis le repo jarvis-skills."""
+    from skills.installer import skill_installer
+    from skills.registry import skill_registry
+    result = await skill_installer.install(skill_name)
+    if result.get("success"):
+        tool_registry = getattr(request.app.state, "tool_registry", None)
+        if tool_registry:
+            tool_registry.replace_skill_tools(*skill_registry.get_all_tools())
+    return result
 
 
-@router.get("/api/skills", response_model=list[SkillItem])
-async def list_skills(request: Request) -> list[SkillItem]:
-    """Retourne la liste des skills actifs."""
-    registry = request.app.state.skill_registry
-    return [
-        SkillItem(name=s["name"], description=s["description"])
-        for s in registry.active
-    ]
-
-
-@router.post("/api/skills/install", response_model=InstallResponse)
-async def install_skill(body: InstallRequest, request: Request) -> InstallResponse:
-    """Installe un skill depuis ClawHub ou un chemin local."""
-    from pathlib import Path
-
-    from config.settings import settings
-
-    registry = request.app.state.skill_registry
-    skills_dir = Path(settings.skills_dir)
-
-    if body.source == "clawhub":
-        from skills._clawhub import install_skill as _install
-        ok, msg = await _install(body.value, skills_dir)
-        if ok:
-            registry.reload()
-        return InstallResponse(success=ok, message=msg)
-
-    if body.source == "local":
-        src = Path(body.value)
-        if not (src / "SKILL.md").exists():
-            return InstallResponse(success=False, message=f"SKILL.md introuvable dans {src}")
-        import shutil
-        dest = skills_dir / src.name
-        shutil.copytree(src, dest, dirs_exist_ok=True)
-        registry.reload()
-        return InstallResponse(success=True, message=f"Skill '{src.name}' installé depuis {src}.")
-
-    return InstallResponse(success=False, message=f"Source inconnue : '{body.source}'. Valeurs : 'clawhub', 'local'.")
+@router.delete("/api/skills/uninstall/{skill_name}")
+async def uninstall_skill(skill_name: str, request: Request) -> dict:
+    """Désinstalle un skill."""
+    from skills.installer import skill_installer
+    from skills.registry import skill_registry
+    result = skill_installer.uninstall(skill_name)
+    if result.get("success"):
+        tool_registry = getattr(request.app.state, "tool_registry", None)
+        if tool_registry:
+            tool_registry.replace_skill_tools(*skill_registry.get_all_tools())
+    return result
 
 
 @router.post("/api/skills/reload")
 async def reload_skills(request: Request) -> dict:
-    """Recharge tous les skills sans redémarrer Jarvis."""
-    registry = request.app.state.skill_registry
-    registry.reload()
-    return {"count": len(registry.active), "names": registry.list_names()}
-
-
-@router.delete("/api/skills/{name}")
-async def delete_skill(name: str, request: Request) -> dict:
-    """Désactive et supprime un skill."""
-    registry = request.app.state.skill_registry
-    removed = registry.remove(name)
-    if not removed:
-        raise HTTPException(status_code=404, detail=f"Skill '{name}' introuvable.")
-    return {"removed": name}
+    """Recharge les skills et leurs outils sans redémarrer Jarvis."""
+    from skills.registry import skill_registry
+    skill_registry.reload()
+    tool_registry = getattr(request.app.state, "tool_registry", None)
+    if tool_registry:
+        tool_registry.replace_skill_tools(*skill_registry.get_all_tools())
+    return {
+        "success": True,
+        "loaded": len(skill_registry.get_all()),
+    }
 
 
 # ── Permissions API ───────────────────────────────────────────────────────────
@@ -438,28 +421,6 @@ async def list_tools_endpoint(request: Request) -> list[dict]:
             "description": s.get("description", ""),
         })
     return out
-
-
-# ── ClawHub (mock search) ─────────────────────────────────────────────────────
-
-_CLAWHUB_CATALOG = [
-    {"slug": "web-researcher",    "description": "Recherche web avancée avec synthèse structurée",    "stars": 4.8, "installs": 1247},
-    {"slug": "code-reviewer",     "description": "Review de code et suggestions d'amélioration",      "stars": 4.6, "installs": 892},
-    {"slug": "email-writer",      "description": "Rédaction d'emails professionnels en français",      "stars": 4.5, "installs": 743},
-    {"slug": "data-analyst",      "description": "Analyse de données CSV/JSON et visualisation",      "stars": 4.7, "installs": 561},
-    {"slug": "meeting-notes",     "description": "Synthèse automatique de notes de réunion",          "stars": 4.4, "installs": 498},
-    {"slug": "social-manager",    "description": "Génération de posts LinkedIn/Twitter/Instagram",     "stars": 4.3, "installs": 412},
-    {"slug": "seo-optimizer",     "description": "Optimisation SEO de contenus et méta-descriptions", "stars": 4.2, "installs": 387},
-    {"slug": "contract-drafter",  "description": "Rédaction de contrats et documents légaux",         "stars": 4.1, "installs": 295},
-]
-
-
-@router.get("/api/skills/clawhub/search")
-async def clawhub_search(q: str = "") -> list[dict]:
-    if not q.strip():
-        return _CLAWHUB_CATALOG[:6]
-    ql = q.strip().lower()
-    return [s for s in _CLAWHUB_CATALOG if ql in s["slug"] or ql in s["description"].lower()]
 
 
 # ── System API ────────────────────────────────────────────────────────────────
@@ -1190,6 +1151,98 @@ def _parse_bt_windows(devices: list) -> None:
             "b": ["Status", status],
             "type": "bluetooth",
         })
+
+
+@router.get("/api/settings/connectors")
+async def get_connectors() -> list:
+    import json as _json
+    from datetime import timezone
+
+    env = _read_env()
+
+    def _env_ok(*keys: str) -> bool:
+        return all((env.get(k) or os.getenv(k, "")).strip() for k in keys)
+
+    def _token_status(path: str) -> str:
+        p = Path(path)
+        if not p.exists():
+            return "off"
+        try:
+            data = _json.loads(p.read_text())
+            expiry = data.get("expiry") or data.get("expires_at")
+            if expiry:
+                from datetime import datetime as _dt
+                exp = _dt.fromisoformat(expiry.replace("Z", "+00:00"))
+                if exp < _dt.now(timezone.utc):
+                    return "expired"
+            return "on"
+        except Exception:
+            return "on"
+
+    from config.settings import settings as _s
+
+    connectors = [
+        {
+            "name": "Gmail",
+            "sub": "OAuth · lecture + envoi",
+            "status": _token_status(_s.google_credentials_path.replace("credentials", "gmail_token")),
+        },
+        {
+            "name": "Google Calendar",
+            "sub": "OAuth · lecture + écriture",
+            "status": _token_status(_s.google_token_path),
+        },
+        {
+            "name": "Spotify",
+            "sub": "OAuth · lecture musicale",
+            "status": (
+                "on" if _token_status(_s.spotify_token_path) == "on" and _env_ok("SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET")
+                else "expired" if _token_status(_s.spotify_token_path) == "expired"
+                else "off"
+            ),
+        },
+        {
+            "name": "Notion",
+            "sub": "token intégration · workspace",
+            "status": "on" if _env_ok("NOTION_TOKEN") else "off",
+        },
+        {
+            "name": "Anthropic (Claude)",
+            "sub": "LLM principal",
+            "status": "on" if _env_ok("ANTHROPIC_API_KEY") else "off",
+        },
+        {
+            "name": "ElevenLabs",
+            "sub": "TTS — voix de Jarvis",
+            "status": "on" if _env_ok("ELEVENLABS_API_KEY") else "off",
+        },
+        {
+            "name": "OpenAI",
+            "sub": "Whisper STT / fallback LLM",
+            "status": "on" if _env_ok("OPENAI_API_KEY") else "off",
+        },
+        {
+            "name": "Google (API Key)",
+            "sub": "Gemini · autres services Google",
+            "status": "on" if _env_ok("GOOGLE_API_KEY") else "off",
+        },
+        {
+            "name": "LiveKit",
+            "sub": "agent vocal temps réel",
+            "status": "on" if _env_ok("LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET") else "off",
+        },
+        {
+            "name": "Deepgram",
+            "sub": "STT alternatif",
+            "status": "on" if _env_ok("DEEPGRAM_API_KEY") else "off",
+        },
+        {
+            "name": "Mistral",
+            "sub": "LLM alternatif",
+            "status": "on" if _env_ok("MISTRAL_API_KEY") else "off",
+        },
+    ]
+    return connectors
 
 
 @router.get("/api/settings/voices")

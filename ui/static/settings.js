@@ -1060,29 +1060,20 @@
   }
 
   function renderSettingsConnectors(c) {
-    // Dérive le statut depuis les clés API configurées
-    const CONN_MAP = [
-      { name: "Anthropic (Claude)",   keys: ["ANTHROPIC_API_KEY"],                    sub: "LLM principal" },
-      { name: "ElevenLabs",           keys: ["ELEVENLABS_API_KEY"],                   sub: "TTS voix" },
-      { name: "OpenAI",               keys: ["OPENAI_API_KEY"],                       sub: "Whisper STT / fallback" },
-      { name: "Google",               keys: ["GOOGLE_API_KEY"],                       sub: "Gemini · Calendar · Drive" },
-      { name: "LiveKit",              keys: ["LIVEKIT_URL","LIVEKIT_API_KEY","LIVEKIT_API_SECRET"], sub: "agent vocal temps réel" },
-      { name: "Notion",               keys: ["NOTION_TOKEN"],                         sub: "workspace" },
-      { name: "Spotify",              keys: ["SPOTIFY_CLIENT_ID","SPOTIFY_CLIENT_SECRET"], sub: "lecture musicale" },
-      { name: "Deepgram",             keys: ["DEEPGRAM_API_KEY"],                     sub: "STT alternatif" },
-      { name: "Mistral",              keys: ["MISTRAL_API_KEY"],                      sub: "LLM alternatif" },
-    ];
     c.appendChild(el("div", { class: "j-loading", text: "Chargement…" }));
-    J.api.get("/api/settings").then(data => {
+    J.api.get("/api/settings/connectors").then(conns => {
       c.innerHTML = "";
-      const keys = data.api_keys || {};
-      CONN_MAP.forEach(conn => {
-        const isOn = conn.keys.every(k => (keys[k] || "").length > 0);
-        const col = isOn ? "var(--green)" : "var(--fg-3)";
-        const lbl = isOn ? "CONFIGURÉ" : "NON LIÉ";
+      const STATUS = {
+        on:      { col: "var(--green)", lbl: "CONNECTÉ" },
+        expired: { col: "var(--gold)",  lbl: "EXPIRÉ" },
+        off:     { col: "var(--fg-3)",  lbl: "NON LIÉ" },
+      };
+      conns.forEach(conn => {
+        const s = STATUS[conn.status] || STATUS.off;
         c.appendChild(setRow(conn.name, conn.sub,
-          el("span", { class: "t-mono", style: { color: col, fontSize: "10.5px" }, text: "● " + lbl }),
-          el("button", { class: "btn-ghost", text: "API Keys", onclick: () => {} })));
+          el("span", { class: "t-mono", style: { color: s.col, fontSize: "10.5px" }, text: "● " + s.lbl }),
+          el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--fg-3)" }, text: conn.status === "expired" ? "renouveler" : "" })
+        ));
       });
     }).catch(() => { c.innerHTML = ""; c.appendChild(el("div", { class: "j-empty", text: "Impossible de charger." })); });
   }
