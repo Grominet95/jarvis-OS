@@ -34,8 +34,17 @@ async def command_center_ui() -> FileResponse:
 
 
 @router.get("/settings", include_in_schema=False)
-async def settings_ui() -> FileResponse:
-    return FileResponse("ui/static/settings.html")
+async def settings_ui() -> Response:
+    from pathlib import Path
+    from fastapi.responses import Response as FastResponse
+    html_path = Path("ui/static/settings.html")
+    css_v = int(Path("ui/static/settings.css").stat().st_mtime)
+    js_v  = int(Path("ui/static/settings.js").stat().st_mtime)
+    content = html_path.read_text()
+    content = content.replace('href="/settings.css"', f'href="/settings.css?v={css_v}"')
+    content = content.replace('src="/settings.js"', f'src="/settings.js?v={js_v}"')
+    return FastResponse(content=content, media_type="text/html",
+                        headers={"Cache-Control": "no-store"})
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -807,6 +816,12 @@ async def conso_calls() -> list[dict]:
 async def conso_daily_providers() -> list[dict]:
     from core.tracking import tracker
     return tracker.get_daily_by_provider(7)
+
+
+@router.get("/api/conso/monthly")
+async def conso_monthly() -> dict:
+    from core.tracking import tracker
+    return tracker.get_monthly_totals()
 
 
 # ── Settings API ──────────────────────────────────────────────────────────────

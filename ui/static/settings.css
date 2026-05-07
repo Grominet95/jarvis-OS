@@ -25,9 +25,10 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: 14px;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── TOPBAR ─────────────────────────────────────────────────── */
@@ -52,13 +53,13 @@ html, body {
   background: none;
   border: none;
   color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
   cursor: pointer;
   padding: 5px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: color 150ms, background 150ms;
 }
 .topbar-back:hover {
@@ -71,10 +72,10 @@ html, body {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'Space Grotesk', 'DM Sans', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.18em;
+  font-size: 13px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text);
 }
@@ -84,8 +85,9 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-mid);
 }
 .topbar-dot {
@@ -118,61 +120,66 @@ html, body {
 }
 
 .sidebar-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-dim);
   padding: 0 18px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  opacity: 0.5;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
+  padding: 0 10px;
 }
 
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   width: 100%;
   background: none;
   border: none;
-  border-left: 2px solid transparent;
+  border-radius: 7px;
   color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   cursor: pointer;
-  padding: 11px 18px;
+  padding: 9px 12px;
   text-align: left;
-  transition: color 150ms, background 150ms, border-color 150ms;
+  transition: color 150ms, background 150ms;
 }
 .sidebar-item:hover {
   color: var(--text);
-  background: rgba(74, 158, 255, 0.05);
+  background: rgba(74, 158, 255, 0.06);
 }
 .sidebar-item.active {
   color: var(--blue-bright);
-  background: rgba(74, 158, 255, 0.10);
-  border-left-color: var(--blue-bright);
-  box-shadow: inset 0 0 20px rgba(74, 158, 255, 0.04);
+  background: rgba(74, 158, 255, 0.12);
 }
 
 .sidebar-icon {
-  font-size: 14px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
-  width: 18px;
-  text-align: center;
+  opacity: 0.7;
+}
+.sidebar-item.active .sidebar-icon,
+.sidebar-item:hover .sidebar-icon {
+  opacity: 1;
 }
 
 .sidebar-sep {
   height: 1px;
   background: var(--border);
-  margin: 10px 18px;
+  margin: 8px 10px;
 }
 
 /* ── MAIN CONTENT ───────────────────────────────────────────── */
@@ -200,23 +207,23 @@ html, body {
 }
 
 .tab-title {
-  font-family: 'Space Grotesk', 'DM Sans', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.1em;
+  font-size: 15px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text);
 }
 
 .tab-meta {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text-dim);
 }
 
 .section-lbl {
   display: block;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -232,7 +239,7 @@ html, body {
 }
 
 .loading {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--text-dim);
@@ -240,7 +247,7 @@ html, body {
 }
 
 .empty {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--text-dim);
@@ -254,7 +261,7 @@ html, body {
   background: none;
   border: 1px solid var(--border-mid);
   color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -291,7 +298,7 @@ html, body {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -337,7 +344,7 @@ html, body {
 }
 
 .status-badge {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.1em;
   padding: 3px 7px;
@@ -387,7 +394,7 @@ html, body {
 .prog-fill.failed { background: var(--red); }
 
 .prog-meta {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   color: var(--text-dim);
   flex-shrink: 0;
@@ -413,7 +420,7 @@ html, body {
 .card-section-arrow.open { transform: rotate(90deg); }
 
 .card-section-lbl {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   color: var(--text-dim);
@@ -422,7 +429,7 @@ html, body {
 }
 
 .card-section-count {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   color: var(--text-dim);
 }
@@ -461,7 +468,7 @@ html, body {
 .step-approval .no {
   background: none;
   border: 1px solid;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -484,18 +491,18 @@ html, body {
 .file-name {
   flex: 1;
   font-size: 11px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   color: var(--text-mid);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.file-size { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-dim); flex-shrink: 0; }
+.file-size { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-dim); flex-shrink: 0; }
 .file-open {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -511,7 +518,7 @@ html, body {
   background: none;
   border: 1px dashed rgba(74, 158, 255, 0.18);
   color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
   cursor: pointer;
@@ -532,7 +539,7 @@ html, body {
   background: none;
   border: 1px solid rgba(74, 158, 255, 0.25);
   color: var(--blue-bright);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   cursor: pointer;
@@ -557,7 +564,7 @@ html, body {
 
 .mem-name {
   flex: 1;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   color: var(--text);
   overflow: hidden;
@@ -566,7 +573,7 @@ html, body {
 }
 
 .mem-meta {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   color: var(--text-dim);
   flex-shrink: 0;
@@ -576,7 +583,7 @@ html, body {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   cursor: pointer;
   padding: 3px 8px;
@@ -606,7 +613,7 @@ html, body {
 
 .inline-editor-name {
   flex: 1;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text-mid);
   overflow: hidden;
@@ -617,7 +624,7 @@ html, body {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   cursor: pointer;
   padding: 3px 9px;
@@ -628,7 +635,7 @@ html, body {
 .editor-cancel:hover { color: var(--red);           border-color: rgba(255,85,85,0.4); }
 
 .editor-saved {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--green);
 }
@@ -641,7 +648,7 @@ html, body {
   outline: none;
   resize: vertical;
   color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   line-height: 1.5;
   padding: 12px 14px;
@@ -659,8 +666,8 @@ html, body {
 
 .sess-hd { display: flex; align-items: center; gap: 9px; }
 .sess-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; box-shadow: 0 0 6px rgba(54,211,153,0.5); }
-.sess-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--green); letter-spacing: 0.1em; text-transform: uppercase; flex: 1; }
-.sess-duration { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); }
+.sess-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--green); letter-spacing: 0.1em; text-transform: uppercase; flex: 1; }
+.sess-duration { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); }
 .sess-stats { font-size: 12px; color: var(--text-mid); margin-top: 6px; }
 
 .sess-past {
@@ -676,13 +683,13 @@ html, body {
 
 .sess-past-info { flex: 1; overflow: hidden; }
 .sess-past-date { font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sess-past-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.sess-past-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 
 .sess-view-btn {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   cursor: pointer;
   padding: 4px 10px;
@@ -699,7 +706,7 @@ html, body {
   background: none;
   border: none;
   color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.07em;
   cursor: pointer;
@@ -710,14 +717,14 @@ html, body {
 .back-btn:hover { color: var(--text); }
 
 .transcript-hd { font-size: 14px; color: var(--text); font-weight: 500; }
-.transcript-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); margin-bottom: 14px; margin-top: 3px; }
+.transcript-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); margin-bottom: 14px; margin-top: 3px; }
 
 .tx-msg { margin-bottom: 12px; }
 .tx-hd { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
-.tx-role { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; font-weight: 500; text-transform: uppercase; }
+.tx-role { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; font-weight: 500; text-transform: uppercase; }
 .tx-role.jarvis { color: var(--blue-bright); }
 .tx-role.user   { color: var(--text-dim); }
-.tx-ts { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); }
+.tx-ts { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); }
 .tx-body { font-size: 12px; color: rgba(220, 232, 255, 0.80); line-height: 1.6; white-space: pre-wrap; }
 
 /* ── TOOLS ──────────────────────────────────────────────────── */
@@ -741,7 +748,7 @@ html, body {
   margin-top: 4px;
 }
 
-.tool-name { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
+.tool-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
 .tool-desc { font-size: 11px; color: var(--text-mid); margin-top: 2px; line-height: 1.4; }
 
 .skill-del {
@@ -762,7 +769,7 @@ html, body {
   background: none;
   border: 1px solid rgba(201, 168, 76, 0.25);
   color: var(--gold);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
   cursor: pointer;
@@ -777,164 +784,187 @@ html, body {
 
 /* ── CONSO ──────────────────────────────────────────────────── */
 
-.conso-summary {
+/* KPI grid */
+.conso-kpi-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1px;
-  border: 1px solid var(--border-mid);
-  border-radius: 5px;
-  overflow: hidden;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
   margin-bottom: 28px;
+}
+
+.conso-kpi {
+  background: rgba(6, 9, 18, 0.65);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.conso-kpi.kpi-accent {
+  border-color: rgba(74, 158, 255, 0.22);
+  background: rgba(74, 158, 255, 0.04);
+}
+
+.conso-kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.conso-kpi-value {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.conso-kpi-value.cost { color: var(--gold); }
+
+.conso-kpi-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* Section headers */
+.conso-section-hd {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0 14px;
+}
+
+.conso-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.conso-section-rule {
+  flex: 1;
+  height: 1px;
   background: var(--border);
 }
 
-.conso-stat {
-  padding: 18px 20px;
-  background: rgba(6, 9, 18, 0.6);
-}
-
-.conso-stat-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-}
-
-.conso-stat-value {
-  font-family: 'Space Grotesk', 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 24px;
-  color: var(--text);
-  line-height: 1;
-}
-
-.conso-stat-value.cost { color: var(--gold); }
-
-.conso-provider {
-  border: 1px solid var(--border-mid);
-  border-radius: 5px;
-  padding: 16px 18px;
+/* Provider cards */
+.conso-provider-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
   margin-bottom: 10px;
-  background: rgba(6, 9, 18, 0.4);
+  overflow: hidden;
+  background: rgba(6, 9, 18, 0.5);
 }
 
-.conso-provider-name {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--blue-bright);
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-
-.conso-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 20px;
-}
-
-.conso-key {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--text-mid);
-}
-
-.conso-val {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--text);
-  text-align: right;
-}
-
-.conso-provider-total {
+.conso-provider-hd {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--text-dim);
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
 }
 
-.conso-provider-total span:last-child { color: var(--gold); font-size: 13px; }
-
-/* ── BAR CHART ──────────────────────────────────────────────── */
-
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  height: 100px;
-  padding: 10px 0 0;
-  margin-bottom: 10px;
-}
-
-.bar-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  height: 100%;
-}
-
-.bar {
-  width: 100%;
-  min-height: 3px;
-  background: rgba(74, 158, 255, 0.28);
-  border-radius: 3px 3px 0 0;
-  transition: background 150ms;
-}
-.bar:hover { background: var(--blue-bright); }
-
-.bar-day {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  text-transform: uppercase;
+.conso-provider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.bar-cost {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
+.conso-provider-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.conso-provider-subtotal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gold);
+}
+
+.conso-model-block {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(74, 158, 255, 0.05);
+}
+.conso-model-block:last-child { border-bottom: none; }
+
+.conso-model-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--blue-bright);
+  margin-bottom: 8px;
+}
+
+.conso-model-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+}
+
+.conso-stat-pair {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.conso-stat-key {
+  font-size: 11px;
   color: var(--text-dim);
 }
 
-/* ── CONSO CHARTS ───────────────────────────────────────────── */
+.conso-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+}
 
+/* Charts */
 .conso-charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
   gap: 12px;
   margin-bottom: 28px;
 }
 
-.conso-chart-wrap {
-  border: 1px solid var(--border-mid);
-  border-radius: 5px;
-  padding: 16px 18px 12px;
-  background: rgba(6, 9, 18, 0.4);
-  position: relative;
+.conso-chart-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  background: rgba(6, 9, 18, 0.5);
 }
 
-.conso-chart-wide {
+.conso-chart-card.conso-chart-wide {
   grid-column: 1 / -1;
 }
 
 .conso-chart-title {
-  font-family: 'DM Mono', monospace;
   font-size: 10px;
-  letter-spacing: 0.10em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
+
+.conso-chart-canvas-wrap {
+  position: relative;
+  height: 160px;
+}
+
+/* legacy bar chart (unused) */
+.bar-chart { display: none; }
 
 /* ── CALLS TABLE ─────────────────────────────────────────────── */
 
@@ -950,7 +980,7 @@ html, body {
 .calls-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
 }
 
@@ -1018,7 +1048,7 @@ html, body {
 .params-section-arrow.open { transform: rotate(90deg); }
 
 .params-section-title {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1040,7 +1070,7 @@ html, body {
 .params-row:last-child { border-bottom: none; }
 
 .params-label {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text-mid);
   flex: 1;
@@ -1054,7 +1084,7 @@ html, body {
   background: rgba(6, 8, 14, 0.9);
   border: 1px solid rgba(74, 158, 255, 0.18);
   color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   border-radius: 4px;
   padding: 6px 10px;
@@ -1070,7 +1100,7 @@ html, body {
   background: rgba(6, 8, 14, 0.9);
   border: 1px solid rgba(74, 158, 255, 0.18);
   color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   border-radius: 4px;
   padding: 6px 10px;
@@ -1085,7 +1115,7 @@ html, body {
   background: rgba(6, 8, 14, 0.9);
   border: 1px solid rgba(74, 158, 255, 0.18);
   color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   border-radius: 4px;
   padding: 6px 10px;
@@ -1138,7 +1168,7 @@ html, body {
 }
 
 .params-key-value {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text-dim);
   flex: 1;
@@ -1173,7 +1203,7 @@ html, body {
   background: rgba(6, 8, 14, 0.9);
   border: 1px solid rgba(74, 158, 255, 0.28);
   color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   border-radius: 4px;
   padding: 5px 9px;
@@ -1184,7 +1214,7 @@ html, body {
   background: none;
   border: 1px solid rgba(54, 211, 153, 0.35);
   color: var(--green);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   cursor: pointer;
   padding: 4px 10px;
@@ -1197,7 +1227,7 @@ html, body {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   cursor: pointer;
   padding: 4px 8px;
@@ -1234,14 +1264,14 @@ html, body {
 }
 
 .sys-key {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text-dim);
   white-space: nowrap;
 }
 
 .sys-val {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text);
 }
@@ -1266,15 +1296,15 @@ html, body {
 .health-dot.warn { background: var(--gold); box-shadow: 0 0 6px rgba(201,168,76,0.45); }
 .health-dot.off  { background: var(--text-dim); box-shadow: none; }
 
-.health-name { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); flex: 1; }
-.health-desc { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); }
+.health-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); flex: 1; }
+.health-desc { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); }
 
 .action-btn {
   width: 100%;
   background: none;
   border: 1px solid var(--border-mid);
   color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -1305,7 +1335,7 @@ html, body {
   border: 1px solid var(--border-mid);
   border-radius: 4px;
   padding: 10px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   line-height: 1.6;
   color: var(--text-dim);
@@ -1349,7 +1379,7 @@ html, body {
 
 .modal-name {
   flex: 1;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1375,7 +1405,7 @@ html, body {
   padding: 18px;
 }
 .modal-body pre {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   line-height: 1.5;
   color: var(--text-mid);
@@ -1397,7 +1427,7 @@ html, body {
   background: rgba(6, 8, 14, 0.9);
   border: 1px solid rgba(74, 158, 255, 0.18);
   color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   border-radius: 4px;
   padding: 8px 12px;
@@ -1412,16 +1442,16 @@ html, body {
   padding: 12px 18px;
   border-bottom: 1px solid var(--border);
 }
-.ch-slug { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
+.ch-slug { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
 .ch-desc { font-size: 11px; color: var(--text-mid); margin-top: 3px; }
-.ch-stars { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold); margin-top: 2px; }
+.ch-stars { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--gold); margin-top: 2px; }
 .ch-info { flex: 1; }
 
 .ch-install {
   background: none;
   border: 1px solid rgba(201, 168, 76, 0.35);
   color: var(--gold);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -1450,7 +1480,7 @@ html, body {
   background: rgba(10, 13, 22, 0.98);
   border: 1px solid var(--border-mid);
   color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.05em;
   padding: 9px 16px;
@@ -1469,7 +1499,7 @@ html, body {
 
 .unsaved-indicator {
   display: none;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   color: var(--gold);
   padding: 8px 18px;
@@ -1480,7 +1510,7 @@ html, body {
 /* ── APPROVAL SUBSECTION LABEL ──────────────────────────────── */
 
 .params-subsection {
-  font: 500 8px/1 'DM Mono', monospace;
+  font: 500 8px/1 'JetBrains Mono', monospace;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: rgba(74, 158, 255, 0.55);

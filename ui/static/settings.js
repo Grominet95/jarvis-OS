@@ -462,7 +462,7 @@ const _PROV_COLORS = {
 
 const _GRID_COLOR  = 'rgba(74,158,255,0.06)';
 const _TICK_COLOR  = 'rgba(255,255,255,0.35)';
-const _FONT_MONO   = "'DM Mono', monospace";
+const _FONT_MONO   = "'JetBrains Mono', monospace";
 
 function _cjsScales(stacked = false) {
   return {
@@ -485,109 +485,162 @@ function _cjsTooltip(extra = {}) {
 }
 
 async function renderConso() {
-  _content().innerHTML = '<div class="loading">CHARGEMENT…</div>';
+  _content().innerHTML = '<div class="loading">Chargement…</div>';
   try {
-    const [sessR, dailyR, callsR, dpR] = await Promise.allSettled([
+    const [sessR, monthR, dailyR, callsR, dpR] = await Promise.allSettled([
       fetch('/api/conso/session').then(r => r.json()),
+      fetch('/api/conso/monthly').then(r => r.json()),
       fetch('/api/conso/daily').then(r => r.json()),
       fetch('/api/conso/calls').then(r => r.json()),
       fetch('/api/conso/daily_providers').then(r => r.json()),
     ]);
     _s.consoData = {
-      session:     sessR.status === 'fulfilled' ? sessR.value : {},
+      session:     sessR.status  === 'fulfilled' ? sessR.value  : {},
+      monthly:     monthR.status === 'fulfilled' ? monthR.value : {},
       daily:       dailyR.status === 'fulfilled' ? dailyR.value : [],
       calls:       callsR.status === 'fulfilled' ? callsR.value : [],
-      dailyByProv: dpR.status === 'fulfilled' ? dpR.value : [],
+      dailyByProv: dpR.status    === 'fulfilled' ? dpR.value    : [],
     };
-  } catch { _s.consoData = { session: {}, daily: [], calls: [], dailyByProv: [] }; }
+  } catch {
+    _s.consoData = { session: {}, monthly: {}, daily: [], calls: [], dailyByProv: [] };
+  }
   paintConso();
 }
 
-function paintConso() {
-  const { session, daily, calls, dailyByProv } = _s.consoData || {};
-  const totalTokens = (session || {}).total_tokens || 0;
-  const totalCalls  = (session || {}).total_api_calls || 0;
-  const totalCost   = (session || {}).total_cost_usd || 0;
-  const providers   = (session || {}).providers || {};
+const _PROV_COLORS_DOT = {
+  anthropic:  '#4A9EFF',
+  openai:     '#10A37F',
+  elevenlabs: '#F5C842',
+  deepgram:   '#A855F7',
+};
 
-  // direct vs indirect depuis les appels bruts
+function paintConso() {
+  const { session, monthly, daily, calls, dailyByProv } = _s.consoData || {};
+
+  const todayTokens  = (session || {}).total_tokens    || 0;
+  const todayCalls   = (session || {}).total_api_calls || 0;
+  const todayCost    = (session || {}).total_cost_usd  || 0;
+  const todayChars   = (session || {}).total_tts_chars || 0;
+  const providers    = (session || {}).providers       || {};
+
+  const monthCost    = (monthly || {}).total_cost_usd  || 0;
+  const monthLabel   = (monthly || {}).month           || '';
+
   let directCost = 0, indirectCost = 0;
   for (const c of (calls || [])) {
     const ctx = c.context || '';
-    if (!ctx || ctx === 'conversation') directCost += c.cost_usd || 0;
-    else indirectCost += c.cost_usd || 0;
+    if (!ctx || ctx === 'conversation') directCost  += c.cost_usd || 0;
+    else                                indirectCost += c.cost_usd || 0;
   }
 
-  /* ── résumé ── */
+  /* ── en-tête ── */
   let html = `
     <div class="tab-header">
-      <span class="tab-title">CONSOMMATION & COÛTS</span>
-      <button class="btn-icon" onclick="renderConso()" title="Actualiser">↻</button>
-    </div>
-    <span class="section-lbl">RÉSUMÉ SESSION</span>
-    <div class="conso-summary">
-      <div class="conso-stat">
-        <div class="conso-stat-label">Tokens LLM</div>
-        <div class="conso-stat-value">${_fmtNum(totalTokens)}</div>
+      <span class="tab-title">Consommation & Coûts</span>
+      <button class="btn" onclick="renderConso()" title="Actualiser" style="gap:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Actualiser
+      </button>
+    </div>`;
+
+  /* ── KPIs ── */
+  html += `
+    <div class="conso-kpi-grid">
+      <div class="conso-kpi kpi-accent">
+        <div class="conso-kpi-label">Aujourd'hui</div>
+        <div class="conso-kpi-value cost">${_fmtCost(todayCost)}</div>
+        <div class="conso-kpi-sub">${_fmtNum(todayCalls)} appels</div>
       </div>
-      <div class="conso-stat">
-        <div class="conso-stat-label">Appels API</div>
-        <div class="conso-stat-value">${_fmtNum(totalCalls)}</div>
+      <div class="conso-kpi kpi-accent">
+        <div class="conso-kpi-label">Ce mois</div>
+        <div class="conso-kpi-value cost">${_fmtCost(monthCost)}</div>
+        <div class="conso-kpi-sub">${_esc(monthLabel)}</div>
       </div>
-      <div class="conso-stat">
-        <div class="conso-stat-label">COÛT SESSION</div>
-        <div class="conso-stat-value cost">${_fmtCost(totalCost)}</div>
+      <div class="conso-kpi">
+        <div class="conso-kpi-label">Tokens LLM</div>
+        <div class="conso-kpi-value">${_fmtNum(todayTokens)}</div>
+        <div class="conso-kpi-sub">aujourd'hui</div>
+      </div>
+      <div class="conso-kpi">
+        <div class="conso-kpi-label">Chars TTS</div>
+        <div class="conso-kpi-value">${_fmtNum(todayChars)}</div>
+        <div class="conso-kpi-sub">aujourd'hui</div>
+      </div>
+      <div class="conso-kpi">
+        <div class="conso-kpi-label">Appels API</div>
+        <div class="conso-kpi-value">${_fmtNum(todayCalls)}</div>
+        <div class="conso-kpi-sub">aujourd'hui</div>
       </div>
     </div>`;
 
   /* ── par provider ── */
+  html += `<div class="conso-section-hd"><span class="conso-section-label">Par provider</span><div class="conso-section-rule"></div></div>`;
+
   const provEntries = Object.entries(providers);
   if (provEntries.length) {
-    html += '<span class="section-lbl">PAR PROVIDER</span>';
     for (const [pk, pd] of provEntries) {
-      const name = _PROV_NAMES[pk] || pk;
-      html += `<div class="conso-provider"><div class="conso-provider-name">${_esc(name)}</div><div class="conso-grid">`;
+      const name  = _PROV_NAMES[pk] || pk;
+      const dot   = _PROV_COLORS_DOT[pk] || '#8CA8CC';
+      const color = pk === 'anthropic' ? '#4A9EFF'
+                  : pk === 'openai'    ? '#10A37F'
+                  : pk === 'elevenlabs'? '#F5C842'
+                  : pk === 'deepgram'  ? '#A855F7'
+                  : '#8CA8CC';
+
+      html += `<div class="conso-provider-card">
+        <div class="conso-provider-hd">
+          <span class="conso-provider-dot" style="background:${dot};box-shadow:0 0 6px ${dot}80"></span>
+          <span class="conso-provider-name" style="color:${color}">${_esc(name)}</span>
+          <span class="conso-provider-subtotal">${_fmtCost(pd.total_cost)}</span>
+        </div>`;
+
       for (const [mk, md] of Object.entries(pd.models || {})) {
-        html += `<span class="conso-key" style="grid-column:1/-1;color:rgba(74,158,255,0.6);margin-top:4px">${_esc(mk)}</span>`;
-        if (md.input_tokens)  html += `<span class="conso-key">  Tokens input</span><span class="conso-val">${_fmtNum(md.input_tokens)}</span>`;
-        if (md.output_tokens) html += `<span class="conso-key">  Tokens output</span><span class="conso-val">${_fmtNum(md.output_tokens)}</span>`;
-        if (md.characters)    html += `<span class="conso-key">  Caractères</span><span class="conso-val">${_fmtNum(md.characters)}</span>`;
-        if (md.audio_minutes) html += `<span class="conso-key">  Minutes audio</span><span class="conso-val">${md.audio_minutes.toFixed(1)} min</span>`;
-        if (md.images)        html += `<span class="conso-key">  Images</span><span class="conso-val">${md.images}</span>`;
-        html += `<span class="conso-key">  Appels</span><span class="conso-val">${md.calls}</span>`;
+        const stats = [];
+        if (md.input_tokens)  stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Input</span><span class="conso-stat-val">${_fmtNum(md.input_tokens)} tok</span></span>`);
+        if (md.output_tokens) stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Output</span><span class="conso-stat-val">${_fmtNum(md.output_tokens)} tok</span></span>`);
+        if (md.characters)    stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Chars</span><span class="conso-stat-val">${_fmtNum(md.characters)}</span></span>`);
+        if (md.audio_minutes) stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Audio</span><span class="conso-stat-val">${md.audio_minutes.toFixed(1)} min</span></span>`);
+        if (md.images)        stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Images</span><span class="conso-stat-val">${md.images}</span></span>`);
+        stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Appels</span><span class="conso-stat-val">${md.calls}</span></span>`);
+
+        html += `<div class="conso-model-block">
+          <div class="conso-model-name">${_esc(mk)}</div>
+          <div class="conso-model-stats">${stats.join('')}</div>
+        </div>`;
       }
-      html += `</div><div class="conso-provider-total"><span>Subtotal</span><span>${_fmtCost(pd.total_cost)}</span></div></div>`;
+      html += `</div>`;
     }
   } else {
-    html += '<div class="empty">Aucune consommation enregistrée aujourd\'hui</div>';
+    html += `<div class="empty">Aucune consommation enregistrée aujourd'hui.</div>`;
   }
 
   /* ── graphes ── */
   html += `
-    <div class="sep"></div>
-    <span class="section-lbl">ANALYTIQUES</span>
+    <div class="conso-section-hd"><span class="conso-section-label">Analytiques</span><div class="conso-section-rule"></div></div>
     <div class="conso-charts-grid">
-      <div class="conso-chart-wrap">
-        <div class="conso-chart-title">COÛT PAR JOUR (7 JOURS)</div>
-        <canvas id="cjsCostDay" height="160"></canvas>
+      <div class="conso-chart-card">
+        <div class="conso-chart-title">Coût par jour — 7 jours</div>
+        <div class="conso-chart-canvas-wrap"><canvas id="cjsCostDay"></canvas></div>
       </div>
-      <div class="conso-chart-wrap">
-        <div class="conso-chart-title">DIRECT / INDIRECT</div>
-        <canvas id="cjsSplit" height="160"></canvas>
+      <div class="conso-chart-card">
+        <div class="conso-chart-title">Direct / Indirect</div>
+        <div class="conso-chart-canvas-wrap"><canvas id="cjsSplit"></canvas></div>
       </div>
-      <div class="conso-chart-wrap conso-chart-wide">
-        <div class="conso-chart-title">TOKENS PAR PROVIDER (7 JOURS)</div>
-        <canvas id="cjsProvTokens" height="160"></canvas>
+      <div class="conso-chart-card conso-chart-wide">
+        <div class="conso-chart-title">Tokens par provider — 7 jours</div>
+        <div class="conso-chart-canvas-wrap"><canvas id="cjsProvTokens"></canvas></div>
       </div>
     </div>`;
 
   /* ── tableau appels ── */
-  html += '<div class="sep"></div><span class="section-lbl">APPELS RÉCENTS</span>';
+  html += `<div class="conso-section-hd"><span class="conso-section-label">Appels récents</span><div class="conso-section-rule"></div></div>`;
   html += _renderCallsTable(calls || []);
 
   _content().innerHTML = html;
 
-  /* init charts après rendu DOM */
   requestAnimationFrame(() => {
     _initCostDayChart(daily || []);
     _initSplitDonut(directCost, indirectCost);

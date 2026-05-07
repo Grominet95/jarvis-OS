@@ -1410,7 +1410,22 @@
 
   <!-- Intel Monde — iframe plein écran -->
   <div id="intel-overlay">
-    <iframe id="intel-iframe" src="http://localhost:3000" title="Intel Monde"></iframe>
+    <iframe id="intel-iframe" src="" title="Intel Monde"></iframe>
+    <div id="intel-fallback">
+      <div class="intel-fallback-inner">
+        <div class="intel-fallback-title">Dashboard Géopolitique Mondial</div>
+        <p class="intel-fallback-sub">Le service Intel n'est pas disponible sur <code>localhost:3000</code></p>
+        <div class="intel-fallback-steps">
+          <p>Pour y avoir accès :</p>
+          <ol>
+            <li>Cloner le dépôt :<br><code>git clone https://github.com/Grominet95/dashboard_monde.git</code></li>
+            <li>Installer les dépendances : <code>npm install</code></li>
+            <li>Lancer le serveur : <code>npm run dev -- --port 3000</code></li>
+            <li>Revenir ici — Jarvis l'affichera automatiquement</li>
+          </ol>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Settings — iframe plein écran -->
@@ -2945,7 +2960,7 @@
       if (!overlay) return;
       window._prevSettingsView = window._currentView;
       _setView('settings');
-      if (!iframe.src || iframe.src === window.location.href) iframe.src = '/settings';
+      iframe.src = '/settings?v=' + Date.now();
       overlay.style.display = 'block';
       gsap.fromTo(overlay, { opacity: 0, x: 24 }, { duration: 0.28, opacity: 1, x: 0, ease: 'power3.out' });
     };
@@ -3030,6 +3045,19 @@
       const io = document.getElementById('intel-overlay');
       if (io) gsap.set(io, { opacity: 0 });
       _slideOut(d);
+      const _iframe = document.getElementById('intel-iframe');
+      const _fallback = document.getElementById('intel-fallback');
+      const _ctrl = new AbortController();
+      setTimeout(() => _ctrl.abort(), 2500);
+      fetch('http://localhost:3000', { mode: 'no-cors', cache: 'no-store', signal: _ctrl.signal })
+        .then(() => {
+          if (_iframe) { _iframe.style.display = 'block'; if (!_iframe.src || _iframe.src === window.location.href) _iframe.src = 'http://localhost:3000'; }
+          if (_fallback) _fallback.classList.remove('visible');
+        })
+        .catch(() => {
+          if (_iframe) { _iframe.style.display = 'none'; _iframe.src = ''; }
+          if (_fallback) _fallback.classList.add('visible');
+        });
       setTimeout(() => {
         document.body.classList.add('intel-mode');
         _setView('intel');
