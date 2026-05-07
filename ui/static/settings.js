@@ -1,1161 +1,979 @@
-/* ================================================================
-   JARVIS V3 — Settings Page (settings.js)
-   ================================================================ */
-'use strict';
+/* settings.js — Page Système (vanilla)
+ * Sessions · Mémoire · Outils · Conso · Paramètres · Système (logs)
+ */
+(function () {
+  "use strict";
+  const J = window.Jarvis, el = J.el;
+  const Charts = window.JarvisCharts;
 
-/* ── State ──────────────────────────────────────────────────── */
-const _s = {
-  tab:           'sessions',
-  memTopics:     [],
-  memIndexOpen:  false,
-  sessions:      [],
-  transcript:    null,
-  tools:         [],
-  skills:        [],
-  sysStats:      null,
-  sysLogs:       [],
-  logsInterval:  null,
-  consoData:     null,
-  paramsData:    null,
-  paramsDevices: { audio_input: [], audio_output: [], video: [] },
-  apiKeysVisible: {},
-  unsavedCount:  0,
-};
-
-/* ── Utils ──────────────────────────────────────────────────── */
-const STEP_ICON = { running:'↻', done:'✓', failed:'✗', waiting:'⏸', paused:'⏸', skipped:'—', pending:'○' };
-const FILE_ICON = { md:'📄',txt:'📄',json:'{}',py:'🐍',js:'📜',ts:'📜',html:'🌐',css:'🎨',csv:'📊',pdf:'📋',png:'🖼',jpg:'🖼' };
-
-function _esc(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function _fileIcon(name) {
-  const ext = (name.split('.').pop() || '').toLowerCase();
-  return FILE_ICON[ext] || '📄';
-}
-function _fmtSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/1024/1024).toFixed(2) + ' MB';
-}
-function _fmtCost(usd) {
-  return '$' + (usd || 0).toFixed(4);
-}
-function _fmtNum(n) {
-  if (!n) return '0';
-  return n.toLocaleString('fr-FR');
-}
-function _content() { return document.getElementById('tab-content'); }
-
-/* ── Toast ──────────────────────────────────────────────────── */
-function toast(msg, type) {
-  const wrap = document.getElementById('toast-container');
-  if (!wrap) return;
-  const el = document.createElement('div');
-  el.className = 'toast-msg' + (type ? ' ' + type : '');
-  el.textContent = msg;
-  wrap.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(4px)'; el.style.transition = '0.2s'; setTimeout(() => el.remove(), 200); }, 2800);
-}
-
-/* ── Navigation ─────────────────────────────────────────────── */
-function goBack() {
-  const inIframe = window.self !== window.top;
-  if (inIframe) {
-    window.parent.postMessage('jarvis:close-settings', '*');
-    return;
+  /* ───────── Mocks (TODO: replace with API) ───────── */
+  const SESSIONS = [
+    { id: "s_8a14", agent: "librarian",  start: "14:08:42", dur: "00:24:18", calls: 142, tok: "184.2k", status: "RUN",  cls: "ok" },
+    { id: "s_8a13", agent: "editor",     start: "13:51:09", dur: "00:41:03", calls: 86,  tok: "312.0k", status: "RUN",  cls: "ok" },
+    { id: "s_8a12", agent: "scheduler",  start: "13:42:00", dur: "00:08:11", calls: 24,  tok: "12.4k",  status: "WAIT", cls: "warn" },
+    { id: "s_8a11", agent: "finops",     start: "12:00:00", dur: "02:32:18", calls: 412, tok: "44.1k",  status: "RUN",  cls: "ok" },
+    { id: "s_8a10", agent: "digest",     start: "09:00:00", dur: "00:01:42", calls: 6,   tok: "8.2k",   status: "DONE", cls: "info" },
+    { id: "s_8a0f", agent: "triager",    start: "08:14:22", dur: "00:00:54", calls: 12,  tok: "4.4k",   status: "DONE", cls: "info" },
+  ];
+  const MEM_GROUPS = [
+    { id: "global",  label: "Global" },
+    { id: "prefs",   label: "Préférences" },
+    { id: "tools",   label: "Par outil" },
+    { id: "context", label: "Contexte long-terme" },
+  ];
+  const MEM_FILES = [
+    { id:"m1", group:"global",  name:"identity.md",        path:"global/identity.md",        size:"4.2 KB", pin:true,
+      body:{ title:"identity.md", fm:{Type:"global",Updated:"2026-04-28",Pinned:"true",Tokens:"1,142"}, sections:[
+        {p:["Marc, 32 ans, basé à Paris. Créateur de contenu YouTube (414K subs) sur la tech, l'IA et la productivité. Travaille en solo, full-remote."]},
+        {h:"Style de communication", p:["Direct, peu de fioritures, jamais de small talk inutile. Préfère les réponses denses au verbiage. Tutoiement par défaut."]},
+        {h:"Préférences", list:["Travaille mieux le matin (06:00 — 12:00)","Sport : 17:00 — 18:30 (ne pas planifier dessus)","Pas de réunion le vendredi"]},
+      ]}},
+    { id:"m2", group:"global",  name:"objectives-q2.md",   path:"global/objectives-q2.md",   size:"2.8 KB", pin:true,
+      body:{ title:"objectives-q2.md", fm:{Type:"global",Updated:"2026-04-12",Pinned:"true",Tokens:"784"}, sections:[
+        {h:"Objectifs Q2 2026", list:["Atteindre 500K subs YouTube (actuel : 414K)","Lancer la formation 'Build Your Own Jarvis' en juin","Réduire le temps email à <30 min/jour"]},
+        {h:"Note", p:["Réviser fin mai. Si en retard sur subs, pivoter sur les shorts."]},
+      ]}},
+    { id:"m3", group:"prefs",   name:"writing-style.md",   path:"preferences/writing-style.md", size:"3.1 KB",
+      body:{ title:"writing-style.md", fm:{Type:"preference",Updated:"2026-05-02",Used:"editor, digest"}, sections:[
+        {h:"Voix", p:["Phrases courtes. Une idée par phrase. Éviter les adverbes faibles."]},
+        {h:"À bannir", list:["Les listes à 7+ points","Les conclusions qui résument l'article","Les questions rhétoriques"]},
+        {h:"À utiliser", list:["Métaphores concrètes, jamais abstraites","Exemples avec chiffres précis","Anecdotes personnelles datées"]},
+      ]}},
+    { id:"m4", group:"prefs",   name:"coding.md",          path:"preferences/coding.md",        size:"1.8 KB",
+      body:{ title:"coding.md", fm:{Type:"preference",Updated:"2026-03-18",Used:"editor, planner"}, sections:[
+        {h:"Stack par défaut", list:["TypeScript + Bun","Tailwind v4","SQLite local-first quand possible"]},
+        {h:"Style", p:["2 espaces, pas de point-virgule. Components en kebab-case."]},
+      ]}},
+    { id:"m5", group:"tools",   name:"email.md",           path:"tools/email.md",               size:"5.4 KB",
+      body:{ title:"email.md", fm:{Type:"tool-memory",Tool:"email.imap",Updated:"il y a 12 min"}, sections:[
+        {h:"Triage automatique", list:["Newsletters → archive après 7j","Sponsors YouTube → label 'biz' + notif","Famille → toujours top inbox"]},
+        {h:"Brouillons fréquents", p:["Réponses sponsor : tarif 2026 = 8K€/intégration. Brief 7j avant, droit de refus."]},
+      ]}},
+    { id:"m6", group:"tools",   name:"calendar.md",        path:"tools/calendar.md",            size:"2.2 KB",
+      body:{ title:"calendar.md", fm:{Type:"tool-memory",Tool:"calendar",Updated:"il y a 3h"}, sections:[
+        {h:"Règles de scheduling", list:["Pas de meeting avant 10:00","Buffer 15 min entre meetings","Vendredi = 0 meeting"]},
+        {h:"Récurrents", list:["Lundi 11:00 — review hebdo","Mercredi 15:00 — sync éditeur vidéo"]},
+      ]}},
+    { id:"m7", group:"tools",   name:"youtube.md",         path:"tools/youtube.md",             size:"4.1 KB",
+      body:{ title:"youtube.md", fm:{Type:"tool-memory",Tool:"youtube.api",Updated:"hier"}, sections:[
+        {h:"Patterns de titre qui marchent", list:["Ne pas commencer par 'Comment'","Inclure un chiffre concret","Tension dans les 3 premiers mots"]},
+        {h:"Thumbnails", p:["Visage à gauche, texte à droite, max 4 mots. Pas de flèche rouge."]},
+      ]}},
+    { id:"m8", group:"tools",   name:"finops.md",          path:"tools/finops.md",              size:"1.4 KB",
+      body:{ title:"finops.md", fm:{Type:"tool-memory",Tool:"finops",Updated:"il y a 6h"}, sections:[
+        {h:"Budgets", list:["OpenAI : $200/mois (alerte $180)","Anthropic : $250/mois (alerte $220)","Cumulé infra : $500/mois max"]},
+      ]}},
+    { id:"m9", group:"context", name:"projects-active.md", path:"context/projects-active.md",   size:"6.8 KB",
+      body:{ title:"projects-active.md", fm:{Type:"context",Updated:"il y a 2j",Tokens:"1,940"}, sections:[
+        {h:"Formation BYO Jarvis", p:["Lancement 12 juin 2026. 8 modules, 14h. Tarif early-bird : 297€."]},
+        {h:"Refonte site perso",   p:["Stack : Astro + Tailwind v4. Maquettes faites. Après la formation."]},
+      ]}},
+    { id:"m10", group:"context",name:"learnings.md",       path:"context/learnings.md",         size:"12.4 KB",
+      body:{ title:"learnings.md", fm:{Type:"context",Updated:"il y a 4j",Tokens:"3,420"}, sections:[
+        {h:"Insights", list:["Les vidéos >12 min performent moins depuis mars 2026","Newsletter ouverte 2x plus si envoyée jeudi 09:00","Sleep <7h ⇒ output créatif /2 le lendemain"]},
+      ]}},
+  ];
+  const TOOLS = [
+    { glyph:"fs",  name:"filesystem",        sub:"read · write · search local files", calls:1842, lat:"12 ms",  on:true  },
+    { glyph:"wb",  name:"web · browser",     sub:"playwright headless · 6 sessions",   calls:412,  lat:"1.2 s",  on:true  },
+    { glyph:"em",  name:"email · imap",      sub:"Gmail OAuth · 4 mailboxes",          calls:287,  lat:"340 ms", on:true  },
+    { glyph:"cal", name:"calendar",          sub:"Google Calendar · read+write",       calls:92,   lat:"180 ms", on:true  },
+    { glyph:"yt",  name:"youtube · api",     sub:"v3 · stats + uploads",               calls:41,   lat:"240 ms", on:true  },
+    { glyph:"x",   name:"x · twitter",       sub:"posting + analytics · OAuth2",       calls:28,   lat:"410 ms", on:false },
+    { glyph:"vec", name:"vector · pinecone", sub:"ix-personal · 1536d",                calls:2104, lat:"48 ms",  on:true  },
+    { glyph:"fin", name:"finance · plaid",   sub:"3 comptes liés · read-only",         calls:14,   lat:"1.1 s",  on:false },
+  ];
+  const PROVIDERS = [
+    { name:"Anthropic",  color:"#D97757", cost:"$184.20", tok:"12.4M" },
+    { name:"OpenAI",     color:"#10A37F", cost:"$112.80", tok:"8.2M"  },
+    { name:"Pinecone",   color:"#4A9EFF", cost:"$32.40",  tok:"—"     },
+    { name:"ElevenLabs", color:"#B8963E", cost:"$24.10",  tok:"1.8M"  },
+    { name:"Mapbox",     color:"#36D399", cost:"$18.00",  tok:"—"     },
+  ];
+  function genSeries(base, vol, len) {
+    const out=[]; let v=base;
+    for (let i=0;i<len;i++){ v=Math.max(0,v+(Math.random()-0.45)*vol); out.push(Number(v.toFixed(2))); }
+    return out;
   }
-  if (typeof gsap === 'undefined') { window.location.href = '/'; return; }
-  gsap.timeline({ onComplete: () => { window.location.href = '/'; } })
-    .to('body', { duration: 0.25, opacity: 0, scale: 1.03, filter: 'blur(8px)', ease: 'power2.in' });
-}
+  const CONSO_SERIES = [
+    { name:"Anthropic",  color:"#D97757", data: genSeries(5.5,1.6,30) },
+    { name:"OpenAI",     color:"#10A37F", data: genSeries(3.6,1.2,30) },
+    { name:"Pinecone",   color:"#4A9EFF", data: genSeries(1.2,0.4,30) },
+    { name:"ElevenLabs", color:"#B8963E", data: genSeries(0.8,0.3,30) },
+    { name:"Mapbox",     color:"#36D399", data: genSeries(0.6,0.2,30) },
+  ];
+  const USAGE_TYPES = [
+    { name:"Échange direct",        sub:"chat synchrone · Marc ↔ Jarvis",  pct:0.34, cost:"$126.30", tok:"6.4M",  color:"#4A9EFF" },
+    { name:"Agents en arrière-plan",sub:"missions autonomes · 24/7",       pct:0.41, cost:"$152.10", tok:"9.8M",  color:"#D97757" },
+    { name:"Indexation & embeddings",sub:"vector store · batch nightly",   pct:0.14, cost:"$52.00",  tok:"2.1M",  color:"#B8963E" },
+    { name:"Voice · STT/TTS",       sub:"transcription + synthèse",        pct:0.08, cost:"$28.40",  tok:"—",     color:"#36D399" },
+    { name:"Outils · web/scrape",   sub:"playwright + parsing",            pct:0.03, cost:"$12.70",  tok:"—",     color:"rgba(220,232,255,0.55)" },
+  ];
+  const HOURLY = Array.from({length:24},(_,i)=>{ const peak=i>=8&&i<=19?1:0.3; return Math.round((Math.random()*0.5+0.5)*peak*100); });
+  const LOG_SEED = [
+    { lv:"ok",   parts:[{t:"agent.librarian",cls:"accent"},{t:" · indexed 96/142 documents "},{t:"(cosine ≥ 0.78)",cls:"dim"}] },
+    { lv:"info", parts:[{t:"scheduler",cls:"accent"},{t:" · proposed 3 reschedule slots "},{t:"awaiting human",cls:"dim"}] },
+    { lv:"info", parts:[{t:"tool "},{t:"vector.pinecone",cls:"accent"},{t:" · 412 upserts "},{t:"batch 8/8",cls:"dim"}] },
+    { lv:"warn", parts:[{t:"rate-limit nearing on "},{t:"openai.gpt5",cls:"accent"},{t:" "},{t:"(82% of 10k req/min)",cls:"dim"}] },
+    { lv:"ok",   parts:[{t:"finops",cls:"accent"},{t:" · daily spend within budget "},{t:"($12.40 / $20.00)",cls:"dim"}] },
+    { lv:"info", parts:[{t:"memory page "},{t:"0x4F",cls:"accent"},{t:" evicted "},{t:"(LRU · cold for 7d)",cls:"dim"}] },
+    { lv:"err",  parts:[{t:"tool "},{t:"x.twitter",cls:"accent"},{t:" · auth refresh failed "},{t:"(401 · re-link required)",cls:"dim"}] },
+    { lv:"ok",   parts:[{t:"editor",cls:"accent"},{t:" · draft saved "},{t:"v3 · 1842 words",cls:"dim"}] },
+  ];
 
-/* ── Tab switching ──────────────────────────────────────────── */
-function switchTab(name) {
-  if (_s.logsInterval) { clearInterval(_s.logsInterval); _s.logsInterval = null; }
-  _s.tab = name;
-  document.querySelectorAll('.sidebar-item').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === name);
-  });
-  const c = _content();
-  if (typeof gsap !== 'undefined') {
-    gsap.to(c, { duration: 0.1, opacity: 0, onComplete: () => { _renderTab(name); gsap.to(c, { duration: 0.15, opacity: 1 }); } });
-  } else {
-    _renderTab(name);
-  }
-}
-
-function _renderTab(name) {
-  switch (name) {
-    case 'memoire':  renderMemoire();  break;
-    case 'sessions': renderSessions(); break;
-    case 'outils':   renderOutils();   break;
-    case 'conso':    renderConso();    break;
-    case 'params':   renderParams();   break;
-    case 'systeme':  renderSysteme();  break;
-  }
-}
-
-/* ================================================================
-   MISSIONS — déplacées dans dashboard.js
-   (kept as no-op stub for any legacy callers)
-   ================================================================ */
-async function renderMissions() {
-  _content().innerHTML = '<div class="empty">Les missions sont maintenant dans le Dashboard Pilotage (bouton ⚡).</div>';
-}
-
-function closeFileModal() { document.getElementById('file-modal').style.display = 'none'; }
-
-/* ================================================================
-   MÉMOIRE TAB
-   ================================================================ */
-async function renderMemoire() {
-  _content().innerHTML = '<div class="loading">CHARGEMENT…</div>';
-  try { const r = await fetch('/api/memory/topics'); _s.memTopics = await r.json(); }
-  catch { _s.memTopics = []; }
-  paintMemoire();
-}
-
-function paintMemoire() {
-  let html = `
-    <div class="tab-header">
-      <span class="tab-title">MÉMOIRE</span>
-      <button class="autodream-btn" id="autodream-btn" onclick="window._sAutoDream()">✦ AUTODREAM</button>
-    </div>
-    <div class="card-section-hd" style="border:1px solid rgba(74,158,255,0.10);border-radius:3px;padding:8px 12px;margin-bottom:10px;cursor:pointer"
-         onclick="window._sToggleMemIndex()">
-      <span class="card-section-arrow ${_s.memIndexOpen?'open':''}" id="memindex-arrow">▶</span>
-      <span class="card-section-lbl">MEMORY.md</span>
-      <span class="mem-edit" style="padding:2px 8px;border:1px solid rgba(74,158,255,0.1);border-radius:2px;cursor:pointer">INDEX</span>
-    </div>
-    <div id="memindex-wrap" style="display:${_s.memIndexOpen?'block':'none'}">
-      <div class="inline-editor" id="memindex-editor">
-        <div class="inline-editor-hd">
-          <span class="inline-editor-name">MEMORY.md</span>
-          <button class="editor-save" onclick="window._sSaveMemIndex()">Enregistrer</button>
-          <span class="editor-saved" id="memindex-saved" style="display:none">✓</span>
-        </div>
-        <textarea class="editor-textarea" id="memindex-ta" spellcheck="false" placeholder="Chargement…"></textarea>
-      </div>
-    </div>
-    <div class="sep"></div>
-    <span class="section-lbl">TOPICS (${_s.memTopics.length})</span>`;
-
-  if (!_s.memTopics.length) {
-    html += '<div class="empty">AUCUN TOPIC</div>';
-  } else {
-    _s.memTopics.forEach(t => {
-      const kb = (t.size / 1024).toFixed(1);
-      const mtime = t.mtime ? t.mtime.slice(0, 10) : '';
-      html += `
-        <div class="mem-row">
-          <span class="mem-name">${_esc(t.name)}</span>
-          <span class="mem-meta">${_esc(kb)}k · ${_esc(mtime)}</span>
-          <button class="mem-edit" onclick="window._sEditTopic('${_esc(t.name)}')">édit</button>
-        </div>
-        <div id="memeditor-${_esc(t.name)}" style="display:none"></div>`;
-    });
-  }
-  _content().innerHTML = html;
-  if (_s.memIndexOpen) _loadMemIndex();
-}
-
-window._sToggleMemIndex = async () => {
-  _s.memIndexOpen = !_s.memIndexOpen;
-  const wrap = document.getElementById('memindex-wrap');
-  const arrow = document.getElementById('memindex-arrow');
-  if (!wrap) return;
-  wrap.style.display = _s.memIndexOpen ? 'block' : 'none';
-  if (arrow) arrow.classList.toggle('open', _s.memIndexOpen);
-  if (_s.memIndexOpen) await _loadMemIndex();
-};
-
-async function _loadMemIndex() {
-  const ta = document.getElementById('memindex-ta');
-  if (!ta) return;
-  try { const r = await fetch('/api/memory/index'); const d = await r.json(); ta.value = d.content || ''; }
-  catch { ta.value = ''; }
-}
-
-window._sSaveMemIndex = async () => {
-  const ta = document.getElementById('memindex-ta');
-  const saved = document.getElementById('memindex-saved');
-  if (!ta) return;
-  try {
-    await fetch('/api/memory/index', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content:ta.value}) });
-    if (saved) { saved.style.display = ''; setTimeout(() => { saved.style.display = 'none'; }, 1500); }
-    toast('Index enregistré', 'success');
-  } catch { toast('Erreur sauvegarde', 'error'); }
-};
-
-window._sEditTopic = async (name) => {
-  const wrap = document.getElementById('memeditor-' + name);
-  if (!wrap) return;
-  if (wrap.style.display !== 'none') { wrap.style.display = 'none'; return; }
-  wrap.innerHTML = '<div class="loading">CHARGEMENT…</div>';
-  wrap.style.display = 'block';
-  try {
-    const r = await fetch(`/api/memory/topics/${encodeURIComponent(name)}`);
-    const d = await r.json();
-    wrap.innerHTML = `<div class="inline-editor" style="margin-bottom:8px">
-      <div class="inline-editor-hd">
-        <span class="inline-editor-name">${_esc(name)}</span>
-        <button class="editor-cancel" onclick="document.getElementById('memeditor-${_esc(name)}').style.display='none'">✕</button>
-        <button class="editor-save" onclick="window._sSaveTopic('${_esc(name)}')">Enregistrer</button>
-        <span class="editor-saved" id="saved-${_esc(name)}" style="display:none">✓</span>
-      </div>
-      <textarea class="editor-textarea" id="topicta-${_esc(name)}" spellcheck="false">${_esc(d.content||'')}</textarea>
-    </div>`;
-  } catch { wrap.innerHTML = '<div class="empty">Erreur chargement</div>'; }
-};
-
-window._sSaveTopic = async (name) => {
-  const ta = document.getElementById('topicta-' + name);
-  const saved = document.getElementById('saved-' + name);
-  if (!ta) return;
-  try {
-    await fetch(`/api/memory/topics/${encodeURIComponent(name)}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content:ta.value}) });
-    if (saved) { saved.style.display=''; setTimeout(() => { saved.style.display='none'; }, 1500); }
-    toast('Topic enregistré', 'success');
-  } catch { toast('Erreur sauvegarde', 'error'); }
-};
-
-window._sAutoDream = async () => {
-  const btn = document.getElementById('autodream-btn');
-  if (btn) btn.classList.add('running');
-  try { await fetch('/api/memory/autodream', {method:'POST'}); toast('AutoDream déclenché', 'success'); }
-  catch { toast('Erreur AutoDream', 'error'); }
-  setTimeout(() => { if (btn) btn.classList.remove('running'); }, 3000);
-};
-
-/* ================================================================
-   SESSIONS TAB
-   ================================================================ */
-async function renderSessions() {
-  if (_s.transcript) { paintTranscript(); return; }
-  _content().innerHTML = '<div class="loading">CHARGEMENT…</div>';
-  try { const r = await fetch('/api/sessions'); _s.sessions = await r.json(); }
-  catch { _s.sessions = []; }
-  paintSessions();
-}
-
-function paintSessions() {
-  let html = `<div class="tab-header"><span class="tab-title">SESSIONS</span></div>`;
-  const past = _s.sessions;
-  if (!past.length) {
-    html += '<div class="empty">AUCUNE SESSION</div>';
-  } else {
-    html += '<span class="section-lbl">HISTORIQUE</span>';
-    past.forEach(s => {
-      const displayTitle = _esc(s.title || s.preview);
-      const safeTitle = (s.title || s.preview).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html += `<div class="sess-past" id="sess-past-${_esc(s.id)}">
-        <span class="sess-past-dot"></span>
-        <div class="sess-past-info">
-          <div class="sess-past-date" id="sess-title-${_esc(s.id)}">${displayTitle}</div>
-          <div class="sess-past-meta">${_esc(s.date)} · ${s.message_count} msg</div>
-        </div>
-        <button class="mem-edit" style="flex-shrink:0" onclick="window._sRenameSession('${_esc(s.id)}','${safeTitle}')">renommer</button>
-        <button class="sess-view-btn" onclick="window._sViewSession('${_esc(s.id)}','${safeTitle}',${s.message_count})">VOIR</button>
-      </div>
-      <div id="sess-rename-wrap-${_esc(s.id)}" style="display:none;padding:0 0 8px"></div>`;
-    });
-  }
-  _content().innerHTML = html;
-}
-
-window._sRenameSession = (id, currentTitle) => {
-  const wrap = document.getElementById('sess-rename-wrap-' + id);
-  const titleEl = document.getElementById('sess-title-' + id);
-  const pastRow = document.getElementById('sess-past-' + id);
-  if (!wrap) return;
-  if (wrap.style.display !== 'none' && wrap.querySelector('input')) { wrap.querySelector('input').focus(); return; }
-  if (pastRow) pastRow.style.display = 'none';
-  wrap.style.display = 'block';
-  wrap.innerHTML = `<div class="inline-editor" style="margin:0">
-    <div class="inline-editor-hd">
-      <span class="inline-editor-name">TITRE</span>
-      <button class="editor-cancel">✕</button>
-      <button class="editor-save">Enregistrer</button>
-    </div>
-    <input style="width:100%;background:none;border:none;outline:none;font:400 12px/1.4 'DM Sans',sans-serif;color:rgba(200,220,255,0.85);padding:10px 12px" placeholder="Nom de la session…">
-  </div>`;
-  const inp = wrap.querySelector('input');
-  inp.value = currentTitle;
-  inp.focus(); inp.select();
-  const cancel = () => { wrap.innerHTML=''; wrap.style.display='none'; if (pastRow) pastRow.style.display=''; };
-  wrap.querySelector('.editor-cancel').onclick = cancel;
-  inp.addEventListener('keydown', e => { if (e.key==='Escape') cancel(); });
-  const save = async () => {
-    const newTitle = inp.value.trim();
-    if (!newTitle) return;
-    try {
-      await fetch(`/api/sessions/${encodeURIComponent(id)}/title`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title:newTitle}) });
-      if (titleEl) titleEl.textContent = newTitle;
-      const sess = _s.sessions.find(s => s.id === id);
-      if (sess) sess.title = newTitle;
-      toast('Session renommée', 'success');
-    } catch { toast('Erreur renommage', 'error'); }
-    cancel();
-  };
-  wrap.querySelector('.editor-save').onclick = save;
-  inp.addEventListener('keydown', e => { if (e.key==='Enter') save(); });
-};
-
-window._sViewSession = async (id, date, count) => {
-  _content().innerHTML = '<div class="loading">CHARGEMENT…</div>';
-  try {
-    const r = await fetch(`/api/sessions/${id}/messages?limit=50`);
-    const messages = await r.json();
-    _s.transcript = { id, date, count, messages };
-    paintTranscript();
-  } catch { toast('Erreur chargement session', 'error'); paintSessions(); }
-};
-
-function paintTranscript() {
-  const t = _s.transcript;
-  const sess = _s.sessions.find(s => s.id === t.id);
-  const displayTitle = (sess && sess.title) ? sess.title : t.date;
-  let html = `
-    <button class="back-btn" onclick="window._sBackSessions()">← RETOUR</button>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
-      <div class="transcript-hd" id="sess-title-${_esc(t.id)}" style="flex:1">${_esc(displayTitle)}</div>
-      <button class="mem-edit" onclick="window._sRenameSession('${_esc(t.id)}','${_esc(displayTitle.replace(/'/g,"\\'"))}')">renommer</button>
-    </div>
-    <div id="sess-rename-wrap-${_esc(t.id)}"></div>
-    <div class="transcript-meta">${t.count} messages · ${_esc(t.date)}</div>`;
-  if (!t.messages || !t.messages.length) {
-    html += '<div class="empty">AUCUN MESSAGE</div>';
-  } else {
-    t.messages.forEach(m => {
-      const role = m.role === 'user' ? 'user' : 'jarvis';
-      const content = typeof m.content === 'string' ? m.content
-        : (Array.isArray(m.content) ? m.content.filter(c => c.type==='text').map(c => c.text).join('\n') : '');
-      const ts = m.ts ? String(m.ts).slice(11,16) : '';
-      html += `<div class="tx-msg">
-        <div class="tx-hd">
-          <span class="tx-role ${role}">${role==='user'?'VOUS':'JARVIS'}</span>
-          ${ts ? `<span class="tx-ts">${_esc(ts)}</span>` : ''}
-        </div>
-        <div class="tx-body">${_esc(content.slice(0,600))}${content.length>600?'…':''}</div>
-      </div>`;
-    });
-  }
-  _content().innerHTML = html;
-}
-
-window._sBackSessions = () => { _s.transcript = null; paintSessions(); };
-
-/* ================================================================
-   OUTILS TAB
-   ================================================================ */
-async function renderOutils() {
-  _content().innerHTML = '<div class="loading">CHARGEMENT…</div>';
-  const [tr, sr] = await Promise.allSettled([
-    fetch('/api/tools').then(r => r.json()),
-    fetch('/api/skills').then(r => r.json()),
-  ]);
-  _s.tools  = tr.status === 'fulfilled' ? tr.value : [];
-  _s.skills = sr.status === 'fulfilled' ? sr.value : [];
-  paintOutils();
-}
-
-function paintOutils() {
-  let html = `<div class="tab-header"><span class="tab-title">OUTILS</span></div>
-    <span class="section-lbl">OUTILS ACTIFS (${_s.tools.length})</span>`;
-  if (!_s.tools.length) {
-    html += '<div class="empty">AUCUN OUTIL</div>';
-  } else {
-    _s.tools.forEach(t => {
-      html += `<div class="tool-row">
-        <span class="tool-dot"></span>
-        <div style="flex:1">
-          <div class="tool-name">${_esc(t.name)}</div>
-          <div class="tool-desc">${_esc((t.description||'').slice(0,100))}</div>
-        </div>
-      </div>`;
-    });
-  }
-  html += `<div class="sep"></div><span class="section-lbl">SKILLS ACTIFS (${_s.skills.length})</span>`;
-  if (!_s.skills.length) {
-    html += '<div class="empty">AUCUN SKILL</div>';
-  } else {
-    _s.skills.forEach(sk => {
-      html += `<div class="tool-row">
-        <span class="tool-dot" style="background:#B8963E;box-shadow:0 0 5px rgba(184,150,62,0.4)"></span>
-        <div style="flex:1">
-          <div class="tool-name">${_esc(sk.name)}</div>
-          <div class="tool-desc">${_esc((sk.description||'').slice(0,100))}</div>
-        </div>
-        <button class="skill-del" onclick="window._sDeleteSkill('${_esc(sk.name)}')" title="Supprimer">✕</button>
-      </div>`;
-    });
-  }
-  html += `<button class="install-btn" onclick="window._sOpenClawHub()">✦ INSTALLER DEPUIS CLAWHUB</button>`;
-  _content().innerHTML = html;
-}
-
-window._sDeleteSkill = async (name) => {
-  if (!confirm(`Supprimer le skill "${name}" ?`)) return;
-  try { await fetch(`/api/skills/${encodeURIComponent(name)}`, {method:'DELETE'}); toast(`Skill "${name}" supprimé`, 'success'); await renderOutils(); }
-  catch { toast('Erreur suppression', 'error'); }
-};
-
-window._sOpenClawHub = async () => {
-  const modal = document.getElementById('clawhub-modal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  await _clawHubSearch('');
-  const inp = document.getElementById('clawhub-search');
-  if (inp) { inp.value=''; inp.oninput=() => _clawHubSearch(inp.value); inp.focus(); }
-};
-
-function closeClawHub() { document.getElementById('clawhub-modal').style.display='none'; }
-
-async function _clawHubSearch(q) {
-  const results = document.getElementById('clawhub-results');
-  if (!results) return;
-  results.innerHTML = '<div class="loading" style="padding:12px 16px">RECHERCHE…</div>';
-  try {
-    const r = await fetch(`/api/skills/clawhub/search?q=${encodeURIComponent(q)}`);
-    const items = await r.json();
-    if (!items.length) { results.innerHTML = '<div class="empty" style="padding:12px 16px">AUCUN RÉSULTAT</div>'; return; }
-    results.innerHTML = items.map(item => `<div class="ch-item">
-      <div class="ch-info">
-        <div class="ch-slug">${_esc(item.slug)}</div>
-        <div class="ch-desc">${_esc(item.description||'')}</div>
-        <div class="ch-stars">★ ${_esc(String(item.stars||''))} · ${_esc(String(item.installs||''))} installs</div>
-      </div>
-      <button class="ch-install" id="ch-install-${_esc(item.slug)}" onclick="window._sInstallSkill('${_esc(item.slug)}')">INSTALL</button>
-    </div>`).join('');
-  } catch { results.innerHTML = '<div class="empty" style="padding:12px 16px">ERREUR</div>'; }
-}
-
-window._sInstallSkill = async (slug) => {
-  const btn = document.getElementById('ch-install-' + slug);
-  if (btn) btn.textContent = '…';
-  try {
-    const r = await fetch('/api/skills/install', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({source:'clawhub',value:slug}) });
-    const d = await r.json();
-    if (d.success) { if (btn) { btn.textContent='✓'; btn.classList.add('done'); } toast(`Skill "${slug}" installé`, 'success'); }
-    else { if (btn) btn.textContent='INSTALL'; toast(d.message||'Erreur installation','error'); }
-  } catch { if (btn) btn.textContent='INSTALL'; toast('Erreur réseau','error'); }
-};
-
-/* ================================================================
-   CONSO TAB — Chart.js
-   ================================================================ */
-
-const _cjsInstances = {};
-
-function _cjsDestroy(id) {
-  if (_cjsInstances[id]) { _cjsInstances[id].destroy(); delete _cjsInstances[id]; }
-}
-
-const _PROV_NAMES  = { anthropic: 'Anthropic', elevenlabs: 'ElevenLabs', openai: 'OpenAI', deepgram: 'Deepgram' };
-const _PROV_COLORS = {
-  anthropic:  { bg: 'rgba(74,158,255,0.75)',  border: 'rgba(74,158,255,1)' },
-  openai:     { bg: 'rgba(0,200,130,0.75)',   border: 'rgba(0,200,130,1)'  },
-  elevenlabs: { bg: 'rgba(255,196,0,0.75)',   border: 'rgba(255,196,0,1)'  },
-  deepgram:   { bg: 'rgba(180,100,255,0.75)', border: 'rgba(180,100,255,1)'},
-};
-
-const _GRID_COLOR  = 'rgba(74,158,255,0.06)';
-const _TICK_COLOR  = 'rgba(255,255,255,0.35)';
-const _FONT_MONO   = "'JetBrains Mono', monospace";
-
-function _cjsScales(stacked = false) {
-  return {
-    x: { grid: { color: _GRID_COLOR }, ticks: { color: _TICK_COLOR, font: { size: 10, family: _FONT_MONO } }, stacked },
-    y: { grid: { color: _GRID_COLOR }, ticks: { color: _TICK_COLOR, font: { size: 10, family: _FONT_MONO } }, stacked },
-  };
-}
-
-function _cjsTooltip(extra = {}) {
-  return {
-    backgroundColor: 'rgba(8,14,28,0.95)',
-    borderColor: 'rgba(74,158,255,0.3)',
-    borderWidth: 1,
-    titleColor: 'rgba(74,158,255,0.9)',
-    bodyColor: 'rgba(255,255,255,0.85)',
-    titleFont: { size: 11, family: _FONT_MONO },
-    bodyFont: { size: 11, family: _FONT_MONO },
-    ...extra,
-  };
-}
-
-async function renderConso() {
-  _content().innerHTML = '<div class="loading">Chargement…</div>';
-  try {
-    const [sessR, monthR, dailyR, callsR, dpR] = await Promise.allSettled([
-      fetch('/api/conso/session').then(r => r.json()),
-      fetch('/api/conso/monthly').then(r => r.json()),
-      fetch('/api/conso/daily').then(r => r.json()),
-      fetch('/api/conso/calls').then(r => r.json()),
-      fetch('/api/conso/daily_providers').then(r => r.json()),
-    ]);
-    _s.consoData = {
-      session:     sessR.status  === 'fulfilled' ? sessR.value  : {},
-      monthly:     monthR.status === 'fulfilled' ? monthR.value : {},
-      daily:       dailyR.status === 'fulfilled' ? dailyR.value : [],
-      calls:       callsR.status === 'fulfilled' ? callsR.value : [],
-      dailyByProv: dpR.status    === 'fulfilled' ? dpR.value    : [],
-    };
-  } catch {
-    _s.consoData = { session: {}, monthly: {}, daily: [], calls: [], dailyByProv: [] };
-  }
-  paintConso();
-}
-
-const _PROV_COLORS_DOT = {
-  anthropic:  '#4A9EFF',
-  openai:     '#10A37F',
-  elevenlabs: '#F5C842',
-  deepgram:   '#A855F7',
-};
-
-function paintConso() {
-  const { session, monthly, daily, calls, dailyByProv } = _s.consoData || {};
-
-  const todayTokens  = (session || {}).total_tokens    || 0;
-  const todayCalls   = (session || {}).total_api_calls || 0;
-  const todayCost    = (session || {}).total_cost_usd  || 0;
-  const todayChars   = (session || {}).total_tts_chars || 0;
-  const providers    = (session || {}).providers       || {};
-
-  const monthCost    = (monthly || {}).total_cost_usd  || 0;
-  const monthLabel   = (monthly || {}).month           || '';
-
-  let directCost = 0, indirectCost = 0;
-  for (const c of (calls || [])) {
-    const ctx = c.context || '';
-    if (!ctx || ctx === 'conversation') directCost  += c.cost_usd || 0;
-    else                                indirectCost += c.cost_usd || 0;
-  }
-
-  /* ── en-tête ── */
-  let html = `
-    <div class="tab-header">
-      <span class="tab-title">Consommation & Coûts</span>
-      <button class="btn" onclick="renderConso()" title="Actualiser" style="gap:6px">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-        </svg>
-        Actualiser
-      </button>
-    </div>`;
-
-  /* ── KPIs ── */
-  html += `
-    <div class="conso-kpi-grid">
-      <div class="conso-kpi kpi-accent">
-        <div class="conso-kpi-label">Aujourd'hui</div>
-        <div class="conso-kpi-value cost">${_fmtCost(todayCost)}</div>
-        <div class="conso-kpi-sub">${_fmtNum(todayCalls)} appels</div>
-      </div>
-      <div class="conso-kpi kpi-accent">
-        <div class="conso-kpi-label">Ce mois</div>
-        <div class="conso-kpi-value cost">${_fmtCost(monthCost)}</div>
-        <div class="conso-kpi-sub">${_esc(monthLabel)}</div>
-      </div>
-      <div class="conso-kpi">
-        <div class="conso-kpi-label">Tokens LLM</div>
-        <div class="conso-kpi-value">${_fmtNum(todayTokens)}</div>
-        <div class="conso-kpi-sub">aujourd'hui</div>
-      </div>
-      <div class="conso-kpi">
-        <div class="conso-kpi-label">Chars TTS</div>
-        <div class="conso-kpi-value">${_fmtNum(todayChars)}</div>
-        <div class="conso-kpi-sub">aujourd'hui</div>
-      </div>
-      <div class="conso-kpi">
-        <div class="conso-kpi-label">Appels API</div>
-        <div class="conso-kpi-value">${_fmtNum(todayCalls)}</div>
-        <div class="conso-kpi-sub">aujourd'hui</div>
-      </div>
-    </div>`;
-
-  /* ── par provider ── */
-  html += `<div class="conso-section-hd"><span class="conso-section-label">Par provider</span><div class="conso-section-rule"></div></div>`;
-
-  const provEntries = Object.entries(providers);
-  if (provEntries.length) {
-    for (const [pk, pd] of provEntries) {
-      const name  = _PROV_NAMES[pk] || pk;
-      const dot   = _PROV_COLORS_DOT[pk] || '#8CA8CC';
-      const color = pk === 'anthropic' ? '#4A9EFF'
-                  : pk === 'openai'    ? '#10A37F'
-                  : pk === 'elevenlabs'? '#F5C842'
-                  : pk === 'deepgram'  ? '#A855F7'
-                  : '#8CA8CC';
-
-      html += `<div class="conso-provider-card">
-        <div class="conso-provider-hd">
-          <span class="conso-provider-dot" style="background:${dot};box-shadow:0 0 6px ${dot}80"></span>
-          <span class="conso-provider-name" style="color:${color}">${_esc(name)}</span>
-          <span class="conso-provider-subtotal">${_fmtCost(pd.total_cost)}</span>
-        </div>`;
-
-      for (const [mk, md] of Object.entries(pd.models || {})) {
-        const stats = [];
-        if (md.input_tokens)  stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Input</span><span class="conso-stat-val">${_fmtNum(md.input_tokens)} tok</span></span>`);
-        if (md.output_tokens) stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Output</span><span class="conso-stat-val">${_fmtNum(md.output_tokens)} tok</span></span>`);
-        if (md.characters)    stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Chars</span><span class="conso-stat-val">${_fmtNum(md.characters)}</span></span>`);
-        if (md.audio_minutes) stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Audio</span><span class="conso-stat-val">${md.audio_minutes.toFixed(1)} min</span></span>`);
-        if (md.images)        stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Images</span><span class="conso-stat-val">${md.images}</span></span>`);
-        stats.push(`<span class="conso-stat-pair"><span class="conso-stat-key">Appels</span><span class="conso-stat-val">${md.calls}</span></span>`);
-
-        html += `<div class="conso-model-block">
-          <div class="conso-model-name">${_esc(mk)}</div>
-          <div class="conso-model-stats">${stats.join('')}</div>
-        </div>`;
-      }
-      html += `</div>`;
+  /* ───────── Card / sec helpers ───────── */
+  function card(opts, children) {
+    const c = el("div", { class: "card" });
+    if (opts.title || opts.right) {
+      c.appendChild(el("div", { class: "card-hd" }, [
+        el("div", {}, [
+          el("div", { class: "card-title", text: opts.title }),
+          opts.sub ? el("div", { class: "card-sub", text: opts.sub }) : null,
+        ]),
+        opts.right || null,
+      ]));
     }
-  } else {
-    html += `<div class="empty">Aucune consommation enregistrée aujourd'hui.</div>`;
+    (Array.isArray(children) ? children : [children]).forEach(ch => ch && c.appendChild(ch));
+    return c;
+  }
+  function secHd(num, title, display, right) {
+    return el("div", { class: "sec-hd" }, [
+      el("div", { class: "sec-hd-l" }, [
+        el("div", { class: "sec-hd-row" }, [
+          el("span", { class: "sec-hd-num", text: num }),
+          el("span", { class: "sec-hd-title", text: title }),
+        ]),
+        el("span", { class: "sec-hd-disp", text: display }),
+      ]),
+      right ? el("div", { class: "sec-hd-r", text: right }) : null,
+    ]);
   }
 
-  /* ── graphes ── */
-  html += `
-    <div class="conso-section-hd"><span class="conso-section-label">Analytiques</span><div class="conso-section-rule"></div></div>
-    <div class="conso-charts-grid">
-      <div class="conso-chart-card">
-        <div class="conso-chart-title">Coût par jour — 7 jours</div>
-        <div class="conso-chart-canvas-wrap"><canvas id="cjsCostDay"></canvas></div>
-      </div>
-      <div class="conso-chart-card">
-        <div class="conso-chart-title">Direct / Indirect</div>
-        <div class="conso-chart-canvas-wrap"><canvas id="cjsSplit"></canvas></div>
-      </div>
-      <div class="conso-chart-card conso-chart-wide">
-        <div class="conso-chart-title">Tokens par provider — 7 jours</div>
-        <div class="conso-chart-canvas-wrap"><canvas id="cjsProvTokens"></canvas></div>
-      </div>
-    </div>`;
+  /* ───────── Sessions ───────── */
+  async function renderSessions(root) {
+    // SHAPE EXPECTED: [{ id, agent (=preview/title), start (=date), dur, calls (=message_count), tok, status, cls }]
+    // Backend GET /api/sessions → [{ id, date, preview, title, message_count }]
+    // No live calls/tokens count in backend — shows message_count as "msgs"
+    root.innerHTML = '<div class="surface"><div class="j-loading">Chargement…</div></div>';
+    let sessions = SESSIONS;
+    try {
+      const raw = await J.api.get("/api/sessions");
+      if (raw && raw.length) {
+        sessions = raw.map(s => ({
+          id:     s.id ? s.id.slice(0, 6) : "?",
+          agent:  s.title || s.preview || "session",
+          start:  s.date || "—",
+          dur:    "—",
+          calls:  s.message_count || 0,
+          tok:    "—",
+          status: "DONE",
+          cls:    "info",
+        }));
+      }
+    } catch (_) { /* keep mock */ }
 
-  /* ── tableau appels ── */
-  html += `<div class="conso-section-hd"><span class="conso-section-label">Appels récents</span><div class="conso-section-rule"></div></div>`;
-  html += _renderCallsTable(calls || []);
+    root.innerHTML = "";
+    root.appendChild(secHd("01", "Sessions", "Historique des conversations", sessions.length + " sessions"));
+    const list = el("div");
+    list.appendChild(el("div", {
+      class: "row-tab",
+      style: { borderTop:"0", paddingTop:"0", paddingBottom:"10px", color:"var(--fg-3)", fontFamily:"var(--mono)", fontSize:"10px", letterSpacing:".1em", textTransform:"uppercase" },
+    }, [
+      el("span", { text: "ID" }),
+      el("span", { text: "Titre · date" }),
+      el("span", { style:{textAlign:"right"}, text: "Msgs" }),
+      el("span", { style:{textAlign:"right"}, text: "Tokens" }),
+      el("span", { style:{textAlign:"right"}, text: "State" }),
+    ]));
+    sessions.forEach(s => {
+      list.appendChild(el("div", { class: "row-tab" }, [
+        el("span", { class: "rt-id", text: s.id }),
+        el("span", { class: "rt-name" }, [
+          document.createTextNode(s.agent),
+          el("span", { class: "rt-sub", text: "started " + s.start + " · " + s.dur }),
+        ]),
+        el("span", { class: "rt-num", text: s.calls }),
+        el("span", { class: "rt-num", text: s.tok }),
+        el("span", { class: "rt-status", style: { color: s.cls === "ok" ? "var(--green)" : s.cls === "warn" ? "var(--gold)" : "var(--fg-3)" }, text: "● " + s.status }),
+      ]));
+    });
+    root.appendChild(card({
+      title: "Sessions", sub: sessions.length + " sessions · historique",
+      right: el("button", { class: "btn-ghost", text: "Stream live ●" }),
+    }, list));
+  }
 
-  _content().innerHTML = html;
+  /* ───────── Memory ───────── */
+  async function renderMemory(root) {
+    // SHAPE EXPECTED (MEM_FILES): [{ id, group, name, path, size, pin, body:{title,fm,sections} }]
+    // Backend GET /api/memory/topics → [{ name, size, mtime }]
+    // Backend GET /api/memory/topics/{name} → { name, content }
+    // Transformation: topics are flat (no groups), displayed in a single "global" group
+    // body (viewer content) is loaded on-demand when a file is selected
+    root.innerHTML = '<div class="surface"><div class="j-loading">Chargement…</div></div>';
+    let memFiles = MEM_FILES;
+    try {
+      const raw = await J.api.get("/api/memory/topics");
+      if (raw && raw.length) {
+        memFiles = raw.map((t, i) => ({
+          id:    "t" + i,
+          group: "global",
+          name:  t.name,
+          path:  t.name,
+          size:  t.size > 1024 ? (t.size / 1024).toFixed(1) + " KB" : t.size + " B",
+          pin:   false,
+          body:  null,  // loaded on-demand
+        }));
+      }
+    } catch (_) { /* keep mock */ }
 
-  requestAnimationFrame(() => {
-    _initCostDayChart(daily || []);
-    _initSplitDonut(directCost, indirectCost);
-    _initProvTokensChart(dailyByProv || []);
-  });
-}
+    root.innerHTML = "";
+    root.appendChild(secHd("02", "Mémoire", "Ce que Jarvis sait de toi", memFiles.length + " fichiers"));
 
-function _renderCallsTable(calls) {
-  if (!calls.length) return '<div class="empty">Aucun appel enregistré aujourd\'hui</div>';
-  const rows = calls.slice(0, 150).map(c => {
-    const t  = (c.timestamp || '').replace('T', ' ').slice(11, 19);
-    const tok = (c.input_tokens || c.output_tokens)
-      ? `${_fmtNum(c.input_tokens || 0)}/${_fmtNum(c.output_tokens || 0)}`
-      : c.characters ? `${_fmtNum(c.characters)}c`
-      : c.audio_minutes ? `${c.audio_minutes.toFixed(2)}min`
-      : '—';
-    return `<tr>
-      <td class="ct-time">${_esc(t)}</td>
-      <td class="ct-prov">${_esc(c.provider || '')}</td>
-      <td class="ct-model">${_esc((c.model || '').slice(0,22))}</td>
-      <td class="ct-ctx">${_esc(c.context || 'conversation')}</td>
-      <td class="ct-tok">${tok}</td>
-      <td class="ct-cost">${_fmtCost(c.cost_usd || 0)}</td>
-    </tr>`;
-  }).join('');
-  return `<div class="calls-table-wrap"><table class="calls-table">
-    <thead><tr><th>HEURE</th><th>PROVIDER</th><th>MODÈLE</th><th>CONTEXTE</th><th>TOKENS/CHARS</th><th>COÛT</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table></div>`;
-}
+    const firstId = memFiles.length > 0 ? memFiles[0].id : null;
+    let selectedId = firstId, query = "";
+    const cardEl = card({
+      title: "Mémoire", sub: memFiles.length + " fichiers · markdown",
+      right: el("div", { style: { display: "flex", gap: "6px" } }, [
+        el("button", { class: "btn-ghost", text: "+ New" }),
+        el("button", { class: "btn-ghost", text: "Reindex" }),
+      ]),
+    });
 
-function _initCostDayChart(daily) {
-  _cjsDestroy('cjsCostDay');
-  const el = document.getElementById('cjsCostDay');
-  if (!el) return;
-  _cjsInstances['cjsCostDay'] = new Chart(el, {
-    type: 'bar',
-    data: {
-      labels: daily.map(d => d.day),
-      datasets: [{
-        label: 'Coût USD',
-        data: daily.map(d => d.cost_usd),
-        backgroundColor: 'rgba(74,158,255,0.65)',
-        borderColor: 'rgba(74,158,255,1)',
-        borderWidth: 1,
-        borderRadius: 3,
-      }],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { ..._cjsTooltip(), callbacks: { label: ctx => ` $${(ctx.raw||0).toFixed(5)}` } },
-      },
-      scales: _cjsScales(),
-    },
-  });
-}
+    // Stats
+    const stats = el("div", { class: "mem-stats" });
+    [
+      ["Fichiers", String(memFiles.length), memFiles.length + " fichiers",null],
+      ["Pinnés",   "—",   "non implémenté","var(--gold)"],
+    ].forEach(([lbl,val,sub,col]) => {
+      stats.appendChild(el("div", { class: "mem-stat" }, [
+        el("div", { class: "ms-lbl", text: lbl }),
+        el("div", { class: "ms-val", style: col?{color:col}:{}, text: val }),
+        el("div", { class: "ms-sub", text: sub }),
+      ]));
+    });
+    cardEl.appendChild(stats);
 
-function _initSplitDonut(direct, indirect) {
-  _cjsDestroy('cjsSplit');
-  const el = document.getElementById('cjsSplit');
-  if (!el) return;
-  const noData = direct === 0 && indirect === 0;
-  _cjsInstances['cjsSplit'] = new Chart(el, {
-    type: 'doughnut',
-    data: {
-      labels: ['Direct', 'Indirect'],
-      datasets: [{
-        data: noData ? [1, 0] : [direct, indirect],
-        backgroundColor: noData
-          ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']
-          : ['rgba(74,158,255,0.75)', 'rgba(255,196,0,0.75)'],
-        borderColor: noData
-          ? ['rgba(255,255,255,0.1)', 'transparent']
-          : ['rgba(74,158,255,1)', 'rgba(255,196,0,1)'],
-        borderWidth: 1,
-      }],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      cutout: '62%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: 'rgba(255,255,255,0.45)', font: { size: 10, family: _FONT_MONO }, boxWidth: 10, padding: 12 },
-        },
-        tooltip: {
-          ..._cjsTooltip(),
-          callbacks: {
-            label: ctx => noData ? ' Aucune donnée' : ` ${ctx.label}: $${(ctx.raw||0).toFixed(5)}`,
+    const layout = el("div", { class: "mem-layout" });
+    const listCol = el("div", { class: "mem-list" });
+    const viewCol = el("div", { class: "mem-view" });
+
+    // Use a flat group for API-sourced files (no groups metadata from backend)
+    const groups = [{ id: "global", label: "Topics" }];
+    const filesWithGroup = memFiles.map(f => Object.assign({ group: "global" }, f));
+
+    async function loadFileContent(file) {
+      if (file.body) return;  // already loaded
+      try {
+        // SHAPE EXPECTED: { name, content } from GET /api/memory/topics/{name}
+        const data = await J.api.get("/api/memory/topics/" + encodeURIComponent(file.name));
+        file.body = {
+          title: file.name,
+          fm: { Fichier: file.name, Taille: file.size },
+          sections: [{ p: [data.content || ""] }],
+        };
+      } catch (_) {
+        file.body = { title: file.name, fm: {}, sections: [{ p: ["Contenu non disponible."] }] };
+      }
+    }
+
+    async function rerenderViewer() {
+      const file = filesWithGroup.find(f => f.id === selectedId) || filesWithGroup[0];
+      if (!file) { viewCol.innerHTML = '<div class="j-empty">Aucun fichier sélectionné.</div>'; return; }
+      if (!file.body) {
+        viewCol.innerHTML = '<div class="j-loading">Chargement…</div>';
+        await loadFileContent(file);
+      }
+      viewCol.innerHTML = "";
+      const vhd = el("div", { class: "mem-view-hd" }, [
+        el("div", { class: "mem-view-hd-l" }, [
+          el("span", { class: "mvh-name", text: file.body.title }),
+          el("span", { class: "mvh-meta" }, [
+            el("span", { text: file.path }),
+            el("span", { text: "·" }),
+            el("span", { text: file.size }),
+            file.pin ? el("span", { text: "·" }) : null,
+            file.pin ? el("span", { style:{color:"var(--gold)"}, text: "● PINNED" }) : null,
+          ]),
+        ]),
+        el("div", { class: "mem-view-hd-r" }, [
+          el("button", { class: "btn-ghost", text: "Edit" }),
+          el("button", { class: "btn-ghost", text: "⋯" }),
+        ]),
+      ]);
+      viewCol.appendChild(vhd);
+      const md = el("div", { class: "mem-md" });
+      md.appendChild(el("h1", { text: file.body.title }));
+      if (Object.keys(file.body.fm).length > 0) {
+        const dl = el("dl", { class: "frontmatter" });
+        Object.keys(file.body.fm).forEach(k => {
+          dl.appendChild(el("dt", { text: k }));
+          const v = file.body.fm[k];
+          if (k === "Pinned" && v === "true") dl.appendChild(el("dd", {}, [el("span", { class: "pin", text: "● true" })]));
+          else dl.appendChild(el("dd", { text: v }));
+        });
+        md.appendChild(dl);
+      }
+      file.body.sections.forEach(s => {
+        if (s.h) md.appendChild(el("h2", { text: s.h }));
+        if (s.p) s.p.forEach(p => md.appendChild(el("p", { text: p })));
+        if (s.list) {
+          const ul = el("ul");
+          s.list.forEach(li => ul.appendChild(el("li", { text: li })));
+          md.appendChild(ul);
+        }
+      });
+      viewCol.appendChild(md);
+    }
+
+    function rerender() {
+      listCol.innerHTML = "";
+      const hd = el("div", { class: "mem-list-hd" }, [
+        el("div", { class: "t-eyebrow" }, [
+          el("span", { text: "memory · topics" }),
+          el("span", { text: filesWithGroup.length }),
+        ]),
+        el("input", { class: "mem-search", placeholder: "⌘ rechercher…", value: query,
+          oninput: (e) => { query = e.target.value; rerender(); } }),
+      ]);
+      listCol.appendChild(hd);
+      const scroll = el("div", { class: "scroll-y", style: { flex:"1" } });
+      groups.forEach(g => {
+        const items = filesWithGroup.filter(f => f.group === g.id && (!query || (f.name+f.path).toLowerCase().indexOf(query.toLowerCase()) >= 0));
+        const grp = el("div", { class: "mem-group" });
+        grp.appendChild(el("div", { class: "mem-group-hd" }, [
+          el("span", { text: g.label }),
+          el("span", { text: items.length }),
+        ]));
+        items.forEach(f => {
+          grp.appendChild(el("div", {
+            class: "mem-file" + (selectedId === f.id ? " is-on" : ""),
+            onclick: () => { selectedId = f.id; rerender(); rerenderViewer(); },
+          }, [
+            el("span", { class: "mf-glyph", text: f.pin ? "●" : "md" }),
+            el("span", { class: "mf-name" }, [
+              el("span", { style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}, text: f.name }),
+              el("span", { class: "mf-path", text: f.path }),
+            ]),
+            el("span", { class: "mf-size", text: f.size }),
+          ]));
+        });
+        scroll.appendChild(grp);
+      });
+      listCol.appendChild(scroll);
+    }
+    rerender();
+    rerenderViewer();
+    layout.appendChild(listCol); layout.appendChild(viewCol);
+    cardEl.appendChild(layout);
+    root.appendChild(cardEl);
+  }
+
+  /* ───────── Tools ───────── */
+  async function renderTools(root) {
+    // SHAPE EXPECTED: [{ glyph, name, sub, calls, lat, on }]
+    // Backend GET /api/tools → [{ name, description }]
+    // No calls/lat/on toggle state from backend — shows tools as always-on
+    root.innerHTML = '<div class="surface"><div class="j-loading">Chargement…</div></div>';
+    let tools = TOOLS.map(t => Object.assign({}, t));
+    try {
+      const raw = await J.api.get("/api/tools");
+      if (raw && raw.length) {
+        tools = raw.map(t => ({
+          glyph: t.name ? t.name.slice(0, 3).toLowerCase() : "?",
+          name:  t.name || "outil",
+          sub:   t.description || "",
+          calls: 0,
+          lat:   "—",
+          on:    true,
+        }));
+      }
+    } catch (_) { /* keep mock */ }
+
+    root.innerHTML = "";
+    root.appendChild(secHd("03", "Outils", "Capabilities branchées", tools.filter(t=>t.on).length + " actifs"));
+    const list = el("div");
+    const state = tools;
+    function rerender() {
+      list.innerHTML = "";
+      state.forEach((t, i) => {
+        list.appendChild(el("div", { class: "tool-row" }, [
+          el("div", { class: "tg", text: t.glyph }),
+          el("div", {}, [
+            el("span", { style:{color:"var(--fg-0)"}, text: t.name }),
+            el("span", { class: "tn-sub", text: t.sub }),
+          ]),
+          el("div", { class: "tnum", text: t.calls.toLocaleString() }),
+          el("div", { class: "tlat", text: t.lat }),
+          el("div", {
+            class: "toggle" + (t.on ? " on" : ""),
+            style: { justifySelf: "end" },
+            onclick: () => { state[i].on = !state[i].on; rerender(); J.notify({ kind: state[i].on ? "success" : "info", text: t.name + (state[i].on ? " · activé" : " · désactivé") }); },
+          }),
+        ]));
+      });
+    }
+    rerender();
+    root.appendChild(card({ title: "Outils", sub: state.filter(t=>t.on).length + " / " + state.length + " actifs · runtime" }, list));
+  }
+
+  /* ───────── Conso ───────── */
+  async function renderConso(root) {
+    // SHAPE EXPECTED: PROVIDERS, CONSO_SERIES (area chart), USAGE_TYPES, HOURLY
+    // Backend:
+    //   GET /api/conso/session → { total_cost_usd, total_tokens, providers: {name: {cost_usd, tokens}} }
+    //   GET /api/conso/daily   → [{ date, cost_usd, tokens }]  (last 7 days)
+    //   GET /api/conso/monthly → { month, cost_usd, tokens }
+    // Transformation: daily → CONSO_SERIES (single provider "Jarvis"), session → hero totals
+    // CONSO_SERIES multi-provider breakdown: TODO no endpoint yet — keeps mock per-provider series
+    root.innerHTML = '<div class="surface"><div class="j-loading">Chargement…</div></div>';
+    let heroTotal = "$0.00", heroBudget = "$500", heroPct = 0;
+    let heroToday = "$0.00", heroTokens = "0M", heroForecast = "$0";
+    let consoSeries = CONSO_SERIES;
+    let providers = PROVIDERS;
+    let usageTypes = USAGE_TYPES;
+    try {
+      const [sessResult, monthResult, dailyResult] = await Promise.allSettled([
+        J.api.get("/api/conso/session"),
+        J.api.get("/api/conso/monthly"),
+        J.api.get("/api/conso/daily"),
+      ]);
+      const sess  = sessResult.status  === "fulfilled" ? sessResult.value  : null;
+      const month = monthResult.status === "fulfilled" ? monthResult.value : null;
+      const daily = dailyResult.status === "fulfilled" ? dailyResult.value : null;
+
+      if (month) {
+        heroTotal  = "$" + (month.cost_usd || 0).toFixed(2);
+        heroTokens = Math.round((month.tokens || 0) / 1e6 * 10) / 10 + "M";
+        // Providers from monthly breakdown (correct field: cost_usd)
+        if (month.providers && month.providers.length > 0) {
+          providers = month.providers.map(p => ({
+            name:  p.name,
+            color: { anthropic: "#D97757", elevenlabs: "#A78BFA", openai: "#10A37F", deepgram: "#4A9EFF" }[p.name] || "#6B7280",
+            cost:  "$" + (p.cost_usd || 0).toFixed(2),
+            tok:   p.tokens > 0 ? Math.round(p.tokens / 1e6 * 10) / 10 + "M"
+                 : p.chars  > 0 ? Math.round(p.chars / 1000) + "K c"
+                 : "—",
+          }));
+        }
+        if (month.by_type && month.by_type.length > 0) {
+          usageTypes = month.by_type.map(t => ({
+            name:  t.label,
+            sub:   t.sub,
+            color: t.color,
+            cost:  "$" + (t.cost_usd || 0).toFixed(2),
+            pct:   t.pct,
+            tok:   Math.round((t.cost_usd || 0) / (month.cost_usd || 1) * (month.tokens || 0) / 1e6 * 10) / 10 + "M",
+          }));
+        }
+        heroPct = Math.min(100, Math.round((month.cost_usd || 0) / 500 * 100));
+      }
+      if (sess) {
+        heroToday = "$" + (sess.total_cost_usd || 0).toFixed(2);
+      }
+      if (daily && daily.length > 0) {
+        // Build single-series area chart from daily data
+        const vals = daily.map(d => Number((d.cost_usd || 0).toFixed(2)));
+        consoSeries = [{ name: "Jarvis", color: "#4A9EFF", data: vals }];
+        // Forecast: linear regression on last 14 days
+        const recent = vals.slice(-14);
+        if (recent.length > 1) {
+          const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+          const daysLeft = 30 - new Date().getDate();
+          heroForecast = "$" + (parseFloat(heroTotal.replace("$", "")) + avg * daysLeft).toFixed(0);
+        }
+      }
+    } catch (_) { /* keep mocks */ }
+
+    root.innerHTML = "";
+    root.appendChild(secHd("04", "Conso", "Coûts & tokens", heroTotal + " ce mois"));
+
+    // Mini grid
+    const mini = el("div", { class: "conso-mini-grid" });
+    const heroBox = el("div", { class: "conso-mini", style: { padding: "22px" } }, [
+      el("div", { class: "cm-lbl", text: "Total · ce mois" }),
+      el("div", { style: { display:"flex", alignItems:"baseline", gap:"14px" } }, [
+        el("span", { class: "num-hero", text: heroTotal }),
+        el("span", { class: "kpi-delta up", text: "ce mois" }),
+      ]),
+      el("div", { class: "cm-sub", text: "budget mensuel · " + heroBudget + " · " + heroPct + "% consommé" }),
+      el("div", { class: "src-bar", style: { marginTop: "6px" } }, [
+        el("div", { style: { width: heroPct + "%", background: "var(--accent)" } }),
+      ]),
+    ]);
+    mini.appendChild(heroBox);
+
+    function miniBox(lbl, val, valStyle, spark, sub, subStyle, inspect) {
+      const box = el("div", { class: "conso-mini" }, [
+        el("div", { class: "cm-lbl", text: lbl }),
+        el("div", { class: "cm-val", style: valStyle || {}, dataset: inspect ? { inspect } : null }, val),
+      ]);
+      if (spark) box.appendChild(spark);
+      if (sub) box.appendChild(el("div", { class: "cm-sub", style: subStyle || {}, text: sub }));
+      return box;
+    }
+    mini.appendChild(miniBox("Aujourd'hui", heroToday, null,
+      J.sparkline(consoSeries[0] ? consoSeries[0].data.slice(-7) : [0],{width:140,height:24,color:"var(--accent)"}),
+      "session courante", null, "Cumul UTC · reset à 00:00"));
+    const tokParts = heroTokens.replace("M","").replace("K","");
+    mini.appendChild(miniBox("Tokens · mois",
+      [document.createTextNode(tokParts), el("span",{class:"u",text: heroTokens.includes("M") ? "M" : "K"})],
+      null,
+      J.sparkline(consoSeries[0] ? consoSeries[0].data.slice(-7) : [0],{width:140,height:24,color:"var(--green)"}),
+      "input + output · tous providers", null, "Input + output · tous providers"));
+    const fbox = miniBox("Forecast fin de mois", heroForecast, { color: "var(--gold)" }, null,
+      "extrapolation linéaire", null, "Régression linéaire sur 14j · IC 95%");
+    fbox.appendChild(el("div", { class: "cm-sub", style: { color: "var(--gold)" }, text: "● extrapolé" }));
+    mini.appendChild(fbox);
+
+    root.appendChild(mini);
+
+    // Evolution chart
+    const chartCard = card({}, []);
+    chartCard.classList.add("conso-area-card");
+    chartCard.appendChild(el("div", { class: "card-hd" }, [
+      el("div", {}, [
+        el("div", { class: "card-title", text: "Évolution · 30 derniers jours" }),
+        el("div", { class: "card-sub", style: { marginTop: "6px" }, text: "stack par provider · USD / jour" }),
+      ]),
+      el("div", { style: { display: "flex", gap: "6px" } }, [
+        el("span", { class: "badge badge--solid", text: "USD" }),
+        el("button", { class: "btn-ghost", text: "7j" }),
+        el("button", { class: "btn-ghost", style: { color: "var(--fg-0)", background: "rgba(220,232,255,0.06)" }, text: "30j" }),
+        el("button", { class: "btn-ghost", text: "90j" }),
+      ]),
+    ]));
+    chartCard.appendChild(Charts.areaStack(consoSeries, { width: 900, height: 220 }));
+    const legend = el("div", { class: "conso-legend" });
+    consoSeries.forEach(s => {
+      const sum = s.data.reduce((a,b) => a+b, 0);
+      legend.appendChild(el("span", { class: "lg" }, [
+        el("span", { class: "sw", style: { background: s.color } }),
+        el("span", { text: s.name }),
+        el("span", { class: "v", text: "$" + sum.toFixed(0) }),
+      ]));
+    });
+    chartCard.appendChild(legend);
+    root.appendChild(chartCard);
+
+    // Donut + usage
+    const grid = el("div", { class: "conso-grid" });
+    const usageCard = card({ title: "Répartition par type d'usage", sub: "où part vraiment l'argent" });
+    const ut = el("div", { class: "usage-types" });
+    usageTypes.forEach(u => {
+      ut.appendChild(el("div", { class: "utype" }, [
+        el("span", { class: "ut-sw", style: { background: u.color } }),
+        el("div", {}, [
+          el("div", { class: "ut-name", text: u.name }),
+          el("span", { class: "ut-sub", text: u.sub }),
+          el("div", { class: "src-bar", style: { marginTop: "8px" } }, [
+            el("div", { style: { width: (u.pct*100)+"%", background: u.color, opacity: ".85" } }),
+          ]),
+        ]),
+        el("div", {}, [
+          el("div", { class: "ut-num", text: u.cost }),
+          el("span", { class: "ut-sub", style: { textAlign: "right", display: "block" }, text: (u.pct*100).toFixed(0) + "% · " + u.tok }),
+        ]),
+      ]));
+    });
+    usageCard.appendChild(ut);
+    grid.appendChild(usageCard);
+
+    const provCard = card({ title: "Par provider", sub: "part du total" });
+    provCard.style.display = "flex"; provCard.style.flexDirection = "column"; provCard.style.gap = "18px";
+    const provRow = el("div", { style: { display: "flex", alignItems: "center", gap: "22px" } });
+    provRow.appendChild(Charts.donut(providers.map(p => ({ value: parseFloat(p.cost.replace("$","")), color: p.color })), { size: 140, thickness: 20 }));
+    const legendBlock = el("div", { style: { display: "flex", flexDirection: "column", gap: "8px", flex: "1", minWidth: "0" } });
+    providers.forEach(p => {
+      legendBlock.appendChild(el("div", {
+        style: { display: "grid", gridTemplateColumns: "12px 1fr auto", gap: "10px", alignItems: "center", fontSize: "12px" },
+      }, [
+        el("span", { style: { width: "10px", height: "10px", borderRadius: "2px", background: p.color } }),
+        el("span", { style: { color: "var(--fg-1)" }, text: p.name }),
+        el("span", { class: "t-mono", style: { color: "var(--fg-0)", fontSize: "11.5px" }, text: p.cost }),
+      ]));
+    });
+    provRow.appendChild(legendBlock);
+    provCard.appendChild(provRow);
+
+    const heat = el("div", { class: "heat-block" }, [
+      el("div", { class: "hb-lbl" }, [
+        el("span", { text: "USAGE · 24h · $/heure" }),
+        el("span", { style: { color: "var(--fg-1)" }, text: "peak 14:00 · $1.42" }),
+      ]),
+    ]);
+    heat.appendChild(Charts.heatRow(HOURLY, { height: 20 }));
+    heat.appendChild(el("div", { class: "hb-lbl" }, [
+      el("span", { text: "00:00" }), el("span", { text: "06:00" }), el("span", { text: "12:00" }), el("span", { text: "18:00" }), el("span", { text: "23:59" }),
+    ]));
+    provCard.appendChild(heat);
+    grid.appendChild(provCard);
+
+    root.appendChild(grid);
+  }
+
+  /* ───────── Settings (sub-pages) ───────── */
+  const SETTINGS_NAV = [
+    { id: "keys",       label: "API Keys",       meta: "4",      eyebrow: "clefs d'accès",    title: "API Keys" },
+    { id: "audio",      label: "Audio & Vidéo",  meta: "",       eyebrow: "input / output",   title: "Audio & Vidéo" },
+    { id: "autonomy",   label: "Autonomie",      meta: "L2",     eyebrow: "comportement",     title: "Autonomie" },
+    { id: "connectors", label: "Connecteurs",    meta: "6/8",    eyebrow: "intégrations",     title: "Connecteurs" },
+    { id: "appearance", label: "Apparence",      meta: "dark",   eyebrow: "interface",        title: "Apparence" },
+    { id: "agents",     label: "Agents",         meta: "5",      eyebrow: "équipe IA",        title: "Agents" },
+  ];
+
+  function setRow(title, sub, control, status) {
+    return el("div", { class: "set-row" }, [
+      el("div", { class: "set-l" }, [
+        el("span", { class: "set-l-title", text: title }),
+        el("span", { class: "set-l-sub", text: sub }),
+      ]),
+      control || el("span"),
+      status || el("span"),
+    ]);
+  }
+
+  function renderSettingsKeys(c) {
+    const keys = [
+      { name:"Anthropic",  sub:"claude-sonnet-4.5 · org_4F8a", val:"sk-ant-api03-9F4a8b2c1d6e...kQ", status:"valid" },
+      { name:"OpenAI",     sub:"gpt-5 · whisper-1",            val:"sk-proj-2A8d9f1e3c5b...mP",      status:"valid" },
+      { name:"Pinecone",   sub:"ix-personal · 1536d",          val:"pcsk_4Hq2_AbcDef123Ghi...",      status:"valid" },
+      { name:"ElevenLabs", sub:"voice · fr-marc-v2",           val:"el_8X2c4a...",                   status:"warn" },
+    ];
+    keys.forEach(k => {
+      c.appendChild(setRow(k.name, k.sub,
+        el("input", { class: "input-mono", type: "password", value: k.val }),
+        el("div", { style: { display: "flex", gap: "6px", alignItems: "center" } }, [
+          el("span", { class: "t-mono", style: { fontSize: "10px", color: k.status==="valid" ? "var(--green)" : "var(--gold)" }, text: "● " + (k.status==="valid" ? "OK" : "EXPIRE") }),
+          el("button", { class: "btn-ghost", text: "Show" }),
+          el("button", { class: "btn-ghost", text: "⋯" }),
+        ])
+      ));
+    });
+  }
+  function renderSettingsAudio(c) {
+    function selOpts(arr) { return arr.map(o => el("option", { text: o })); }
+    c.appendChild(setRow("Microphone", "capture par défaut",
+      el("select", { class: "select-mono" }, selOpts(["MacBook Pro Microphone","AirPods Pro 2","Shure MV7"])),
+      el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--green)" }, text: "● −18 dB" })));
+    c.appendChild(setRow("Sortie audio", "où Jarvis parle",
+      el("select", { class: "select-mono" }, selOpts(["AirPods Pro 2","MacBook Pro Speakers","HomePod mini"])),
+      el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--fg-3)" }, text: "vol 64%" })));
+    c.appendChild(setRow("Caméra", "video input",
+      el("select", { class: "select-mono" }, selOpts(["FaceTime HD Camera","Logitech Brio"])),
+      el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--fg-3)" }, text: "1080p · 30fps" })));
+    c.appendChild(setRow("Voice wake-word", '"Jarvis" · always listening',
+      el("span", { class: "t-mono", style: { color: "var(--fg-3)", fontSize: "10.5px" }, text: "OFF" }),
+      el("div", { class: "toggle" })));
+    c.appendChild(setRow("Voix de Jarvis (TTS)", "ElevenLabs · fr-marc-v2",
+      el("select", { class: "select-mono" }, selOpts(["fr-marc-v2 (clone)","fr-onyx","fr-aurore"])),
+      el("button", { class: "btn-ghost", text: "▶ Précouter" })));
+  }
+  function renderSettingsAutonomy(c) {
+    const levels = [
+      { n:0, lbl:"Manuel",         sub:"chaque action demande confirmation" },
+      { n:1, lbl:"Assisté",        sub:"propose des actions, n'exécute jamais seul" },
+      { n:2, lbl:"Autonome · L2",  sub:"exécute librement sauf actions destructives" },
+      { n:3, lbl:"Total",          sub:"plein pouvoir, alerte uniquement en cas d'erreur" },
+    ];
+    let lvl = 2;
+    const wrap = el("div", { style: { gridColumn: "2 / 4", display: "flex", flexDirection: "column", gap: "8px" } });
+    function rerender() {
+      wrap.innerHTML = "";
+      levels.forEach(l => {
+        wrap.appendChild(el("div", {
+          onclick: () => { lvl = l.n; rerender(); },
+          style: {
+            display: "grid", gridTemplateColumns: "24px 1fr auto", alignItems: "center", gap: "12px",
+            padding: "10px 14px", borderRadius: "8px", cursor: "pointer",
+            border: "1px solid " + (lvl === l.n ? "var(--accent-line)" : "var(--line-1)"),
+            background: lvl === l.n ? "var(--accent-soft)" : "transparent",
           },
-        },
-      },
-    },
-  });
-}
-
-function _initProvTokensChart(dailyByProv) {
-  _cjsDestroy('cjsProvTokens');
-  const el = document.getElementById('cjsProvTokens');
-  if (!el) return;
-  const labels = dailyByProv.map(d => d.day);
-  const provKeys = ['anthropic', 'openai', 'elevenlabs', 'deepgram'];
-  const datasets = provKeys
-    .filter(p => dailyByProv.some(d => (d[p] || 0) > 0))
-    .map(p => ({
-      label: _PROV_NAMES[p] || p,
-      data: dailyByProv.map(d => d[p] || 0),
-      backgroundColor: (_PROV_COLORS[p] || { bg: 'rgba(200,200,200,0.5)' }).bg,
-      borderColor:     (_PROV_COLORS[p] || { border: 'rgba(200,200,200,1)' }).border,
-      borderWidth: 1,
-      stack: 'tokens',
-      borderRadius: 2,
-    }));
-
-  if (!datasets.length) {
-    datasets.push({
-      label: 'Aucune donnée',
-      data: dailyByProv.map(() => 0),
-      backgroundColor: 'rgba(255,255,255,0.06)',
-      borderWidth: 0,
-      stack: 'tokens',
+        }, [
+          el("span", { class: "t-mono", style: { color: lvl===l.n ? "var(--accent)" : "var(--fg-3)", fontSize: "11px" }, text: "L" + l.n }),
+          el("div", {}, [
+            el("div", { style: { color: "var(--fg-0)", fontSize: "13px" }, text: l.lbl }),
+            el("div", { style: { fontFamily: "var(--mono)", fontSize: "10.5px", color: "var(--fg-3)", marginTop: "2px" }, text: l.sub }),
+          ]),
+          el("span", { class: "t-mono", style: { color: lvl===l.n ? "var(--green)" : "var(--fg-4)", fontSize: "10px" }, text: lvl===l.n ? "● ACTIF" : "○" }),
+        ]));
+      });
+    }
+    rerender();
+    const row1 = el("div", { class: "set-row", style: { borderTop: "0", paddingTop: "0" } }, [
+      el("div", { class: "set-l" }, [
+        el("span", { class: "set-l-title", text: "Niveau d'autonomie" }),
+        el("span", { class: "set-l-sub", text: "jusqu'où Jarvis peut agir sans toi" }),
+      ]),
+      wrap,
+    ]);
+    c.appendChild(row1);
+    c.appendChild(setRow("Confirmation à partir de", "coût d'une action",
+      el("input", { class: "input-mono", value: "$5.00" }),
+      el("span", { class: "t-mono", style: { color: "var(--fg-3)", fontSize: "10px" }, text: "au-dessus → demande" })));
+    c.appendChild(setRow("Plage horaire active", "silence radio en dehors",
+      el("div", { style: { display: "flex", gap: "6px", alignItems: "center" } }, [
+        el("input", { class: "input-mono", value: "06:00", style: { width: "90px" } }),
+        el("span", { style: { color: "var(--fg-3)" }, text: "→" }),
+        el("input", { class: "input-mono", value: "23:00", style: { width: "90px" } }),
+      ]),
+      el("span", { class: "t-mono", style: { color: "var(--green)", fontSize: "10px" }, text: "● ACTIF" })));
+  }
+  function renderSettingsConnectors(c) {
+    const conns = [
+      { name:"Gmail",          status:"on",  sub:"OAuth · 4 mailboxes" },
+      { name:"Google Calendar",status:"on",  sub:"r/w · calendrier perso" },
+      { name:"YouTube API",    status:"on",  sub:"v3 · stats + uploads" },
+      { name:"X / Twitter",    status:"err", sub:"401 · re-link requis" },
+      { name:"Notion",         status:"on",  sub:"workspace personnel" },
+      { name:"Plaid (banques)",status:"off", sub:"3 comptes prêts à lier" },
+      { name:"Stripe",         status:"on",  sub:"revenue read-only" },
+      { name:"Slack",          status:"off", sub:"non lié" },
+    ];
+    conns.forEach(co => {
+      const col = co.status === "on" ? "var(--green)" : co.status === "err" ? "var(--red)" : "var(--fg-3)";
+      const lbl = co.status === "on" ? "CONNECTÉ" : co.status === "err" ? "ERREUR AUTH" : "NON LIÉ";
+      const btn = co.status === "on" ? "Gérer" : co.status === "err" ? "Réparer" : "Connecter";
+      c.appendChild(setRow(co.name, co.sub,
+        el("span", { class: "t-mono", style: { color: col, fontSize: "10.5px" }, text: "● " + lbl }),
+        el("button", { class: "btn-ghost", text: btn })));
     });
   }
-
-  _cjsInstances['cjsProvTokens'] = new Chart(el, {
-    type: 'bar',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: 'rgba(255,255,255,0.45)', font: { size: 10, family: _FONT_MONO }, boxWidth: 10, padding: 10 },
-        },
-        tooltip: {
-          ..._cjsTooltip(),
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${_fmtNum(ctx.raw||0)} tokens` },
-        },
-      },
-      scales: _cjsScales(true),
-    },
-  });
-}
-
-/* ================================================================
-   PARAMÈTRES TAB  — NOUVEAU
-   ================================================================ */
-async function renderParams() {
-  _content().innerHTML = '<div class="loading">CHARGEMENT…</div>';
-  try {
-    const r = await fetch('/api/settings');
-    _s.paramsData = await r.json();
-  } catch { _s.paramsData = {}; }
-
-  try {
-    const allDevices = await navigator.mediaDevices.enumerateDevices();
-    _s.paramsDevices = {
-      audio_input:  allDevices.filter(d => d.kind === 'audioinput'),
-      audio_output: allDevices.filter(d => d.kind === 'audiooutput'),
-      video:        allDevices.filter(d => d.kind === 'videoinput'),
-    };
-  } catch { /**/ }
-
-  paintParams();
-}
-
-function _toggle(key, initial) {
-  const on = initial ? 'on' : '';
-  return `<button class="toggle ${on}" id="toggle-${_esc(key)}" onclick="window._sToggleSetting('${_esc(key)}', this)"></button>`;
-}
-
-function _select(key, options, current) {
-  return `<select class="params-select" onchange="window._sUpdateSetting('${_esc(key)}', this.value)">
-    ${options.map(([v,l]) => `<option value="${_esc(v)}" ${v===current?'selected':''}>${_esc(l)}</option>`).join('')}
-  </select>`;
-}
-
-function _numInput(key, value, width) {
-  return `<input type="number" class="params-input" style="${width?`width:${width}px`:''}" value="${_esc(String(value))}"
-    onchange="window._sUpdateSetting('${_esc(key)}', this.value)" onblur="window._sUpdateSetting('${_esc(key)}', this.value)">`;
-}
-
-function _row(label, control) {
-  return `<div class="params-row"><span class="params-label">${_esc(label)}</span>${control}</div>`;
-}
-
-function _apiKeyRow(key, maskedValue) {
-  const hasValue = maskedValue && maskedValue.length > 0;
-  return `<div class="params-row">
-    <span class="params-label">${_esc(key)}</span>
-    <div class="params-key-wrap" id="key-wrap-${_esc(key)}">
-      <span class="params-key-value">${_esc(hasValue ? maskedValue : '—')}</span>
-      <button class="params-key-btn" onclick="window._sEditKey('${_esc(key)}')" title="Modifier">✎</button>
-      <button class="params-key-btn" onclick="window._sRevealKey('${_esc(key)}')" title="${_s.apiKeysVisible[key] ? 'Masquer' : 'Voir'}">${_s.apiKeysVisible[key] ? '◎' : '👁'}</button>
-    </div>
-  </div>`;
-}
-
-function _section(id, title, open, rows) {
-  return `<div class="params-section" id="psec-${_esc(id)}">
-    <div class="params-section-hd" onclick="toggleParamsSection('${_esc(id)}')">
-      <span class="params-section-arrow ${open?'open':''}" id="psec-arrow-${_esc(id)}">${open?'▼':'▶'}</span>
-      <span class="params-section-title">${_esc(title)}</span>
-    </div>
-    <div class="params-section-body" id="psec-body-${_esc(id)}" style="display:${open?'block':'none'}">
-      ${rows}
-    </div>
-  </div>`;
-}
-
-function toggleParamsSection(id) {
-  const body = document.getElementById('psec-body-' + id);
-  const arrow = document.getElementById('psec-arrow-' + id);
-  if (!body) return;
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  if (arrow) { arrow.textContent = open ? '▶' : '▼'; arrow.classList.toggle('open', !open); }
-}
-
-function paintParams() {
-  const p = _s.paramsData || {};
-  const audio   = p.audio   || {};
-  const llm     = p.llm     || {};
-  const apiKeys = p.api_keys || {};
-  const docker  = p.docker  || {};
-  const proact  = p.proactive || {};
-  const vision  = p.vision  || {};
-  const jarvis  = p.jarvis  || {};
-  const devs    = _s.paramsDevices;
-
-  const micOptions = [['default','Par défaut']].concat((devs.audio_input||[]).map(d => [d.deviceId, d.label||d.deviceId.slice(0,20)]));
-  const spkOptions = [['default','Par défaut']].concat((devs.audio_output||[]).map(d => [d.deviceId, d.label||d.deviceId.slice(0,20)]));
-  const camOptions = [['default','Par défaut']].concat((devs.video||[]).map(d => [d.deviceId, d.label||d.deviceId.slice(0,20)]));
-
-  let html = `<div class="tab-header"><span class="tab-title">PARAMÈTRES</span></div>`;
-
-  html += _section('audio', '▼ AUDIO & VOIX', true, [
-    _row('Microphone',       _select('MICROPHONE', micOptions, 'default')),
-    _row('Haut-parleurs',    _select('SPEAKERS', spkOptions, 'default')),
-    _row('Caméra',           _select('CAMERA_DEVICE', camOptions, 'default')),
-    _row('Provider TTS',     _select('TTS_PROVIDER', [['elevenlabs','ElevenLabs'],['piper','Piper']], audio.tts_provider||'piper')),
-    _row('Modèle ElevenLabs', _select('ELEVENLABS_MODEL', [['eleven_flash_v2_5','Flash v2.5 (~75ms)'],['eleven_turbo_v2_5','Turbo v2.5 (~300ms)']], audio.elevenlabs_model||'eleven_flash_v2_5')),
-    _row('Modèle STT',       _select('WHISPER_MODEL', [['nova-2','Deepgram Nova-2'],['tiny','Whisper Tiny'],['small','Whisper Small'],['medium','Whisper Medium']], audio.whisper_model||'tiny')),
-  ].join(''));
-
-  html += _section('llm', '▼ MODÈLES IA', false, [
-    _row('Provider LLM',     _select('LLM_PROVIDER', [['api','Anthropic'],['local','Local (Ollama)']], llm.llm_provider||'api')),
-    _row('Modèle principal', _select('ANTHROPIC_MODEL', [['claude-sonnet-4-6','Claude Sonnet 4.6'],['claude-haiku-4-5-20251001','Claude Haiku 4.5'],['claude-opus-4-7','Claude Opus 4.7']], llm.anthropic_model||'claude-sonnet-4-6')),
-    _row('Modèle vocal',     _select('VOICE_ANTHROPIC_MODEL', [['claude-haiku-4-5-20251001','Claude Haiku 4.5'],['claude-sonnet-4-6','Claude Sonnet 4.6']], llm.voice_anthropic_model||'claude-haiku-4-5-20251001')),
-    _row('Modèle vision',    _select('VISION_MODEL', [['gpt-4o','GPT-4o'],['gpt-4o-mini','GPT-4o Mini']], llm.vision_model||'gpt-4o')),
-  ].join(''));
-
-  html += _section('apikeys', '▼ CLÉS API', false,
-    Object.entries(apiKeys).map(([key, val]) => _apiKeyRow(key, val)).join('')
-  );
-
-  html += _section('docker', '▼ AGENT WORKER', false, [
-    _row('Docker activé',    _toggle('DOCKER_ENABLED', docker.docker_enabled)),
-    _row('Image Docker',     `<input type="text" class="params-input-text" value="${_esc(docker.docker_base_image||'python:3.11-slim')}" onchange="window._sUpdateSetting('DOCKER_BASE_IMAGE', this.value)">`),
-    _row('Mémoire max',      _select('DOCKER_MEMORY_LIMIT', [['256m','256 MB'],['512m','512 MB'],['1g','1 GB'],['2g','2 GB']], docker.docker_memory_limit||'512m')),
-    _row('CPU max',          _select('DOCKER_CPU_LIMIT', [['0.5','0.5'],['1.0','1.0'],['2.0','2.0']], String(docker.docker_cpu_limit||'1.0'))),
-    _row('Timeout par step', _numInput('DOCKER_TIMEOUT_SECONDS', docker.docker_timeout_seconds||300, 80)),
-  ].join(''));
-
-  html += _section('proactive', '▼ PROACTIVITÉ', false, [
-    _row('Heure briefing',   _numInput('BRIEFING_HOUR', proact.briefing_hour||9, 60)),
-    _row('Rappel calendrier',_numInput('CALENDAR_REMINDER_MINUTES', proact.calendar_reminder_minutes||10, 60)),
-  ].join(''));
-
-  html += _section('vision', '▼ VISION', false, [
-    _row('Détection objets YOLO', _toggle('VISION_OBJECT_DETECTION', vision.vision_object_detection)),
-    _row('Index webcam',          _numInput('VISION_WEBCAM_INDEX', vision.vision_webcam_index||0, 60)),
-    _row('Seuil confiance YOLO',  `<input type="range" class="params-slider" min="0.1" max="1.0" step="0.05" value="${_esc(String(vision.vision_yolo_confidence||0.5))}" onchange="window._sUpdateSetting('VISION_YOLO_CONFIDENCE', this.value)">`),
-  ].join(''));
-
-  html += _section('jarvis', '▼ JARVIS', false, [
-    _row('Mode Québécois 🍁', _toggle('QUEBEC_MODE', jarvis.quebec_mode)),
-    _row('Niveau log',  _select('LOG_LEVEL', [['DEBUG','DEBUG'],['INFO','INFO'],['WARNING','WARNING'],['ERROR','ERROR']], jarvis.log_level||'INFO')),
-    _row('Environnement', `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim)">${_esc(jarvis.environment||'development')}</span>`),
-  ].join(''));
-
-  const appr = p.approvals || {};
-  const _appr = (cat, label) => _row(label, _approvalSelect(cat, appr[cat] || 'ask'));
-  html += _section('approvals', '▼ APPROBATIONS', false, [
-    '<div class="params-subsection">Système</div>',
-    _appr('system_shutdown', 'Éteindre / Veille'),
-    _appr('system_restart',  'Redémarrage'),
-    '<div class="params-subsection">Fichiers</div>',
-    _appr('file_write',  'Écrire des fichiers'),
-    _appr('file_delete', 'Supprimer des fichiers'),
-    '<div class="params-subsection">Communications</div>',
-    _appr('email_draft', 'Rédiger un email'),
-    _appr('email_send',  'Envoyer un email'),
-    '<div class="params-subsection">Web</div>',
-    _appr('web_agent', 'Automatisation browser'),
-    '<div class="params-subsection">Matériel</div>',
-    _appr('printer_slice', 'Slicer un modèle 3D'),
-    _appr('printer_print', 'Lancer une impression'),
-    _appr('fusion_create', 'Créer dans Fusion 360'),
-    _appr('fusion_modify', 'Modifier dans Fusion 360'),
-    _appr('fusion_delete', 'Supprimer dans Fusion 360'),
-    '<div class="params-subsection">Code / Agent</div>',
-    _appr('code_write',    'Écrire du code'),
-    _appr('agent_mission', 'Lancer une mission agent'),
-  ].join(''));
-
-  _content().innerHTML = html;
-}
-
-function _approvalSelect(category, value) {
-  const opts = [['always','Toujours'],['ask','Demander'],['never','Jamais']];
-  const sel = opts.map(([v, l]) =>
-    `<option value="${v}" ${v === value ? 'selected' : ''}>${l}</option>`
-  ).join('');
-  return `<select class="params-select" onchange="window._sUpdateApproval('${_esc(category)}', this.value)">${sel}</select>`;
-}
-
-window._sUpdateApproval = async (category, mode) => {
-  try {
-    const r = await fetch(`/api/approvals/config/${encodeURIComponent(category)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode }),
+  function renderSettingsAppearance(c) {
+    c.appendChild(setRow("Thème", "deep navy uniquement (par design)",
+      el("div", { style: { display: "flex", gap: "8px" } }, [
+        el("span", { class: "badge badge--accent", text: "Deep Navy" }),
+        el("span", { class: "badge badge--solid", style: { opacity: "0.5" }, text: "Slate (bientôt)" }),
+      ]),
+      el("span")));
+    c.appendChild(setRow("Densité", "espacement général",
+      el("div", { style: { display: "flex", gap: "4px" } }, ["compact","regular","comfy"].map((d, i) =>
+        el("span", { class: "badge" + (i === 1 ? " badge--accent" : ""), text: d })
+      )),
+      el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--fg-3)" }, text: "tweak · live" })));
+    c.appendChild(setRow("Effets atmosphériques", "grain · vignette · aurora",
+      el("div", { style: { display: "flex", gap: "8px" } }, ["grain","vignette","aurora"].map(d =>
+        el("span", { class: "badge badge--green" }, [el("span",{class:"pri-dot"}), document.createTextNode(d)])
+      )),
+      el("span")));
+    c.appendChild(setRow("Police d'interface", "stack actuel",
+      el("span", { class: "t-mono", style: { fontSize: "11px", color: "var(--fg-1)" }, text: "Geist · Geist Mono" }),
+      el("button", { class: "btn-ghost", text: "Changer" })));
+  }
+  function renderSettingsAgents(c) {
+    const agents = [
+      { name:"librarian",  sub:"index + search knowledge base",         on:true,  model:"sonnet-4.5" },
+      { name:"editor",     sub:"rédaction · brief vidéo + newsletter", on:true,  model:"sonnet-4.5" },
+      { name:"scheduler",  sub:"calendrier · reschedule + booking",     on:true,  model:"haiku-4.5"  },
+      { name:"finops",     sub:"monitoring spend cloud + perso",         on:true,  model:"haiku-4.5"  },
+      { name:"digest",     sub:"synthèse hebdo · newsletters + RSS",     on:true,  model:"sonnet-4.5" },
+      { name:"triager",    sub:"triage email + notifs",                  on:false, model:"haiku-4.5"  },
+    ];
+    agents.forEach(a => {
+      const sel = el("select", { class: "select-mono" });
+      ["sonnet-4.5","haiku-4.5","gpt-5"].forEach(m => sel.appendChild(el("option", { value: m, text: m, selected: m===a.model ? "" : null })));
+      c.appendChild(setRow(a.name, a.sub, sel, el("div", { class: "toggle" + (a.on ? " on" : "") })));
     });
-    if (!r.ok) throw new Error(await r.text());
-    toast(`${category} → ${mode}`, 'success');
-  } catch (e) { toast(`Erreur: ${e.message}`, 'error'); }
-};
+  }
+  const SETTINGS_RENDERERS = {
+    keys: renderSettingsKeys, audio: renderSettingsAudio, autonomy: renderSettingsAutonomy,
+    connectors: renderSettingsConnectors, appearance: renderSettingsAppearance, agents: renderSettingsAgents,
+  };
 
-window._sUpdateSetting = async (key, value) => {
-  try {
-    const r = await fetch('/api/settings/update', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key, value: String(value)}) });
-    const d = await r.json();
-    toast(`${key} mis à jour${d.needs_restart ? ' · Restart requis' : ''}`, 'success');
-  } catch { toast(`Erreur mise à jour de ${key}`, 'error'); }
-};
+  function renderSettings(root) {
+    root.innerHTML = "";
+    root.appendChild(secHd("05", "Paramètres", "Configuration", "6 sections"));
 
-window._sToggleSetting = async (key, btn) => {
-  const isOn = btn.classList.toggle('on');
-  await window._sUpdateSetting(key, isOn ? 'true' : 'false');
-};
+    let page = "keys";
+    const shell = el("div", { class: "settings-shell" });
+    const nav = el("div", { class: "settings-nav" });
+    const content = el("div", { class: "settings-content" });
 
-window._sEditKey = (key) => {
-  const wrap = document.getElementById('key-wrap-' + key);
-  if (!wrap) return;
-  wrap.innerHTML = `<div class="params-key-edit-wrap">
-    <input type="password" class="params-key-input" id="key-input-${_esc(key)}" placeholder="Nouvelle valeur…">
-    <button class="params-key-save" onclick="window._sSaveKey('${_esc(key)}')">Sauvegarder</button>
-    <button class="params-key-cancel" onclick="window._sCancelKey('${_esc(key)}')">✕</button>
-  </div>`;
-  const inp = document.getElementById('key-input-' + key);
-  if (inp) { inp.focus(); inp.addEventListener('keydown', e => { if (e.key==='Enter') window._sSaveKey(key); if (e.key==='Escape') window._sCancelKey(key); }); }
-};
+    function rerender() {
+      nav.innerHTML = "";
+      nav.appendChild(el("div", { class: "sn-eyebrow", text: "configuration" }));
+      SETTINGS_NAV.forEach(s => {
+        nav.appendChild(el("div", {
+          class: "sn-item" + (page === s.id ? " is-on" : ""),
+          onclick: () => { page = s.id; rerender(); },
+        }, [
+          el("span", { text: s.label }),
+          el("span", { class: "sn-meta", text: s.meta }),
+        ]));
+      });
 
-window._sSaveKey = async (key) => {
-  const inp = document.getElementById('key-input-' + key);
-  if (!inp || !inp.value.trim()) { window._sCancelKey(key); return; }
-  await window._sUpdateSetting(key, inp.value.trim());
-  // Re-fetch masked value and repaint
-  const r = await fetch('/api/settings');
-  _s.paramsData = await r.json();
-  paintParams();
-};
-
-window._sCancelKey = (key) => {
-  const r = async () => { const res = await fetch('/api/settings'); _s.paramsData = await res.json(); paintParams(); };
-  r();
-};
-
-window._sRevealKey = async (key) => {
-  // Toggle visibility flag — for now just re-render (real reveal needs server support)
-  _s.apiKeysVisible[key] = !_s.apiKeysVisible[key];
-  paintParams();
-};
-
-/* ================================================================
-   SYSTÈME TAB  (porté depuis panel.js → _renderSys)
-   ================================================================ */
-async function renderSysteme() {
-  _content().innerHTML = '<div class="loading">CHARGEMENT…</div>';
-  try { const r = await fetch('/api/system/stats'); _s.sysStats = await r.json(); }
-  catch { _s.sysStats = null; }
-  await _fetchSysLogs();
-  paintSysteme();
-  _startLogsPolling();
-}
-
-async function _fetchSysLogs() {
-  try { const r = await fetch('/api/system/logs'); _s.sysLogs = await r.json(); }
-  catch { _s.sysLogs = []; }
-}
-
-function _startLogsPolling() {
-  if (_s.logsInterval) clearInterval(_s.logsInterval);
-  _s.logsInterval = setInterval(async () => {
-    if (_s.tab !== 'systeme') { clearInterval(_s.logsInterval); _s.logsInterval = null; return; }
-    await _fetchSysLogs();
-    const el = document.getElementById('sys-logs');
-    if (el) _renderLogsInto(el);
-  }, 3000);
-}
-
-function _renderLogsInto(el) {
-  el.innerHTML = _s.sysLogs.slice(-60).map(line => {
-    const lvl = /WARNING|ERROR|CRITICAL/.test(line) ? 'level-WARNING' : /INFO/.test(line) ? 'level-INFO' : '';
-    return `<div class="sys-log-line ${lvl}">${_esc(line)}</div>`;
-  }).join('');
-  el.scrollTop = el.scrollHeight;
-}
-
-function paintSysteme() {
-  const st  = _s.sysStats;
-  const cfg  = st ? st.config   : {};
-  const mem  = st ? st.memory   : {};
-  const sess = st ? st.sessions : {};
-  const proj = st ? st.projects : {};
-
-  let html = `
-    <div class="tab-header"><span class="tab-title">SYSTÈME</span></div>
-
-    <span class="section-lbl">CONFIGURATION ACTIVE</span>
-    <div class="sys-grid">
-      <span class="sys-key">LLM Provider</span><span class="sys-val">${_esc(cfg.llm_provider||'—')}</span>
-      <span class="sys-key">Modèle</span><span class="sys-val">${_esc(cfg.model||'—')}</span>
-      <span class="sys-key">Voice LLM</span><span class="sys-val">${_esc(cfg.voice_model||'—')}</span>
-      <span class="sys-key">Vision</span><span class="sys-val">${_esc(cfg.vision_model||'—')}</span>
-      <span class="sys-key">TTS</span><span class="sys-val">${_esc(cfg.tts_provider||'—')}</span>
-      <span class="sys-key">STT</span><span class="sys-val">${_esc(cfg.whisper_model||'—')}</span>
-    </div>
-    <div class="sep"></div>
-
-    <span class="section-lbl">RESSOURCES</span>
-    <div class="sys-grid">
-      <span class="sys-key">Mémoire topics</span><span class="sys-val">${mem.topics??'—'} fichiers · ${mem.size_kb??'—'} KB</span>
-      <span class="sys-key">Sessions</span><span class="sys-val">${sess.total??'—'} · ${sess.size_mb??'—'} MB</span>
-      <span class="sys-key">Projets</span><span class="sys-val">${proj.total??'—'} total (${proj.running??0} en cours)</span>
-      <span class="sys-key">Workspace</span><span class="sys-val" style="font-size:9px">${_esc(st?.workspace||'workspace/projects/')}</span>
-    </div>
-    <div class="sep"></div>
-
-    <span class="section-lbl">SANTÉ DU SYSTÈME</span>
-    <div class="health-row"><span class="health-dot"></span><span class="health-name">FastAPI</span><span class="health-desc">En ligne · port 8000</span></div>
-    <div class="health-row"><span class="health-dot"></span><span class="health-name">Memory</span><span class="health-desc">${mem.topics??0} topics chargés</span></div>
-    <div class="health-row"><span class="health-dot off"></span><span class="health-name">Voice Agent</span><span class="health-desc">Voir logs LiveKit</span></div>
-    <div class="sep"></div>
-
-    <span class="section-lbl">ACTIONS</span>
-    <button class="action-btn" onclick="window._sSysAutodream()">✦ Déclencher AutoDream</button>
-    <button class="action-btn" onclick="window._sSysReloadSkills()">↻ Recharger les Skills</button>
-    <button class="action-btn" onclick="window._sSysCleanup()">🗑 Nettoyer projets terminés</button>
-    <button class="action-btn danger" onclick="window._sSysRestart()">⚡ Redémarrer Jarvis</button>
-    <div class="sep"></div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <span class="section-lbl" style="margin:0">LOGS SYSTÈME EN DIRECT</span>
-      <button class="btn" style="padding:3px 8px;font-size:8px" onclick="window._sRefreshLogs()">↺ Refresh</button>
-    </div>
-    <div class="sys-logs" id="sys-logs"></div>`;
-
-  _content().innerHTML = html;
-  const logsEl = document.getElementById('sys-logs');
-  if (logsEl) _renderLogsInto(logsEl);
-}
-
-window._sSysAutodream = async () => {
-  try { await fetch('/api/memory/autodream', {method:'POST'}); toast('AutoDream déclenché', 'success'); }
-  catch { toast('Erreur', 'error'); }
-};
-
-window._sSysReloadSkills = async () => {
-  try { const r = await fetch('/api/skills/reload', {method:'POST'}); const d = await r.json(); toast(`${d.count} skills rechargés`, 'success'); }
-  catch { toast('Erreur', 'error'); }
-};
-
-window._sSysCleanup = async () => {
-  if (!confirm('Supprimer tous les projets terminés ?')) return;
-  try { const r = await fetch('/api/system/projects/done', {method:'DELETE'}); const d = await r.json(); toast(`${d.removed} projet(s) supprimé(s)`, 'success'); }
-  catch { toast('Erreur', 'error'); }
-};
-
-window._sSysRestart = async () => {
-  if (!confirm('Redémarrer Jarvis ?')) return;
-  try { await fetch('/api/system/restart', {method:'POST'}); toast('Redémarrage en cours…', ''); }
-  catch { toast('Erreur', 'error'); }
-};
-
-window._sRefreshLogs = async () => {
-  await _fetchSysLogs();
-  const el = document.getElementById('sys-logs');
-  if (el) _renderLogsInto(el);
-};
-
-/* ================================================================
-   INIT
-   ================================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  // Entry animation
-  if (typeof gsap !== 'undefined') {
-    gsap.from('body', { duration: 0.4, opacity: 0, scale: 0.97, filter: 'blur(10px)', ease: 'power2.out' });
+      const cur = SETTINGS_NAV.find(s => s.id === page);
+      content.innerHTML = "";
+      content.appendChild(el("div", { class: "sc-hd" }, [
+        el("div", { class: "sc-hd-l" }, [
+          el("span", { class: "sc-hd-eyebrow", text: cur.eyebrow }),
+          el("span", { class: "sc-hd-title", text: cur.title }),
+        ]),
+        el("button", { class: "btn-ghost", text: "Sauvegarder", onclick: () => J.notify({ kind: "success", text: "Paramètres · sauvegardés" }) }),
+      ]));
+      const inner = el("div", { style: { marginTop: "8px" } });
+      SETTINGS_RENDERERS[page](inner);
+      content.appendChild(inner);
+    }
+    rerender();
+    shell.appendChild(nav); shell.appendChild(content);
+    root.appendChild(shell);
   }
 
-  // Wire modal backdrop clicks
-  document.getElementById('file-modal')?.addEventListener('click', e => {
-    if (e.target.id === 'file-modal') closeFileModal();
-  });
-  document.getElementById('clawhub-modal')?.addEventListener('click', e => {
-    if (e.target.id === 'clawhub-modal') closeClawHub();
-  });
+  /* ───────── Système (logs + actions) ───────── */
+  function renderSysteme(root) {
+    root.innerHTML = "";
+    root.appendChild(secHd("06", "Système", "Stream & actions", "live · 14d uptime"));
 
-  // Keyboard
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeFileModal(); closeClawHub(); }
-  });
+    const grid = el("div", { class: "sys-grid" });
 
-  // Load initial tab
-  switchTab(_s.tab);
-});
+    // Logs
+    const logsCard = card({
+      title: "Système", sub: "event stream · live",
+      right: el("div", { style: { display: "flex", gap: "6px" } }, [
+        el("span", { class: "badge", text: "all" }),
+        el("span", { class: "badge badge--accent" }, [el("span",{class:"pri-dot"}), document.createTextNode("info")]),
+        el("span", { class: "badge badge--gold", text: "warn" }),
+        el("span", { class: "badge badge--red",  text: "err" }),
+      ]),
+    });
+    const logScroll = el("div", { class: "scroll-y", style: { maxHeight: "280px" } });
+    function rebuildLogs() {
+      logScroll.innerHTML = "";
+      const now = new Date();
+      LOG_SEED.forEach((l, i) => {
+        const t = new Date(now.getTime() - i * 14000);
+        const pad = (n) => String(n).padStart(2, "0");
+        const tStr = pad(t.getHours()) + ":" + pad(t.getMinutes()) + ":" + pad(t.getSeconds());
+        const lm = el("span", { class: "lm" });
+        l.parts.forEach(p => {
+          if (p.cls) lm.appendChild(el("span", { class: p.cls, text: p.t }));
+          else lm.appendChild(document.createTextNode(p.t));
+        });
+        logScroll.appendChild(el("div", { class: "log-line" }, [
+          el("span", { class: "lt", text: tStr }),
+          el("span", { class: "lv " + l.lv, text: l.lv }),
+          lm,
+        ]));
+      });
+    }
+    rebuildLogs();
+    // Replace setInterval stub with real WebSocket /ws/logs
+    // Format: { lv: "ok"|"info"|"warn"|"err", parts: [{t: string, cls?: "accent"|"dim"}] }
+    try {
+      const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+      const wsLogs = new WebSocket(wsProto + "//" + location.host + "/ws/logs");
+      wsLogs.onmessage = (ev) => {
+        try {
+          const log = JSON.parse(ev.data);
+          LOG_SEED.unshift(log);
+          if (LOG_SEED.length > 50) LOG_SEED.pop();
+          rebuildLogs();
+        } catch (_) {}
+      };
+      wsLogs.onerror = () => setInterval(rebuildLogs, 2400);  // fallback si WS échoue
+    } catch (_) {
+      setInterval(rebuildLogs, 2400);
+    }
+    logsCard.appendChild(logScroll);
+    grid.appendChild(logsCard);
+
+    // Actions
+    const actionsCard = card({ title: "Actions système", sub: "opérations runtime" });
+    const actGrid = el("div", { class: "action-grid" });
+    [
+      { t: "Recharger config",    s: "soft-reload · 0 downtime", cls: "" },
+      { t: "Vider cache",          s: "~ 124 MB · libère mémoire", cls: "" },
+      { t: "Reindex mémoire",      s: "~ 9.8 s · vector store",    cls: "" },
+      { t: "Restart agents",       s: "interrompt 6 sessions",     cls: "is-warn" },
+      { t: "Snapshot complet",     s: "backup · ~ 480 MB",         cls: "is-warn" },
+      { t: "Wipe sessions",        s: "destructif · confirm requis", cls: "is-danger" },
+    ].forEach(a => {
+      actGrid.appendChild(el("div", {
+        class: "act " + a.cls,
+        onclick: () => {
+          const kind = a.cls === "is-danger" ? "error" : a.cls === "is-warn" ? "warn" : "success";
+          J.notify({ kind, text: a.t + " · exécuté" });
+        },
+      }, [
+        el("span", { class: "a-title", text: a.t }),
+        el("span", { class: "a-sub",   text: a.s }),
+      ]));
+    });
+    actionsCard.appendChild(actGrid);
+    grid.appendChild(actionsCard);
+
+    root.appendChild(grid);
+  }
+
+  /* ───────── Routing ───────── */
+  const SECTIONS = [
+    { id: "sessions",  label: "Sessions",    meta: "6"      },
+    { id: "memoire",   label: "Mémoire",     meta: "10"     },
+    { id: "outils",    label: "Outils",      meta: "6/8"    },
+    { id: "conso",     label: "Conso",       meta: "…"      },
+    { id: "settings",  label: "Paramètres",  meta: "6"      },
+    { id: "systeme",   label: "Système",     meta: "live"   },
+  ];
+  const RENDERERS = {
+    sessions: renderSessions, memoire: renderMemory, outils: renderTools,
+    conso: renderConso, settings: renderSettings, systeme: renderSysteme,
+  };
+  const state = { active: "sessions" };
+
+  function refreshSidebar() {
+    document.querySelectorAll(".sb-item").forEach(b => {
+      b.classList.toggle("is-on", b.dataset.id === state.active);
+    });
+  }
+  function mountSidebar() {
+    J.mountSidebar({
+      activeId: state.active,
+      onNav: (id) => { state.active = id; renderActive(); refreshSidebar(); },
+      sections: [{ label: "Système", items: SECTIONS }],
+      footer: { spend: "$3.42", cpu: "14%", ramPct: 0.65 },
+    });
+  }
+  function renderActive() {
+    const root = document.getElementById("page-root");
+    root.innerHTML = '<div class="surface"><div class="j-loading">Chargement…</div></div>';
+    const surface = el("section", { class: "surface page-in", dataset: { screenLabel: "system-" + state.active } });
+    try { RENDERERS[state.active](surface); }
+    catch (err) { surface.appendChild(el("div", { class: "j-empty", text: "Erreur : " + err.message })); }
+    root.innerHTML = ""; root.appendChild(surface);
+  }
+  function registerCommands() {
+    J.registerCommands([
+      { kind: "nav", group: "Aller à", title: "Sessions",   glyph: "01", run: () => { state.active = "sessions";  renderActive(); refreshSidebar(); } },
+      { kind: "nav", group: "Aller à", title: "Mémoire",    glyph: "02", run: () => { state.active = "memoire";   renderActive(); refreshSidebar(); } },
+      { kind: "nav", group: "Aller à", title: "Outils",     glyph: "03", run: () => { state.active = "outils";    renderActive(); refreshSidebar(); } },
+      { kind: "nav", group: "Aller à", title: "Conso",      glyph: "04", run: () => { state.active = "conso";     renderActive(); refreshSidebar(); } },
+      { kind: "nav", group: "Aller à", title: "Paramètres", glyph: "05", run: () => { state.active = "settings";  renderActive(); refreshSidebar(); } },
+      { kind: "nav", group: "Aller à", title: "Système",    glyph: "06", run: () => { state.active = "systeme";   renderActive(); refreshSidebar(); } },
+      { kind: "nav", group: "Pages",   title: "Dashboard",  glyph: "→",  sub: "control", run: () => { window.location.href = "/dashboard"; } },
+      { kind: "slash", group: "Commandes", title: "restart", glyph: ">", sub: "redémarre le runtime", run: () => J.notify({ kind: "warn", text: "Runtime · restart envoyé" }) },
+      { kind: "slash", group: "Commandes", title: "logs",    glyph: ">", sub: "saute aux logs",       run: () => { state.active = "systeme"; renderActive(); refreshSidebar(); } },
+      { kind: "slash", group: "Commandes", title: "spend",   glyph: ">", sub: "saute à conso",        run: () => { state.active = "conso";   renderActive(); refreshSidebar(); } },
+    ]);
+  }
+
+  function boot() {
+    J.mountAtmosphere();
+    mountSidebar();
+    J.mountTopbar({ pageTitle: "Système", crumb: "/ system" });
+    J.mountBottomNav({ active: "system" });
+    registerCommands();
+    renderActive();
+    // Update conso meta in sidebar with real monthly total
+    J.api.get("/api/conso/monthly").then(m => {
+      const sec = SECTIONS.find(s => s.id === "conso");
+      if (sec && m && m.cost_usd != null) {
+        sec.meta = "$" + m.cost_usd.toFixed(0);
+        document.querySelectorAll(".sb-item[data-id='conso'] .sb-meta").forEach(el => {
+          el.textContent = sec.meta;
+        });
+      }
+    }).catch(() => {});
+  }
+  document.addEventListener("DOMContentLoaded", boot);
+})();

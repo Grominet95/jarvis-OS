@@ -199,5 +199,95 @@ class UsageTracker:
             result.append(row)
         return result
 
+    def get_monthly_totals(self) -> dict:
+        """Totaux du mois courant avec ventilation par provider et par type de contexte."""
+        today = date.today()
+        first = today.replace(day=1)
+        total_cost = 0.0
+        total_tokens = 0
+        prov_acc: dict[str, dict] = {}   # {name: {cost, tokens, chars}}
+        type_acc: dict[str, float] = {}  # {type_key: cost}
+
+        d = first
+        while d <= today:
+            for e in self._read_day(d):
+                cost  = e.get("cost_usd", 0.0)
+                tok   = e.get("input_tokens", 0) + e.get("output_tokens", 0)
+                prov  = e.get("provider", "other")
+                ctx   = e.get("context", "") or ""
+                chars = e.get("characters", 0)
+
+                total_cost   += cost
+                total_tokens += tok
+
+                if prov not in prov_acc:
+                    prov_acc[prov] = {"cost": 0.0, "tokens": 0, "chars": 0}
+                prov_acc[prov]["cost"]   += cost
+                prov_acc[prov]["tokens"] += tok
+                prov_acc[prov]["chars"]  += chars
+
+                # Classify by usage type
+                if prov in ("elevenlabs", "deepgram"):
+                    tkey = "voice"
+                elif ctx.startswith("mission:"):
+                    tkey = "mission"
+                elif ctx == "memory":
+                    tkey = "memory"
+                elif ctx == "proactive":
+                    tkey = "proactive"
+                elif ctx == "conversation":
+                    tkey = "conversation"
+                else:
+                    tkey = "other"
+                type_acc[tkey] = type_acc.get(tkey, 0.0) + cost
+
+            d += timedelta(days=1)
+
+        total_cost = round(total_cost, 4)
+
+        # Build providers list (sorted by cost desc)
+        prov_list = [
+            {
+                "name":     name,
+                "cost_usd": round(v["cost"], 4),
+                "tokens":   v["tokens"],
+                "chars":    v["chars"],
+                "pct":      round(v["cost"] / total_cost, 4) if total_cost else 0,
+            }
+            for name, v in sorted(prov_acc.items(), key=lambda x: -x[1]["cost"])
+        ]
+
+        # Build usage type list
+        TYPE_META = {
+            "conversation": {"label": "Échange direct",          "sub": "chat synchrone · Marc ↔ Jarvis", "color": "#4A9EFF"},
+            "mission":      {"label": "Agents en arrière-plan",  "sub": "missions autonomes · 24/7",       "color": "#D97757"},
+            "memory":       {"label": "Indexation & mémoire",    "sub": "lectures & écritures mémoire",    "color": "#B8963E"},
+            "proactive":    {"label": "Proactif",                "sub": "tâches proactives · auto",        "color": "#36D399"},
+            "voice":        {"label": "Voix · STT/TTS",          "sub": "synthèse & transcription",        "color": "#A78BFA"},
+            "other":        {"label": "Autre",                   "sub": "appels non classifiés",           "color": "#6B7280"},
+        }
+        type_list = []
+        for key, meta in TYPE_META.items():
+            c = type_acc.get(key, 0.0)
+            if c == 0.0:
+                continue
+            type_list.append({
+                "type":     key,
+                "label":    meta["label"],
+                "sub":      meta["sub"],
+                "color":    meta["color"],
+                "cost_usd": round(c, 4),
+                "pct":      round(c / total_cost, 4) if total_cost else 0,
+            })
+        type_list.sort(key=lambda x: -x["cost_usd"])
+
+        return {
+            "month":     today.strftime("%Y-%m"),
+            "cost_usd":  total_cost,
+            "tokens":    total_tokens,
+            "providers": prov_list,
+            "by_type":   type_list,
+        }
+
 
 tracker = UsageTracker()

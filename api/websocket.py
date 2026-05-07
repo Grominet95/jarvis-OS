@@ -19,6 +19,62 @@ router = APIRouter()
 
 _spotify_tool = SpotifyTool()
 
+
+# ── /ws/logs — stream log buffer to the dashboard Système › Logs panel ────────
+# Format pushed to client: { lv: "ok"|"info"|"warn"|"err", parts: [{t: string, cls?: "accent"|"dim"}] }
+@router.websocket("/ws/logs")
+async def websocket_logs(websocket: WebSocket) -> None:
+    """Streams the in-memory log ring buffer to the Système › Logs panel.
+    Sends the last 50 entries on connect, then pushes new lines as they arrive.
+    """
+    from api.http import _log_buffer
+    await websocket.accept()
+    last_sent = 0
+    try:
+        # Send buffered lines on connect
+        snapshot = list(_log_buffer)
+        for raw in snapshot[-50:]:
+            msg = _format_log_line(raw)
+            await websocket.send_json(msg)
+        last_sent = len(_log_buffer)
+
+        while True:
+            await asyncio.sleep(0.8)
+            buf = list(_log_buffer)
+            new_lines = buf[last_sent:]
+            for raw in new_lines:
+                msg = _format_log_line(raw)
+                try:
+                    await websocket.send_json(msg)
+                except Exception:
+                    return
+            last_sent = len(buf)
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.warning("ws/logs error", error=str(e))
+
+
+def _format_log_line(raw: str) -> dict:
+    """Wrap a plain loguru string line into the { lv, parts } schema."""
+    import re
+    # loguru format: "HH:MM:SS | LEVEL    | name — message"
+    m = re.match(r"^(\d{2}:\d{2}:\d{2})\s*\|\s*(\w+)\s*\|\s*(.+?)(?:\s*—\s*(.*))?$", raw)
+    if m:
+        level_raw = m.group(2).lower().strip()
+        source    = m.group(3).strip()
+        message   = (m.group(4) or "").strip()
+        lv = {"info": "info", "warning": "warn", "error": "err",
+              "success": "ok",  "debug": "info"}.get(level_raw, "info")
+        parts: list[dict] = [
+            {"t": source, "cls": "accent"},
+        ]
+        if message:
+            parts.append({"t": " · " + message})
+        return {"lv": lv, "parts": parts}
+    # Fallback: treat whole line as plain message
+    return {"lv": "info", "parts": [{"t": raw}]}
+
 _GESTURE_DIRECT_ACTIONS: dict[str, str] = {
     "Open_Palm": "toggle",
     "Victory":   "next",

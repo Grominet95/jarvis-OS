@@ -1,658 +1,447 @@
-/* ================================================================
-   JARVIS V3 — Dashboard Pilotage
-   ================================================================ */
-'use strict';
+/* dashboard.js — Control page (vanilla, branche sur backend Jarvis)
+ *
+ * Données mockées pour le port initial. Les TODOs marquent où brancher
+ * les vrais endpoints (api/analytics.py, api/admin.py, agent runtime).
+ */
+(function () {
+  "use strict";
+  const J = window.Jarvis, el = J.el;
 
-/* ── State ──────────────────────────────────────────────────────── */
-const _dash = {
-  section:     'initiatives',
-  projFilter:  'all',
-  projects:    [],
-  initiatives: [],
-  initFilter:  'all',
-  briefData:   null,
-  briefTimer:  null,
-  analyticsDays: 7,
-};
+  /* ───────── Mocks (replace with API calls) ───────── */
+  const MOCK_INITIATIVES = [
+    { id: "INI·041", title: "Renouveler abonnement Cloudflare avant expiration", type: "Action",    priority: "high", source: "Email · billing@cf",     due: "2j" },
+    { id: "INI·040", title: "Répondre à 3 emails marqués important",             type: "Triage",    priority: "med",  source: "Inbox · prioritaire",    due: "Auj." },
+    { id: "INI·039", title: "Optimiser la pipeline YouTube (−14% sur 7 shorts)", type: "Stratégie", priority: "med",  source: "Analytics drift",        due: "Cette sem." },
+    { id: "INI·038", title: "Bloquer 90 min pour la review trimestrielle Q2",    type: "Calendrier",priority: "low",  source: "Pattern hebdo",          due: "Demain" },
+    { id: "INI·037", title: "Tester Sonnet 4.5 sur la pipeline transcription",   type: "R&D",       priority: "low",  source: "Anthropic update",       due: "—" },
+    { id: "INI·036", title: "Fermer 7 onglets idle Chrome",                       type: "Hygiène",   priority: "low",  source: "Detection auto",         due: "—" },
+  ];
+  const MOCK_MISSIONS = [
+    { id: "M·207", status: "run",   title: "Indexation 142 PDFs personnels",                sub: "agent: librarian · pinecone-ix",       prog: 0.68, cur: 96, tot: 142, eta: "12 min" },
+    { id: "M·206", status: "run",   title: 'Brief vidéo : "Pourquoi l\'IA personnelle…"',   sub: "agent: editor · 14 articles + 3 vids", prog: 0.34, cur: null, tot: null, eta: "1h 40" },
+    { id: "M·205", status: "wait",  title: "Reschedule meeting Stripe (3 participants)",     sub: "agent: scheduler · 2 réponses",        prog: 0.50, cur: 1, tot: 3, eta: "—" },
+    { id: "M·204", status: "queue", title: "Synthèse hebdo Substack (12 newsletters)",       sub: "agent: digest · dim. 09:00",           prog: 0,    cur: 0, tot: 12, eta: "Dim." },
+    { id: "M·203", status: "run",   title: "Monitoring spend cloud (AWS+OpenAI+Anthropic)",  sub: "agent: finops · 6h",                   prog: 0.92, cur: null, tot: null, eta: "ongoing" },
+  ];
+  const MOCK_KPIS = [
+    { lbl: "Vues 30j",        val: 248.3, unit: "K",    delta: "+12.4%", dir: "up", spark: [180,195,188,210,215,230,248] },
+    { lbl: "Subs YouTube",    val: 41.2,  unit: "K",    delta: "+1.8%",  dir: "up", spark: [39.8,40.1,40.4,40.6,40.9,41.0,41.2] },
+    { lbl: "Requêtes Jarvis", val: 18742, unit: "/sem", delta: "+24%",   dir: "up", spark: [12000,13500,14800,15600,16800,17400,18742] },
+    { lbl: "Latence p95",     val: 312,   unit: "ms",   delta: "−8%",    dir: "up", spark: [380,360,350,340,330,320,312] },
+  ];
+  const MOCK_SOURCES = [
+    { name: "YouTube",     glyph: "Y", w: 0.82, num: "248.3K", delta: "+12.4%", dir: "up",   color: "rgba(220,232,255,.85)" },
+    { name: "Twitter / X", glyph: "𝕏", w: 0.61, num: "184.0K", delta: "+6.1%",  dir: "up",   color: "rgba(74,158,255,.78)" },
+    { name: "Email",       glyph: "@", w: 0.42, num: "1,284",  delta: "+3.0%",  dir: "up",   color: "rgba(184,150,62,.78)" },
+    { name: "Substack",    glyph: "S", w: 0.28, num: "12.8K",  delta: "−1.4%",  dir: "down", color: "rgba(220,232,255,.55)" },
+    { name: "Jarvis",      glyph: "J", w: 0.94, num: "18,742", delta: "+24%",   dir: "up",   color: "rgba(54,211,153,.78)" },
+  ];
+  const MOCK_TOP = [
+    { rank: "01", title: "L'IA personnelle ne ressemble pas à ChatGPT", views: "184K", chg: "+8.2%" },
+    { rank: "02", title: "J'ai construit mon propre Jarvis (12 mois)",  views: "142K", chg: "+4.1%" },
+    { rank: "03", title: "Pourquoi vos prompts sont nuls",              views: "96.4K", chg: "+12%" },
+    { rank: "04", title: "Stack 2026 : ce que j'utilise vraiment",      views: "78.1K", chg: "−2.3%" },
+  ];
+  const MOCK_DEVICES = [
+    { name: "MacBook Pro 16″", id: "mac · M3 Max", status: "Active", col: "var(--green)",  a: ["CPU", "14%"],   b: ["RAM", "42 / 64 GB"] },
+    { name: "iPhone 16 Pro",   id: "ios · 18.4",   status: "Sync",   col: "var(--accent)", a: ["Battery", "82%"], b: ["Last sync", "2 min"] },
+    { name: "AirPods Pro 2",   id: "audio · BT",   status: "Idle",   col: "var(--fg-3)",   a: ["Battery", "—"],  b: ["Last use", "3h"] },
+    { name: "Studio Display",  id: "ext · 5K",     status: "Active", col: "var(--green)",  a: ["Bright.", "62%"],b: ["Color", "P3"] },
+  ];
 
-const DASH_STEP_ICON = { running:'↻', done:'✓', failed:'✗', waiting:'⏸', paused:'⏸', skipped:'—', pending:'○' };
-const DASH_FILE_ICON = { md:'📄',txt:'📄',json:'{}',py:'🐍',js:'📜',ts:'📜',html:'🌐',css:'🎨',csv:'📊',pdf:'📋',png:'🖼',jpg:'🖼' };
-
-function _dEsc(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function _dFileIcon(name) {
-  const ext = (name.split('.').pop() || '').toLowerCase();
-  return DASH_FILE_ICON[ext] || '📄';
-}
-function _dFmtSize(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
-  return (b/1024/1024).toFixed(2) + ' MB';
-}
-function _dMain() { return document.getElementById('dashboard-main'); }
-
-/* ── Clock ──────────────────────────────────────────────────────── */
-function _updateDashClock() {
-  const el = document.getElementById('dash-datetime');
-  if (!el) return;
-  const now = new Date();
-  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-  const hh = String(now.getHours()).padStart(2,'0');
-  const mm = String(now.getMinutes()).padStart(2,'0');
-  el.textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} · ${hh}:${mm}`;
-}
-
-/* ── Open / Close ───────────────────────────────────────────────── */
-window.openDashboard = function () {
-  if (window._currentView === 'dashboard') return;
-  if (window._currentView === 'intel') { window.navigateFromIntel('dashboard'); return; }
-  const settingsOverlay = document.getElementById('settings-overlay');
-  if (settingsOverlay && settingsOverlay.style.display === 'block') window.closeSettings?.();
-  const dash = document.getElementById('dashboard-view');
-  if (!dash) return;
-  window._previousView = window._currentView || 'sphere';
-  if (window._setView) window._setView('dashboard');
-  else { window._currentView = 'dashboard'; document.getElementById('dashboard-nav-btn')?.classList.add('active'); }
-
-  dash.classList.add('visible');
-  _updateDashClock();
-
-  if (typeof gsap !== 'undefined') {
-    gsap.fromTo(dash,
-      { opacity: 0, scale: 0.97, filter: 'blur(8px)' },
-      { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out' }
-    );
+  /* ───────── Data loaders ───────── */
+  async function loadInitiatives() {
+    // SHAPE EXPECTED: [{ id, title, type, priority: "high"|"med"|"low", source, due }]
+    // Backend GET /api/initiatives → [{ id, type, title, context, priority, created_at, … }]
+    // priority: "haute"→"high", "moyen"→"med", "basse"→"low" (also accepts English forms)
+    try {
+      const raw = await J.api.get("/api/initiatives");
+      const pMap = { haute: "high", moyen: "med", basse: "low", high: "high", med: "med", low: "low" };
+      return raw.map(i => ({
+        id:       i.id,
+        title:    i.title,
+        type:     i.type || "Action",
+        priority: pMap[String(i.priority || "").toLowerCase()] || "low",
+        source:   i.context ? i.context.slice(0, 40) : "Jarvis",
+        due:      i.created_at ? J.fmt.relTime(i.created_at) : "—",
+      }));
+    } catch (_) { return MOCK_INITIATIVES; }
   }
 
-  // Start clock
-  _updateDashClock();
-  if (dash._clockTimer) clearInterval(dash._clockTimer);
-  dash._clockTimer = setInterval(_updateDashClock, 10000);
-
-  loadDashboardSection(_dash.section || 'initiatives');
-};
-
-window.closeDashboard = function () {
-  const dash = document.getElementById('dashboard-view');
-  if (!dash) return;
-
-  if (dash._clockTimer) { clearInterval(dash._clockTimer); dash._clockTimer = null; }
-  if (_dash.briefTimer) { clearTimeout(_dash.briefTimer); _dash.briefTimer = null; }
-
-  const finish = () => {
-    dash.classList.remove('visible');
-    const restoreView = window._previousView || 'sphere';
-    if (window._setView) window._setView(restoreView);
-    else { window._currentView = restoreView; document.getElementById('dashboard-nav-btn')?.classList.remove('active'); }
-  };
-
-  if (typeof gsap !== 'undefined') {
-    gsap.to(dash, {
-      opacity: 0, scale: 1.02, filter: 'blur(8px)', duration: 0.2, ease: 'power2.in',
-      onComplete: finish,
-    });
-  } else {
-    finish();
+  async function loadMissions() {
+    // SHAPE EXPECTED: [{ id, status: "run"|"wait"|"queue", title, sub, prog, cur, tot, eta }]
+    // Backend GET /api/projects → [{ id, title, status, steps_done, steps_total, … }]
+    // status mapping: "running"/"planning"→"run", "waiting"→"wait", "queued"/"queue"→"queue"
+    // Filters out done/failed/killed projects
+    try {
+      const raw = await J.api.get("/api/projects");
+      const sMap = { running: "run", planning: "run", waiting: "wait", queued: "queue", queue: "queue" };
+      return raw
+        .filter(p => p.status !== "done" && p.status !== "failed" && p.status !== "killed")
+        .map(p => ({
+          id:     p.id ? p.id.slice(0, 6).toUpperCase() : "?",
+          status: sMap[p.status] || "run",
+          title:  p.title || p.instruction || "Mission sans titre",
+          sub:    "agent · " + (p.status || "running"),
+          prog:   p.steps_total > 0 ? p.steps_done / p.steps_total : 0,
+          cur:    p.steps_done || null,
+          tot:    p.steps_total || null,
+          eta:    "—",
+        }));
+    } catch (_) { return MOCK_MISSIONS; }
   }
-};
 
-/* ── Section navigation ─────────────────────────────────────────── */
-window.loadDashboardSection = function (section) {
-  _dash.section = section;
+  async function loadAnalytics() {
+    // SHAPE EXPECTED: { kpis: [{lbl,val,unit,delta,dir,spark}], sources: [...], topVideos: [...] }
+    // Backend GET /api/analytics/jarvis → { sessions, missions, total_tokens, total_cost_usd, top_model }
+    //         GET /api/analytics/youtube → { configured, subscribers, total_views, recent_videos, top_video }
+    // sources array: TODO - no multi-source endpoint yet, keeps mock
+    try {
+      const [jarvis, yt] = await Promise.allSettled([
+        J.api.get("/api/analytics/jarvis?days=30"),
+        J.api.get("/api/analytics/youtube?days=7"),
+      ]);
+      const j = jarvis.status === "fulfilled" ? jarvis.value : null;
+      const y = yt.status === "fulfilled" ? yt.value : null;
 
-  document.querySelectorAll('.dash-nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.section === section);
-  });
+      const kpis = [];
+      if (j) {
+        kpis.push({ lbl: "Sessions 30j",  val: j.sessions || 0,    unit: "",  delta: "—", dir: "up", spark: [0, j.sessions || 0] });
+        kpis.push({ lbl: "Tokens 30j",    val: Math.round((j.total_tokens || 0) / 1000), unit: "K", delta: "—", dir: "up", spark: [0, Math.round((j.total_tokens || 0) / 1000)] });
+        kpis.push({ lbl: "Coût 30j",      val: (j.total_cost_usd || 0).toFixed(2), unit: "$", delta: "—", dir: "up", spark: [0, j.total_cost_usd || 0] });
+      }
+      if (y && y.configured) {
+        kpis.push({ lbl: "Subs YouTube",  val: Math.round((y.subscribers || 0) / 1000 * 10) / 10, unit: "K", delta: "—", dir: "up", spark: [0, y.subscribers || 0] });
+      }
 
-  const main = _dMain();
-  if (!main) return;
+      const topVideos = (y && y.configured && y.recent_videos && y.recent_videos.length)
+        ? y.recent_videos.slice(0, 4).map((v, i) => ({
+            rank:  String(i + 1).padStart(2, "0"),
+            title: v.title || "—",
+            views: J.fmt.num(v.views || 0),
+            chg:   "—",
+          }))
+        : MOCK_TOP;
 
-  const render = () => {
-    switch (section) {
-      case 'initiatives': _renderInitiatives(); break;
-      case 'missions':    _renderDashMissions(); break;
-      case 'domotique':   _renderDomotique(); break;
-      case 'devices':     _renderDevices(); break;
-      case 'analytics':   _renderAnalytics(); break;
-      default:            main.innerHTML = '<div class="dash-empty">Section inconnue.</div>';
+      return { kpis: kpis.length > 0 ? kpis : MOCK_KPIS, sources: MOCK_SOURCES, topVideos };
+    } catch (_) { return { kpis: MOCK_KPIS, sources: MOCK_SOURCES, topVideos: MOCK_TOP }; }
+  }
+
+  async function loadDevices() {
+    // TODO: endpoint /api/devices manquant — retourne mock
+    return MOCK_DEVICES;
+  }
+
+  /* ───────── Render helpers ───────── */
+  function card(opts, children) {
+    const c = el("div", { class: "card" });
+    if (opts.title || opts.right) {
+      c.appendChild(el("div", { class: "card-hd" }, [
+        el("div", {}, [
+          el("div", { class: "card-title", text: opts.title }),
+          opts.sub ? el("div", { class: "card-sub", text: opts.sub }) : null,
+        ]),
+        opts.right || null,
+      ]));
     }
-  };
-
-  if (typeof gsap !== 'undefined') {
-    gsap.to(main, { opacity: 0, duration: 0.12, onComplete: () => {
-      render();
-      gsap.to(main, { opacity: 1, duration: 0.18 });
-    }});
-  } else {
-    render();
+    (Array.isArray(children) ? children : [children]).forEach(ch => ch && c.appendChild(ch));
+    return c;
   }
-};
-
-/* ================================================================
-   SECTION — INITIATIVES
-   ================================================================ */
-async function _renderInitiatives() {
-  const main = _dMain();
-  main.innerHTML = '<div class="dash-loading">CHARGEMENT…</div>';
-
-  // Fetch all data in parallel
-  const [initsResult, projectsResult, consoResult] = await Promise.allSettled([
-    fetch('/api/initiatives').then(r => r.json()),
-    fetch('/api/projects').then(r => r.json()),
-    fetch('/api/conso/session').then(r => r.json()),
-  ]);
-
-  const inits    = initsResult.status === 'fulfilled' ? initsResult.value : [];
-  const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : [];
-  const conso    = consoResult.status === 'fulfilled' ? consoResult.value : {};
-
-  _dash.initiatives = inits;
-  _dash.projects = projects;
-
-  const running = projects.filter(p => p.status === 'running' || p.status === 'planning').length;
-  const costToday = (conso.total_cost_usd || 0).toFixed(2);
-  const totalTokens = (conso.total_tokens || 0).toLocaleString('fr-FR');
-
-  const lastUpdated = _briefLastUpdatedLabel();
-
-  main.innerHTML = `
-    <div class="dash-section-hd">
-      <span class="dash-section-title">Initiatives</span>
-      <span class="dash-section-meta">${lastUpdated}</span>
-    </div>
-
-    <!-- Brief bar -->
-    <div class="brief-bar">
-      <div class="brief-metric" onclick="loadDashboardSection('missions')">
-        <span class="brief-metric-icon">⚙</span>
-        <div class="brief-metric-value">${running}</div>
-        <div class="brief-metric-label">Mission en cours</div>
-      </div>
-      <div class="brief-metric" onclick="loadDashboardSection('missions')">
-        <span class="brief-metric-icon">✓</span>
-        <div class="brief-metric-value">${projects.filter(p=>p.status==='done').length}</div>
-        <div class="brief-metric-label">Terminées</div>
-      </div>
-      <div class="brief-metric">
-        <span class="brief-metric-icon">⚡</span>
-        <div class="brief-metric-value">${inits.length}</div>
-        <div class="brief-metric-label">Initiatives</div>
-      </div>
-      <div class="brief-metric" onclick="loadDashboardSection('analytics')">
-        <span class="brief-metric-icon">💰</span>
-        <div class="brief-metric-value">$${costToday}</div>
-        <div class="brief-metric-label">Coût session</div>
-      </div>
-      <div class="brief-metric" onclick="loadDashboardSection('analytics')">
-        <span class="brief-metric-icon">🧠</span>
-        <div class="brief-metric-value">${totalTokens}</div>
-        <div class="brief-metric-label">Tokens session</div>
-      </div>
-      <div class="brief-metric">
-        <span class="brief-metric-icon">🔮</span>
-        <div class="brief-metric-value">${_proactiveStatus()}</div>
-        <div class="brief-metric-label">Proactif</div>
-      </div>
-    </div>
-
-    <!-- Initiatives list -->
-    <div class="dash-subsection-hd">
-      <span class="dash-subsection-title">INITIATIVES EN ATTENTE (${inits.length})</span>
-      <button class="dash-btn" id="dash-analyze-btn" onclick="_dashRunProactive()">↻ Analyser</button>
-    </div>
-
-    <div class="dash-filter-bar" id="dash-init-filters">
-      ${_initFilterBar(inits)}
-    </div>
-
-    <div id="dash-init-list">
-      ${_renderInitList(inits, _dash.initFilter)}
-    </div>
-
-    ${inits.length === 0 ? `
-    <div class="next-cycle-bar">
-      <div class="next-cycle-label">Prochain cycle proactif dans quelques minutes</div>
-      <div class="next-cycle-progress"><div class="next-cycle-fill" style="width:40%"></div></div>
-    </div>` : ''}
-  `;
-
-  // Schedule next brief refresh in 5 min
-  if (_dash.briefTimer) clearTimeout(_dash.briefTimer);
-  _dash.briefTimer = setTimeout(() => {
-    if (_dash.section === 'initiatives') _renderInitiatives();
-  }, 5 * 60 * 1000);
-}
-
-function _briefLastUpdatedLabel() {
-  const now = new Date();
-  return `mis à jour à ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-}
-
-function _proactiveStatus() {
-  return '●';
-}
-
-function _initFilterBar(inits) {
-  const types = ['all', ...new Set(inits.map(i => i.type || 'autre'))];
-  const counts = {};
-  types.forEach(t => {
-    counts[t] = t === 'all' ? inits.length : inits.filter(i => (i.type||'autre') === t).length;
-  });
-  return types.map(t => `
-    <button class="dash-filter ${_dash.initFilter === t ? 'active' : ''}"
-      onclick="_dashInitFilter('${_dEsc(t)}')">
-      ${t === 'all' ? 'Tous' : t} (${counts[t]})
-    </button>
-  `).join('');
-}
-
-function _renderInitList(inits, filter) {
-  const list = filter === 'all' ? inits : inits.filter(i => (i.type||'autre') === filter);
-  if (!list.length) return '<div class="dash-empty">Aucune initiative en attente.</div>';
-  return list.map(i => _initRow(i)).join('');
-}
-
-function _initRow(i) {
-  const prio = (i.priority || 'moyen').toUpperCase();
-  const dotClass = prio === 'HAUTE' ? 'high' : prio === 'MOYEN' ? 'medium' : 'low';
-  return `
-    <div class="initiative-row" id="init-row-${_dEsc(i.id)}" onclick="_dashToggleInit('${_dEsc(i.id)}')">
-      <span class="init-dot ${dotClass}"></span>
-      <span class="init-type">${_dEsc(i.type || '?')}</span>
-      <span class="init-title">${_dEsc(i.title)}</span>
-      <span class="init-priority ${prio}">${prio}</span>
-      <button class="init-expand-btn" onclick="event.stopPropagation();_dashToggleInit('${_dEsc(i.id)}')">→</button>
-    </div>
-    <div class="initiative-detail" id="init-detail-${_dEsc(i.id)}" style="display:none">
-      <div class="init-context">${_dEsc(i.context || i.reasoning || '')}</div>
-      <div class="init-actions">
-        <button class="init-action-btn approve" onclick="_dashApproveInit('${_dEsc(i.id)}')">✓ Valider</button>
-        <button class="init-action-btn reject"  onclick="_dashRejectInit('${_dEsc(i.id)}')">✕ Rejeter</button>
-      </div>
-    </div>`;
-}
-
-window._dashInitFilter = (f) => {
-  _dash.initFilter = f;
-  document.getElementById('dash-init-filters').innerHTML = _initFilterBar(_dash.initiatives);
-  document.getElementById('dash-init-list').innerHTML = _renderInitList(_dash.initiatives, f);
-};
-
-window._dashToggleInit = (id) => {
-  const detail = document.getElementById('init-detail-' + id);
-  const row = document.getElementById('init-row-' + id);
-  if (!detail) return;
-  const open = detail.style.display !== 'none';
-  detail.style.display = open ? 'none' : 'block';
-  row?.classList.toggle('expanded', !open);
-};
-
-window._dashRunProactive = async () => {
-  const btn = document.getElementById('dash-analyze-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '↻ En cours…'; }
-  try {
-    await fetch('/api/proactive/run', { method: 'POST' });
-    setTimeout(() => { if (_dash.section === 'initiatives') _renderInitiatives(); }, 3000);
-  } catch { /* silent */ } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '↻ Analyser'; }
-  }
-};
-
-window._dashApproveInit = async (id) => {
-  try {
-    await fetch(`/api/initiatives/${id}/approve`, { method: 'POST' });
-    _dash.initiatives = _dash.initiatives.filter(i => i.id !== id);
-    document.getElementById('init-row-' + id)?.remove();
-    document.getElementById('init-detail-' + id)?.remove();
-  } catch { /* silent */ }
-};
-
-window._dashRejectInit = async (id) => {
-  try {
-    await fetch(`/api/initiatives/${id}/reject`, { method: 'POST' });
-    _dash.initiatives = _dash.initiatives.filter(i => i.id !== id);
-    document.getElementById('init-row-' + id)?.remove();
-    document.getElementById('init-detail-' + id)?.remove();
-  } catch { /* silent */ }
-};
-
-/* ================================================================
-   SECTION — MISSIONS
-   ================================================================ */
-async function _renderDashMissions() {
-  const main = _dMain();
-  main.innerHTML = '<div class="dash-loading">CHARGEMENT…</div>';
-  try {
-    const r = await fetch('/api/projects');
-    _dash.projects = await r.json();
-  } catch { _dash.projects = []; }
-  _paintDashMissions();
-}
-
-function _paintDashMissions() {
-  const f = _dash.projFilter;
-  const list = f === 'all' ? _dash.projects : _dash.projects.filter(p => p.status === f);
-  const main = _dMain();
-
-  let html = `
-    <div class="dash-section-hd">
-      <span class="dash-section-title">Missions</span>
-      <button class="dash-btn" onclick="_dashNewMission()">＋ Nouvelle</button>
-    </div>
-    <div class="dash-filter-row">
-      ${['all','running','done','failed'].map(x => `
-        <button class="dash-filter ${f===x?'active':''}" onclick="_dashProjFilter('${x}')">
-          ${x==='all'?'Toutes':x==='running'?'En cours':x.charAt(0).toUpperCase()+x.slice(1)}
-        </button>`).join('')}
-    </div>`;
-
-  if (!list.length) {
-    html += '<div class="dash-empty">AUCUNE MISSION</div>';
-  } else {
-    list.forEach(p => { html += _dashProjCard(p); });
-  }
-  html += `<button class="dash-new-proj-btn" onclick="_dashNewMission()">＋ NOUVELLE MISSION</button>`;
-  main.innerHTML = html;
-}
-
-function _dashProjCard(p) {
-  const pct = p.steps_total > 0 ? Math.round(p.steps_done / p.steps_total * 100) : 0;
-  const fc = p.status === 'done' ? 'done' : p.status === 'failed' ? 'failed' : '';
-  return `
-    <div class="dash-proj-card ${_dEsc(p.status)}" id="dcard-${_dEsc(p.id)}">
-      <div class="dash-proj-hd" onclick="_dashToggleCard('${_dEsc(p.id)}')">
-        <span class="dash-proj-title">${_dEsc(p.title)}</span>
-        <span class="dash-status-badge ${_dEsc(p.status)}">${_dEsc(p.status).toUpperCase()}</span>
-        ${(p.status==='running'||p.status==='planning') ? `
-          <button class="dash-proj-kill" onclick="event.stopPropagation();_dashKill('${_dEsc(p.id)}')">✕</button>
-        ` : ''}
-      </div>
-      <div class="dash-prog-row">
-        <div class="dash-prog-bar"><div class="dash-prog-fill ${fc}" style="width:${pct}%"></div></div>
-        <span class="dash-prog-meta">${p.steps_done}/${p.steps_total}</span>
-      </div>
-      <div class="dash-card-body" id="dbody-${_dEsc(p.id)}" style="display:none">
-        <div class="dash-subsec-hd" onclick="_dashToggleSub('dbsteps-${_dEsc(p.id)}','dbarr-steps-${_dEsc(p.id)}')">
-          <span class="dash-subsec-arrow" id="dbarr-steps-${_dEsc(p.id)}">▶</span>
-          <span class="dash-subsec-lbl">ÉTAPES</span>
-          <span class="dash-subsec-count">${p.steps_done}/${p.steps_total}</span>
-        </div>
-        <div id="dbsteps-${_dEsc(p.id)}" style="display:none"></div>
-        <div class="dash-subsec-hd" onclick="_dashToggleSub('dbfiles-${_dEsc(p.id)}','dbarr-files-${_dEsc(p.id)}')">
-          <span class="dash-subsec-arrow" id="dbarr-files-${_dEsc(p.id)}">▶</span>
-          <span class="dash-subsec-lbl">FICHIERS</span>
-          <span class="dash-subsec-count">${p.files_created}</span>
-        </div>
-        <div id="dbfiles-${_dEsc(p.id)}" style="display:none"></div>
-      </div>
-    </div>`;
-}
-
-window._dashProjFilter = (f) => { _dash.projFilter = f; _paintDashMissions(); };
-window._dashNewMission = () => { window.closeDashboard(); };
-
-window._dashToggleSub = (contentId, arrowId) => {
-  const el = document.getElementById(contentId);
-  const arrow = document.getElementById(arrowId);
-  if (!el) return;
-  const open = el.style.display !== 'none';
-  el.style.display = open ? 'none' : 'block';
-  arrow?.classList.toggle('open', !open);
-};
-
-window._dashToggleCard = async (id) => {
-  const body = document.getElementById('dbody-' + id);
-  if (!body) return;
-  const vis = body.style.display !== 'none';
-  body.style.display = vis ? 'none' : 'block';
-  if (!vis) await _loadDashProjectDetail(id);
-};
-
-async function _loadDashProjectDetail(id) {
-  try {
-    const [dr, fr] = await Promise.allSettled([
-      fetch(`/api/projects/${id}`).then(r => r.json()),
-      fetch(`/api/projects/${id}/files`).then(r => r.json()),
+  function secHd(num, title, display, right) {
+    return el("div", { class: "sec-hd" }, [
+      el("div", { class: "sec-hd-l" }, [
+        el("div", { class: "sec-hd-row" }, [
+          el("span", { class: "sec-hd-num", text: num }),
+          el("span", { class: "sec-hd-title", text: title }),
+        ]),
+        el("span", { class: "sec-hd-disp", text: display }),
+      ]),
+      right ? el("div", { class: "sec-hd-r", text: right }) : null,
     ]);
-    const proj  = dr.status === 'fulfilled' ? dr.value : {};
-    const files = fr.status === 'fulfilled' ? fr.value : [];
-    _renderDashSteps(id, proj.steps || []);
-    _renderDashFiles(id, files);
-  } catch { /**/ }
-}
-
-function _renderDashSteps(id, steps) {
-  const el = document.getElementById('dbsteps-' + id);
-  if (!el) return;
-  if (!steps.length) { el.innerHTML = '<div class="dash-empty">Aucune étape.</div>'; return; }
-  let html = '<div class="dash-steps">';
-  steps.forEach(s => {
-    const ico = DASH_STEP_ICON[s.status] || '○';
-    html += `<div class="dash-step">
-      <span class="dash-step-icon ${_dEsc(s.status)}">${_dEsc(ico)}</span>
-      <div class="dash-step-title ${_dEsc(s.status)}">${_dEsc(s.title || s.id)}</div>
-    </div>`;
-  });
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function _renderDashFiles(id, files) {
-  const el = document.getElementById('dbfiles-' + id);
-  if (!el) return;
-  if (!files.length) { el.innerHTML = '<div class="dash-empty">Aucun fichier.</div>'; return; }
-  let html = '<div class="dash-files">';
-  files.forEach(f => {
-    const name = typeof f === 'string' ? f : (f.path || f.name || String(f));
-    const size = typeof f === 'object' && f.size ? _dFmtSize(f.size) : '';
-    html += `<div class="dash-file-row">
-      <span class="dash-file-ico">${_dFileIcon(name)}</span>
-      <span class="dash-file-name" title="${_dEsc(name)}">${_dEsc(name)}</span>
-      ${size ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(220,232,255,0.3)">${_dEsc(size)}</span>` : ''}
-      <button class="dash-file-open" onclick="_dashOpenFile('${_dEsc(id)}','${_dEsc(name)}')">OUVRIR</button>
-    </div>`;
-  });
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-window._dashKill = async (id) => {
-  if (!confirm('Arrêter cette mission ?')) return;
-  try {
-    await fetch(`/api/projects/${id}/kill`, { method: 'POST' });
-    await _renderDashMissions();
-  } catch { /**/ }
-};
-
-window._dashOpenFile = async (projId, path) => {
-  const modal = document.getElementById('dash-file-modal');
-  if (!modal) return;
-  document.getElementById('dash-file-modal-name').textContent = path;
-  document.getElementById('dash-file-modal-body').innerHTML = '<div class="dash-loading">CHARGEMENT…</div>';
-  modal.classList.add('open');
-  try {
-    const r = await fetch(`/api/projects/${projId}/files/${path}`);
-    const d = await r.json();
-    const ext = (path.split('.').pop() || '').toLowerCase();
-    const isCode = ['py','js','ts','json','yaml','yml','sh','css','html','md','txt'].includes(ext);
-    document.getElementById('dash-file-modal-body').innerHTML =
-      isCode ? `<pre><code>${_dEsc(d.content||'')}</code></pre>` : `<p style="white-space:pre-wrap">${_dEsc(d.content||'')}</p>`;
-  } catch(e) {
-    document.getElementById('dash-file-modal-body').innerHTML = `<div class="dash-empty">Erreur : ${_dEsc(String(e))}</div>`;
-  }
-};
-
-window._dashCloseFileModal = () => {
-  document.getElementById('dash-file-modal')?.classList.remove('open');
-};
-
-/* ================================================================
-   SECTION — DOMOTIQUE (placeholder)
-   ================================================================ */
-function _renderDomotique() {
-  _dMain().innerHTML = `
-    <div class="dash-section-hd">
-      <span class="dash-section-title">Domotique</span>
-    </div>
-    <div class="dash-placeholder">
-      <div class="dash-placeholder-icon">🏠</div>
-      <div class="dash-placeholder-title">Domotique non configurée</div>
-      <div class="dash-placeholder-desc">
-        Connecte Home Assistant pour contrôler tes lumières,
-        température et appareils depuis Jarvis.
-      </div>
-      <button class="dash-placeholder-btn" onclick="window.openSettings()">Configurer →</button>
-    </div>`;
-}
-
-/* ================================================================
-   SECTION — DEVICES (placeholder)
-   ================================================================ */
-function _renderDevices() {
-  _dMain().innerHTML = `
-    <div class="dash-section-hd">
-      <span class="dash-section-title">Devices</span>
-    </div>
-    <div class="dash-placeholder">
-      <div class="dash-placeholder-icon">🤖</div>
-      <div class="dash-placeholder-title">Aucun device connecté</div>
-      <div class="dash-placeholder-desc">
-        Connecte des devices physiques (bras robotisé Alfred, ESP32, lunettes)
-        pour les piloter depuis Jarvis.
-      </div>
-      <button class="dash-placeholder-btn" onclick="window.openSettings()">En savoir plus →</button>
-    </div>`;
-}
-
-/* ================================================================
-   SECTION — ANALYTICS
-   ================================================================ */
-async function _renderAnalytics() {
-  const main = _dMain();
-  main.innerHTML = '<div class="dash-loading">CHARGEMENT…</div>';
-
-  const [jarvisResult, ytResult] = await Promise.allSettled([
-    fetch(`/api/analytics/jarvis?days=30`).then(r => r.json()),
-    fetch(`/api/analytics/youtube?days=7`).then(r => r.json()),
-  ]);
-
-  const jarvis = jarvisResult.status === 'fulfilled' ? jarvisResult.value : null;
-  const yt     = ytResult.status === 'fulfilled' ? ytResult.value : null;
-
-  const fNum = (n) => (n || 0).toLocaleString('fr-FR');
-
-  // YouTube block
-  let ytHtml = '';
-  if (!yt || !yt.configured) {
-    ytHtml = `
-      <div class="analytics-not-configured">
-        <span class="analytics-warn-icon">⚠</span>
-        <span class="analytics-not-configured-text">API non configurée (YOUTUBE_API_KEY)</span>
-        <button class="analytics-config-link" onclick="window.openSettings()">Configurer →</button>
-      </div>`;
-  } else {
-    const topTitle = yt.top_video ? _dEsc(yt.top_video.title) : 'Non disponible';
-    const topViews = yt.top_video ? fNum(yt.top_video.views) + ' vues' : '—';
-    ytHtml = `
-      <div class="analytics-grid">
-        <div class="analytics-row">
-          <span class="analytics-label">Abonnés</span>
-          <span class="analytics-value">${fNum(yt.subscribers)}</span>
-        </div>
-        <div class="analytics-row">
-          <span class="analytics-label">Vues totales</span>
-          <span class="analytics-value">${fNum(yt.total_views)}</span>
-        </div>
-        <div class="analytics-row" style="grid-column:1/-1">
-          <span class="analytics-label">Vidéo top</span>
-          <span style="font-family:'DM Mono',monospace;font-size:11px;color:#DCE8FF">${topTitle} · ${topViews}</span>
-        </div>
-      </div>`;
   }
 
-  // Jarvis stats block
-  let jarvisHtml = '<div class="dash-empty">Données indisponibles.</div>';
-  if (jarvis) {
-    jarvisHtml = `
-      <div class="analytics-grid">
-        <div class="analytics-row">
-          <span class="analytics-label">Conversations (30j)</span>
-          <span class="analytics-value">${fNum(jarvis.sessions)}</span>
-        </div>
-        <div class="analytics-row">
-          <span class="analytics-label">Missions lancées</span>
-          <span class="analytics-value">${fNum(jarvis.missions)}</span>
-        </div>
-        <div class="analytics-row">
-          <span class="analytics-label">Tokens utilisés</span>
-          <span class="analytics-value">${fNum(jarvis.total_tokens)}</span>
-        </div>
-        <div class="analytics-row">
-          <span class="analytics-label">Coût total</span>
-          <span class="analytics-value" style="color:#C9A84C">$${(jarvis.total_cost_usd||0).toFixed(4)}</span>
-        </div>
-        <div class="analytics-row" style="grid-column:1/-1">
-          <span class="analytics-label">Modèle principal</span>
-          <span style="font-family:'DM Mono',monospace;font-size:11px;color:#DCE8FF">${_dEsc(jarvis.top_model)}</span>
-        </div>
-      </div>`;
+  const PRI_BADGE = {
+    high: { cls: "badge--gold",   label: "P1" },
+    med:  { cls: "badge--accent", label: "P2" },
+    low:  { cls: "badge--solid",  label: "P3" },
+  };
+  const STATUS_LBL = { run: "Running", wait: "Waiting", queue: "Queued" };
+
+  /* ───────── Section renderers ───────── */
+  function renderInitiatives(root, data) {
+    root.innerHTML = "";
+    root.appendChild(secHd("01", "Initiatives", "Ce qui mérite ton attention", "Mis à jour il y a 4 min"));
+    const filters = el("div", { style: { display: "flex", gap: "8px", alignItems: "center" } }, [
+      el("span", { class: "badge badge--solid", text: "All" }),
+      el("span", { class: "badge", text: "Action" }),
+      el("span", { class: "badge", text: "Stratégie" }),
+      el("button", { class: "btn-ghost", text: "+ New ⌘N" }),
+    ]);
+    const list = el("div");
+    data.forEach((it, i) => {
+      const pri = PRI_BADGE[it.priority] || PRI_BADGE.low;
+      list.appendChild(el("div", { class: "init-row fx-focus" }, [
+        el("div", { class: "init-num", text: String(i + 1).padStart(2, "0") }),
+        el("div", {}, [
+          el("div", { class: "init-title", text: it.title }),
+          el("div", { class: "init-meta" }, [
+            el("span", { text: it.id }),
+            el("span", { style: { color: "var(--fg-4)" }, text: "·" }),
+            el("span", { text: it.source }),
+            el("span", { style: { color: "var(--fg-4)" }, text: "·" }),
+            el("span", { text: "Échéance · " + it.due }),
+          ]),
+        ]),
+        el("div", { class: "init-badges" }, [
+          el("span", { class: "badge " + pri.cls }, [
+            el("span", { class: "pri-dot" }),
+            document.createTextNode(pri.label),
+          ]),
+          el("span", { class: "badge badge--solid", text: it.type }),
+        ]),
+        el("div", { class: "init-arrow", text: "→" }),
+      ]));
+    });
+    root.appendChild(card({ title: "Initiatives", sub: data.length + " active · proposées par l'agent · triées par priorité", right: filters }, list));
   }
 
-  main.innerHTML = `
-    <div class="dash-section-hd">
-      <span class="dash-section-title">Analytics</span>
-    </div>
+  function renderMissions(root, data) {
+    root.innerHTML = "";
+    root.appendChild(secHd("02", "Missions", "Ce que l'agent fait pour toi", data.length + " en cours · 18 terminées · 7j"));
+    const list = el("div");
+    data.forEach(m => {
+      list.appendChild(el("div", { class: "mission" }, [
+        el("div", { class: "m-id" }, [
+          document.createTextNode(m.id),
+          el("div", { class: "m-id-status " + m.status, text: STATUS_LBL[m.status] }),
+        ]),
+        el("div", {}, [
+          el("div", { class: "m-title", text: m.title }),
+          el("div", { class: "m-sub", text: m.sub }),
+        ]),
+        el("div", { class: "m-prog" }, [
+          el("div", { class: "m-prog-bar" }, [el("div", { style: { width: (m.prog * 100) + "%" } })]),
+          el("div", { class: "m-prog-meta" }, [
+            el("span", { text: Math.round(m.prog * 100) + "%" }),
+            el("span", { text: m.cur != null ? (m.cur + " / " + m.tot) : "—" }),
+          ]),
+        ]),
+        el("div", { class: "m-eta" }, [
+          el("div", { class: "m-eta-lbl", text: "ETA" }),
+          document.createTextNode(m.eta),
+        ]),
+      ]));
+    });
+    root.appendChild(card({
+      title: "Missions",
+      sub: data.length + " en cours · agent autonomous",
+      right: el("button", { class: "btn-ghost", text: "Voir tout · 23" }),
+    }, list));
+  }
 
-    <div class="analytics-block">
-      <div class="analytics-block-title">YOUTUBE — BarthH95</div>
-      ${ytHtml}
-    </div>
+  function renderDomotique(root) {
+    root.innerHTML = "";
+    root.appendChild(secHd("03", "Domotique", "Maison", "0 device"));
+    root.appendChild(el("div", { class: "placeholder" }, [
+      el("div", {}, [
+        el("div", { class: "ph-eyebrow", text: "Domotique · pas encore connectée" }),
+        el("div", { class: "ph-title",   text: "Aucun device" }),
+        el("div", { class: "ph-body",    text: "Connecte HomeKit, Matter ou Home Assistant pour piloter lumières, capteurs et thermostats depuis Jarvis." }),
+        el("div", { style: { marginTop: "18px", display: "flex", gap: "8px", justifyContent: "center" } }, [
+          el("button", { class: "btn-accent", text: "Connecter un hub" }),
+          el("button", { class: "tb-btn",     text: "Documentation" }),
+        ]),
+      ]),
+    ]));
+  }
 
-    <div class="analytics-block">
-      <div class="analytics-block-title">JARVIS — Activité (30 jours)</div>
-      ${jarvisHtml}
-    </div>`;
-}
+  function renderDevices(root, data) {
+    root.innerHTML = "";
+    root.appendChild(secHd("04", "Devices", "Tes appareils", data.filter(d => d.status === "Active").length + " actifs · " + data.filter(d => d.status === "Idle").length + " idle"));
+    const grid = el("div", { style: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" } });
+    data.forEach(d => {
+      const splitVal = (s) => {
+        const parts = String(s).split(" ");
+        return [parts[0], parts.slice(1).join(" ")];
+      };
+      const [aV, aU] = splitVal(d.a[1]);
+      const [bV, bU] = splitVal(d.b[1]);
+      grid.appendChild(el("div", { class: "dev-card" }, [
+        el("div", { class: "dev-head" }, [
+          el("div", {}, [
+            el("div", { class: "dev-name", text: d.name }),
+            el("div", { class: "dev-id",   text: d.id }),
+          ]),
+          el("div", {}, [
+            el("span", {
+              class: "t-mono",
+              style: { fontSize: "10px", color: d.col, letterSpacing: ".12em", textTransform: "uppercase" },
+              text: "● " + d.status,
+            }),
+          ]),
+        ]),
+        el("div", { class: "dev-meters" }, [
+          el("div", { class: "dev-meter" }, [
+            el("div", { class: "lbl", text: d.a[0] }),
+            el("div", { class: "val" }, [document.createTextNode(aV), aU ? el("span", { class: "u", text: aU }) : null]),
+          ]),
+          el("div", { class: "dev-meter" }, [
+            el("div", { class: "lbl", text: d.b[0] }),
+            el("div", { class: "val" }, [document.createTextNode(bV), bU ? el("span", { class: "u", text: bU }) : null]),
+          ]),
+        ]),
+      ]));
+    });
+    root.appendChild(grid);
+  }
 
-/* ================================================================
-   INIT
-   ================================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  // File modal backdrop click
-  document.getElementById('dash-file-modal')?.addEventListener('click', e => {
-    if (e.target.id === 'dash-file-modal') window._dashCloseFileModal();
-  });
+  function renderAnalytics(root, data) {
+    root.innerHTML = "";
+    root.appendChild(secHd("05", "Analytics", "Ce qui se passe en ce moment", "multi-source · 7j"));
 
-  // Escape closes dashboard or file modal
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (document.getElementById('dash-file-modal')?.classList.contains('open')) {
-        window._dashCloseFileModal();
-        return;
+    // KPIs
+    const kpiGrid = el("div", { class: "kpi-grid" });
+    data.kpis.forEach(k => {
+      const sparkSlot = el("div");
+      sparkSlot.appendChild(J.sparkline(k.spark, { width: 180, height: 28, color: k.dir === "up" ? "var(--green)" : "var(--accent)" }));
+      kpiGrid.appendChild(el("div", {
+        class: "kpi",
+        dataset: { inspect: k.lbl + " · " + k.delta + " vs 7j · src: " + (k.lbl.indexOf("Latence") >= 0 ? "edge ping" : "agg. multi-source") },
+      }, [
+        el("div", { class: "kpi-lbl" }, [
+          el("span", { text: k.lbl }),
+          el("span", { class: "kpi-delta " + k.dir, text: k.delta }),
+        ]),
+        el("div", { class: "kpi-val" }, [
+          el("span", { class: "v", text: J.fmt.num(k.val) }),
+          el("span", { class: "u", text: k.unit }),
+        ]),
+        sparkSlot,
+      ]));
+    });
+    root.appendChild(kpiGrid);
+
+    // Multi-source + Top videos
+    const twoCol = el("div", { style: { display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "18px", marginTop: "18px" } });
+
+    const srcList = el("div");
+    data.sources.forEach(s => {
+      srcList.appendChild(el("div", { class: "src-row" }, [
+        el("div", { class: "src-name" }, [
+          el("div", { class: "src-glyph", text: s.glyph }),
+          el("span", { text: s.name }),
+        ]),
+        el("div", { class: "src-bar" }, [el("div", { style: { width: (s.w * 100) + "%", background: s.color } })]),
+        el("div", { class: "src-num", text: s.num }),
+        el("div", { class: "src-delta", style: { color: s.dir === "up" ? "var(--green)" : "var(--red)" }, text: s.delta }),
+      ]));
+    });
+    twoCol.appendChild(card({ title: "Multi-source", sub: "reach · 7 derniers jours", right: el("button", { class: "btn-ghost", text: "Période · 7j ▾" }) }, srcList));
+
+    const topList = el("div");
+    data.topVideos.forEach((v, i) => {
+      topList.appendChild(el("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "32px 1fr 80px 60px",
+          padding: "13px 0",
+          borderTop: i ? "1px solid var(--line-1)" : "0",
+          alignItems: "center", gap: "14px", fontSize: "12.5px",
+        },
+      }, [
+        el("span", { class: "t-mono", style: { color: "var(--fg-3)" }, text: v.rank }),
+        el("span", { style: { color: "var(--fg-0)" }, text: v.title }),
+        el("span", { class: "t-mono", style: { textAlign: "right", color: "var(--fg-1)" }, text: v.views }),
+        el("span", { class: "t-mono", style: { textAlign: "right", color: v.chg.indexOf("−") === 0 ? "var(--red)" : "var(--green)", fontSize: "10.5px" }, text: v.chg }),
+      ]));
+    });
+    twoCol.appendChild(card({ title: "Top contenus", sub: "YouTube · 30j" }, topList));
+
+    root.appendChild(twoCol);
+  }
+
+  /* ───────── App state + routing ───────── */
+  const state = {
+    active: "initiatives",
+    sections: [
+      { id: "initiatives", label: "Initiatives", meta: "6" },
+      { id: "missions",    label: "Missions",    meta: "5" },
+      { id: "domotique",   label: "Domotique",   meta: "—" },
+      { id: "devices",     label: "Devices",     meta: "4" },
+      { id: "analytics",   label: "Analytics",   meta: "7j" },
+    ],
+  };
+
+  function mountSidebar() {
+    J.mountSidebar({
+      activeId: state.active,
+      onNav: (id) => { state.active = id; renderActive(); refreshSidebar(); },
+      sections: [
+        { label: "Control", items: state.sections },
+      ],
+      footer: { spend: "$3.42", cpu: "14%", ramPct: 0.65 },
+    });
+  }
+  function refreshSidebar() {
+    document.querySelectorAll(".sb-item").forEach(b => {
+      b.classList.toggle("is-on", b.dataset.id === state.active);
+    });
+  }
+
+  async function renderActive() {
+    const root = document.getElementById("page-root");
+    root.innerHTML = '<div class="surface"><div class="j-loading">Chargement…</div></div>';
+    const surface = el("section", { class: "surface page-in", dataset: { screenLabel: "dashboard-" + state.active } });
+
+    try {
+      switch (state.active) {
+        case "initiatives": renderInitiatives(surface, await loadInitiatives()); break;
+        case "missions":    renderMissions(surface, await loadMissions()); break;
+        case "domotique":   renderDomotique(surface); break;
+        case "devices":     renderDevices(surface, await loadDevices()); break;
+        case "analytics":   renderAnalytics(surface, await loadAnalytics()); break;
       }
-      if (window._currentView === 'dashboard') {
-        window.closeDashboard();
-      }
+    } catch (err) {
+      surface.appendChild(el("div", { class: "j-empty", text: "Erreur de chargement : " + err.message }));
     }
-  });
+    root.innerHTML = "";
+    root.appendChild(surface);
+  }
 
-  // WS bridge — live project updates
-  window.addEventListener('jarvis:ws', (e) => {
-    const msg = e.detail;
-    if (!msg) return;
-    const t = msg.type;
-    if (['project_created','project_update','project_done','project_event'].includes(t)) {
-      const proj = msg.project || msg;
-      if (proj && proj.id) {
-        const idx = _dash.projects.findIndex(p => p.id === proj.id);
-        if (idx >= 0) Object.assign(_dash.projects[idx], proj);
-        else _dash.projects.unshift(proj);
-        if (_dash.section === 'missions' && document.getElementById('dashboard-view')?.classList.contains('visible')) {
-          _paintDashMissions();
-        }
-      }
-    }
-  });
-});
+  /* ───────── Boot ───────── */
+  function registerCommands() {
+    J.registerCommands([
+      // Navigation (no slash)
+      { kind: "nav",   group: "Aller à", title: "Initiatives",  glyph: "01", run: () => { state.active = "initiatives"; renderActive(); refreshSidebar(); } },
+      { kind: "nav",   group: "Aller à", title: "Missions",     glyph: "02", run: () => { state.active = "missions";    renderActive(); refreshSidebar(); } },
+      { kind: "nav",   group: "Aller à", title: "Domotique",    glyph: "03", run: () => { state.active = "domotique";   renderActive(); refreshSidebar(); } },
+      { kind: "nav",   group: "Aller à", title: "Devices",      glyph: "04", run: () => { state.active = "devices";     renderActive(); refreshSidebar(); } },
+      { kind: "nav",   group: "Aller à", title: "Analytics",    glyph: "05", run: () => { state.active = "analytics";   renderActive(); refreshSidebar(); } },
+      { kind: "nav",   group: "Pages",   title: "Système",      glyph: "→",  sub: "tools, mémoire, conso, params", run: () => { window.location.href = "/settings"; } },
+      // Slash commands (>)
+      { kind: "slash", group: "Commandes", title: "restart",  glyph: ">", sub: "redémarre le runtime agent",  run: () => J.notify({ kind: "warn",   text: "Runtime · restart envoyé" }) },
+      { kind: "slash", group: "Commandes", title: "logs",     glyph: ">", sub: "ouvre les logs récents",       run: () => J.notify({ kind: "info",   text: "Logs · ouverture…" }) },
+      { kind: "slash", group: "Commandes", title: "spend",    glyph: ">", sub: "dépense aujourd'hui",          run: () => J.notify({ kind: "info",   text: "Spend · $3.42 aujourd'hui" }) },
+      { kind: "slash", group: "Commandes", title: "memo",     glyph: ">", sub: "ajoute un mémo rapide",        run: () => J.notify({ kind: "success",text: "Memo · enregistré" }) },
+      { kind: "slash", group: "Commandes", title: "calm",     glyph: ">", sub: "mode calme (focus)",           run: () => document.body.dataset.mode = "calm" },
+      { kind: "slash", group: "Commandes", title: "control",  glyph: ">", sub: "mode control (default)",       run: () => document.body.dataset.mode = "control" },
+    ]);
+  }
+
+  function boot() {
+    J.mountAtmosphere();
+    mountSidebar();
+    J.mountTopbar({
+      pageTitle: "Dashboard",
+      crumb: "/ control",
+      onAsk: () => { J.openCmdK(); setTimeout(() => { document.querySelector(".cmdk-input").value = "> ask "; document.querySelector(".cmdk-input").dispatchEvent(new Event("input")); }, 50); },
+    });
+    J.mountBottomNav({ active: "control" });
+    registerCommands();
+    renderActive();
+
+    // Demo notification
+    setTimeout(() => J.notify({ kind: "success", text: "Mission M·207 — indexation à 70 %" }), 4000);
+  }
+  document.addEventListener("DOMContentLoaded", boot);
+})();

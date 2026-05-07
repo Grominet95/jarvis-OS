@@ -33,16 +33,54 @@ async def command_center_ui() -> FileResponse:
     return FileResponse("ui/static/command.html")
 
 
-@router.get("/settings", include_in_schema=False)
-async def settings_ui() -> Response:
-    from pathlib import Path
+def _versioned_html(html_path: Path, assets: list[tuple[str, str]]) -> str:
+    """Inject cache-busting ?v=<mtime> into HTML asset references."""
+    from fastapi.responses import Response as FastResponse  # noqa: F401 (used by callers)
+    content = html_path.read_text(encoding="utf-8")
+    for src_attr, asset_path in assets:
+        try:
+            v = int(Path(asset_path).stat().st_mtime)
+            # href="…" or src="…" without existing ?v=
+            import re
+            content = re.sub(
+                r'((?:href|src)=["\'])(' + re.escape(src_attr) + r')(["\'])',
+                lambda m: m.group(1) + m.group(2) + "?v=" + str(v) + m.group(3),
+                content,
+            )
+        except OSError:
+            pass
+    return content
+
+
+@router.get("/dashboard", include_in_schema=False)
+async def dashboard_ui():
     from fastapi.responses import Response as FastResponse
-    html_path = Path("ui/static/settings.html")
-    css_v = int(Path("ui/static/settings.css").stat().st_mtime)
-    js_v  = int(Path("ui/static/settings.js").stat().st_mtime)
-    content = html_path.read_text()
-    content = content.replace('href="/settings.css"', f'href="/settings.css?v={css_v}"')
-    content = content.replace('src="/settings.js"', f'src="/settings.js?v={js_v}"')
+    content = _versioned_html(
+        Path("ui/static/dashboard.html"),
+        [
+            ("/_shared.css",    "ui/static/_shared.css"),
+            ("/dashboard.css",  "ui/static/dashboard.css"),
+            ("/_shared.js",     "ui/static/_shared.js"),
+            ("/dashboard.js",   "ui/static/dashboard.js"),
+        ],
+    )
+    return FastResponse(content=content, media_type="text/html",
+                        headers={"Cache-Control": "no-store"})
+
+
+@router.get("/settings", include_in_schema=False)
+async def settings_ui():
+    from fastapi.responses import Response as FastResponse
+    content = _versioned_html(
+        Path("ui/static/settings.html"),
+        [
+            ("/_shared.css",          "ui/static/_shared.css"),
+            ("/settings.css",         "ui/static/settings.css"),
+            ("/_shared.js",           "ui/static/_shared.js"),
+            ("/settings-charts.js",   "ui/static/settings-charts.js"),
+            ("/settings.js",          "ui/static/settings.js"),
+        ],
+    )
     return FastResponse(content=content, media_type="text/html",
                         headers={"Cache-Control": "no-store"})
 
