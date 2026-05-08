@@ -77,39 +77,11 @@
   }
 
   async function loadAnalytics() {
-    // SHAPE EXPECTED: { kpis: [{lbl,val,unit,delta,dir,spark}], sources: [...], topVideos: [...] }
-    // Backend GET /api/analytics/jarvis → { sessions, missions, total_tokens, total_cost_usd, top_model }
-    //         GET /api/analytics/youtube → { configured, subscribers, total_views, recent_videos, top_video }
-    // sources array: TODO - no multi-source endpoint yet, keeps mock
-    try {
-      const [jarvis, yt] = await Promise.allSettled([
-        J.api.get("/api/analytics/jarvis?days=30"),
-        J.api.get("/api/analytics/youtube?days=7"),
-      ]);
-      const j = jarvis.status === "fulfilled" ? jarvis.value : null;
-      const y = yt.status === "fulfilled" ? yt.value : null;
-
-      const kpis = [];
-      if (j) {
-        kpis.push({ lbl: "Sessions 30j",  val: j.sessions || 0,    unit: "",  delta: "—", dir: "up", spark: [0, j.sessions || 0] });
-        kpis.push({ lbl: "Tokens 30j",    val: Math.round((j.total_tokens || 0) / 1000), unit: "K", delta: "—", dir: "up", spark: [0, Math.round((j.total_tokens || 0) / 1000)] });
-        kpis.push({ lbl: "Coût 30j",      val: (j.total_cost_usd || 0).toFixed(2), unit: "$", delta: "—", dir: "up", spark: [0, j.total_cost_usd || 0] });
-      }
-      if (y && y.configured) {
-        kpis.push({ lbl: "Subs YouTube",  val: Math.round((y.subscribers || 0) / 1000 * 10) / 10, unit: "K", delta: "—", dir: "up", spark: [0, y.subscribers || 0] });
-      }
-
-      const topVideos = (y && y.configured && y.recent_videos && y.recent_videos.length)
-        ? y.recent_videos.slice(0, 4).map((v, i) => ({
-            rank:  String(i + 1).padStart(2, "0"),
-            title: v.title || "—",
-            views: J.fmt.num(v.views || 0),
-            chg:   "—",
-          }))
-        : MOCK_TOP;
-
-      return { kpis: kpis.length > 0 ? kpis : MOCK_KPIS, sources: MOCK_SOURCES, topVideos };
-    } catch (_) { return { kpis: MOCK_KPIS, sources: MOCK_SOURCES, topVideos: MOCK_TOP }; }
+    const [activeRes, dataRes] = await Promise.all([
+      J.api.get("/api/analytics/active"),
+      J.api.get("/api/analytics/data"),
+    ]);
+    return { active: activeRes.widgets || [], data: dataRes.widgets || {} };
   }
 
   async function loadDevices() {
@@ -303,70 +275,343 @@
     root.appendChild(grid);
   }
 
-  function renderAnalytics(root, data) {
+  /* ───────── Analytics widget system ───────── */
+
+  function renderAnalytics(root, { active, data }) {
     root.innerHTML = "";
-    root.appendChild(secHd("05", "Analytics", "Ce qui se passe en ce moment", "multi-source · 7j"));
 
-    // KPIs
-    const kpiGrid = el("div", { class: "kpi-grid" });
-    data.kpis.forEach(k => {
-      const sparkSlot = el("div");
-      sparkSlot.appendChild(J.sparkline(k.spark, { width: 180, height: 28, color: k.dir === "up" ? "var(--green)" : "var(--accent)" }));
-      kpiGrid.appendChild(el("div", {
-        class: "kpi",
-        dataset: { inspect: k.lbl + " · " + k.delta + " vs 7j · src: " + (k.lbl.indexOf("Latence") >= 0 ? "edge ping" : "agg. multi-source") },
-      }, [
-        el("div", { class: "kpi-lbl" }, [
-          el("span", { text: k.lbl }),
-          el("span", { class: "kpi-delta " + k.dir, text: k.delta }),
+    const hd = el("div", { class: "sec-hd" }, [
+      el("div", { class: "sec-hd-l" }, [
+        el("div", { class: "sec-hd-row" }, [
+          el("span", { class: "sec-hd-num",   text: "05" }),
+          el("span", { class: "sec-hd-title", text: "Analytics" }),
         ]),
-        el("div", { class: "kpi-val" }, [
-          el("span", { class: "v", text: J.fmt.num(k.val) }),
-          el("span", { class: "u", text: k.unit }),
-        ]),
-        sparkSlot,
-      ]));
-    });
-    root.appendChild(kpiGrid);
+        el("span", { class: "sec-hd-disp", text: "Ce qui se passe en ce moment" }),
+      ]),
+      el("div", { class: "sec-hd-r", style: { display: "flex", gap: "8px", alignItems: "center" } }, [
+        el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--fg-3)" }, text: "multi-source · 7j" }),
+        el("button", { class: "btn-ghost", onclick: openAddWidgetModal, text: "+ Ajouter" }),
+        el("button", { class: "btn-ghost", onclick: refreshAnalyticsView, text: "↻" }),
+      ]),
+    ]);
+    root.appendChild(hd);
 
-    // Multi-source + Top videos
-    const twoCol = el("div", { style: { display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "18px", marginTop: "18px" } });
+    const grid = el("div", { class: "analytics-grid" });
+    if (!active.length) {
+      grid.appendChild(el("div", { class: "j-empty", style: { gridColumn: "span 4" }, text: "Aucun widget actif — cliquer + Ajouter pour commencer." }));
+    } else {
+      active.forEach(manifest => grid.appendChild(renderWidget(manifest, data[manifest.id])));
+    }
+    root.appendChild(grid);
 
-    const srcList = el("div");
-    data.sources.forEach(s => {
-      srcList.appendChild(el("div", { class: "src-row" }, [
-        el("div", { class: "src-name" }, [
-          el("div", { class: "src-glyph", text: s.glyph }),
-          el("span", { text: s.name }),
-        ]),
-        el("div", { class: "src-bar" }, [el("div", { style: { width: (s.w * 100) + "%", background: s.color } })]),
-        el("div", { class: "src-num", text: s.num }),
-        el("div", { class: "src-delta", style: { color: s.dir === "up" ? "var(--green)" : "var(--red)" }, text: s.delta }),
-      ]));
-    });
-    twoCol.appendChild(card({ title: "Multi-source", sub: "reach · 7 derniers jours", right: el("button", { class: "btn-ghost", text: "Période · 7j ▾" }) }, srcList));
-
-    const topList = el("div");
-    data.topVideos.forEach((v, i) => {
-      topList.appendChild(el("div", {
-        style: {
-          display: "grid",
-          gridTemplateColumns: "32px 1fr 80px 60px",
-          padding: "13px 0",
-          borderTop: i ? "1px solid var(--line-1)" : "0",
-          alignItems: "center", gap: "14px", fontSize: "12.5px",
-        },
-      }, [
-        el("span", { class: "t-mono", style: { color: "var(--fg-3)" }, text: v.rank }),
-        el("span", { style: { color: "var(--fg-0)" }, text: v.title }),
-        el("span", { class: "t-mono", style: { textAlign: "right", color: "var(--fg-1)" }, text: v.views }),
-        el("span", { class: "t-mono", style: { textAlign: "right", color: v.chg.indexOf("−") === 0 ? "var(--red)" : "var(--green)", fontSize: "10.5px" }, text: v.chg }),
-      ]));
-    });
-    twoCol.appendChild(card({ title: "Top contenus", sub: "YouTube · 30j" }, topList));
-
-    root.appendChild(twoCol);
+    clearTimeout(window._analyticsTimer);
+    window._analyticsTimer = setTimeout(refreshAnalyticsView, 5 * 60 * 1000);
   }
+
+  async function refreshAnalyticsView() {
+    if (state.active === "analytics") renderActive();
+  }
+
+  function renderWidget(manifest, wd) {
+    const isNative = manifest.requires_env.length === 0;
+    const div = el("div", { class: "widget widget-" + manifest.size });
+    div.appendChild(el("div", { class: "widget-header" }, [
+      el("div",  { class: "widget-icon",  text: manifest.icon }),
+      el("span", { class: "widget-label", text: manifest.label }),
+      isNative ? null : el("button", { class: "widget-remove", onclick: () => removeWidget(manifest.id), text: "×" }),
+    ]));
+    if (!wd || !wd.success) {
+      div.appendChild(renderWidgetError(manifest, wd && wd.error));
+      return div;
+    }
+    const body = el("div", { class: "widget-body" });
+    const renderers = { jarvis_stats: renderJarvisStats, conso: renderConso, youtube: renderYouTube, github: renderGitHub, discord: renderDiscord };
+    if (renderers[manifest.id]) renderers[manifest.id](body, wd.data);
+    div.appendChild(body);
+    return div;
+  }
+
+  function renderWidgetError(manifest, error) {
+    const div = el("div", { class: "widget-error" });
+    div.appendChild(el("span", { text: "⚠ " + (error || "Erreur de chargement") }));
+    if (manifest.requires_env.length) {
+      div.appendChild(el("span", { class: "widget-config-hint", text: "Configurer dans Système → Outils → " + manifest.label }));
+    }
+    return div;
+  }
+
+  function renderJarvisStats(body, d) {
+    const row = el("div", { class: "widget-metrics" });
+    [
+      { lbl: "Sessions (7j)",    val: d.sessions_7d },
+      { lbl: "Missions",         val: d.missions_total },
+      { lbl: "Coût aujourd'hui", val: "$" + d.cost_today },
+      { lbl: "Tokens",           val: J.fmt.num(d.tokens_today) },
+    ].forEach(m => row.appendChild(el("div", { class: "widget-metric" }, [
+      el("div", { class: "widget-metric-lbl", text: m.lbl }),
+      el("div", { class: "widget-metric-val", text: String(m.val) }),
+    ])));
+    body.appendChild(row);
+  }
+
+  function renderConso(body, d) {
+    body.appendChild(el("div", { class: "widget-conso-totals" }, [
+      el("span", { text: "Coût 7j : $" + d.total_7d }),
+      el("span", { text: "Total 30j : $" + d.total_30d }),
+    ]));
+    const days7 = Object.entries(d.daily || {}).slice(0, 7).reverse();
+    const maxCost = Math.max(...days7.map(([, v]) => v.cost), 0.0001);
+    const MAX_PX = 48;
+    const bars = el("div", { class: "widget-bars" });
+    days7.forEach(([date, v]) => {
+      const px = Math.max(2, Math.round((v.cost / maxCost) * MAX_PX));
+      bars.appendChild(el("div", { class: "widget-bar-col" }, [
+        el("div", { class: "widget-bar", style: { height: px + "px" } }),
+        el("div", { class: "widget-bar-lbl", text: date.slice(5) }),
+      ]));
+    });
+    body.appendChild(bars);
+  }
+
+  function renderYouTube(body, d) {
+    const row = el("div", { class: "widget-metrics" });
+    [
+      { lbl: "Abonnés",     val: J.fmt.num(d.subscribers) },
+      { lbl: "Vues totales",val: J.fmt.num(d.total_views) },
+      { lbl: "Vidéos",      val: d.video_count },
+    ].forEach(m => row.appendChild(el("div", { class: "widget-metric" }, [
+      el("div", { class: "widget-metric-lbl", text: m.lbl }),
+      el("div", { class: "widget-metric-val", text: String(m.val) }),
+    ])));
+    body.appendChild(row);
+    if (d.recent_videos && d.recent_videos.length) {
+      const list = el("div", { class: "widget-video-list" });
+      d.recent_videos.slice(0, 4).forEach((v, i) => list.appendChild(el("div", { class: "widget-video-row" }, [
+        el("span", { class: "widget-video-rank", text: String(i + 1).padStart(2, "0") }),
+        el("span", { class: "widget-video-title", text: v.title }),
+        el("span", { class: "widget-video-date",  text: v.published }),
+      ])));
+      body.appendChild(list);
+    }
+  }
+
+  function renderGitHub(body, d) {
+    const row = el("div", { class: "widget-metrics" });
+    [
+      { lbl: "Stars",   val: J.fmt.num(d.stars) },
+      { lbl: "Forks",   val: d.forks },
+      { lbl: "Watchers",val: d.watchers },
+      { lbl: "Issues",  val: d.open_issues },
+    ].forEach(m => row.appendChild(el("div", { class: "widget-metric" }, [
+      el("div", { class: "widget-metric-lbl", text: m.lbl }),
+      el("div", { class: "widget-metric-val", text: String(m.val) }),
+    ])));
+    body.appendChild(row);
+  }
+
+  function renderDiscord(body, d) {
+    body.appendChild(el("div", { class: "widget-discord" }, [
+      el("div", { class: "widget-discord-name", text: d.name }),
+      el("div", { class: "widget-discord-stats" }, [
+        el("span", { text: "● " + J.fmt.num(d.members_total) + " membres" }),
+        el("span", { text: "● " + d.members_online + " en ligne" }),
+      ]),
+    ]));
+  }
+
+  async function removeWidget(widgetId) {
+    const res = await fetch("/api/analytics/remove/" + widgetId, { method: "DELETE" });
+    if ((await res.json()).success) renderActive();
+  }
+
+  async function openAddWidgetModal() {
+    const res = await J.api.get("/api/analytics/catalog");
+    const catalog = (res.widgets || []).filter(w => !w.active && w.requires_env.length > 0);
+
+    let selected = null;
+    const overlay = el("div", { class: "modal-overlay" });
+    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+    const modal = el("div", { class: "add-widget-modal" });
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    function step1() {
+      modal.innerHTML = "";
+      modal.appendChild(el("div", { class: "modal-header" }, [
+        el("span", { class: "modal-title", text: "AJOUTER UN WIDGET" }),
+        el("button", { class: "widget-remove", onclick: () => overlay.remove(), text: "×" }),
+      ]));
+      modal.appendChild(el("p", { class: "modal-sub", text: "Choisissez une source de données" }));
+
+      const list = el("div", { class: "catalog-list" });
+      if (!catalog.length) {
+        list.appendChild(el("div", { class: "j-empty", text: "Tous les widgets sont déjà actifs." }));
+      }
+      catalog.forEach(w => {
+        const item = el("div", { class: "catalog-item", onclick: () => {
+          selected = w;
+          modal.querySelectorAll(".catalog-item").forEach(i => i.classList.remove("selected"));
+          item.classList.add("selected");
+        }});
+        item.appendChild(el("div", { class: "catalog-item-main" }, [
+          el("div", { class: "src-glyph", text: w.icon }),
+          el("div", {}, [
+            el("div", { class: "catalog-item-label", text: w.label }),
+            el("div", { class: "catalog-item-desc",  text: w.description }),
+          ]),
+          el("span", { class: w.configured ? "badge badge--solid" : "badge", text: w.configured ? "✓ Configuré" : "Requiert config" }),
+        ]));
+        if (w.requires_env.length) {
+          item.appendChild(el("div", { class: "catalog-item-env", text: "⚠ Requiert : " + w.requires_env.join(" · ") }));
+        }
+        list.appendChild(item);
+      });
+      modal.appendChild(list);
+      modal.appendChild(el("div", { class: "modal-footer" }, [
+        el("button", { class: "btn-accent", onclick: () => {
+          if (!selected) return;
+          selected.configured ? step3(false) : step2();
+        }, text: "Suivant →" }),
+      ]));
+    }
+
+    function step2() {
+      modal.innerHTML = "";
+      modal.appendChild(el("div", { class: "modal-header" }, [
+        el("span", { class: "modal-title", text: "AJOUTER UN WIDGET — " + selected.label }),
+        el("button", { class: "widget-remove", onclick: () => overlay.remove(), text: "×" }),
+      ]));
+      modal.appendChild(el("p", { class: "modal-sub", text: "Configuration requise" }));
+
+      const form = el("div", { class: "modal-form" });
+      selected.requires_env.forEach(key => {
+        form.appendChild(el("div", { class: "modal-field" }, [
+          el("label", { class: "modal-field-lbl", text: key }),
+          el("input", { class: "j-input", type: "text", placeholder: key }),
+        ]));
+      });
+      modal.appendChild(form);
+
+      const status = el("div", { class: "modal-status" });
+      modal.appendChild(status);
+      modal.appendChild(el("div", { class: "modal-footer" }, [
+        el("button", { class: "btn-ghost", onclick: step1, text: "← Retour" }),
+        el("button", { class: "btn-accent", onclick: async () => {
+          status.textContent = "Test en cours…";
+          const r = await fetch("/api/analytics/add/" + selected.id, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+          const d = await r.json();
+          if (d.success) step3(true);
+          else status.textContent = "✗ " + d.message;
+        }, text: "Tester la connexion →" }),
+      ]));
+    }
+
+    async function step3(alreadyAdded) {
+      if (!alreadyAdded) {
+        await fetch("/api/analytics/add/" + selected.id, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      }
+      modal.innerHTML = "";
+      modal.appendChild(el("div", { class: "modal-header" }, [
+        el("span", { class: "modal-title", text: "AJOUTER UN WIDGET" }),
+        el("button", { class: "widget-remove", onclick: () => overlay.remove(), text: "×" }),
+      ]));
+      modal.appendChild(el("div", { class: "modal-confirm" }, [
+        el("div", { class: "modal-confirm-icon", text: "✓" }),
+        el("div", { class: "modal-confirm-msg",  text: selected.label + " ajouté" }),
+        el("div", { class: "modal-confirm-sub",  text: "Le widget apparaît maintenant dans votre Analytics." }),
+      ]));
+      modal.appendChild(el("div", { class: "modal-footer" }, [
+        el("button", { class: "btn-accent", onclick: () => { overlay.remove(); renderActive(); }, text: "Fermer" }),
+      ]));
+    }
+
+    step1();
+  }
+
+  /* ───────── Routines ───────── */
+  async function loadRoutines() {
+    try {
+      const res = await J.api.get("/api/routines");
+      return (res && res.routines) ? res.routines : [];
+    } catch (_) { return []; }
+  }
+
+  const _routineProgress = {};
+
+  function renderRoutines(root, routines) {
+    root.appendChild(secHd("05", "Routines", "Séquences automatisées", routines.length + " installée(s)"));
+
+    if (!routines.length) {
+      const empty = el("div", { class: "j-empty" });
+      empty.appendChild(document.createTextNode("Aucune routine installée. "));
+      const link = el("a", { href: "/settings", style: { color: "var(--accent)" }, text: "Aller au Marketplace →" });
+      empty.appendChild(link);
+      root.appendChild(card({ title: "Routines installées", sub: "0 routine" }, empty));
+      return;
+    }
+
+    const list = el("div");
+    routines.forEach((r, i) => {
+      const triggersText = (r.triggers || []).slice(0, 2).map(t => `"${t}"`).join(", ");
+      const platformsText = (r.platforms || []).join(", ") || "—";
+      const stepsText = (r.steps_count || 0) + " step" + (r.steps_count !== 1 ? "s" : "");
+
+      const progressEl = el("div", {
+        style: { fontSize: "11px", color: "var(--fg-3)", marginTop: "4px", display: "none" },
+      });
+
+      const launchBtn = el("button", { class: "btn-ghost", text: "▶ Lancer" });
+      launchBtn.onclick = async () => {
+        launchBtn.disabled = true;
+        launchBtn.textContent = "▶ En cours…";
+        progressEl.style.display = "block";
+        progressEl.textContent = "Démarrage…";
+        _routineProgress[r.name] = { btn: launchBtn, progress: progressEl };
+        try {
+          const res = await fetch("/api/routines/" + encodeURIComponent(r.name) + "/execute", { method: "POST" });
+          const data = await res.json();
+          const done = data.steps_done || 0;
+          const fail = data.steps_failed || 0;
+          J.notify({ kind: "success", text: `Routine "${r.label || r.name}" terminée — ${done} étapes réalisées` + (fail ? `, ${fail} en erreur` : "") });
+        } catch (e) {
+          J.notify({ kind: "error", text: "Erreur routine : " + e.message });
+        }
+        launchBtn.disabled = false;
+        launchBtn.textContent = "▶ Lancer";
+        progressEl.style.display = "none";
+        delete _routineProgress[r.name];
+      };
+
+      const infoCol = el("div", { style: { flex: 1 } });
+      infoCol.appendChild(el("span", { style: { color: "var(--fg-0)" }, text: r.label || r.name }));
+      infoCol.appendChild(el("span", { class: "tn-sub", text: ` ${stepsText} · ${platformsText}` }));
+      if (triggersText) infoCol.appendChild(el("span", { class: "tn-sub", text: triggersText }));
+      infoCol.appendChild(progressEl);
+
+      list.appendChild(el("div", {
+        class: "tool-row",
+        style: { borderTop: i ? "1px solid var(--line-1)" : "0", alignItems: "start" },
+      }, [
+        el("div", { class: "tg", text: "▶" }),
+        infoCol,
+        launchBtn,
+      ]));
+    });
+
+    const mktLink = el("a", { href: "/settings", class: "btn-ghost", style: { fontSize: "12px" }, text: "Marketplace →" });
+    root.appendChild(card({ title: "Routines installées", sub: routines.length + " routine(s)", right: mktLink }, list));
+  }
+
+  // WebSocket handler temps réel (appelé depuis _shared.js si exposé)
+  window._handleRoutineEvent = function(msg) {
+    const entry = _routineProgress[msg.routine];
+    if (!entry) return;
+    if (msg.type === "routine_step") {
+      entry.progress.textContent = `Étape ${msg.step_index}/${msg.total_steps || "?"} : ${msg.step_name}`;
+    } else if (msg.type === "routine_finished") {
+      entry.progress.textContent = "Terminé ✓";
+    }
+  };
 
   /* ───────── App state + routing ───────── */
   const state = {
@@ -376,6 +621,7 @@
       { id: "missions",    label: "Missions",    meta: "5" },
       { id: "domotique",   label: "Écosystème",  meta: "—" },
       { id: "devices",     label: "Devices",     meta: "4" },
+      { id: "routines",    label: "Routines",    meta: "" },
       { id: "analytics",   label: "Analytics",   meta: "7j" },
     ],
   };
@@ -407,6 +653,7 @@
         case "missions":    renderMissions(surface, await loadMissions()); break;
         case "domotique":   renderDomotique(surface); break;
         case "devices":     renderDevices(surface, await loadDevices()); break;
+        case "routines":    renderRoutines(surface, await loadRoutines()); break;
         case "analytics":   renderAnalytics(surface, await loadAnalytics()); break;
       }
     } catch (err) {
@@ -424,7 +671,8 @@
       { kind: "nav",   group: "Aller à", title: "Missions",     glyph: "02", run: () => { state.active = "missions";    renderActive(); refreshSidebar(); } },
       { kind: "nav",   group: "Aller à", title: "Écosystème",   glyph: "03", run: () => { state.active = "domotique";   renderActive(); refreshSidebar(); } },
       { kind: "nav",   group: "Aller à", title: "Devices",      glyph: "04", run: () => { state.active = "devices";     renderActive(); refreshSidebar(); } },
-      { kind: "nav",   group: "Aller à", title: "Analytics",    glyph: "05", run: () => { state.active = "analytics";   renderActive(); refreshSidebar(); } },
+      { kind: "nav",   group: "Aller à", title: "Routines",     glyph: "05", run: () => { state.active = "routines";    renderActive(); refreshSidebar(); } },
+      { kind: "nav",   group: "Aller à", title: "Analytics",    glyph: "06", run: () => { state.active = "analytics";   renderActive(); refreshSidebar(); } },
       { kind: "nav",   group: "Pages",   title: "Keypad Studio", glyph: "⌨", sub: "firmware macropad CH552", run: () => { window.openKeypadDrawer?.(); } },
       { kind: "nav",   group: "Pages",   title: "Système",      glyph: "→",  sub: "tools, mémoire, conso, params", run: () => { window.handleSettingsClick && window.handleSettingsClick(); } },
       // Slash commands (>)

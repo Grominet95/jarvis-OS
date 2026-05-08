@@ -2669,6 +2669,8 @@
           document.getElementById('panels-toggle')?.click();
         } else if (msg.type === 'wake_up') {
           if (window._jarvisSleeping && typeof triggerWakeUp === 'function') triggerWakeUp();
+        } else if (msg.type === 'routine_started' || msg.type === 'routine_step' || msg.type === 'routine_finished') {
+          window._handleRoutineEvent && window._handleRoutineEvent(msg);
         }
       };
     }

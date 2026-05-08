@@ -58,6 +58,7 @@ from tools.memory import MemoryTopicWriteTool
 from tools.notion import NotionTasksTool
 from tools.registry import ToolRegistry
 from tools.map_control import MapControlTool
+from tools.routine import ExecuteRoutineTool
 from tools.spotify import SpotifyTool
 from tools.weather import WeatherTool
 
@@ -158,8 +159,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     notifications = NotificationQueue()
     proactive_queue = ProactiveQueue()
     map_control_tool = MapControlTool(broadcast_event=proactive_queue.broadcast_event)
-    tool_registry.register(map_control_tool)
+    tool_registry.register(map_control_tool, ExecuteRoutineTool())
     approval_checker = ApprovalChecker(broadcast_event=proactive_queue.broadcast_event)
+
+    # Expose singletons pour les routines (executor + tool)
+    from background.notifications import set_proactive_queue
+    from core.gateway import set_tool_registry
+    set_proactive_queue(proactive_queue)
+    set_tool_registry(tool_registry)
     orchestrator = ProjectOrchestrator(broadcast_event=proactive_queue.broadcast_event)
     worker = BackgroundWorker(llm=llm, notifications=notifications, tool_registry=tool_registry)
     worker_task = asyncio.create_task(worker.run_loop(), name="background-worker")

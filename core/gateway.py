@@ -15,6 +15,19 @@ from core.session import Session, SessionManager
 def _get_orchestrator(app_state):  # type: ignore[return]
     return getattr(app_state, "orchestrator", None)
 
+
+# ── Singleton tool registry (pour les routines) ───────────────────────────────
+_tool_registry_instance = None
+
+
+def set_tool_registry(registry) -> None:
+    global _tool_registry_instance
+    _tool_registry_instance = registry
+
+
+def get_tool_registry():
+    return _tool_registry_instance
+
 _FALLBACK = "Désolé chef, j'ai eu un souci — je regarde."
 
 

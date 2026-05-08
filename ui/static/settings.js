@@ -636,15 +636,40 @@
 
     const marketList = el("div");
 
+    let marketTypeFilter = "all";
+
+    const filterTabs = el("div", { style: { display: "flex", gap: "6px", marginBottom: "10px" } });
+    ["Tous", "Skills", "Routines"].forEach(label => {
+      const id = label === "Tous" ? "all" : label.toLowerCase();
+      const btn = el("button", {
+        class: "btn-ghost",
+        text: label,
+        style: { fontSize: "11px", opacity: id === "all" ? "1" : "0.5" },
+      });
+      btn.onclick = () => {
+        marketTypeFilter = id;
+        filterTabs.querySelectorAll("button").forEach(b => b.style.opacity = "0.5");
+        btn.style.opacity = "1";
+        renderMarket(searchInput.value.trim().toLowerCase());
+      };
+      filterTabs.appendChild(btn);
+    });
+
     function renderMarket(filter) {
       marketList.innerHTML = "";
-      const filtered = filter
-        ? catalog.filter(s =>
-            s.name.toLowerCase().includes(filter) ||
-            (s.description || "").toLowerCase().includes(filter) ||
-            (s.tags || []).some(t => t.toLowerCase().includes(filter))
-          )
-        : catalog;
+      let filtered = catalog;
+      if (marketTypeFilter === "skills") {
+        filtered = filtered.filter(s => (s.type || "conversational") !== "routine");
+      } else if (marketTypeFilter === "routines") {
+        filtered = filtered.filter(s => s.type === "routine");
+      }
+      if (filter) {
+        filtered = filtered.filter(s =>
+          s.name.toLowerCase().includes(filter) ||
+          (s.description || "").toLowerCase().includes(filter) ||
+          (s.tags || []).some(t => t.toLowerCase().includes(filter))
+        );
+      }
 
       if (!filtered.length) {
         marketList.appendChild(el("div", {
@@ -657,6 +682,7 @@
 
       filtered.forEach(s => {
         const isInst = s.installed || installed.some(i => i.name === s.name);
+        const isRoutine = s.type === "routine";
         const actionBtn = el("button", {
           class: "btn-ghost",
           style: isInst ? { opacity: "0.5", cursor: "default" } : {},
@@ -712,12 +738,27 @@
         const mktInfoCol = el("div", { style: { flex: 1 } });
         mktInfoCol.appendChild(el("span", { style: { color: "var(--fg-0)" }, text: s.name }));
         mktInfoCol.appendChild(el("span", { class: "tn-sub", text: " · " + (s.author || "—") }));
+        if (isRoutine) {
+          mktInfoCol.appendChild(el("span", {
+            class: "badge badge--accent",
+            style: { fontSize: "9px", padding: "1px 5px", marginLeft: "5px", verticalAlign: "middle" },
+            text: "ROUTINE",
+          }));
+        }
         mktInfoCol.appendChild(el("span", { class: "tn-sub", text: s.description || "" }));
+        if (isRoutine && (s.platforms || []).length) {
+          mktInfoCol.appendChild(el("span", { class: "tn-sub", text: "Plateformes : " + s.platforms.join(", ") }));
+        }
+        if (isRoutine && (s.triggers || []).length) {
+          const trigText = s.triggers.slice(0, 2).map(t => `"${t}"`).join(", ");
+          mktInfoCol.appendChild(el("span", { class: "tn-sub", text: trigText }));
+        }
         mktInfoCol.appendChild(tagsWrap);
         if (requiresCol.children.length) mktInfoCol.appendChild(requiresCol);
 
+        const glyphText = isRoutine ? "▶" : (s.name || "sk").slice(0, 2).toUpperCase();
         marketList.appendChild(el("div", { class: "tool-row", style: { alignItems: "start" } }, [
-          el("div", { class: "tg", text: (s.name || "sk").slice(0, 2).toUpperCase() }),
+          el("div", { class: "tg", text: glyphText }),
           mktInfoCol,
           actionBtn,
         ]));
@@ -753,7 +794,7 @@
       title: "Marketplace",
       sub:   catalog.length + " skills disponibles",
       right: mktRight,
-    }, [searchInput, marketList]));
+    }, [filterTabs, searchInput, marketList]));
 
     /* ─── Section 3 : Outils runtime ────────────────────────── */
     let tools = TOOLS.map(t => Object.assign({}, t));

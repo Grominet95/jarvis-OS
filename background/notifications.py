@@ -73,3 +73,27 @@ class ProactiveQueue:
             type=event.get("type"),
             subscribers=len(self._subscribers),
         )
+
+
+# ── Module-level helpers pour les routines ───────────────────────────────────
+
+_proactive_queue_instance: "ProactiveQueue | None" = None
+
+
+def set_proactive_queue(q: "ProactiveQueue") -> None:
+    global _proactive_queue_instance
+    _proactive_queue_instance = q
+
+
+async def broadcast_event(event: dict) -> None:
+    if _proactive_queue_instance:
+        _proactive_queue_instance.broadcast_event(event)
+
+
+async def broadcast_audio(audio_bytes: bytes) -> None:
+    if _proactive_queue_instance and audio_bytes:
+        import base64
+        _proactive_queue_instance.broadcast_event({
+            "type": "audio",
+            "data": base64.b64encode(audio_bytes).decode(),
+        })

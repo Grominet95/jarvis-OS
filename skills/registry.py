@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 from loguru import logger
-from skills.base import SkillBase
+from skills.base import SkillBase, RoutineSkill
 
 SKILLS_INSTALLED_DIR = Path("skills/installed")
 
@@ -55,10 +55,15 @@ class SkillRegistry:
                 attr = getattr(module, attr_name)
                 if (isinstance(attr, type)
                         and issubclass(attr, SkillBase)
-                        and attr is not SkillBase):
+                        and attr is not SkillBase
+                        and attr is not RoutineSkill):
                     skill = attr(metadata=metadata)
                     self._skills[skill.name] = skill
-                    logger.debug(f"Skill chargé : {skill.name} v{skill.version}")
+                    skill_type = metadata.get("type", "conversational")
+                    if skill_type == "routine" or isinstance(skill, RoutineSkill):
+                        logger.debug(f"Routine chargée : {skill.name} v{skill.version}")
+                    else:
+                        logger.debug(f"Skill conversationnel chargé : {skill.name} v{skill.version}")
                     break
 
         except Exception as e:
@@ -108,6 +113,30 @@ class SkillRegistry:
             except Exception as e:
                 logger.error(f"Erreur get_tools() pour {skill.name}: {e}")
         return tools
+
+    def get_routines(self) -> dict[str, RoutineSkill]:
+        """Retourne uniquement les skills de type routine."""
+        return {
+            name: skill
+            for name, skill in self._skills.items()
+            if isinstance(skill, RoutineSkill)
+        }
+
+    def get_routine(self, name: str) -> RoutineSkill | None:
+        """Retourne une routine par son nom."""
+        skill = self._skills.get(name)
+        if skill and isinstance(skill, RoutineSkill):
+            return skill
+        return None
+
+    def find_routine_by_trigger(self, text: str) -> RoutineSkill | None:
+        """Trouve une routine dont un trigger correspond au texte (partiel, insensible à la casse)."""
+        text_lower = text.lower()
+        for skill in self.get_routines().values():
+            for trigger in skill.get_triggers():
+                if trigger.lower() in text_lower:
+                    return skill
+        return None
 
 
 skill_registry = SkillRegistry.get_instance()

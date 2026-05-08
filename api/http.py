@@ -232,6 +232,50 @@ async def reload_skills(request: Request) -> dict:
     }
 
 
+# ── Routines API ─────────────────────────────────────────────────────────────
+
+@router.get("/api/routines")
+async def get_routines() -> dict:
+    """Liste toutes les routines installées."""
+    from skills.registry import skill_registry
+    routines = skill_registry.get_routines()
+    return {
+        "routines": [
+            {
+                "name": r.name,
+                "label": r.label,
+                "description": r.description,
+                "triggers": r.get_triggers(),
+                "platforms": r.get_platforms(),
+                "steps_count": len(r.get_steps()),
+            }
+            for r in routines.values()
+        ]
+    }
+
+
+@router.post("/api/routines/{routine_name}/execute")
+async def execute_routine_endpoint(routine_name: str, request: Request) -> dict:
+    """Lance une routine depuis l'UI (bouton ▶)."""
+    from skills.registry import skill_registry
+    from skills.executor import RoutineExecutor
+    from audio.tts import tts_engine
+    from background.notifications import broadcast_event
+    from core.gateway import get_tool_registry
+
+    routine = skill_registry.get_routine(routine_name)
+    if not routine:
+        return {"success": False, "message": f"Routine '{routine_name}' introuvable"}
+
+    executor = RoutineExecutor(
+        tool_registry=get_tool_registry(),
+        tts_engine=tts_engine,
+    )
+
+    results = await executor.execute(routine, broadcast_fn=broadcast_event)
+    return results
+
+
 @router.get("/api/settings/env-status")
 async def get_env_status(keys: str = Query("")) -> dict:
     """Retourne True/False par clé env — jamais les valeurs."""
