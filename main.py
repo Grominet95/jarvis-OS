@@ -25,6 +25,9 @@ from api.voice_ws import router as voice_router
 from api.websocket import router as ws_router
 from api.globe import router as globe_router
 from api.spotify import router as spotify_router
+from api.deezer import router as deezer_router
+from api.local_music import router as local_music_router
+from api.music import router as music_router
 from api.widgets import router as widgets_router
 from api.keypad import _ui_router as keypad_ui_router
 from api.keypad import router as keypad_router
@@ -241,6 +244,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     from core.approval_checker import set_approval_checker
     set_approval_checker(approval_checker)
 
+    # Initialiser le registry analytics (charge la config sauvegardée)
+    from analytics.registry import analytics_registry as _analytics_registry
+    logger.info("AnalyticsRegistry initialisé", widgets=len(_analytics_registry.get_active()))
+
     logger.info(
         "Jarvis démarré",
         env=settings.environment,
@@ -285,6 +292,9 @@ app.include_router(admin_router)
 app.include_router(projects_router)
 app.include_router(widgets_router)
 app.include_router(spotify_router)
+app.include_router(deezer_router)
+app.include_router(local_music_router)
+app.include_router(music_router)
 app.include_router(globe_router)
 app.include_router(keypad_router)
 app.include_router(keypad_ui_router)

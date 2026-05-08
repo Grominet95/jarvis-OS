@@ -15,7 +15,7 @@ from config.settings import settings
 
 router = APIRouter(prefix="/api/spotify")
 
-_SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state"
+_SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private"
 _AUTH_URL = "https://accounts.spotify.com/authorize"
 _TOKEN_URL = "https://accounts.spotify.com/api/token"
 _API_BASE = "https://api.spotify.com/v1"
@@ -121,13 +121,42 @@ async def spotify_callback(code: str | None = None, error: str | None = None) ->
     return RedirectResponse("/?spotify_ok=1")
 
 
-# ── Player state ──────────────────────────────────────────────
+# ── Token for Web Playback SDK ────────────────────────────────
 
-@router.get("/player")
-async def get_player() -> JSONResponse:
+@router.get("/token")
+async def get_token() -> JSONResponse:
+    token = await _get_access_token()
+    return JSONResponse({"token": token})
+
+
+@router.post("/transfer")
+async def transfer_playback(request: Request) -> JSONResponse:
+    body = await request.json()
+    device_id = body.get("device_id")
+    if not device_id:
+        return JSONResponse({"ok": False}, status_code=400)
     token = await _get_access_token()
     if not token:
-        return JSONResponse({"connected": False})
+        return JSONResponse({"ok": False}, status_code=401)
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.put(
+                f"{_API_BASE}/me/player",
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                json={"device_ids": [device_id], "play": False},
+            )
+        return JSONResponse({"ok": resp.status_code in (200, 204)})
+    except httpx.RequestError as e:
+        logger.warning("Spotify transfer error", error=str(e))
+        return JSONResponse({"ok": False})
+
+
+# ── Player state ──────────────────────────────────────────────
+
+async def _get_player_state() -> dict:
+    token = await _get_access_token()
+    if not token:
+        return {"connected": False}
 
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -137,16 +166,16 @@ async def get_player() -> JSONResponse:
             )
     except httpx.TimeoutException:
         logger.debug("Spotify player timeout")
-        return JSONResponse({"connected": True, "is_playing": False, "track": None})
+        return {"connected": True, "is_playing": False, "track": None}
     except httpx.RequestError as e:
         logger.warning("Spotify player request error", error=str(e))
-        return JSONResponse({"connected": False})
+        return {"connected": False}
 
     if resp.status_code == 204:
-        return JSONResponse({"connected": True, "is_playing": False, "track": None})
+        return {"connected": True, "is_playing": False, "track": None}
 
     if not resp.is_success:
-        return JSONResponse({"connected": False})
+        return {"connected": False}
 
     data = resp.json()
     item = data.get("item") or {}
@@ -154,7 +183,7 @@ async def get_player() -> JSONResponse:
     images = (item.get("album") or {}).get("images", [])
     album_art = images[0]["url"] if images else None
 
-    return JSONResponse({
+    return {
         "connected": True,
         "is_playing": data.get("is_playing", False),
         "track": item.get("name", ""),
@@ -164,7 +193,12 @@ async def get_player() -> JSONResponse:
         "progress_ms": data.get("progress_ms", 0),
         "duration_ms": item.get("duration_ms", 0),
         "track_url": (item.get("external_urls") or {}).get("spotify", ""),
-    })
+    }
+
+
+@router.get("/player")
+async def get_player() -> JSONResponse:
+    return JSONResponse(await _get_player_state())
 
 
 # ── Playback controls ─────────────────────────────────────────

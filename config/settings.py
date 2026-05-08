@@ -165,6 +165,10 @@ class Settings(BaseSettings):
     maptiler_key: str = Field(
         default="", description="Clé API MapTiler (free tier, carte détaillée globe V2).")
 
+    # ── Musique ───────────────────────────────────────────────
+    music_provider: str = Field(
+        default="", description="Fournisseur de musique actif: spotify | deezer | local")
+
     # ── Spotify ───────────────────────────────────────────────
     spotify_client_id: str = Field(
         default="", description="Spotify app Client ID.")
@@ -177,6 +181,18 @@ class Settings(BaseSettings):
     spotify_token_path: str = Field(
         default="config/spotify_token.json",
         description="Fichier de token Spotify (généré automatiquement).",
+    )
+
+    # ── Deezer ────────────────────────────────────────────────
+    deezer_app_id: str = Field(default="", description="Deezer app ID.")
+    deezer_app_secret: str = Field(default="", description="Deezer app secret.")
+    deezer_redirect_uri: str = Field(
+        default="http://127.0.0.1:8000/api/deezer/callback",
+        description="URI de callback OAuth Deezer.",
+    )
+    deezer_token_path: str = Field(
+        default="config/deezer_token.json",
+        description="Fichier de token Deezer (généré automatiquement).",
     )
 
     # ── Proactivité ───────────────────────────────────────────

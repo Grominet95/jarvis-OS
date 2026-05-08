@@ -1005,6 +1005,7 @@
     { id: "audio",      label: "Audio & Vidéo", meta: "", eyebrow: "input / output", title: "Audio & Vidéo" },
     { id: "modeles",    label: "Modèles",     meta: "",  eyebrow: "IA & voix",       title: "Modèles" },
     { id: "connectors", label: "Connecteurs", meta: "",  eyebrow: "intégrations",    title: "Connecteurs" },
+    { id: "musique",    label: "Musique",     meta: "",  eyebrow: "fournisseur",     title: "Musique" },
     { id: "autonomy",   label: "Autonomie",   meta: "",  eyebrow: "comportement",    title: "Autonomie" },
     { id: "appearance", label: "Apparence",   meta: "",  eyebrow: "interface",       title: "Apparence" },
   ];
@@ -1174,6 +1175,98 @@
     }).catch(() => { c.innerHTML = ""; c.appendChild(el("div", { class: "j-empty", text: "Impossible de charger les paramètres." })); });
   }
 
+  function renderSettingsMusique(c) {
+    const PROVIDERS = [
+      { id: "spotify", label: "Spotify",       sub: "Premium · Web Playback SDK" },
+      { id: "deezer",  label: "Deezer",         sub: "Premium · OAuth" },
+      { id: "local",   label: "Lecture locale", sub: "macOS · nowplaying-cli · toutes applications" },
+    ];
+
+    function keyInp(envKey, placeholder, type) {
+      const inp = el("input", { class: "input-mono", type: type || "text", placeholder });
+      fetch("/api/settings").then(r => r.json()).then(d => {
+        const v = (d.api_keys || {})[envKey] || "";
+        inp.value = v;
+        inp.style.opacity = v ? "1" : "0.4";
+      }).catch(() => {});
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !v.includes("•")) { saveSetting(envKey, v); inp.style.opacity = "1"; }
+      });
+      return inp;
+    }
+
+    function orSep() {
+      return el("div", { style: { display: "flex", alignItems: "center", gap: "10px", margin: "6px 16px" } }, [
+        el("div", { style: { flex: "1", height: "1px", background: "var(--border)" } }),
+        el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--fg-3)", flexShrink: "0" }, text: "OU" }),
+        el("div", { style: { flex: "1", height: "1px", background: "var(--border)" } }),
+      ]);
+    }
+
+    c.appendChild(el("div", { class: "j-loading", text: "Chargement…" }));
+
+    J.api.get("/api/settings").then(data => {
+      c.innerHTML = "";
+      const current = (data.music || {}).music_provider || "";
+
+      const sel = el("select", { class: "select-mono" });
+      sel.appendChild(el("option", { value: "", text: "— Aucun —", selected: !current ? "" : null }));
+      PROVIDERS.forEach(p => sel.appendChild(el("option", { value: p.id, text: p.label, selected: p.id === current ? "" : null })));
+      sel.addEventListener("change", () => { saveSetting("MUSIC_PROVIDER", sel.value); renderDetails(); });
+      c.appendChild(setRow("Fournisseur de musique", "source affichée dans le widget de la page d'accueil", sel));
+
+      const detailsDiv = el("div", { style: { marginTop: "4px" } });
+      c.appendChild(detailsDiv);
+
+      function renderDetails() {
+        detailsDiv.innerHTML = "";
+        const provId = sel.value;
+
+        if (provId === "spotify") {
+          fetch("/api/music/provider-status").then(r => r.json()).then(s => {
+            const connected = s.connected;
+            const statusEl = el("span", { class: "t-mono", style: { fontSize: "10.5px", color: connected ? "var(--green)" : "var(--fg-3)" }, text: connected ? "● CONNECTÉ" : "○ NON LIÉ" });
+            const connectBtn = el("a", { href: "/api/spotify/auth", class: "btn-ghost", text: "Se connecter avec son compte →", style: { fontSize: "12px" } });
+            detailsDiv.appendChild(setRow("Spotify", "si abonnement Spotify Premium", connectBtn, statusEl));
+            detailsDiv.appendChild(orSep());
+            detailsDiv.appendChild(setRow("Spotify Client ID", "depuis developer.spotify.com",
+              keyInp("SPOTIFY_CLIENT_ID", "ex: d70b227e6e8d402e…")));
+            detailsDiv.appendChild(setRow("Spotify Client Secret", "",
+              keyInp("SPOTIFY_CLIENT_SECRET", "ex: bad37c5e5d634206…", "password")));
+          }).catch(() => {});
+
+        } else if (provId === "deezer") {
+          fetch("/api/music/provider-status").then(r => r.json()).then(s => {
+            const connected = s.connected;
+            const statusEl = el("span", { class: "t-mono", style: { fontSize: "10.5px", color: connected ? "var(--green)" : "var(--fg-3)" }, text: connected ? "● CONNECTÉ" : "○ NON LIÉ" });
+            const connectBtn = el("a", { href: "/api/deezer/auth", class: "btn-ghost", text: "Se connecter avec son compte →", style: { fontSize: "12px" } });
+            detailsDiv.appendChild(setRow("Deezer", "si abonnement Deezer Premium", connectBtn, statusEl));
+            detailsDiv.appendChild(orSep());
+            detailsDiv.appendChild(setRow("Deezer App ID", "depuis developers.deezer.com",
+              keyInp("DEEZER_APP_ID", "ex: 123456")));
+            detailsDiv.appendChild(setRow("Deezer App Secret", "",
+              keyInp("DEEZER_APP_SECRET", "ex: abc123…", "password")));
+          }).catch(() => {});
+
+        } else if (provId === "local") {
+          fetch("/api/local-music/player").then(r => r.json()).then(d => {
+            const ok = d.connected !== false;
+            const statusEl = el("span", { class: "t-mono", style: { fontSize: "10.5px", color: ok ? "var(--green)" : "var(--gold)" }, text: ok ? "● DISPONIBLE" : "○ NON TROUVÉ" });
+            const hint = ok
+              ? el("span", { class: "t-mono", style: { fontSize: "10px", color: "var(--fg-3)" }, text: "lit le Now Playing macOS" })
+              : el("code", { text: "brew install nowplaying-cli", style: { fontSize: "11px", color: "var(--fg-3)" } });
+            detailsDiv.appendChild(setRow("nowplaying-cli", "contrôle système · toutes applications audio", hint, statusEl));
+          }).catch(() => {
+            detailsDiv.appendChild(el("div", { class: "set-section-hint", text: "Installer : brew install nowplaying-cli" }));
+          });
+        }
+      }
+
+      renderDetails();
+    }).catch(() => { c.innerHTML = ""; c.appendChild(el("div", { class: "j-empty", text: "Erreur de chargement." })); });
+  }
+
   function renderSettingsConnectors(c) {
     c.appendChild(el("div", { class: "j-loading", text: "Chargement…" }));
     J.api.get("/api/settings/connectors").then(conns => {
@@ -1198,6 +1291,7 @@
     audio: renderSettingsAudio,
     modeles: renderSettingsModeles,
     connectors: renderSettingsConnectors,
+    musique: renderSettingsMusique,
     autonomy: comingSoon,
     appearance: comingSoon,
   };
@@ -1206,7 +1300,8 @@
     root.innerHTML = "";
     root.appendChild(secHd("05", "Paramètres", "Configuration", SETTINGS_NAV.length + " sections"));
 
-    let page = "keys";
+    let page = window._pendingSettingsSection || "keys";
+    window._pendingSettingsSection = null;
     const shell = el("div", { class: "settings-shell" });
     const nav = el("div", { class: "settings-nav" });
     const content = el("div", { class: "settings-content" });

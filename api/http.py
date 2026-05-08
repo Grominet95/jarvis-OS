@@ -848,6 +848,7 @@ _SENSITIVE_KEYS = {
     "LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET",
     "NOTION_TOKEN", "MISTRAL_API_KEY", "AISSTREAM_KEY",
     "SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET",
+    "DEEZER_APP_ID", "DEEZER_APP_SECRET",
 }
 
 # Keys that require a restart to take effect
@@ -878,6 +879,9 @@ _SETTINGS_FIELD_MAP: dict[str, str] = {
     "BRIEFING_HOUR":              "briefing_hour",
     "CALENDAR_REMINDER_MINUTES":  "calendar_reminder_minutes",
     "QUEBEC_MODE":                "quebec_mode",
+    "MUSIC_PROVIDER":             "music_provider",
+    "DEEZER_APP_ID":              "deezer_app_id",
+    "DEEZER_APP_SECRET":          "deezer_app_secret",
 }
 
 
@@ -971,6 +975,9 @@ async def get_settings_endpoint() -> dict:
             "log_level":   _s.log_level,
             "environment": _s.environment,
             "quebec_mode": _s.quebec_mode,
+        },
+        "music": {
+            "music_provider": _s.music_provider,
         },
         "approvals": __import__('dataclasses').asdict(__import__('config.approvals', fromlist=['approval_config']).approval_config),
     }
@@ -1284,6 +1291,15 @@ async def get_connectors() -> list:
             ),
         },
         {
+            "name": "Deezer",
+            "sub": "OAuth · lecture musicale",
+            "status": (
+                "on" if _token_status(_s.deezer_token_path) == "on" and _env_ok("DEEZER_APP_ID", "DEEZER_APP_SECRET")
+                else "expired" if _token_status(_s.deezer_token_path) == "expired"
+                else "off"
+            ),
+        },
+        {
             "name": "Notion",
             "sub": "token intégration · workspace",
             "status": "on" if _env_ok("NOTION_TOKEN") else "off",
@@ -1521,7 +1537,7 @@ async def get_voice_token(session_id: str | None = None) -> dict:
     return {"token": token, "url": livekit_url}
 
 
-# ── Analytics API ─────────────────────────────────────────────────────────────
+# ── Analytics API (legacy) ────────────────────────────────────────────────────
 
 @router.get("/api/analytics/jarvis")
 async def analytics_jarvis(days: int = 30) -> dict:
@@ -1539,3 +1555,63 @@ async def analytics_youtube(days: int = 7) -> dict:
 async def analytics_summary() -> dict:
     from api.analytics import get_analytics_summary
     return await get_analytics_summary()
+
+
+# ── Analytics Widget System ───────────────────────────────────────────────────
+
+@router.get("/api/analytics/catalog")
+async def get_analytics_catalog():
+    """Catalogue de tous les widgets disponibles."""
+    from analytics.registry import analytics_registry
+    return {"widgets": analytics_registry.get_catalog()}
+
+
+@router.get("/api/analytics/data")
+async def get_analytics_data():
+    """Fetch les données de tous les widgets actifs."""
+    from analytics.registry import analytics_registry
+    data = await analytics_registry.fetch_all()
+    return {
+        "widgets": {
+            wid: {
+                "success": wd.success,
+                "data": wd.data,
+                "error": wd.error,
+                "cached": wd.cached,
+            }
+            for wid, wd in data.items()
+        }
+    }
+
+
+@router.get("/api/analytics/active")
+async def get_active_widgets():
+    """Liste des widgets actifs avec leurs manifests."""
+    from analytics.registry import analytics_registry
+    return {"widgets": [w.to_manifest() for w in analytics_registry.get_active()]}
+
+
+@router.post("/api/analytics/add/{widget_id}")
+async def add_widget(widget_id: str, request: Request):
+    """Active un widget."""
+    from analytics.registry import analytics_registry
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    return analytics_registry.add(widget_id, settings=body)
+
+
+@router.delete("/api/analytics/remove/{widget_id}")
+async def remove_widget(widget_id: str):
+    """Désactive un widget."""
+    from analytics.registry import analytics_registry
+    return analytics_registry.remove(widget_id)
+
+
+@router.post("/api/analytics/refresh")
+async def refresh_analytics():
+    """Force le refresh des données analytics."""
+    from analytics.registry import analytics_registry
+    data = await analytics_registry.fetch_all()
+    return {"refreshed": len(data)}

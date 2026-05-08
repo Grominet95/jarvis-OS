@@ -1797,11 +1797,14 @@
 
       </div><!-- /globe-data-panel -->
 
-      <!-- Spotify (compact, fixed au bas) -->
+      <!-- Musique (compact, fixed au bas) -->
       <div class="section focus">
         <div class="section-hd">
           <span class="section-label">En cours</span>
-          <span class="spotify-badge" id="spotify-badge">SPOTIFY</span>
+          <span class="spotify-badge" id="music-badge">MUSIQUE</span>
+        </div>
+        <div id="music-no-provider" style="display:none;padding:12px 16px 14px">
+          <a href="#" onclick="document.getElementById('settings-nav-btn')?.click();window._pendingSettingsSection='musique';return false;" class="spotify-connect-btn">Choisir un fournisseur de musique →</a>
         </div>
         <div id="spotify-disconnected" style="display:none;padding:12px 16px 14px">
           <a href="/api/spotify/auth" class="spotify-connect-btn">Connecter Spotify →</a>
@@ -3019,68 +3022,154 @@
       }
     }
 
-    async function loadSpotify() {
-      try {
-        const r = await fetch('/api/spotify/player');
-        if (!r.ok) return;
-        const d = await r.json();
+    let _currentProvider = null;
 
-        const disc = document.getElementById('spotify-disconnected');
-        const player = document.getElementById('spotify-player');
+    function _updateMusicUI(d) {
+      const noProvider = document.getElementById('music-no-provider');
+      const disc       = document.getElementById('spotify-disconnected');
+      const player     = document.getElementById('spotify-player');
+      const badge      = document.getElementById('music-badge');
 
-        if (!d.connected) {
-          disc.style.display = 'block';
-          player.style.display = 'none';
-          return;
-        }
-
+      if (!d.provider) {
+        noProvider.style.display = 'block';
         disc.style.display = 'none';
-        player.style.display = 'block';
+        player.style.display = 'none';
+        return;
+      }
 
-        if (!d.track) {
-          document.getElementById('spotify-track').textContent = 'Rien en cours';
-          document.getElementById('spotify-artist').textContent = '—';
-          _spPlaying = false; _spDurationMs = 0;
-          return;
-        }
+      _currentProvider = d.provider;
+      noProvider.style.display = 'none';
+      badge.textContent = d.provider.toUpperCase();
 
-        _spPlaying = d.is_playing;
-        _spProgressMs = d.progress_ms || 0;
-        _spDurationMs = d.duration_ms || 0;
-        _spLastTick = Date.now();
+      if (!d.connected) {
+        disc.style.display = 'block';
+        player.style.display = 'none';
+        disc.querySelector('a').textContent = 'Connecter ' + d.provider + ' →';
+        disc.querySelector('a').href = '/api/' + d.provider + '/auth';
+        return;
+      }
 
-        document.getElementById('spotify-track').textContent = d.track;
-        document.getElementById('spotify-artist').textContent = d.artist;
-        document.getElementById('spotify-album').textContent = d.album;
-        document.getElementById('sp-play-svg').innerHTML = d.is_playing
-          ? '<rect x="1.5" y="1" width="3.5" height="11" rx="1"/><rect x="7" y="1" width="3.5" height="11" rx="1"/>'
-          : '<polygon points="1,1 11,6.5 1,12"/>';
+      disc.style.display = 'none';
+      player.style.display = 'block';
 
-        const img = document.getElementById('album-art-img');
-        if (d.album_art && img.src !== d.album_art) {
-          img.src = d.album_art;
-          img.style.display = 'block';
-        }
+      if (!d.track) {
+        document.getElementById('spotify-track').textContent = 'Rien en cours';
+        document.getElementById('spotify-artist').textContent = '—';
+        _spPlaying = false; _spDurationMs = 0;
+        return;
+      }
 
-        document.getElementById('prog-dur').textContent = fmtMs(_spDurationMs);
-        updateProgressBar();
-      } catch (e) { console.warn('spotify error', e); }
+      _spPlaying = d.is_playing;
+      _spProgressMs = d.progress_ms || 0;
+      _spDurationMs = d.duration_ms || 0;
+      _spLastTick = Date.now();
+
+      document.getElementById('spotify-track').textContent = d.track;
+      document.getElementById('spotify-artist').textContent = d.artist;
+      document.getElementById('spotify-album').textContent = d.album;
+      document.getElementById('sp-play-svg').innerHTML = d.is_playing
+        ? '<rect x="1.5" y="1" width="3.5" height="11" rx="1"/><rect x="7" y="1" width="3.5" height="11" rx="1"/>'
+        : '<polygon points="1,1 11,6.5 1,12"/>';
+
+      const img = document.getElementById('album-art-img');
+      if (d.album_art && img.src !== d.album_art) {
+        img.src = d.album_art;
+        img.style.display = 'block';
+      }
+
+      document.getElementById('prog-dur').textContent = fmtMs(_spDurationMs);
+      updateProgressBar();
+    }
+
+    async function loadMusicPlayer() {
+      try {
+        const r = await fetch('/api/music/status');
+        if (!r.ok) return;
+        _updateMusicUI(await r.json());
+      } catch (e) { console.warn('music player error', e); }
     }
 
     async function spotifyToggle() {
-      await fetch('/api/spotify/' + (_spPlaying ? 'pause' : 'play'), { method: 'POST' });
-      setTimeout(loadSpotify, 300);
+      if (_spSdkPlayer && _currentProvider === 'spotify') {
+        await _spSdkPlayer.togglePlay();
+      } else {
+        const prov = _currentProvider || 'spotify';
+        await fetch('/api/' + prov + '/' + (_spPlaying ? 'pause' : 'play'), { method: 'POST' });
+        setTimeout(loadMusicPlayer, 300);
+      }
     }
 
     async function spotifyAction(action) {
-      await fetch('/api/spotify/' + action, { method: 'POST' });
-      setTimeout(loadSpotify, 500);
+      if (_spSdkPlayer && _currentProvider === 'spotify') {
+        if (action === 'next') await _spSdkPlayer.nextTrack();
+        else if (action === 'previous') await _spSdkPlayer.previousTrack();
+      } else {
+        const prov = _currentProvider || 'spotify';
+        await fetch('/api/' + prov + '/' + action, { method: 'POST' });
+        setTimeout(loadMusicPlayer, 500);
+      }
     }
 
-    loadSpotify();
-    setInterval(loadSpotify, 5000);
+    // ── Spotify Web Playback SDK ──────────────────────────────────
+    let _spSdkPlayer = null;
+    let _spDeviceId = null;
+    let _spSdkReady = false;
+
+    function updateSpotifyFromSdk(state) {
+      const track = state.track_window?.current_track;
+      _updateMusicUI({
+        provider: 'spotify',
+        connected: true,
+        is_playing: !state.paused,
+        track: track?.name || null,
+        artist: track?.artists?.map(a => a.name).join(', ') || '',
+        album: track?.album?.name || '',
+        album_art: track?.album?.images?.[0]?.url || null,
+        progress_ms: state.position,
+        duration_ms: track?.duration_ms || 0,
+      });
+    }
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      const player = new Spotify.Player({
+        name: 'JARVIS',
+        getOAuthToken: async cb => {
+          const r = await fetch('/api/spotify/token');
+          const { token } = await r.json();
+          cb(token);
+        },
+        volume: 0.5,
+      });
+
+      player.addListener('ready', ({ device_id }) => {
+        _spDeviceId = device_id;
+        _spSdkReady = true;
+        fetch('/api/spotify/transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id }),
+        });
+      });
+
+      player.addListener('not_ready', () => {
+        _spSdkReady = false;
+        _spDeviceId = null;
+      });
+
+      player.addListener('player_state_changed', state => {
+        if (!state) return;
+        updateSpotifyFromSdk(state);
+      });
+
+      player.connect();
+      _spSdkPlayer = player;
+    };
+
+    loadMusicPlayer();
+    setInterval(loadMusicPlayer, 30000);
     setInterval(updateProgressBar, 1000);
   </script>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <script src="/voice_livekit.js"></script>
   <script type="module">

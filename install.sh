@@ -73,7 +73,22 @@ else
     success "Modèle Piper déjà présent"
 fi
 
-# ── 7. Dossiers runtime ───────────────────────────────────────
+# ── 7. nowplaying-cli (lecture locale macOS) ─────────────────
+if [[ "$(uname)" == "Darwin" ]]; then
+    if ! command -v nowplaying-cli &>/dev/null; then
+        if command -v brew &>/dev/null; then
+            info "Installation de nowplaying-cli (lecture locale macOS)..."
+            brew install nowplaying-cli
+            success "nowplaying-cli installé"
+        else
+            warn "Homebrew non trouvé — nowplaying-cli non installé (optionnel pour la lecture locale)."
+        fi
+    else
+        success "nowplaying-cli $(nowplaying-cli --version 2>/dev/null || echo '') déjà présent"
+    fi
+fi
+
+# ── 8. Dossiers runtime ───────────────────────────────────────
 mkdir -p memory_data/sessions memory_data/topics memory_data/conso memory_data/initiatives
 mkdir -p workspace/projects
 success "Dossiers memory_data/ et workspace/ créés"
