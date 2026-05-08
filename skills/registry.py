@@ -87,6 +87,9 @@ class SkillRegistry:
     def get(self, name: str) -> "SkillBase | None":
         return self._skills.get(name)
 
+    def _is_preset(self, skill: SkillBase) -> bool:
+        return isinstance(skill, PresetSkill) or skill.metadata.get("type") == "preset"
+
     def list_installed(self) -> list[dict]:
         return [
             {
@@ -95,6 +98,7 @@ class SkillRegistry:
                 "author": s.author,
                 "description": s.description,
                 "tags": s.tags,
+                "type": s.metadata.get("type", "conversational"),
                 "requires_env": s.metadata.get("requires_env", []),
                 "requires_tools": s.metadata.get("requires_tools", []),
             }
@@ -114,22 +118,22 @@ class SkillRegistry:
                 logger.error(f"Erreur get_tools() pour {skill.name}: {e}")
         return tools
 
-    def get_presets(self) -> dict[str, PresetSkill]:
+    def get_presets(self) -> dict[str, SkillBase]:
         """Retourne uniquement les skills de type preset."""
         return {
             name: skill
             for name, skill in self._skills.items()
-            if isinstance(skill, PresetSkill)
+            if self._is_preset(skill)
         }
 
-    def get_preset(self, name: str) -> PresetSkill | None:
+    def get_preset(self, name: str) -> SkillBase | None:
         """Retourne un preset par son nom."""
         skill = self._skills.get(name)
-        if skill and isinstance(skill, PresetSkill):
+        if skill and self._is_preset(skill):
             return skill
         return None
 
-    def find_preset_by_trigger(self, text: str) -> PresetSkill | None:
+    def find_preset_by_trigger(self, text: str) -> SkillBase | None:
         """Trouve un preset dont un trigger correspond au texte (partiel, insensible à la casse)."""
         text_lower = text.lower()
         for skill in self.get_presets().values():

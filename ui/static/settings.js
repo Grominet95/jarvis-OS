@@ -433,7 +433,8 @@
 
     function renderInstalled() {
       activeList.innerHTML = "";
-      if (!installed.length) {
+      const skills = installed.filter(s => s.type !== "preset");
+      if (!skills.length) {
         activeList.appendChild(el("div", {
           class: "card-sub",
           style: { padding: "12px 0", opacity: "0.6" },
@@ -441,7 +442,7 @@
         }));
         return;
       }
-      installed.forEach(s => {
+      skills.forEach(s => {
         const requiresEnv  = s.requires_env  || [];
         const envStatus    = s.env_status    || {};
         const configured   = s.configured !== false || !requiresEnv.length;
@@ -621,7 +622,7 @@
     renderInstalled();
     root.appendChild(card({
       title: "Skills actifs",
-      sub:   installed.length + " / " + catalog.length + " skills disponibles",
+      sub:   installed.filter(s => s.type !== "preset").length + " / " + catalog.filter(s => s.type !== "preset").length + " skills disponibles",
       right: reloadBtn,
     }, activeList));
 
