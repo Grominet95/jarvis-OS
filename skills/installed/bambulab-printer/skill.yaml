@@ -9,6 +9,33 @@ tags:
   - maker
 requires_tools: []
 requires_env:
-  - PRINTER_IP
-  - PRINTER_SERIAL
-  - PRINTER_ACCESS_CODE
+  - name: PRINTER_IP
+    description: Adresse IP locale de la BambuLab
+    example: "192.168.1.42"
+    sensitive: false
+  - name: PRINTER_SERIAL
+    description: "Numéro de série (dans Bambu Studio → Settings)"
+    example: "01P00A..."
+    sensitive: false
+  - name: PRINTER_ACCESS_CODE
+    description: Code d'accès à 8 chiffres
+    example: ""
+    sensitive: true
+capabilities:
+  - Vérifier l'état de l'imprimante
+  - Lancer et suivre une impression
+  - Annuler une impression
+  - Estimer le temps et la consommation de filament
+requires_apps:
+  - name: Bambu Studio
+    mac_bundle: BambuStudio
+    windows_exe: bambu-studio.exe
+    linux_cmd: bambu-studio
+    required: true
+    url: https://bambulab.com/en/download/studio
+  - name: OrcaSlicer
+    mac_bundle: OrcaSlicer
+    windows_exe: orca-slicer.exe
+    linux_cmd: orca-slicer
+    required: false
+    url: https://github.com/SoftFever/OrcaSlicer/releases

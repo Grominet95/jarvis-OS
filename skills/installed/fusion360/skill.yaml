@@ -9,4 +9,19 @@ tags:
   - maker
 requires_tools: []
 requires_env:
-  - FUSION_ENABLED
+  - name: FUSION_ENABLED
+    description: Activer l'intégration Fusion 360 (true/false)
+    example: "true"
+    sensitive: false
+capabilities:
+  - Exécuter des scripts Python dans Fusion 360
+  - Lire la géométrie du document actif
+  - Undo / redo des actions
+  - Créer des composants et esquisses
+requires_apps:
+  - name: Fusion 360
+    mac_bundle: Autodesk Fusion
+    windows_exe: Fusion360.exe
+    linux_cmd: ""
+    required: true
+    url: https://www.autodesk.com/products/fusion-360/free-trial

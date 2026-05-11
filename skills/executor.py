@@ -24,6 +24,25 @@ class PresetExecutor:
         Exécute tous les steps d'un preset.
         broadcast_fn : coroutine async(dict) pour envoyer des events WebSocket.
         """
+        from skills.app_checker import check_all_apps
+        requires_apps = preset.metadata.get("requires_apps", [])
+        if requires_apps:
+            apps_status = check_all_apps(requires_apps)
+            missing_required = [
+                a["name"] for a in apps_status["apps"]
+                if not a["installed"] and a["required"]
+            ]
+            if missing_required:
+                missing_str = ", ".join(missing_required)
+                return {
+                    "success": False,
+                    "error": f"Applications requises non installées : {missing_str}",
+                    "steps_done": 0,
+                    "steps_skipped": 0,
+                    "steps_failed": 0,
+                    "logs": [],
+                }
+
         steps = preset.get_steps()
         results = {
             "preset": preset.name,

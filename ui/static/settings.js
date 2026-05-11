@@ -431,6 +431,172 @@
       style: { width: "100%", marginBottom: "12px", boxSizing: "border-box" },
     });
 
+    const SVG_EYE     = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const SVG_EYE_OFF = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+    const SVG_SAVE    = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+    function _buildCapsInline(capabilities) {
+      if (!capabilities || !capabilities.length) return null;
+      const wrap = el("div", { style: { marginTop: "6px" } });
+      wrap.appendChild(el("div", { style: { fontSize: "10px", color: "var(--fg-3)", marginBottom: "2px" }, text: "Ce skill :" }));
+      capabilities.forEach(cap => {
+        wrap.appendChild(el("div", { style: { fontSize: "11px", color: "var(--fg-2)", lineHeight: "1.7" }, text: "· " + cap }));
+      });
+      return wrap;
+    }
+
+    function _buildPlatformBadges(platforms) {
+      if (!platforms || !platforms.length) return null;
+      const wrap = el("div", { style: { display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "5px" } });
+      const colors = { mac: "#a78bfa", windows: "#60a5fa", linux: "#fb923c" };
+      platforms.forEach(plat => {
+        const c = colors[plat.toLowerCase()] || "#888";
+        wrap.appendChild(el("span", {
+          style: {
+            background: c + "22",
+            border: "1px solid " + c + "55",
+            color: c,
+            borderRadius: "4px",
+            padding: "1px 7px",
+            fontSize: "10px",
+            fontWeight: "500",
+            letterSpacing: "0.03em",
+          },
+          text: plat,
+        }));
+      });
+      return wrap;
+    }
+
+    function _buildAppsSection(appsStatus) {
+      if (!appsStatus || !appsStatus.length) return null;
+      const wrap = el("div", { style: { marginTop: "8px" } });
+      wrap.appendChild(el("div", {
+        style: { fontSize: "10px", fontWeight: "600", letterSpacing: "0.05em", color: "var(--fg-3)", marginBottom: "4px" },
+        text: "APPLICATIONS REQUISES",
+      }));
+      appsStatus.forEach(app => {
+        let icon, color;
+        if (app.installed) {
+          icon = "✓"; color = "var(--green, #4caf50)";
+        } else if (app.required) {
+          icon = "✗"; color = "var(--red, #f55)";
+        } else {
+          icon = "⚠"; color = "var(--amber, #f90)";
+        }
+        const row = el("div", { style: { display: "flex", gap: "6px", alignItems: "center", fontSize: "11px", lineHeight: "1.8" } });
+        row.appendChild(el("span", { style: { color, fontWeight: "bold" }, text: icon }));
+        row.appendChild(el("span", { style: { color: "var(--fg-1)" }, text: app.name }));
+        if (app.installed) {
+          row.appendChild(el("span", { style: { color: "var(--green, #4caf50)", fontSize: "10px" }, text: "Installé" }));
+        } else {
+          const statusText = app.required ? "Non installé (requis)" : "Non installé (optionnel)";
+          row.appendChild(el("span", { style: { color, fontSize: "10px" }, text: statusText }));
+          if (app.url) {
+            row.appendChild(el("span", { style: { fontSize: "10px", opacity: "0.6" }, text: "— " + app.url }));
+          }
+        }
+        wrap.appendChild(row);
+      });
+      return wrap;
+    }
+
+    function _buildEnvSection(requiresEnvDetail, envStatus, envVals, badge, allEnvKeys) {
+      if (!requiresEnvDetail || !requiresEnvDetail.length) return null;
+      const configSection = el("div", { class: "skill-config" });
+      const statusIcons = {};
+
+      requiresEnvDetail.forEach(envEntry => {
+        const varKey = typeof envEntry === "string" ? envEntry : envEntry.name;
+        const desc = typeof envEntry === "object" ? (envEntry.description || "") : "";
+        const example = typeof envEntry === "object" ? (envEntry.example || "") : "";
+        const sensitive = typeof envEntry === "object" ? (envEntry.sensitive !== false) : true;
+
+        const isSet = envStatus[varKey] === true;
+        const curValue = envVals[varKey] || "";
+
+        const statusIcon = el("span", {
+          class: "skill-config-status " + (isSet ? "ok" : "warn"),
+          text: isSet ? "✓" : "⚠",
+        });
+        statusIcons[varKey] = statusIcon;
+
+        const labelWrap = el("div", { style: { flex: 1, minWidth: 0 } });
+        const labelLine = el("div", { style: { display: "flex", gap: "6px", alignItems: "center" } });
+        labelLine.appendChild(el("span", { class: "skill-config-label", text: varKey }));
+        if (desc) labelLine.appendChild(el("span", { style: { fontSize: "10px", color: "var(--fg-3)", opacity: "0.8" }, text: "· " + desc }));
+        labelWrap.appendChild(labelLine);
+        if (example) {
+          labelWrap.appendChild(el("span", { style: { fontSize: "10px", color: "var(--fg-3)", opacity: "0.55" }, text: "Exemple : " + example }));
+        }
+
+        const inputEl = document.createElement("input");
+        inputEl.className = "skill-config-input";
+        inputEl.type = sensitive ? "password" : "text";
+        inputEl.placeholder = varKey;
+        inputEl.value = curValue;
+
+        const inputWrap = el("div", { class: "skill-config-input-wrap" });
+        inputWrap.appendChild(inputEl);
+
+        if (sensitive) {
+          const revealBtn = document.createElement("button");
+          revealBtn.className = "skill-config-reveal";
+          revealBtn.title = "Afficher / masquer";
+          revealBtn.innerHTML = SVG_EYE;
+          let revealed = false;
+          revealBtn.onclick = () => {
+            revealed = !revealed;
+            inputEl.type = revealed ? "text" : "password";
+            revealBtn.innerHTML = revealed ? SVG_EYE_OFF : SVG_EYE;
+          };
+          inputWrap.appendChild(revealBtn);
+        }
+
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "skill-config-save";
+        saveBtn.title = "Sauvegarder";
+        saveBtn.innerHTML = SVG_SAVE;
+        saveBtn.onclick = async () => {
+          const val = inputEl.value.trim();
+          if (!val) return;
+          saveBtn.disabled = true;
+          try {
+            await J.api.post("/api/settings/update", { key: varKey, value: val });
+            const statusRes = await J.api.get(
+              "/api/settings/env-status?keys=" + allEnvKeys.join(",")
+            );
+            allEnvKeys.forEach(k => {
+              const nowSet = !!statusRes[k];
+              if (statusIcons[k]) {
+                statusIcons[k].className = "skill-config-status " + (nowSet ? "ok" : "warn");
+                statusIcons[k].textContent = nowSet ? "✓" : "⚠";
+              }
+            });
+            if (badge) {
+              const allSet = allEnvKeys.every(k => !!statusRes[k]);
+              badge.className = "skill-status-badge " + (allSet ? "ok" : "warn");
+              badge.textContent = allSet ? "✓ Configuré" : "⚠ Configuration requise";
+            }
+            J.notify({ kind: "success", text: varKey + " sauvegardé" });
+            if (sensitive) { inputEl.type = "password"; }
+          } catch (e) {
+            J.notify({ kind: "error", text: "Erreur : " + e.message });
+          }
+          saveBtn.disabled = false;
+        };
+
+        const row = el("div", { class: "skill-config-row", style: { alignItems: "flex-start" } });
+        row.appendChild(statusIcon);
+        row.appendChild(labelWrap);
+        row.appendChild(inputWrap);
+        row.appendChild(saveBtn);
+        configSection.appendChild(row);
+      });
+
+      return configSection;
+    }
+
     function renderInstalled() {
       activeList.innerHTML = "";
       const skills = installed.filter(s => s.type !== "preset");
@@ -443,9 +609,14 @@
         return;
       }
       skills.forEach(s => {
-        const requiresEnv  = s.requires_env  || [];
+        const requiresEnvDetail = s.requires_env_detail || s.requires_env || [];
         const envStatus    = s.env_status    || {};
-        const configured   = s.configured !== false || !requiresEnv.length;
+        const envVals      = s.env_values    || {};
+        const capabilities = s.capabilities  || [];
+        const appsStatus   = s.requires_apps_status || [];
+        const configured   = s.configured !== false;
+
+        const allEnvKeys = requiresEnvDetail.map(e => typeof e === "string" ? e : e.name);
 
         const confirmWrap = el("div", { style: { display: "none", gap: "8px" } });
         const confirmBtn  = el("button", { class: "btn-ghost", style: { color: "var(--red, #f55)" }, text: "Confirmer" });
@@ -471,8 +642,10 @@
             if (data.success) {
               J.notify({ kind: "info", text: "Skill désinstallé : " + s.name });
               installed = installed.filter(x => x.name !== s.name);
+              presets = presets.filter(x => x.name !== s.name);
               catalog = catalog.map(c => c.name === s.name ? Object.assign({}, c, { installed: false }) : c);
               renderInstalled();
+              renderPresetList();
               renderMarket(searchInput.value.trim().toLowerCase());
             } else {
               J.notify({ kind: "error", text: data.message || "Erreur désinstallation" });
@@ -492,105 +665,28 @@
           text: t,
         })));
 
-        // Badge config status
-        const badge = requiresEnv.length
+        const badge = allEnvKeys.length
           ? el("span", {
               class: "skill-status-badge " + (configured ? "ok" : "warn"),
               text: configured ? "✓ Configuré" : "⚠ Configuration requise",
             })
           : null;
 
-        // Inline env config section
-        const SVG_EYE     = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-        const SVG_EYE_OFF = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-        const SVG_SAVE    = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-
-        const envVals = s.env_values || {};
-        const configSection = el("div", { class: "skill-config" });
-        const statusIcons = {};
-
-        requiresEnv.forEach(varKey => {
-          const isSet    = envStatus[varKey] === true;
-          const curValue = envVals[varKey] || "";
-
-          const statusIcon = el("span", {
-            class: "skill-config-status " + (isSet ? "ok" : "warn"),
-            text: isSet ? "✓" : "⚠",
-          });
-          statusIcons[varKey] = statusIcon;
-
-          const inputEl = document.createElement("input");
-          inputEl.className = "skill-config-input";
-          inputEl.type = "password";
-          inputEl.placeholder = varKey;
-          inputEl.value = curValue;
-
-          const inputWrap = el("div", { class: "skill-config-input-wrap" });
-          inputWrap.appendChild(inputEl);
-
-          const revealBtn = document.createElement("button");
-          revealBtn.className = "skill-config-reveal";
-          revealBtn.title = "Afficher / masquer";
-          revealBtn.innerHTML = SVG_EYE;
-          let revealed = false;
-          revealBtn.onclick = () => {
-            revealed = !revealed;
-            inputEl.type = revealed ? "text" : "password";
-            revealBtn.innerHTML = revealed ? SVG_EYE_OFF : SVG_EYE;
-          };
-          inputWrap.appendChild(revealBtn);
-
-          const saveBtn = document.createElement("button");
-          saveBtn.className = "skill-config-save";
-          saveBtn.title = "Sauvegarder";
-          saveBtn.innerHTML = SVG_SAVE;
-          saveBtn.onclick = async () => {
-            const val = inputEl.value.trim();
-            if (!val) return;
-            saveBtn.disabled = true;
-            try {
-              await J.api.post("/api/settings/update", { key: varKey, value: val });
-              const statusRes = await J.api.get(
-                "/api/settings/env-status?keys=" + requiresEnv.join(",")
-              );
-              requiresEnv.forEach(k => {
-                const nowSet = !!statusRes[k];
-                if (statusIcons[k]) {
-                  statusIcons[k].className = "skill-config-status " + (nowSet ? "ok" : "warn");
-                  statusIcons[k].textContent = nowSet ? "✓" : "⚠";
-                }
-              });
-              if (badge) {
-                const allSet = requiresEnv.every(k => !!statusRes[k]);
-                badge.className = "skill-status-badge " + (allSet ? "ok" : "warn");
-                badge.textContent = allSet ? "✓ Configuré" : "⚠ Configuration requise";
-              }
-              J.notify({ kind: "success", text: varKey + " sauvegardé" });
-              inputEl.type = "password";
-              revealed = false;
-              revealBtn.innerHTML = SVG_EYE;
-            } catch (e) {
-              J.notify({ kind: "error", text: "Erreur : " + e.message });
-            }
-            saveBtn.disabled = false;
-          };
-
-          const labelEl = el("span", { class: "skill-config-label", text: varKey });
-          const row = el("div", { class: "skill-config-row" });
-          row.appendChild(statusIcon);
-          row.appendChild(labelEl);
-          row.appendChild(inputWrap);
-          row.appendChild(saveBtn);
-          configSection.appendChild(row);
-        });
-
         const infoCol = el("div", { style: { flex: 1 } });
         infoCol.appendChild(el("span", { style: { color: "var(--fg-0)" }, text: s.name }));
         infoCol.appendChild(el("span", { class: "tn-sub", text: " v" + (s.version || "1.0.0") + " · " + (s.author || "—") }));
-        infoCol.appendChild(el("span", { class: "tn-sub", text: s.description || "" }));
+        if (s.description) infoCol.appendChild(el("span", { style: { display: "block", fontSize: "12px", color: "var(--fg-1)", marginTop: "3px" }, text: s.description }));
         infoCol.appendChild(tagsWrap);
         if (badge) infoCol.appendChild(badge);
-        if (requiresEnv.length) infoCol.appendChild(configSection);
+
+        const capsEl = _buildCapsInline(capabilities);
+        if (capsEl) infoCol.appendChild(capsEl);
+
+        const envSection = _buildEnvSection(requiresEnvDetail, envStatus, envVals, badge, allEnvKeys);
+        if (envSection) infoCol.appendChild(envSection);
+
+        const appsSection = _buildAppsSection(appsStatus);
+        if (appsSection) infoCol.appendChild(appsSection);
 
         activeList.appendChild(el("div", { class: "tool-row", style: { alignItems: "start" } }, [
           el("div", { class: "tg", text: (s.name || "sk").slice(0, 2).toUpperCase() }),
@@ -647,9 +743,18 @@
         }));
         return;
       }
-      presets.forEach((p, i) => {
+
+      // Enrichir les presets avec les données de installed (qui contient apps_status etc.)
+      presets.forEach(p => {
+        const enriched = installed.find(i => i.name === p.name) || {};
         const platformsText = (p.platforms || []).join(", ") || "—";
         const stepsText = (p.steps_count || 0) + " action" + (p.steps_count !== 1 ? "s" : "");
+        const capabilities = enriched.capabilities || [];
+        const appsStatus   = enriched.requires_apps_status || [];
+        const requiresEnvDetail = enriched.requires_env_detail || [];
+        const envStatus    = enriched.env_status || {};
+        const envVals      = enriched.env_values || {};
+        const allEnvKeys   = requiresEnvDetail.map(e => typeof e === "string" ? e : e.name);
 
         const confirmWrap = el("div", { style: { display: "none", gap: "8px" } });
         const confirmBtn  = el("button", { class: "btn-ghost", style: { color: "var(--red, #f55)" }, text: "Confirmer" });
@@ -675,7 +780,10 @@
             if (data.success) {
               J.notify({ kind: "info", text: "Preset désinstallé : " + p.name });
               presets = presets.filter(x => x.name !== p.name);
+              installed = installed.filter(x => x.name !== p.name);
+              catalog = catalog.map(c => c.name === p.name ? Object.assign({}, c, { installed: false }) : c);
               renderPresetList();
+              renderMarket(searchInput.value.trim().toLowerCase());
             } else {
               J.notify({ kind: "error", text: data.message || "Erreur désinstallation" });
               confirmBtn.disabled = false;
@@ -689,12 +797,50 @@
         };
 
         const infoCol = el("div", { style: { flex: 1 } });
-        infoCol.appendChild(el("span", { style: { color: "var(--fg-0)" }, text: p.label || p.name }));
-        infoCol.appendChild(el("span", { class: "tn-sub", text: ` ${stepsText} · ${platformsText}` }));
-        if (p.description) infoCol.appendChild(el("span", { class: "tn-sub", text: p.description }));
+
+        const nameRow = el("div", { style: { display: "flex", alignItems: "center", gap: "6px" } });
+        nameRow.appendChild(el("span", { style: { color: "var(--fg-0)" }, text: p.label || p.name }));
+        nameRow.appendChild(el("span", {
+          class: "badge badge--accent",
+          style: { fontSize: "9px", padding: "1px 5px", verticalAlign: "middle" },
+          text: "PRESET",
+        }));
+        infoCol.appendChild(nameRow);
+        infoCol.appendChild(el("span", { class: "tn-sub", text: `v${enriched.version || p.version || "1.0.0"} · ${enriched.author || p.author || "—"} · ${stepsText}` }));
+
+        const platBadges = _buildPlatformBadges(p.platforms || []);
+        if (platBadges) infoCol.appendChild(platBadges);
+
+        const desc = enriched.description || p.description || "";
+        if (desc) infoCol.appendChild(el("span", { style: { display: "block", fontSize: "12px", color: "var(--fg-1)", marginTop: "4px" }, text: desc }));
+
+        if (p.triggers && p.triggers.length) {
+          const trigText = p.triggers.slice(0, 3).map(t => `"${t}"`).join(", ");
+          infoCol.appendChild(el("span", { style: { fontSize: "11px", color: "var(--fg-3)", fontStyle: "italic", display: "block", marginTop: "2px" }, text: trigText }));
+        }
+
+        const capsEl2 = _buildCapsInline(capabilities);
+        if (capsEl2) infoCol.appendChild(capsEl2);
+
+        const appsSection = _buildAppsSection(appsStatus);
+        if (appsSection) infoCol.appendChild(appsSection);
+
+        if (allEnvKeys.length) {
+          const badge = null;
+          const envSection = _buildEnvSection(requiresEnvDetail, envStatus, envVals, badge, allEnvKeys);
+          if (envSection) {
+            const envWrap = el("div", { style: { marginTop: "8px" } });
+            envWrap.appendChild(el("div", {
+              style: { fontSize: "10px", fontWeight: "600", letterSpacing: "0.05em", color: "var(--fg-3)", marginBottom: "4px" },
+              text: "CONFIGURATION OPTIONNELLE",
+            }));
+            envWrap.appendChild(envSection);
+            infoCol.appendChild(envWrap);
+          }
+        }
 
         presetList.appendChild(el("div", { class: "tool-row", style: { alignItems: "start" } }, [
-          el("div", { class: "tg", text: (p.name || "pr").slice(0, 2).toUpperCase() }),
+          el("div", { class: "tg", text: "▶" }),
           infoCol,
           el("div", { style: { display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-end" } }, [
             uninstallBtn,
@@ -785,7 +931,10 @@
                 catalog = catalog.map(c => c.name === s.name ? Object.assign({}, c, { installed: true }) : c);
                 const res = await J.api.get("/api/skills/installed");
                 installed = (res && res.skills) ? res.skills : [];
+                const pr2 = await J.api.get("/api/presets");
+                presets = (pr2 && pr2.presets) ? pr2.presets : [];
                 renderInstalled();
+                renderPresetList();
                 renderMarket(searchInput.value.trim().toLowerCase());
               } else {
                 J.notify({ kind: "error", text: r.message || "Erreur installation" });
@@ -806,31 +955,21 @@
           text: t,
         })));
 
-        const requiresCol = el("div", {});
-        if (s.requires_env && s.requires_env.length) {
-          requiresCol.appendChild(el("span", {
-            class: "skill-requires",
-            text: "Env : " + s.requires_env.join(", "),
-          }));
-        }
-        if (s.requires_tools && s.requires_tools.length) {
-          requiresCol.appendChild(el("span", {
-            class: "skill-requires",
-            text: "Outils : " + s.requires_tools.join(", "),
-          }));
-        }
-
         const mktInfoCol = el("div", { style: { flex: 1 } });
-        mktInfoCol.appendChild(el("span", { style: { color: "var(--fg-0)" }, text: s.name }));
-        mktInfoCol.appendChild(el("span", { class: "tn-sub", text: " · " + (s.author || "—") }));
+
+        const mktNameRow = el("div", { style: { display: "flex", alignItems: "center", gap: "6px" } });
+        mktNameRow.appendChild(el("span", { style: { color: "var(--fg-0)" }, text: s.name }));
+        mktNameRow.appendChild(el("span", { class: "tn-sub", text: " · " + (s.author || "—") }));
         if (isPreset) {
-          mktInfoCol.appendChild(el("span", {
+          mktNameRow.appendChild(el("span", {
             class: "badge badge--accent",
-            style: { fontSize: "9px", padding: "1px 5px", marginLeft: "5px", verticalAlign: "middle" },
+            style: { fontSize: "9px", padding: "1px 5px", verticalAlign: "middle" },
             text: "PRESET",
           }));
         }
+        mktInfoCol.appendChild(mktNameRow);
         mktInfoCol.appendChild(el("span", { class: "tn-sub", text: s.description || "" }));
+
         if (isPreset && (s.platforms || []).length) {
           mktInfoCol.appendChild(el("span", { class: "tn-sub", text: "Plateformes : " + s.platforms.join(", ") }));
         }
@@ -839,7 +978,31 @@
           mktInfoCol.appendChild(el("span", { class: "tn-sub", text: trigText }));
         }
         mktInfoCol.appendChild(tagsWrap);
-        if (requiresCol.children.length) mktInfoCol.appendChild(requiresCol);
+
+        // Capabilities
+        if (s.capabilities && s.capabilities.length) {
+          const capWrap = el("div", { style: { marginTop: "6px" } });
+          capWrap.appendChild(el("div", { style: { fontSize: "10px", color: "var(--fg-3)", marginBottom: "2px" }, text: "Ce skill :" }));
+          s.capabilities.forEach(cap => {
+            capWrap.appendChild(el("div", { style: { fontSize: "11px", color: "var(--fg-2)" }, text: "· " + cap }));
+          });
+          mktInfoCol.appendChild(capWrap);
+        }
+
+        // Requires env + apps résumé
+        const reqLines = [];
+        const envKeys = (s.requires_env || []).map(e => typeof e === "string" ? e : e.name).filter(Boolean);
+        if (envKeys.length) reqLines.push("Requiert : " + envKeys.join(" · "));
+        const appNames = (s.requires_apps || []).map(a => {
+          if (!a) return null;
+          if (typeof a === "string") return a;
+          if (a.name) return a.name + (a.required === false ? " (optionnel)" : "");
+          return null;
+        }).filter(Boolean);
+        if (appNames.length) reqLines.push("Applications : " + appNames.join(" · "));
+        reqLines.forEach(line => {
+          mktInfoCol.appendChild(el("span", { class: "skill-requires", text: line }));
+        });
 
         const glyphText = isPreset ? "▶" : (s.name || "sk").slice(0, 2).toUpperCase();
         marketList.appendChild(el("div", { class: "tool-row", style: { alignItems: "start" } }, [

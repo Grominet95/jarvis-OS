@@ -44,6 +44,11 @@ class SkillRegistry:
             with skill_yaml.open() as f:
                 metadata = yaml.safe_load(f) or {}
 
+        if "requires_apps" not in metadata:
+            metadata["requires_apps"] = []
+        if "capabilities" not in metadata:
+            metadata["capabilities"] = []
+
         try:
             spec = importlib.util.spec_from_file_location(
                 f"skill_{skill_dir.name}", skill_py

@@ -178,17 +178,46 @@ async def get_skills_catalog() -> dict:
 
 @router.get("/api/skills/installed")
 async def get_installed_skills() -> dict:
-    """Liste des skills installés, enrichie avec env_status et configured."""
+    """Liste des skills installés, enrichie avec env_status, apps_status, capabilities et configured."""
     from skills.registry import skill_registry
+    from skills.app_checker import check_all_apps
     from dotenv import dotenv_values
     env_values = dotenv_values(".env")
     enriched = []
     for s in skill_registry.list_installed():
-        requires_env = s.get("requires_env", [])
-        env_status = {k: bool(env_values.get(k, "").strip()) for k in requires_env}
-        env_vals = {k: env_values.get(k, "") for k in requires_env}
-        configured = all(env_status.values()) if requires_env else True
-        enriched.append({**s, "env_status": env_status, "env_values": env_vals, "configured": configured})
+        skill_obj = skill_registry.get(s["name"])
+        metadata = skill_obj.metadata if skill_obj else {}
+        requires_env = metadata.get("requires_env", s.get("requires_env", []))
+        requires_apps = metadata.get("requires_apps", [])
+        capabilities = metadata.get("capabilities", [])
+
+        # Statut des variables d'env — supporte format simple (str) et enrichi (dict)
+        if requires_env and isinstance(requires_env[0], dict):
+            env_status = {
+                e["name"]: bool(env_values.get(e["name"], "").strip())
+                for e in requires_env
+            }
+            env_vals = {e["name"]: env_values.get(e["name"], "") for e in requires_env}
+        else:
+            env_status = {k: bool(env_values.get(k, "").strip()) for k in requires_env}
+            env_vals = {k: env_values.get(k, "") for k in requires_env}
+
+        apps_status = check_all_apps(requires_apps)
+
+        configured = (
+            all(env_status.values()) if env_status else True
+        ) and apps_status["all_required_installed"]
+
+        enriched.append({
+            **s,
+            "capabilities": capabilities,
+            "requires_env_detail": requires_env,
+            "env_status": env_status,
+            "env_values": env_vals,
+            "requires_apps_status": apps_status["apps"],
+            "all_apps_ok": apps_status["all_required_installed"],
+            "configured": configured,
+        })
     return {"skills": enriched}
 
 

@@ -1,0 +1,78 @@
+name: mode-streameur
+version: 2.0.0
+author: BarthH95
+description: Lance l'environnement stream — OBS, Ne pas déranger, Twitch, recommandation de jeu.
+tags: [preset, stream, gaming, obs, twitch]
+type: preset
+triggers:
+  - "lance le mode streameur"
+  - "démarre le stream"
+  - "on stream"
+  - "je vais streamer"
+platforms: [mac, windows]
+requires_env: []
+requires_tools: [execute_cli]
+requires_oauth: []
+requires_apps:
+  - name: OBS Studio
+    description: "Logiciel de streaming — doit être installé"
+    url: https://obsproject.com
+    mac_bundle: "OBS"
+    windows_exe: "obs64.exe"
+    required: true
+capabilities:
+  - "Ouvre OBS Studio automatiquement"
+  - "Ouvre le dashboard Twitch dans le navigateur"
+  - "Active le mode Ne pas déranger sur macOS et Windows"
+  - "Recommande un jeu à streamer et ouvre sa page Steam"
+  - "Souhaite bonne session avec message vocal"
+steps:
+
+  - name: Ouvrir OBS
+    type: cli
+    platforms:
+      mac: "open -a 'OBS'"
+      windows: "start '' obs64.exe"
+      linux: null
+
+  - name: Attendre OBS
+    type: wait
+    seconds: 3
+
+  - name: Activer Ne pas déranger
+    type: cli
+    platforms:
+      mac: "osascript -e 'tell application \"System Events\" to set doNotDisturb to true'"
+      windows: >-
+        powershell -NoProfile -Command "
+        $ns = 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\CloudStore\\Store\\DefaultAccount\\Current\\default$windows.data.notifications.quiethourssettings';
+        if (-not (Test-Path $ns)) { New-Item -Path $ns -Force | Out-Null };
+        Set-ItemProperty -Path $ns -Name 'Data' -Value ([byte[]](0x02,0,0,0,0xC5,0x1A,0x00,0x00,0,0,0,0,0x00,0x00,0x00,0x00,0x01,0,0,0)) -Type Binary"
+      linux: null
+
+  - name: Ouvrir Twitch
+    type: cli
+    platforms:
+      mac: "open 'https://dashboard.twitch.tv/u/live'"
+      windows: "start '' 'https://dashboard.twitch.tv/u/live'"
+      linux: null
+
+  - name: Recommandation de jeu
+    type: ai
+    prompt: >
+      Barth va streamer sur Twitch. Recommande-lui UN seul jeu à streamer ce soir.
+      Réponds UNIQUEMENT avec ce format exact, sans rien d'autre :
+      NOM_DU_JEU
+      Description courte en 1 phrase max, ton décontracté.
+    output_var: game_recommendation
+
+  - name: Ouvrir page Steam du jeu recommandé
+    type: cli
+    platforms:
+      mac: "open 'https://store.steampowered.com/search/?term={{ game_recommendation.first_line }}&category1=998'"
+      windows: "start '' 'https://store.steampowered.com/search/?term={{ game_recommendation.first_line }}&category1=998'"
+      linux: null
+
+  - name: Message de confirmation
+    type: tts
+    text: "Mode streameur activé. {{ game_recommendation.text }} Bonne session !"
