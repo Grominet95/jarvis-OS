@@ -409,6 +409,23 @@ async def rename_session(session_id: str, body: _TitleBody, request: Request) ->
     return {"id": session_id, "title": body.title.strip()}
 
 
+@router.delete("/api/sessions/{session_id}")
+async def delete_session(session_id: str, request: Request) -> dict:
+    """Supprime une session (fichier JSONL + titre associé)."""
+    store = getattr(request.app.state, "session_store", None)
+    if store is None:
+        raise HTTPException(503, "Session store unavailable.")
+    path = store._find(session_id)
+    if path is None:
+        raise HTTPException(404, "Session introuvable.")
+    path.unlink(missing_ok=True)
+    titles = _load_titles(request)
+    if session_id in titles:
+        del titles[session_id]
+        _save_titles(request, titles)
+    return {"deleted": session_id}
+
+
 @router.get("/api/sessions/{session_id}/messages")
 async def get_session_messages(
     session_id: str,
@@ -484,6 +501,17 @@ async def put_memory_topic(name: str, body: _ContentBody, request: Request) -> d
     if not p.exists():
         raise HTTPException(404, "Fichier introuvable")
     p.write_text(body.content, encoding="utf-8")
+    return {"ok": True}
+
+
+@router.delete("/api/memory/topics/{name}")
+async def delete_memory_topic(name: str, request: Request) -> dict:
+    if "/" in name or "\\" in name or ".." in name:
+        raise HTTPException(400, "Nom invalide")
+    p = _mem_dir(request) / "topics" / name
+    if not p.exists():
+        raise HTTPException(404, "Fichier introuvable")
+    p.unlink()
     return {"ok": True}
 
 

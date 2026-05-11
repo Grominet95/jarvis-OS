@@ -151,16 +151,14 @@
 
   /* ───────── Sessions ───────── */
   async function renderSessions(root) {
-    // SHAPE EXPECTED: [{ id, agent (=preview/title), start (=date), dur, calls (=message_count), tok, status, cls }]
-    // Backend GET /api/sessions → [{ id, date, preview, title, message_count }]
-    // No live calls/tokens count in backend — shows message_count as "msgs"
     root.innerHTML = '<div class="surface"><div class="j-loading">Chargement…</div></div>';
-    let sessions = SESSIONS;
+    let allSessions = SESSIONS.map(s => ({ ...s, fullId: s.id }));
     try {
       const raw = await J.api.get("/api/sessions");
       if (raw && raw.length) {
-        sessions = raw.map(s => ({
+        allSessions = raw.map(s => ({
           id:     s.id ? s.id.slice(0, 6) : "?",
+          fullId: s.id,
           agent:  s.title || s.preview || "session",
           start:  s.date || "—",
           dur:    "—",
@@ -173,10 +171,17 @@
     } catch (_) { /* keep mock */ }
 
     root.innerHTML = "";
-    root.appendChild(secHd("01", "Sessions", "Historique des conversations", sessions.length + " sessions"));
-    const list = el("div");
-    list.appendChild(el("div", {
-      class: "row-tab",
+    root.appendChild(secHd("01", "Sessions", "Historique des conversations", allSessions.length + " sessions"));
+
+    const searchInput = el("input", {
+      class: "sessions-search-input",
+      type: "text",
+      placeholder: "Rechercher une session…",
+    });
+
+    const bodyEl = el("div");
+    bodyEl.appendChild(el("div", {
+      class: "row-tab row-tab-hd",
       style: { borderTop:"0", paddingTop:"0", paddingBottom:"10px", color:"var(--fg-3)", fontFamily:"var(--mono)", fontSize:"10px", letterSpacing:".1em", textTransform:"uppercase" },
     }, [
       el("span", { text: "ID" }),
@@ -184,23 +189,91 @@
       el("span", { style:{textAlign:"right"}, text: "Msgs" }),
       el("span", { style:{textAlign:"right"}, text: "Tokens" }),
       el("span", { style:{textAlign:"right"}, text: "State" }),
+      el("span"),
     ]));
-    sessions.forEach(s => {
-      list.appendChild(el("div", { class: "row-tab" }, [
-        el("span", { class: "rt-id", text: s.id }),
-        el("span", { class: "rt-name" }, [
-          document.createTextNode(s.agent),
-          el("span", { class: "rt-sub", text: "started " + s.start + " · " + s.dur }),
-        ]),
-        el("span", { class: "rt-num", text: s.calls }),
-        el("span", { class: "rt-num", text: s.tok }),
-        el("span", { class: "rt-status", style: { color: s.cls === "ok" ? "var(--green)" : s.cls === "warn" ? "var(--gold)" : "var(--fg-3)" }, text: "● " + s.status }),
-      ]));
-    });
-    root.appendChild(card({
-      title: "Sessions", sub: sessions.length + " sessions · historique",
+
+    function renderRows(filtered) {
+      bodyEl.querySelectorAll(".row-tab:not(.row-tab-hd)").forEach(r => r.remove());
+      filtered.forEach(s => {
+        const nameCell = el("span", { class: "rt-name" });
+
+        function setView() {
+          nameCell.innerHTML = "";
+          nameCell.appendChild(el("div", { class: "rt-title-row" }, [
+            el("span", { class: "rt-title-text", text: s.agent }),
+            el("button", { class: "rt-edit-btn", title: "Renommer" }, [ document.createTextNode("✎") ]),
+          ]));
+          nameCell.appendChild(el("span", { class: "rt-sub", text: "started " + s.start + " · " + s.dur }));
+          nameCell.querySelector(".rt-edit-btn").addEventListener("click", (e) => { e.stopPropagation(); setEdit(); });
+        }
+
+        function setEdit() {
+          nameCell.innerHTML = "";
+          const input = el("input", { class: "rt-edit-input", type: "text" });
+          input.value = s.agent;
+          nameCell.appendChild(input);
+          input.focus(); input.select();
+          let saved = false;
+          async function save() {
+            if (saved) return; saved = true;
+            const newTitle = input.value.trim();
+            if (newTitle && newTitle !== s.agent) {
+              try {
+                await J.api.put("/api/sessions/" + s.fullId + "/title", { title: newTitle });
+                s.agent = newTitle;
+                const found = allSessions.find(x => x.fullId === s.fullId);
+                if (found) found.agent = newTitle;
+              } catch { s.agent = s.agent; }
+            }
+            setView();
+          }
+          input.addEventListener("blur", save);
+          input.addEventListener("keydown", e => {
+            if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+            if (e.key === "Escape") { saved = true; setView(); }
+          });
+        }
+
+        setView();
+
+        const row = el("div", { class: "row-tab" }, [
+          el("span", { class: "rt-id", text: s.id }),
+          nameCell,
+          el("span", { class: "rt-num", text: s.calls }),
+          el("span", { class: "rt-num", text: s.tok }),
+          el("span", { class: "rt-status", style: { color: s.cls === "ok" ? "var(--green)" : s.cls === "warn" ? "var(--gold)" : "var(--fg-3)" }, text: "● " + s.status }),
+          el("button", { class: "rt-del", title: "Supprimer la session" }, [ document.createTextNode("✕") ]),
+        ]);
+        row.querySelector(".rt-del").addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (!confirm("Supprimer cette session ?")) return;
+          try {
+            await J.api.delete("/api/sessions/" + s.fullId);
+            row.remove();
+            allSessions = allSessions.filter(x => x.fullId !== s.fullId);
+            const countSpan = root.querySelector(".sec-hd-r");
+            if (countSpan) countSpan.textContent = allSessions.length + " sessions";
+          } catch { alert("Erreur lors de la suppression."); }
+        });
+        bodyEl.appendChild(row);
+      });
+    }
+
+    renderRows(allSessions);
+
+    const cardEl = card({
+      title: "Sessions", sub: allSessions.length + " sessions · historique",
       right: el("button", { class: "btn-ghost", text: "Stream live ●" }),
-    }, list));
+    }, [
+      el("div", { class: "sessions-search" }, [searchInput]),
+      bodyEl,
+    ]);
+    root.appendChild(cardEl);
+
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim().toLowerCase();
+      renderRows(q ? allSessions.filter(s => s.agent.toLowerCase().includes(q) || s.id.includes(q)) : allSessions);
+    });
   }
 
   /* ───────── Markdown renderer ───────── */
@@ -317,6 +390,98 @@
       }
     }
 
+    async function openMemEditor(file, viewCol) {
+      if (!file.body) {
+        viewCol.innerHTML = '<div class="j-loading">Chargement…</div>';
+        await loadFileContent(file);
+      }
+      const raw = (file.body && file.body.raw) || "";
+      viewCol.innerHTML = "";
+      const editorWrap = el("div", { style: { display: "flex", flexDirection: "column", height: "100%", padding: "18px 22px", gap: "12px" } });
+      const label = el("div", { style: { fontFamily: "var(--mono)", fontSize: "10px", color: "var(--fg-3)", letterSpacing: "0.12em", textTransform: "uppercase" } });
+      label.textContent = file.name;
+      const textarea = el("textarea", { style: {
+        flex: "1", minHeight: "340px", resize: "vertical",
+        fontFamily: "var(--mono)", fontSize: "12.5px", lineHeight: "1.6",
+        background: "var(--bg-1)", color: "var(--fg-0)",
+        border: "1px solid var(--line-1)", borderRadius: "8px",
+        padding: "14px 16px", outline: "none", width: "100%", boxSizing: "border-box",
+      } });
+      textarea.value = raw;
+      const actions = el("div", { style: { display: "flex", gap: "8px", justifyContent: "flex-end" } });
+      const cancelBtn = el("button", { class: "btn-ghost", text: "Annuler", onclick: () => { file.body = null; rerenderViewer(); } });
+      const saveBtn = el("button", { class: "btn-ghost", style: { color: "var(--accent)" }, text: "Sauvegarder" });
+      saveBtn.onclick = async () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "…";
+        try {
+          await J.api.put("/api/memory/topics/" + encodeURIComponent(file.name), { content: textarea.value });
+          file.body.raw = textarea.value;
+          J.notify({ kind: "success", text: "Mémoire · " + file.name + " sauvegardé" });
+          rerenderViewer();
+        } catch (err) {
+          J.notify({ kind: "error", text: "Erreur : " + err.message });
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Sauvegarder";
+        }
+      };
+      actions.appendChild(cancelBtn);
+      actions.appendChild(saveBtn);
+      editorWrap.appendChild(label);
+      editorWrap.appendChild(textarea);
+      editorWrap.appendChild(actions);
+      viewCol.appendChild(editorWrap);
+      textarea.focus();
+    }
+
+    function toggleMemMenu(e, file, viewCol) {
+      e.stopPropagation();
+      const existing = document.getElementById("mem-ctx-menu");
+      if (existing) { existing.remove(); return; }
+      const menu = el("div", {
+        id: "mem-ctx-menu",
+        style: {
+          position: "absolute", top: "36px", right: "0", zIndex: "200",
+          background: "var(--bg-2)", border: "1px solid var(--line-1)",
+          borderRadius: "8px", padding: "6px", minWidth: "160px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+        },
+      });
+      const mkItem = (label, color, action) => {
+        const btn = el("button", {
+          style: {
+            display: "block", width: "100%", textAlign: "left",
+            padding: "7px 12px", borderRadius: "5px",
+            fontSize: "12.5px", fontFamily: "var(--mono)",
+            color: color || "var(--fg-1)", background: "none", border: "none", cursor: "pointer",
+          },
+          text: label,
+          onclick: () => { menu.remove(); action(); },
+        });
+        btn.onmouseenter = () => { btn.style.background = "var(--bg-3, rgba(255,255,255,0.06))"; };
+        btn.onmouseleave = () => { btn.style.background = "none"; };
+        return btn;
+      };
+      menu.appendChild(mkItem("Modifier", null, () => openMemEditor(file, viewCol)));
+      menu.appendChild(mkItem("Supprimer", "var(--red, #f55)", async () => {
+        if (!confirm("Supprimer " + file.name + " ?")) return;
+        try {
+          await J.api.delete("/api/memory/topics/" + encodeURIComponent(file.name));
+          const idx = filesWithGroup.indexOf(file);
+          if (idx !== -1) filesWithGroup.splice(idx, 1);
+          selectedId = filesWithGroup.length ? filesWithGroup[0].id : null;
+          J.notify({ kind: "success", text: "Mémoire · " + file.name + " supprimé" });
+          rerender();
+          rerenderViewer();
+        } catch (err) {
+          J.notify({ kind: "error", text: "Erreur : " + err.message });
+        }
+      }));
+      e.currentTarget.parentElement.appendChild(menu);
+      const close = (ev) => { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener("click", close); } };
+      setTimeout(() => document.addEventListener("click", close), 0);
+    }
+
     async function rerenderViewer() {
       const file = filesWithGroup.find(f => f.id === selectedId) || filesWithGroup[0];
       if (!file) { viewCol.innerHTML = '<div class="j-empty">Aucun fichier sélectionné.</div>'; return; }
@@ -336,9 +501,8 @@
             file.pin ? el("span", { style:{color:"var(--gold)"}, text: "● PINNED" }) : null,
           ]),
         ]),
-        el("div", { class: "mem-view-hd-r" }, [
-          el("button", { class: "btn-ghost", text: "Edit" }),
-          el("button", { class: "btn-ghost", text: "⋯" }),
+        el("div", { class: "mem-view-hd-r", style: { position: "relative" } }, [
+          el("button", { class: "btn-ghost", text: "⋯", onclick: (e) => toggleMemMenu(e, file, viewCol) }),
         ]),
       ]);
       viewCol.appendChild(vhd);

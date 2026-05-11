@@ -91,6 +91,24 @@
       if (!r.ok) throw new Error("POST " + path + " → " + r.status);
       return r.json();
     },
+    async put(path, body) {
+      const r = await fetch(this.base + path, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: body == null ? null : JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error("PUT " + path + " → " + r.status);
+      return r.json();
+    },
+    async delete(path) {
+      const r = await fetch(this.base + path, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      if (!r.ok) throw new Error("DELETE " + path + " → " + r.status);
+      return r.json();
+    },
   };
 
   /* ───────── Atmosphere (vignette + grain + aurora) ───────── */
