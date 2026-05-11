@@ -277,7 +277,8 @@ body {
   padding: var(--density-pad);
   display: flex; flex-direction: column;
   gap: 28px;
-  max-width: 1480px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .card {
