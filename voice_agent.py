@@ -100,24 +100,61 @@ def _voice_broadcast(event: dict) -> None:
 
 
 def _build_voice_tools() -> list:
-    """Retourne les LiveKit tools : skills + outils de base utiles en vocal."""
+    """Retourne les LiveKit tools en miroir du mode texte (main.py)."""
+    from pathlib import Path
+    from config.settings import settings
+
+    _root = Path(__file__).parent
+    _google_creds = (_root / settings.google_credentials_path).resolve()
+    _gmail_token = (_root / "config/google_gmail_token.json").resolve()
+    _calendar_token = (_root / settings.google_token_path).resolve()
+    _allowed_roots = [Path(r).expanduser().resolve() for r in settings.file_search_roots]
+
     jarvis_tools = []
 
-    # Outils de base
-    try:
-        from tools.weather import WeatherTool
-        from tools.cli import ExecuteCLITool
-        from tools.map_control import MapControlTool
-        from tools.preset import ExecutePresetTool
+    _tool_factories = [
+        ("weather",    lambda: __import__("tools.weather",    fromlist=["WeatherTool"]).WeatherTool()),
+        ("browser",    lambda: __import__("tools.browser",    fromlist=["BrowserTool"]).BrowserTool()),
+        ("vision",     lambda: __import__("tools.vision",     fromlist=["VisionTool"]).VisionTool()),
+        ("filesystem", lambda: [
+            __import__("tools.filesystem", fromlist=["ReadFileTool"]).ReadFileTool(allowed_roots=_allowed_roots),
+            __import__("tools.filesystem", fromlist=["FindFilesTool"]).FindFilesTool(allowed_roots=_allowed_roots),
+        ]),
+        ("cli", lambda: [
+            __import__("tools.cli", fromlist=["CLIRunnerTool"]).CLIRunnerTool(
+                whitelist_path=Path(settings.cli_whitelist_path)
+            ),
+            __import__("tools.cli", fromlist=["ExecuteCLITool"]).ExecuteCLITool(),
+        ]),
+        ("calendar", lambda: [
+            __import__("tools.calendar", fromlist=["CalendarListTool"]).CalendarListTool(
+                credentials_path=_google_creds, token_path=_calendar_token
+            ),
+            __import__("tools.calendar", fromlist=["CalendarCreateTool"]).CalendarCreateTool(
+                credentials_path=_google_creds, token_path=_calendar_token
+            ),
+        ]),
+        ("notion",  lambda: __import__("tools.notion",  fromlist=["NotionTasksTool"]).NotionTasksTool()),
+        ("memory",  lambda: __import__("tools.memory",  fromlist=["MemoryTopicWriteTool"]).MemoryTopicWriteTool()),
+        ("spotify", lambda: __import__("tools.spotify", fromlist=["SpotifyTool"]).SpotifyTool()),
+        ("gmail",   lambda: __import__("tools.gmail",   fromlist=["GmailListTool"]).GmailListTool(
+            credentials_path=_google_creds, token_path=_gmail_token
+        )),
+        ("map_control", lambda: __import__("tools.map_control", fromlist=["MapControlTool"]).MapControlTool(
+            broadcast_event=_voice_broadcast
+        )),
+        ("preset", lambda: __import__("tools.preset", fromlist=["ExecutePresetTool"]).ExecutePresetTool()),
+    ]
 
-        jarvis_tools += [
-            WeatherTool(),
-            ExecuteCLITool(),
-            MapControlTool(broadcast_event=_voice_broadcast),
-            ExecutePresetTool(),
-        ]
-    except Exception as e:
-        logger.warning("Outils de base non chargés: %s", e)
+    for name, factory in _tool_factories:
+        try:
+            result = factory()
+            if isinstance(result, list):
+                jarvis_tools += result
+            else:
+                jarvis_tools.append(result)
+        except Exception as e:
+            logger.warning("Outil '%s' non chargé: %s", name, e)
 
     # Outils des skills installés (BambuLab, Fusion360…)
     try:
@@ -202,6 +239,8 @@ async def entrypoint(ctx: object) -> None:
             encoding="pcm_24000",
             streaming_latency=3,
         ),
+        # Désactive l'adaptive interruption (agent-gateway.livekit.cloud) — local dev only
+        turn_handling={"interruption": {"mode": "vad"}},
     )
 
     agent = JarvisVoiceAgent(instructions=instructions, tools=tools)
