@@ -232,13 +232,11 @@
     let mc = document.getElementById("j-rooms-mc");
     if (!mc) {
       mc = el("button", { id: "j-rooms-mc", class: "rooms-mc", onclick: () => Jarvis.openMissionControl() });
-      const icon = el("span", { class: "mc-icon" });
-      for (let i = 0; i < 4; i++) icon.appendChild(el("i"));
+      mc.appendChild(el("span", { class: "mc-dot" }));
+      mc.appendChild(el("span", { text: "Mission Control" }));
       const kbd = el("span", { class: "mc-kbd" });
       kbd.appendChild(el("span", { text: "⌘" }));
       kbd.appendChild(el("span", { text: "T" }));
-      mc.appendChild(icon);
-      mc.appendChild(el("span", { text: "Mission Control" }));
       mc.appendChild(kbd);
       document.body.appendChild(mc);
     }
