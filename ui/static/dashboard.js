@@ -519,7 +519,6 @@
   function buildTaskRow(t, list) {
     const row = el("div", { class: "task-row " + (t.done ? "done" : "") });
     const chk = el("div", { class: "task-check" });
-    if (t.done) chk.textContent = "✓";
     const txt = el("div", { style: { flex: "1", minWidth: "0" } });
     txt.appendChild(el("div", { class: "task-label", text: t.label }));
     txt.appendChild(el("div", { class: "task-src",   text: t.src }));
@@ -544,14 +543,12 @@
     chk.addEventListener("click", async (e) => {
       e.stopPropagation();
       const newDone = !t.done;
-      chk.style.opacity = "0.5";
-      try {
-        await J.api.patch("/api/tasks/" + t.id, { done: newDone });
-        t.done = newDone;
-        row.classList.toggle("done", newDone);
-        chk.textContent = newDone ? "✓" : "";
-      } catch (_) {}
-      chk.style.opacity = "";
+      t.done = newDone;
+      row.classList.toggle("done", newDone);
+      J.api.patch("/api/tasks/" + t.id, { done: newDone }).catch(() => {
+        t.done = !newDone;
+        row.classList.toggle("done", !newDone);
+      });
     });
 
     row.appendChild(chk); row.appendChild(txt); row.appendChild(del);
