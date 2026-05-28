@@ -947,17 +947,32 @@
 
     const wrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "40px" } });
 
-    if (index) {
-      const indexPre = el("div", {
-        style: { fontFamily: "var(--mono)", fontSize: "11px", color: "var(--fg-2)",
-          lineHeight: "1.6", whiteSpace: "pre-wrap", padding: "16px",
-          background: "var(--bg-1)", border: "0.5px solid var(--line-1)",
-          borderRadius: "10px" },
-        text: index.slice(0, 800),
-      });
-      wrap.appendChild(ghostSec("Index mémoire", "MEMORY.md", null, indexPre));
-    }
+    /* ── Index MEMORY.md (éditable) ── */
+    const indexWrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } });
+    const indexTa = el("textarea", { class: "mem-textarea" });
+    indexTa.rows = 10;
+    indexTa.value = index;
+    indexWrap.appendChild(indexTa);
+    const indexSave = el("button", { class: "m-btn m-btn--save", text: "Sauvegarder" });
+    indexSave.addEventListener("click", async () => {
+      const orig = indexSave.textContent;
+      indexSave.textContent = "…"; indexSave.disabled = true;
+      try {
+        await J.api.put("/api/memory/index", { content: indexTa.value });
+        J.notify({ kind: "success", text: "MEMORY.md sauvegardé" });
+        indexSave.textContent = "✓ Sauvegardé";
+      } catch (e) {
+        J.notify({ kind: "error", text: e.message });
+        indexSave.textContent = "✗ Erreur";
+      }
+      setTimeout(() => { indexSave.textContent = orig; indexSave.disabled = false; }, 2000);
+    });
+    const idxRow = el("div", { class: "mem-btn-row" });
+    idxRow.appendChild(indexSave);
+    indexWrap.appendChild(idxRow);
+    wrap.appendChild(ghostSec("Index mémoire", "MEMORY.md", null, indexWrap));
 
+    /* ── Topics ── */
     const list = el("div");
     if (!topics.length) {
       list.appendChild(el("div", { class: "j-empty", text: "Aucun topic en mémoire" }));
@@ -967,17 +982,81 @@
         row.appendChild(el("div", { class: "mem-name", text: t.name }));
         row.appendChild(el("div", { class: "mem-meta", text: Math.round((t.size || 0) / 1024 * 10) / 10 + " ko" }));
         row.appendChild(el("div", { class: "mem-meta", text: t.mtime ? new Date(t.mtime).toLocaleDateString("fr") : "—" }));
-        const delBtn = el("button", { class: "m-btn danger", text: "Sup." });
-        delBtn.addEventListener("click", async () => {
-          if (!confirm("Supprimer " + t.name + " ?")) return;
-          try {
-            await J.api.delete("/api/memory/topics/" + t.name);
-            J.notify({ kind: "success", text: t.name + " supprimé" });
-            renderMemoire();
-          } catch (e) { J.notify({ kind: "error", text: e.message }); }
-        });
-        row.appendChild(delBtn);
+
+        const editBtn = el("button", { class: "m-btn", text: "Éditer" });
+        const delBtn  = el("button", { class: "m-btn m-btn--danger", text: "✕" });
+        delBtn.title = "Supprimer " + t.name;
+        const acts = el("div", { class: "mem-btn-row" });
+        acts.appendChild(editBtn);
+        acts.appendChild(delBtn);
+        row.appendChild(acts);
         list.appendChild(row);
+
+        /* inline editor (hidden by default) */
+        const editor = el("div", { class: "mem-topic-editor" });
+        const ta = el("textarea", { class: "mem-textarea" });
+        ta.rows = 14;
+        editor.appendChild(ta);
+        const saveBtn  = el("button", { class: "m-btn m-btn--save",  text: "Sauvegarder" });
+        const closeBtn = el("button", { class: "m-btn",               text: "Fermer" });
+        const btnRow   = el("div",    { class: "mem-btn-row" });
+        btnRow.appendChild(saveBtn);
+        btnRow.appendChild(closeBtn);
+        editor.appendChild(btnRow);
+        list.appendChild(editor);
+
+        editBtn.addEventListener("click", async () => {
+          if (editor.classList.contains("open")) {
+            editor.classList.remove("open");
+            editBtn.textContent = "Éditer";
+            return;
+          }
+          editBtn.textContent = "…"; editBtn.disabled = true;
+          try {
+            const { content } = await J.api.get("/api/memory/topics/" + encodeURIComponent(t.name));
+            ta.value = content;
+            editor.classList.add("open");
+            editBtn.textContent = "Éditer";
+            setTimeout(() => editor.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+          } catch (e) {
+            J.notify({ kind: "error", text: e.message });
+            editBtn.textContent = "Éditer";
+          }
+          editBtn.disabled = false;
+        });
+
+        closeBtn.addEventListener("click", () => {
+          editor.classList.remove("open");
+          editBtn.textContent = "Éditer";
+        });
+
+        saveBtn.addEventListener("click", async () => {
+          const orig = saveBtn.textContent;
+          saveBtn.textContent = "…"; saveBtn.disabled = true;
+          try {
+            await J.api.put("/api/memory/topics/" + encodeURIComponent(t.name), { content: ta.value });
+            J.notify({ kind: "success", text: t.name + " sauvegardé" });
+            saveBtn.textContent = "✓ Sauvegardé";
+          } catch (e) {
+            J.notify({ kind: "error", text: e.message });
+            saveBtn.textContent = "✗ Erreur";
+          }
+          setTimeout(() => { saveBtn.textContent = orig; saveBtn.disabled = false; }, 2000);
+        });
+
+        delBtn.addEventListener("click", async () => {
+          if (!confirm("Supprimer « " + t.name + " » définitivement ?")) return;
+          delBtn.disabled = true;
+          try {
+            await J.api.delete("/api/memory/topics/" + encodeURIComponent(t.name));
+            row.remove();
+            editor.remove();
+            J.notify({ kind: "success", text: t.name + " supprimé" });
+          } catch (e) {
+            J.notify({ kind: "error", text: e.message });
+            delBtn.disabled = false;
+          }
+        });
       });
     }
     wrap.appendChild(ghostSec("Topics", topics.length + " fichiers", null, list));

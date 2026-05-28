@@ -199,7 +199,7 @@
       background: rgba(74,158,255,0.05);
     }
 
-    .tab-content { display: none; flex: 1; overflow: hidden; }
+    .tab-content { display: none; flex: 1; overflow: hidden; min-height: 0; }
     .tab-content.active { display: flex; flex-direction: column; }
 
     /* placeholder */
@@ -253,7 +253,7 @@
     }
 
     /* ── Memory tab ─────────────────────────────────────────── */
-    #memory-tab { overflow-y: auto; flex-direction: column; padding: 20px 24px; gap: 24px; }
+    #memory-tab { overflow-y: auto; flex-direction: column; padding: 20px 24px; gap: 24px; min-height: 0; }
 
     .mem-block { display: flex; flex-direction: column; gap: 10px; }
 
@@ -278,6 +278,7 @@
       resize: vertical; min-height: 100px;
       outline: none;
       transition: border-color .18s, box-shadow .18s;
+      box-sizing: border-box;
     }
     textarea.mem-editor:focus {
       border-color: rgba(74,158,255,0.42);
@@ -311,7 +312,7 @@
     }
 
     .topic-row {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 8px;
       padding: 9px 14px;
       border-radius: 10px;
       border: 1px solid transparent;
@@ -320,13 +321,38 @@
     .topic-row:hover { background: var(--b4); border-color: var(--b3); }
     .topic-name { flex: 1; font: 500 12px/1 'DM Sans', sans-serif; color: var(--text); }
     .topic-meta { font: 400 10px/1 'DM Mono', monospace; color: var(--muted); }
-    .topic-editor-wrap { display: none; padding: 8px 0 4px; }
-    .topic-editor-wrap.open { display: block; }
-    /* aliases for JS compat */
-    .btn-sm { font: 600 9px/1 'DM Mono', monospace; letter-spacing: 0.18em; text-transform: uppercase; border: 1px solid var(--b3); border-radius: 99px; padding: 6px 16px; background: var(--b4); color: var(--dim); cursor: pointer; transition: all .15s; }
+
+    .topic-editor-wrap {
+      display: none;
+      padding: 0 14px 12px;
+      flex-direction: column; gap: 8px;
+    }
+    .topic-editor-wrap.open { display: flex; }
+
+    /* buttons */
+    .btn-sm { font: 600 9px/1 'DM Mono', monospace; letter-spacing: 0.18em; text-transform: uppercase; border: 1px solid var(--b3); border-radius: 99px; padding: 6px 16px; background: var(--b4); color: var(--dim); cursor: pointer; transition: all .15s; white-space: nowrap; }
     .btn-sm:hover { border-color: var(--b1); color: var(--b1); background: rgba(74,158,255,0.10); }
-    .btn-save { background: rgba(45,125,210,0.16); border-color: rgba(74,158,255,0.36); color: var(--b1); margin-top: 8px; }
+    .btn-save { background: rgba(45,125,210,0.16); border-color: rgba(74,158,255,0.36); color: var(--b1); }
     .btn-save:hover { background: rgba(45,125,210,0.28); border-color: var(--b1); color: #fff; }
+
+    .btn-icon {
+      width: 28px; height: 28px;
+      padding: 0; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px; letter-spacing: 0;
+    }
+    .btn-del {
+      border-color: rgba(255,80,80,0.20);
+      color: rgba(255,100,100,0.50);
+      background: transparent;
+    }
+    .btn-del:hover {
+      border-color: rgba(255,80,80,0.55);
+      color: rgba(255,100,100,1);
+      background: rgba(255,60,60,0.08);
+    }
+
+    .topic-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
     /* ── Tasks tab ──────────────────────────────────────────── */
     #tasks-tab { overflow-y: auto; flex-direction: column; padding: 20px 24px; gap: 24px; }
@@ -567,57 +593,112 @@
     list.innerHTML = '';
     data.topics.forEach(t => {
       const wrap = document.createElement('div');
+      wrap.dataset.topic = t.name;
       wrap.innerHTML = `
         <div class="topic-row">
-          <span class="topic-name">${t.name}</span>
-          <span class="topic-meta">${t.mtime} · ${t.size}o</span>
-          <button class="btn-sm topic-edit-btn" data-name="${t.name}">Éditer</button>
+          <span class="topic-name">${escHtml(t.name)}</span>
+          <span class="topic-meta">${escHtml(t.mtime)} · ${t.size}o</span>
+          <div class="topic-actions">
+            <button class="btn-sm topic-edit-btn" data-name="${escHtml(t.name)}">Éditer</button>
+            <button class="btn-sm btn-icon btn-del topic-del-btn" data-name="${escHtml(t.name)}" title="Supprimer">✕</button>
+          </div>
         </div>
         <div class="topic-editor-wrap" id="editor-${cssId(t.name)}">
-          <textarea class="mem-editor topic-ta" rows="10" data-name="${t.name}"></textarea>
-          <button class="btn-sm btn-save topic-save-btn" data-name="${t.name}">Sauvegarder</button>
+          <textarea class="mem-editor topic-ta" rows="12" data-name="${escHtml(t.name)}"></textarea>
+          <div class="btn-row">
+            <button class="btn-sm btn-save topic-save-btn" data-name="${escHtml(t.name)}">Sauvegarder</button>
+            <button class="btn-sm topic-close-btn" data-name="${escHtml(t.name)}">Fermer</button>
+          </div>
         </div>
       `;
       list.appendChild(wrap);
-    });
 
-    list.querySelectorAll('.topic-edit-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const name = btn.dataset.name;
-        const editorWrap = document.getElementById('editor-' + cssId(name));
+      const editBtn = wrap.querySelector('.topic-edit-btn');
+      const closeBtn = wrap.querySelector('.topic-close-btn');
+      const delBtn = wrap.querySelector('.topic-del-btn');
+      const saveBtn = wrap.querySelector('.topic-save-btn');
+      const editorWrap = wrap.querySelector('.topic-editor-wrap');
+      const ta = wrap.querySelector('.topic-ta');
+
+      editBtn.addEventListener('click', async () => {
         if (editorWrap.classList.contains('open')) {
-          editorWrap.classList.remove('open'); btn.textContent = 'Éditer'; return;
+          editorWrap.classList.remove('open');
+          editBtn.textContent = 'Éditer';
+          return;
         }
-        const { content } = await api('/memory/topics/' + encodeURIComponent(name));
-        editorWrap.querySelector('textarea').value = content;
-        editorWrap.classList.add('open'); btn.textContent = 'Fermer';
+        editBtn.textContent = '…';
+        editBtn.disabled = true;
+        try {
+          const { content } = await api('/memory/topics/' + encodeURIComponent(t.name));
+          ta.value = content;
+          editorWrap.classList.add('open');
+          editBtn.textContent = 'Éditer';
+          setTimeout(() => editorWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+        } catch (e) {
+          editBtn.textContent = 'Erreur';
+          setTimeout(() => { editBtn.textContent = 'Éditer'; editBtn.disabled = false; }, 2000);
+          return;
+        }
+        editBtn.disabled = false;
       });
-    });
 
-    list.querySelectorAll('.topic-save-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const name = btn.dataset.name;
-        const ta = document.querySelector(`.topic-ta[data-name="${name}"]`);
-        await api('/memory/topics/' + encodeURIComponent(name), {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: ta.value }),
-        });
-        btn.textContent = '✓ Sauvegardé';
-        setTimeout(() => btn.textContent = 'Sauvegarder', 2000);
+      closeBtn.addEventListener('click', () => {
+        editorWrap.classList.remove('open');
+        editBtn.textContent = 'Éditer';
+      });
+
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.textContent = '…';
+        saveBtn.disabled = true;
+        try {
+          await api('/memory/topics/' + encodeURIComponent(t.name), {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: ta.value }),
+          });
+          saveBtn.textContent = '✓ Sauvegardé';
+        } catch {
+          saveBtn.textContent = '✗ Erreur';
+        }
+        setTimeout(() => { saveBtn.textContent = 'Sauvegarder'; saveBtn.disabled = false; }, 2000);
+      });
+
+      delBtn.addEventListener('click', async () => {
+        if (!confirm(`Supprimer "${t.name}" définitivement ?`)) return;
+        delBtn.disabled = true;
+        try {
+          await api('/memory/topics/' + encodeURIComponent(t.name), { method: 'DELETE' });
+          wrap.remove();
+          const topicCount = document.getElementById('topic-count');
+          const current = parseInt(topicCount.textContent) || 0;
+          topicCount.textContent = Math.max(0, current - 1) + ' topics';
+        } catch {
+          delBtn.disabled = false;
+          alert('Erreur lors de la suppression.');
+        }
       });
     });
   }
 
-  document.getElementById('save-index').addEventListener('click', async () => {
-    const btn = document.getElementById('save-index');
-    await api('/memory/index', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ content: document.getElementById('index-editor').value }) });
-    btn.textContent = '✓ Sauvegardé'; setTimeout(() => btn.textContent = 'Sauvegarder', 2000);
+  async function saveWithFeedback(btn, fn) {
+    const orig = btn.textContent;
+    btn.textContent = '…'; btn.disabled = true;
+    try { await fn(); btn.textContent = '✓ Sauvegardé'; }
+    catch { btn.textContent = '✗ Erreur'; }
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+  }
+
+  document.getElementById('save-index').addEventListener('click', function() {
+    saveWithFeedback(this, () => api('/memory/index', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: document.getElementById('index-editor').value }),
+    }));
   });
 
-  document.getElementById('save-prefs').addEventListener('click', async () => {
-    const btn = document.getElementById('save-prefs');
-    await api('/memory/prefs', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ content: document.getElementById('prefs-editor').value }) });
-    btn.textContent = '✓ Sauvegardé'; setTimeout(() => btn.textContent = 'Sauvegarder', 2000);
+  document.getElementById('save-prefs').addEventListener('click', function() {
+    saveWithFeedback(this, () => api('/memory/prefs', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: document.getElementById('prefs-editor').value }),
+    }));
   });
 
   async function loadTasks() {

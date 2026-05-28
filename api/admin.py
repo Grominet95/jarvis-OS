@@ -177,6 +177,17 @@ async def put_topic(filename: str, body: ContentBody, request: Request) -> dict:
     return {"ok": True}
 
 
+@router.delete("/memory/topics/{filename}")
+async def delete_topic(filename: str, request: Request) -> dict:
+    if "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Nom de fichier invalide.")
+    path = _memory_dir(request) / "topics" / filename
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Fichier introuvable.")
+    path.unlink()
+    return {"ok": True}
+
+
 # ── Tasks ─────────────────────────────────────────────────────
 
 

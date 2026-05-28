@@ -516,9 +516,54 @@ body[data-mode="capacites"] { overflow-y: auto; overflow-x: hidden; }
 
 /* ── Mémoire ── */
 .memory-row {
-  display: grid; grid-template-columns: 1fr 60px 80px 60px;
+  display: grid; grid-template-columns: 1fr 60px 80px auto;
   align-items: center; gap: 14px;
   padding: 12px 0; border-bottom: 0.5px solid var(--line-1);
 }
 .mem-name { font-size: 12.5px; color: var(--fg-1); }
 .mem-meta { font-family: var(--mono); font-size: 10px; color: var(--fg-3); text-align: right; }
+
+.mem-btn-row { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+.m-btn {
+  appearance: none; background: transparent;
+  border: 0.5px solid var(--line-2); border-radius: 6px;
+  color: var(--fg-2); font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  padding: 5px 11px; cursor: pointer; white-space: nowrap;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.m-btn:hover:not(:disabled) { border-color: var(--fg-2); color: var(--fg-0); }
+.m-btn:disabled { opacity: 0.4; cursor: default; }
+
+.m-btn--save {
+  color: var(--gold); border-color: rgba(184,150,62,.32);
+  background: var(--gold-soft);
+}
+.m-btn--save:hover:not(:disabled) { background: rgba(184,150,62,.22); border-color: var(--gold); }
+
+.m-btn--danger {
+  color: rgba(229,72,77,.55); border-color: rgba(229,72,77,.18);
+  background: transparent; padding: 5px 9px;
+}
+.m-btn--danger:hover:not(:disabled) {
+  color: var(--red); border-color: rgba(229,72,77,.55);
+  background: var(--red-soft);
+}
+
+.mem-topic-editor {
+  display: none; flex-direction: column; gap: 10px;
+  padding: 14px 0 20px;
+  border-bottom: 0.5px solid var(--line-1);
+}
+.mem-topic-editor.open { display: flex; }
+
+.mem-textarea {
+  width: 100%; box-sizing: border-box;
+  background: var(--bg-1); border: 0.5px solid var(--line-2);
+  border-radius: 10px; padding: 12px 14px;
+  font-family: var(--mono); font-size: 11.5px; color: var(--fg-1);
+  line-height: 1.6; resize: vertical; min-height: 120px;
+  outline: none; transition: border-color .15s;
+}
+.mem-textarea:focus { border-color: var(--gold); }
