@@ -70,12 +70,16 @@ class Agent:
             dynamic_parts.append(f"## Mémoire index\n\n{index_content}")
 
         if self._topic_store is not None:
-            topics = self._topic_store.load_all()
-            if topics:
-                sections = "\n\n---\n\n".join(
-                    f"### {name}\n{content}" for name, content in topics.items()
+            topic_names = self._topic_store.list_all()
+            if topic_names:
+                names_list = "\n".join(f"- `{name}`" for name in topic_names)
+                dynamic_parts.append(
+                    "## Fichiers thématiques disponibles\n\n"
+                    "Ces fichiers ne sont PAS préchargés. Pour les consulter, utilise "
+                    "`memory_search` (recherche sémantique) puis `memory_load_topic(filename=...)` "
+                    "pour lire un fichier complet si nécessaire (routing [CF]).\n\n"
+                    f"{names_list}"
                 )
-                dynamic_parts.append(f"## Fichiers thématiques chargés\n\n{sections}")
 
         if self._tool_registry is not None and self._tool_registry.has_tools():
             tool_lines = "\n".join(
