@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -98,11 +99,26 @@ async def delete_session(session_id: str, request: Request) -> dict:
     path = store._find(session_id)
     if path is None:
         raise HTTPException(404, "Session introuvable.")
+    filename = path.name
     path.unlink(missing_ok=True)
     titles = _load_titles(request)
     if session_id in titles:
         del titles[session_id]
         _save_titles(request, titles)
+
+    # Retire la session des indices FTS + vectoriel si disponibles
+    fts_index = getattr(request.app.state, "fts_index", None)
+    vector_index = getattr(request.app.state, "vector_index", None)
+    if fts_index is not None or vector_index is not None:
+        async def _remove_from_indices() -> None:
+            if fts_index is not None:
+                await fts_index.remove(filename)
+            if vector_index is not None:
+                async with vector_index._lock:
+                    vector_index._remove_doc_locked(f"transcript:{filename}")
+                await vector_index.persist()
+        asyncio.create_task(_remove_from_indices(), name=f"indices-remove-{session_id}")
+
     return {"deleted": session_id}
 
 

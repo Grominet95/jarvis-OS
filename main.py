@@ -46,11 +46,12 @@ from core.session import SessionManager
 from llm.api import AnthropicProvider
 from llm.factory import create_background_llm, get_llm_provider
 from memory.auto_dream import AutoDream
-from memory.consolidation import ConsolidationAgent
+from memory.consolidation import ConsolidationAgent, CrossSessionRecall
 from memory.index import MemoryIndex
-from memory.search import VectorIndex
+from memory.search import FTSIndex, VectorIndex
 from memory.sessions import SessionStore
 from memory.topics import TopicStore
+from memory.user_model import UserModel
 from skills.registry import skill_registry
 from tools.browser import BrowserTool
 from tools.subagent import ScriptRPCTool, SpawnSubagentTool
@@ -59,7 +60,12 @@ from tools.calendar import CalendarCreateTool, CalendarListTool
 from tools.cli import CLIRunnerTool, ExecuteCLITool
 from tools.gmail import GmailListTool
 from tools.filesystem import FindFilesTool, ReadFileTool
-from tools.memory import MemoryLoadTopicTool, MemorySearchTool, MemoryTopicWriteTool
+from tools.memory import (
+    CrossSessionRecallTool,
+    MemoryLoadTopicTool,
+    MemorySearchTool,
+    MemoryTopicWriteTool,
+)
 from tools.notion import NotionTasksTool
 from tools.registry import ToolRegistry
 from tools.preset import ExecutePresetTool
@@ -77,6 +83,11 @@ from api.http import _log_sink
 logger.remove()
 logger.add(sys.stderr, level=settings.log_level, format=_LOG_FORMAT, colorize=True)
 logger.add(_log_sink, level="INFO", format="{time:HH:mm:ss} | {level: <8} | {name} — {message}")
+
+
+async def _fts_rebuild_if_empty(fts_index: FTSIndex, sessions_dir: Path) -> None:
+    if await fts_index.is_empty() and sessions_dir.exists():
+        await fts_index.rebuild(sessions_dir)
 
 
 # ── Lifespan ─────────────────────────────────────────────────
@@ -99,6 +110,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             ),
             name="vector-index-reindex",
         )
+
+    fts_index = FTSIndex(db_path=memory_dir / "fts_index.db")
+    asyncio.create_task(
+        _fts_rebuild_if_empty(fts_index, memory_dir / "sessions"),
+        name="fts-index-reindex",
+    )
 
     llm = get_llm_provider()
     background_llm = create_background_llm()
@@ -146,6 +163,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Enregistre les outils fournis par les skills installés
     tool_registry.replace_skill_tools(*skill_registry.get_all_tools())
 
+    user_model_path = memory_dir / "user_model.md"
+
     agent = Agent(
         llm=llm,
         memory_index=memory_index,
@@ -153,6 +172,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         tool_registry=tool_registry,
         user_prefs_path=user_prefs_path,
         skill_registry=skill_registry,
+        user_model_path=user_model_path,
     )
     voice_agent = Agent(
         llm=voice_llm,
@@ -161,6 +181,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         tool_registry=tool_registry,
         user_prefs_path=user_prefs_path,
         skill_registry=skill_registry,
+        user_model_path=user_model_path,
     )
     session_manager = SessionManager(store=session_store)
     consolidation = ConsolidationAgent(
@@ -178,6 +199,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # ShowViewTool fourni par le skill globe-view — désenregistré ici
     tool_registry.register(ExecutePresetTool())
     approval_checker = ApprovalChecker(broadcast_event=proactive_queue.broadcast_event)
+
+    # ── [MEMORY-RECALL] ──────────────────────────────────────────────────────
+    _cross_recall = CrossSessionRecall(
+        llm=background_llm,
+        fts_index=fts_index,
+        vector_index=vector_index,
+    )
+    _user_model = UserModel(llm=background_llm, model_path=user_model_path)
+    tool_registry.register(
+        CrossSessionRecallTool(fts_index=fts_index, vector_index=vector_index),
+    )
+    logger.info("Memory recall initialisé (FTS5 + vecteur + UserModel)")
+    # ── [/MEMORY-RECALL] ─────────────────────────────────────────────────────
 
     # Expose singletons pour les presets (executor + tool)
     from background.notifications import set_proactive_queue
@@ -298,12 +332,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         agent=agent,
         notifications=notifications,
         worker=worker,
+        recall=_cross_recall,
     )
     app.state.voice_gateway = Gateway(
         session_manager=session_manager,
         agent=voice_agent,
         notifications=notifications,
         worker=worker,
+        recall=_cross_recall,
     )
     app.state.worker = worker
     app.state.consolidation = consolidation
@@ -313,6 +349,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.notifications = notifications
     app.state.proactive_engine = proactive_engine
     app.state.approval_checker = approval_checker
+    app.state.vector_index = vector_index
+    app.state.fts_index = fts_index
+    app.state.user_model = _user_model
     from core.approval_checker import set_approval_checker
     set_approval_checker(approval_checker)
 

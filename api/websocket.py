@@ -300,6 +300,9 @@ async def websocket_chat(websocket: WebSocket) -> None:
                 auto_dream._run_micro_safe(user_message=message, assistant_message=full),
                 name="autodream-micro",
             )
+            _user_model = getattr(websocket.app.state, "user_model", None)
+            if _user_model is not None:
+                _user_model.fire(user_message=message, assistant_message=full)
 
     except WebSocketDisconnect:
         logger.info("WebSocket connection closed")

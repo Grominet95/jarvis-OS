@@ -32,6 +32,7 @@ class Agent:
         tool_registry: ToolRegistry | None = None,
         user_prefs_path: Path | None = None,
         skill_registry: SkillRegistry | None = None,
+        user_model_path: Path | None = None,
     ) -> None:
         self._llm = llm
         self._memory_index = memory_index
@@ -39,8 +40,13 @@ class Agent:
         self._tool_registry = tool_registry
         self._user_prefs_path = user_prefs_path
         self._skill_registry = skill_registry
+        self._user_model_path = user_model_path
 
-    def _build_system(self, notifications: list[str] | None = None) -> str:
+    def _build_system(
+        self,
+        notifications: list[str] | None = None,
+        recall_summary: str | None = None,
+    ) -> str:
         """Assemble le prompt système : partie statique + contexte dynamique."""
         from config.settings import settings as _s
         static_system = _STATIC_PROMPT_PATH.read_text(encoding="utf-8")
@@ -59,6 +65,16 @@ class Agent:
         # Date/heure toujours injectée — utile pour le calendrier et les calculs temporels
         now = datetime.now()
         dynamic_parts.append(f"## Date et heure\n\n{now.strftime('%Y-%m-%d %H:%M')}")
+
+        if recall_summary:
+            dynamic_parts.append(
+                f"## Rappel de sessions précédentes\n\n{recall_summary}"
+            )
+
+        if self._user_model_path is not None and self._user_model_path.exists():
+            model_text = self._user_model_path.read_text(encoding="utf-8").strip()
+            if model_text:
+                dynamic_parts.append(f"## Modèle utilisateur\n\n{model_text}")
 
         if self._user_prefs_path is not None and self._user_prefs_path.exists():
             prefs = self._user_prefs_path.read_text(encoding="utf-8").strip()
@@ -164,6 +180,7 @@ class Agent:
         session: Session,
         user_message: str,
         notifications: list[str] | None = None,
+        recall_summary: str | None = None,
     ) -> tuple[AsyncIterator[str], ToolCapture | None]:
         """Un seul appel LLM streamé, avec outils si disponibles.
 
@@ -172,7 +189,7 @@ class Agent:
         est entièrement consommé ; None si le provider ne supporte pas les outils.
         """
         session.add_message("user", user_message)
-        system = self._build_system(notifications=notifications)
+        system = self._build_system(notifications=notifications, recall_summary=recall_summary)
         logger.debug("Agent routing stream", session_id=str(session.id))
 
         if self.has_tools() and hasattr(self._llm, "stream_with_capture"):

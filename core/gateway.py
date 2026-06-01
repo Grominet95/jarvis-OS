@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
@@ -10,6 +11,9 @@ from background.worker import BackgroundWorker
 from core.agent import Agent
 from core.router import RouteEnum, SpeedRouter
 from core.session import Session, SessionManager
+
+if TYPE_CHECKING:
+    from memory.consolidation import CrossSessionRecall
 
 # Import paresseux de l'orchestrateur — évite les imports circulaires
 def _get_orchestrator(app_state):  # type: ignore[return]
@@ -49,11 +53,13 @@ class Gateway:
         agent: Agent,
         notifications: NotificationQueue,
         worker: BackgroundWorker,
+        recall: CrossSessionRecall | None = None,
     ) -> None:
         self._sessions = session_manager
         self._agent = agent
         self._notifications = notifications
         self._worker = worker
+        self._recall = recall
 
     async def handle(
         self,
@@ -69,11 +75,22 @@ class Gateway:
         if notif_texts:
             logger.info("Injecting notifications", count=len(notif_texts))
 
+        # Rappel cross-session uniquement au premier message de la session
+        recall_summary: str | None = None
+        if self._recall is not None and not session.messages:
+            try:
+                recall_summary = await self._recall.recall(message)
+                if recall_summary:
+                    logger.debug("CrossSessionRecall injected", chars=len(recall_summary))
+            except Exception as e:
+                logger.warning("CrossSessionRecall failed", error=str(e))
+
         try:
             raw_stream, tool_capture = self._agent.start_routing_stream(
                 session=session,
                 user_message=message,
                 notifications=notif_texts,
+                recall_summary=recall_summary,
             )
 
             route, text_stream = await SpeedRouter.extract_route(raw_stream)

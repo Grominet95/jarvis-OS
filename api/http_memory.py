@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -66,6 +67,19 @@ async def put_memory_topic(name: str, body: _ContentBody, request: Request) -> d
     if not p.exists():
         raise HTTPException(404, "Fichier introuvable")
     p.write_text(body.content, encoding="utf-8")
+
+    # Synchronise le VectorIndex si disponible
+    vector_index = getattr(request.app.state, "vector_index", None)
+    if vector_index is not None:
+        async def _update_vector() -> None:
+            await vector_index.add(
+                doc_id=f"topic:{name}",
+                text=body.content,
+                metadata={"source": "topic", "filename": name},
+            )
+            await vector_index.persist()
+        asyncio.create_task(_update_vector(), name=f"vector-update-{name}")
+
     return {"ok": True}
 
 
@@ -77,6 +91,16 @@ async def delete_memory_topic(name: str, request: Request) -> dict:
     if not p.exists():
         raise HTTPException(404, "Fichier introuvable")
     p.unlink()
+
+    # Retire le document du VectorIndex si disponible
+    vector_index = getattr(request.app.state, "vector_index", None)
+    if vector_index is not None:
+        async def _remove_vector() -> None:
+            async with vector_index._lock:
+                vector_index._remove_doc_locked(f"topic:{name}")
+            await vector_index.persist()
+        asyncio.create_task(_remove_vector(), name=f"vector-remove-{name}")
+
     return {"ok": True}
 
 
