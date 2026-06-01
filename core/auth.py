@@ -5,8 +5,9 @@ from __future__ import annotations
 import hmac
 from collections.abc import Sequence
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 from loguru import logger
+from starlette.requests import HTTPConnection
 
 from config.settings import settings
 
@@ -19,7 +20,7 @@ _EXEMPT_PREFIXES: Sequence[str] = (
 )
 
 
-async def verify_api_token(request: Request) -> None:
+async def verify_api_token(request: HTTPConnection) -> None:
     """Dépendance FastAPI globale — vérification du token Bearer.
 
     No-op si ``api_auth_enabled=False`` (usage local inchangé).

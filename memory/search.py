@@ -12,7 +12,7 @@ from loguru import logger
 if TYPE_CHECKING:
     from memory.topics import TopicStore
 
-_DEFAULT_MODEL = "intfloat/multilingual-e5-small"
+_DEFAULT_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 _CHUNK_TOKENS = 500
 _CHUNK_OVERLAP = 80
 
@@ -210,7 +210,7 @@ class VectorIndex:
 
         if transcripts_dir is not None and transcripts_dir.exists():
             for jsonl in sorted(transcripts_dir.glob("*.jsonl")):
-                text = self._transcript_to_text(jsonl)
+                text = VectorIndex.transcript_to_text(jsonl)
                 if not text.strip():
                     continue
                 await self.add(
