@@ -2,11 +2,22 @@ from __future__ import annotations
 
 import asyncio
 import re
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from loguru import logger
 
 from background.notifications import ProactiveQueue
+from background.routines import (
+    ROUTINES_ENABLED,
+    CatchUpPolicy,
+    Routine,
+    RoutineStore,
+    TriggerType,
+    apply_catch_up,
+    fire_routine,
+    next_cron_datetime,
+)
 from config.settings import settings
 from memory.auto_dream import AutoDream
 from tools.calendar import CalendarListTool
@@ -25,7 +36,7 @@ def _seconds_until(hour: int) -> float:
 
 
 class Scheduler:
-    """Planifie trois boucles asyncio : briefing 9h, rappels calendrier 5min, autoDream 3h."""
+    """Planifie les boucles asyncio : briefing 9h, rappels calendrier, autoDream, routines."""
 
     def __init__(
         self,
@@ -37,6 +48,7 @@ class Scheduler:
         self._auto_dream = auto_dream
         self._calendar_tool = calendar_tool
         self._tasks: list[asyncio.Task] = []
+        self._routine_tasks: list[asyncio.Task] = []
 
     def start(self) -> None:
         self._tasks = [
@@ -49,6 +61,47 @@ class Scheduler:
     def stop(self) -> None:
         for t in self._tasks:
             t.cancel()
+        for t in self._routine_tasks:
+            t.cancel()
+
+    def start_routines(
+        self,
+        routines: list[Routine],
+        store: RoutineStore,
+        wake_engine: Callable[[], None] | None = None,
+    ) -> None:
+        """Démarre une boucle asyncio par routine activée.
+
+        Ne fait rien si ROUTINES_ENABLED=false ou si la liste est vide.
+        """
+        if not ROUTINES_ENABLED:
+            logger.info("Scheduler: routines désactivées (ROUTINES_ENABLED=false)")
+            return
+
+        started = 0
+        for routine in routines:
+            if not routine.enabled:
+                continue
+            if routine.trigger == TriggerType.INTERVAL and routine.interval_seconds:
+                t = asyncio.create_task(
+                    self._routine_interval_loop(routine, store, wake_engine),
+                    name=f"routine-interval-{routine.name}",
+                )
+                self._routine_tasks.append(t)
+                started += 1
+            elif routine.trigger == TriggerType.CRON and routine.cron_expr:
+                t = asyncio.create_task(
+                    self._routine_cron_loop(routine, store, wake_engine),
+                    name=f"routine-cron-{routine.name}",
+                )
+                self._routine_tasks.append(t)
+                started += 1
+            else:
+                logger.debug(
+                    f"Routine '{routine.name}': trigger {routine.trigger} ignoré "
+                    "(webhook géré par API)"
+                )
+        logger.info(f"Scheduler: {started} routine(s) démarrée(s)")
 
     def status(self) -> list[dict]:
         return [
@@ -73,6 +126,56 @@ class Scheduler:
                 "interval": "quotidien",
             },
         ]
+
+    # ── Routines ──────────────────────────────────────────────
+
+    async def _routine_interval_loop(
+        self,
+        routine: Routine,
+        store: RoutineStore,
+        wake_engine: Callable[[], None] | None,
+    ) -> None:
+        """Boucle d'exécution pour une routine à intervalle fixe."""
+        interval = routine.interval_seconds or 3600
+
+        # Rattrapage au démarrage si des runs ont été manqués
+        if routine.catch_up_policy == CatchUpPolicy.ENQUEUE_MISSED:
+            await apply_catch_up(routine, store, self._proactive.broadcast_event, wake_engine)
+
+        while True:
+            await asyncio.sleep(interval)
+            await fire_routine(
+                routine, store, self._proactive.broadcast_event, wake_engine
+            )
+
+    async def _routine_cron_loop(
+        self,
+        routine: Routine,
+        store: RoutineStore,
+        wake_engine: Callable[[], None] | None,
+    ) -> None:
+        """Boucle d'exécution pour une routine à expression cron."""
+        expr = routine.cron_expr or "0 * * * *"
+        while True:
+            now = datetime.now(UTC)
+            try:
+                next_run = next_cron_datetime(expr, after=now)
+            except ValueError as exc:
+                logger.error(
+                    f"Routine '{routine.name}': expression cron invalide — {exc}"
+                )
+                await asyncio.sleep(3600)
+                continue
+
+            delay = (next_run - datetime.now(UTC)).total_seconds()
+            logger.debug(
+                f"Routine '{routine.name}' (cron): prochaine exécution "
+                f"dans {delay:.0f}s ({next_run.isoformat()})"
+            )
+            await asyncio.sleep(max(delay, 0))
+            await fire_routine(
+                routine, store, self._proactive.broadcast_event, wake_engine
+            )
 
     # ── Briefing matinal ─────────────────────────────────────
 

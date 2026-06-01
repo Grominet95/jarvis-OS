@@ -6,22 +6,58 @@ Dispatche les initiatives selon leur mode d'exécution.
 from __future__ import annotations
 
 import asyncio
+import uuid
+from collections import deque
 from collections.abc import Callable
-from datetime import datetime
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 
 from loguru import logger
 
+from background.notifications import NotificationQueue
 from proactive.context_builder import ContextBuilder
 from proactive.initiative_generator import InitiativeGenerator
 from proactive.schemas import ExecutionMode, Initiative, Priority
 from proactive.store import InitiativeStore
+
+_AUDIT_MAXLEN = 200
+
+
+# ── Audit ─────────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class ProactiveAuditEvent:
+    """Événement auditable émis pour chaque décision proactive."""
+
+    event_id: str
+    initiative_id: str
+    initiative_title: str
+    decision: str        # "notify" | "validate" | "auto"
+    reasoning: str
+    sources: list[str]
+    decided_at: str      # ISO UTC
+
+
+def _extract_sources(initiative: Initiative) -> list[str]:
+    """Infère les sources d'information utilisées pour cette initiative."""
+    text = f"{initiative.context} {initiative.reasoning}".lower()
+    keywords: dict[str, list[str]] = {
+        "email": ["email", "mail", "inbox"],
+        "calendrier": ["calendar", "agenda", "event", "rdv"],
+        "notion": ["notion", "tâche", "task"],
+        "météo": ["météo", "weather", "pluie", "soleil"],
+        "mémoire": ["memory", "mémoire", "session"],
+    }
+    found = [k for k, words in keywords.items() if any(w in text for w in words)]
+    return found or ["proactive_context"]
 
 
 class ProactiveEngine:
 
     def __init__(
         self,
-        notification_queue,   # NotificationQueue — add(str) sync
+        notification_queue: NotificationQueue,
         broadcast_event: Callable,  # ProactiveQueue.broadcast_event(dict) sync
         interval_minutes: int = 30,
     ) -> None:
@@ -35,6 +71,7 @@ class ProactiveEngine:
         self._last_run: datetime | None = None
         self._last_user_activity: datetime | None = None
         self._cycle_lock = asyncio.Lock()  # un seul cycle à la fois
+        self._audit_log: deque[ProactiveAuditEvent] = deque(maxlen=_AUDIT_MAXLEN)
 
     def signal_user_activity(self) -> None:
         """Appelé par le WebSocket à chaque message entrant."""
@@ -64,6 +101,10 @@ class ProactiveEngine:
     async def run_now(self) -> list[Initiative]:
         """Force un cycle immédiatement (debug ou bouton manuel)."""
         return await self._run_cycle()
+
+    def audit_events(self, limit: int = 50) -> list[ProactiveAuditEvent]:
+        """Retourne les derniers événements d'audit (plus récent en premier)."""
+        return list(reversed(list(self._audit_log)))[:limit]
 
     async def _run_cycle(self) -> list[Initiative]:
         """Un cycle complet : collecte → build → generate → dispatch."""
@@ -125,6 +166,21 @@ class ProactiveEngine:
 
     def _dispatch(self, initiative: Initiative) -> None:
         """Dispatche une initiative selon son mode d'exécution."""
+        audit = ProactiveAuditEvent(
+            event_id=f"aud_{uuid.uuid4().hex[:8]}",
+            initiative_id=initiative.id,
+            initiative_title=initiative.title,
+            decision=str(initiative.execution_mode),
+            reasoning=(initiative.reasoning or initiative.action)[:200],
+            sources=_extract_sources(initiative),
+            decided_at=datetime.now(UTC).isoformat(),
+        )
+        self._audit_log.append(audit)
+        self._broadcast_event({"type": "proactive_audit", "event": asdict(audit)})
+        logger.info(
+            f"ProactiveEngine AUDIT [{audit.decision}] {audit.initiative_title!r} "
+            f"— {audit.reasoning[:80]} | sources={audit.sources}"
+        )
 
         if initiative.execution_mode == ExecutionMode.AUTO:
             # Auto-exécution réservée à la Phase 2
