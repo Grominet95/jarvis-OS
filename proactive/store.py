@@ -60,7 +60,8 @@ class InitiativeStore:
     # ── Helpers privés ────────────────────────────────────────────────────────
 
     def _days_files(self, days: int) -> list[Path]:
-        """Retourne les fichiers JSONL des N derniers jours CALENDAIRES, triés du plus ancien au plus récent."""
+        """Retourne les fichiers JSONL des N derniers jours CALENDAIRES,
+        triés du plus ancien au plus récent."""
         from datetime import date, timedelta
 
         cutoff = (date.today() - timedelta(days=days - 1)).strftime("%Y-%m-%d")
