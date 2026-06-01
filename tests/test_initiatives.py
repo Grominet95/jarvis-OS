@@ -13,9 +13,7 @@ Couvre :
 
 from __future__ import annotations
 
-import asyncio
 import json
-import tempfile
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -25,7 +23,6 @@ import pytest
 
 from proactive.schemas import ExecutionMode, Initiative, InitiativeType, Priority
 from proactive.store import InitiativeStore
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -64,7 +61,9 @@ def _make_initiative(
         action="action proposée",
         priority=Priority.MEDIUM,
         execution_mode=ExecutionMode.VALIDATE,
-        draft_content="Bonjour, voici ma réponse…" if itype == InitiativeType.DRAFT_RESPONSE else None,
+        draft_content=(
+            "Bonjour, voici ma réponse…" if itype == InitiativeType.DRAFT_RESPONSE else None
+        ),
         mission_description="Faire X" if itype == InitiativeType.AUTO_TASK else None,
         status=status,
         created_at=datetime.now() - timedelta(days=offset_days),
@@ -95,7 +94,6 @@ def _write_initiative(store_dir: Path, initiative: Initiative, date_str: str) ->
 def make_store(tmp_path: Path) -> InitiativeStore:
     with patch("proactive.store.INITIATIVES_DIR", tmp_path):
         store = InitiativeStore()
-    store.__dict__  # force init
     # Monkey-patch le répertoire de données
     import proactive.store as _store_mod
     _orig = _store_mod.INITIATIVES_DIR
@@ -228,7 +226,6 @@ class TestEngineRestore:
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
-            store = InitiativeStore()
             yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
             init = _make_initiative(status="pending", offset_days=1)
             _write_initiative(tmp_path, init, yesterday)
@@ -381,7 +378,7 @@ class TestExecutorDraftResponse:
             # Étape 2 : confirm — on mocke send_gmail_draft dans tools.gmail
             mock_send = AsyncMock(return_value="msg_abc123")
             with patch("tools.gmail.send_gmail_draft", mock_send):
-                r2 = await executor.confirm(init.id)
+                await executor.confirm(init.id)
 
             # Le statut doit être terminal (done, failed ou draft_only si outil absent)
             final = store.get_by_id(init.id)
@@ -533,9 +530,11 @@ class TestExecutorInfoTypes:
 class TestNoAutoFire:
 
     def test_auto_mode_not_wired_to_executor(self) -> None:
-        """ExecutionMode.AUTO ne doit pas être câblé à un chemin d'exécution externe dans l'engine."""
-        from proactive.engine import ProactiveEngine
+        """ExecutionMode.AUTO ne doit pas être câblé à un chemin d'exécution externe
+        dans l'engine."""
         import inspect
+
+        from proactive.engine import ProactiveEngine
 
         source = inspect.getsource(ProactiveEngine._dispatch)
         # AUTO doit juste logger — aucun appel à executor, aucun envoi de mail
