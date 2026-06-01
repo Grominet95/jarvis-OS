@@ -4,12 +4,16 @@ import asyncio
 import json
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
 from llm.base import LLMProvider
 from memory.index import MemoryIndex
 from memory.topics import TopicStore
+
+if TYPE_CHECKING:
+    from memory.search import FTSIndex, VectorIndex
 
 _PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "consolidation.md"
 _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
@@ -105,3 +109,72 @@ class ConsolidationAgent:
                 description=pointer,
             )
             logger.info("Consolidated", file=filename, key=key)
+
+
+class CrossSessionRecall:
+    """Rappel cross-session : FTS5 + recherche vectorielle → résumé LLM.
+
+    Inspiré de Hermes session_search + recall (NousResearch, MIT).
+    Voir notices/memory-recall.md pour l'attribution complète.
+    """
+
+    MAX_CONTEXT_CHARS = 3000
+
+    def __init__(
+        self,
+        llm: LLMProvider,
+        fts_index: FTSIndex,
+        vector_index: VectorIndex,
+    ) -> None:
+        self._llm = llm
+        self._fts = fts_index
+        self._vector = vector_index
+
+    async def recall(self, query: str, k: int = 8) -> str | None:
+        """Recherche dans les sessions passées et retourne un résumé LLM.
+
+        Retourne None si les index sont vides ou aucun résultat pertinent.
+        """
+        if not query.strip():
+            return None
+
+        fts_results, vec_results = await asyncio.gather(
+            self._fts.search(query, k=k),
+            self._vector.search(query, k=k),
+        )
+
+        # Déduplique par doc_id — FTS5 en priorité (correspondances exactes)
+        seen: set[str] = set()
+        excerpts: list[str] = []
+        for r in fts_results + vec_results:
+            doc_id = r["doc_id"]
+            if doc_id in seen:
+                continue
+            seen.add(doc_id)
+            text = r["text"][:600].strip()
+            if text:
+                excerpts.append(f"[{doc_id}]\n{text}")
+            if len(excerpts) >= k:
+                break
+
+        if not excerpts:
+            return None
+
+        context = "\n\n---\n\n".join(excerpts)[: self.MAX_CONTEXT_CHARS]
+        prompt = (
+            f"Résume les informations utiles de ces échanges passés pour la question : "
+            f"'{query}'\n\nEXTRAITS :\n{context}\n\n"
+            "Synthèse concise (2-4 phrases), uniquement les faits pertinents :"
+        )
+
+        try:
+            summary = await self._llm.complete(
+                messages=[{"role": "user", "content": prompt}],
+                system="Tu es un agent de rappel de mémoire. Sois concis et factuel.",
+                stream=False,
+                context="memory",
+            )
+            return str(summary).strip() or None
+        except Exception as e:
+            logger.warning("CrossSessionRecall LLM failed", error=str(e))
+            return None

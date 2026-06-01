@@ -8,7 +8,7 @@ from memory.topics import TopicStore
 from tools.base import Tool, ToolResult
 
 if TYPE_CHECKING:
-    from memory.search import VectorIndex
+    from memory.search import FTSIndex, VectorIndex
 
 
 def _is_invalid_filename(filename: str) -> bool:
@@ -160,4 +160,67 @@ class MemorySearchTool(Tool):
             score = r.get("score", 0.0)
             text = r.get("text", "").strip()
             lines.append(f"[{i}] {source} (score={score:.3f})\n{text}")
+        return ToolResult(content="\n\n---\n\n".join(lines))
+
+
+class CrossSessionRecallTool(Tool):
+    """Recherche dans les sessions passées par FTS5 + vectoriel.
+
+    Permet à l'agent de rappeler explicitement des échanges antérieurs
+    en combinant recherche plein texte exacte et recherche sémantique.
+    """
+
+    name = "session_recall"
+    description = (
+        "Recherche dans les sessions de conversation passées (FTS5 + sémantique). "
+        "Retourne les extraits les plus pertinents des échanges précédents. "
+        "Utilise pour retrouver ce qui a été dit lors de sessions antérieures, "
+        "comme des décisions, préférences ou contexte de projets passés."
+    )
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "Question ou mots-clés à rechercher dans les sessions.",
+            },
+            "k": {
+                "type": "integer",
+                "description": "Nombre de résultats (défaut : 6).",
+            },
+        },
+        "required": ["query"],
+    }
+
+    def __init__(self, fts_index: FTSIndex, vector_index: VectorIndex) -> None:
+        self._fts = fts_index
+        self._vector = vector_index
+
+    async def execute(self, query: str, k: int = 6) -> ToolResult:  # type: ignore[override]
+        import asyncio
+
+        if not query.strip():
+            return ToolResult(content="Requête vide.", is_error=True)
+        k_int = max(1, min(20, int(k)))
+
+        fts_results, vec_results = await asyncio.gather(
+            self._fts.search(query, k=k_int),
+            self._vector.search(query, k=k_int),
+        )
+
+        seen: set[str] = set()
+        lines: list[str] = []
+        for r in fts_results + vec_results:
+            doc_id = r["doc_id"]
+            if doc_id in seen:
+                continue
+            seen.add(doc_id)
+            text = r["text"][:400].strip()
+            score = r.get("score", 0.0)
+            lines.append(f"[{doc_id}] (score={score:.3f})\n{text}")
+            if len(lines) >= k_int:
+                break
+
+        if not lines:
+            return ToolResult(content="Aucun résultat trouvé dans les sessions passées.")
         return ToolResult(content="\n\n---\n\n".join(lines))
