@@ -1,7 +1,6 @@
 """CLI sandboxé pour le WorkerAgent — whitelist stricte + exécution dans le workspace."""
 from __future__ import annotations
 
-import asyncio
 import re
 from pathlib import Path
 
@@ -111,25 +110,25 @@ class WorkerCLITool:
         return None
 
     async def execute(self, command: str, timeout: int = 60) -> dict:  # noqa: ASYNC109
-        """Exécute une commande. Route vers Docker (V2) ou direct (V1) si opt-in explicite."""
+        """Exécute une commande après validation — route via le backend configuré."""
         err = self._check(command)
         if err:
             return err
 
-        from config.settings import settings
+        from config.backends import get_backend
 
-        if self._docker and settings.docker_enabled:
-            return await self._docker.execute(command, timeout)
+        backend = get_backend(str(self._workspace), docker_executor=self._docker)
 
-        if not settings.allow_unsandboxed_exec:
+        if backend is None:
             logger.error(
-                "WorkerCLI: exécution directe refusée "
-                "(docker_enabled=False, allow_unsandboxed_exec=False)"
+                "WorkerCLI: aucun backend sûr disponible "
+                "(docker_enabled=False et allow_unsandboxed_exec absent/false)"
             )
             return {
-                "success": False, "stdout": "",
+                "success": False,
+                "stdout": "",
                 "stderr": (
-                    "Exécution refusée : aucun sandbox actif. "
+                    "Exécution refusée : aucun backend sûr disponible. "
                     "Activez Docker (DOCKER_ENABLED=true, recommandé) "
                     "ou autorisez explicitement l'exécution hôte "
                     "(ALLOW_UNSANDBOXED_EXEC=true, déconseillé)."
@@ -137,34 +136,5 @@ class WorkerCLITool:
                 "returncode": -1,
             }
 
-        return await self._run_direct(command, timeout)
-
-    async def _run_direct(self, command: str, timeout: int) -> dict:  # noqa: ASYNC109
-        """Exécution directe V1 — sur l'hôte dans le workspace (opt-in explicite requis)."""
-        try:
-            proc = await asyncio.create_subprocess_shell(
-                command,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=self._workspace,
-            )
-            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-            logger.debug("WorkerCLI exec", cmd=command[:60], rc=proc.returncode)
-            return {
-                "success": proc.returncode == 0,
-                "stdout": stdout.decode("utf-8", errors="replace")[:8000],
-                "stderr": stderr.decode("utf-8", errors="replace")[:2000],
-                "returncode": proc.returncode,
-            }
-        except TimeoutError:
-            return {
-                "success": False, "stdout": "",
-                "stderr": f"Timeout après {timeout}s",
-                "returncode": -1,
-            }
-        except Exception as e:
-            return {
-                "success": False, "stdout": "",
-                "stderr": str(e),
-                "returncode": -1,
-            }
+        logger.debug("WorkerCLI → backend", backend=backend.name, cmd=command[:60])
+        return dict(await backend.execute(command, timeout))
