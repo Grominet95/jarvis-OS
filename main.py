@@ -53,6 +53,7 @@ from memory.sessions import SessionStore
 from memory.topics import TopicStore
 from skills.registry import skill_registry
 from tools.browser import BrowserTool
+from tools.subagent import ScriptRPCTool, SpawnSubagentTool
 from tools.vision import VisionTool
 from tools.calendar import CalendarCreateTool, CalendarListTool
 from tools.cli import CLIRunnerTool, ExecuteCLITool
@@ -212,6 +213,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     logger.info("Skills tools enregistrés (skill_create, skill_improve, skill_list)")
     # ── [/SKILLS] ────────────────────────────────────────────────────────────
+
+    # ── [BACKENDS] ───────────────────────────────────────────────────────────
+    # Agent doit être créé AVANT cet bloc (SpawnSubagentTool référence l'agent).
+    from config.backends import backends_config as _backends_cfg
+
+    tool_registry.register(
+        SpawnSubagentTool(agent=agent),
+        ScriptRPCTool(
+            tool_registry=tool_registry,
+            workspace_path=str(Path(settings.memory_dir) / "rpc_workspace"),
+        ),
+    )
+    logger.info(
+        "Backend tools enregistrés",
+        default_backend=str(_backends_cfg.default_backend),
+        tools=["spawn_subagent", "execute_script"],
+    )
+    # ── [/BACKENDS] ──────────────────────────────────────────────────────────
 
     orchestrator = ProjectOrchestrator(
         broadcast_event=proactive_queue.broadcast_event,
