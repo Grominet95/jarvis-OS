@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import json as _json
 import os
+from collections.abc import AsyncIterator
 from datetime import UTC
 from pathlib import Path
 from typing import Any
 
+import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from core.permissions import permissions as _perm_store
@@ -80,6 +84,9 @@ _SETTINGS_FIELD_MAP: dict[str, str] = {
     "MUSIC_PROVIDER": "music_provider",
     "DEEZER_APP_ID": "deezer_app_id",
     "DEEZER_APP_SECRET": "deezer_app_secret",
+    "API_BACKEND": "api_backend",
+    "OLLAMA_MODEL": "ollama_model",
+    "OLLAMA_BASE_URL": "ollama_base_url",
 }
 
 
@@ -203,9 +210,12 @@ async def get_settings_endpoint() -> dict:
         },
         "llm": {
             "llm_provider": _ev("LLM_PROVIDER", "llm_provider"),
+            "api_backend": _ev("API_BACKEND", "api_backend"),
             "anthropic_model": _ev("ANTHROPIC_MODEL", "anthropic_model"),
             "voice_anthropic_model": _ev("VOICE_ANTHROPIC_MODEL", "voice_anthropic_model"),
             "vision_model": _ev("VISION_MODEL", "vision_model"),
+            "ollama_model": _ev("OLLAMA_MODEL", "ollama_model"),
+            "ollama_base_url": _ev("OLLAMA_BASE_URL", "ollama_base_url"),
         },
         "api_keys": api_keys_masked,
         "docker": {
@@ -278,6 +288,58 @@ async def update_setting(body: SettingUpdateBody) -> dict:
 
     needs_restart = env_key in _RESTART_KEYS
     return {"ok": True, "key": body.key, "needs_restart": needs_restart}
+
+
+# ── Ollama ────────────────────────────────────────────────────────────────────
+
+
+@router.get("/api/ollama/models")
+async def get_ollama_models() -> dict:
+    """Liste les modèles téléchargés sur le serveur Ollama local."""
+    from config.settings import settings as _s
+
+    base_url = _s.ollama_base_url.rstrip("/")
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.get(f"{base_url}/api/tags")
+            resp.raise_for_status()
+            data = resp.json()
+            return {"available": True, "models": data.get("models", [])}
+    except Exception:
+        return {"available": False, "models": []}
+
+
+class OllamaPullBody(BaseModel):
+    model: str
+
+
+@router.post("/api/ollama/pull")
+async def pull_ollama_model(body: OllamaPullBody) -> StreamingResponse:
+    """Télécharge un modèle Ollama en streaming SSE (progress events)."""
+    from config.settings import settings as _s
+
+    base_url = _s.ollama_base_url.rstrip("/")
+
+    async def _stream() -> AsyncIterator[str]:
+        try:
+            async with httpx.AsyncClient(timeout=600.0) as client:
+                async with client.stream(
+                    "POST",
+                    f"{base_url}/api/pull",
+                    json={"name": body.model, "stream": True},
+                ) as resp:
+                    async for line in resp.aiter_lines():
+                        if line.strip():
+                            yield f"data: {line}\n\n"
+        except Exception as exc:
+            yield f"data: {_json.dumps({'error': str(exc)})}\n\n"
+        yield 'data: {"done":true}\n\n'
+
+    return StreamingResponse(
+        _stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 # ── Devices ───────────────────────────────────────────────────────────────────

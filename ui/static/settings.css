@@ -439,3 +439,75 @@ body[data-mode="config"] { overflow-y: auto; overflow-x: hidden; }
   border-color: transparent; color: var(--fg-3);
 }
 .m-btn.ghost:hover { color: var(--red); border-color: rgba(229,72,77,.3); }
+
+/* ── Ollama ── */
+.ollama-offline-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--fg-3); padding: 12px 0 4px;
+}
+.ollama-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  background: var(--red, #e5484d);
+}
+.ollama-hint {
+  font-family: var(--mono); font-size: 10.5px; color: var(--fg-3); padding: 4px 0 10px;
+}
+.ollama-lib-sep {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--fg-3);
+  padding: 18px 0 10px; border-top: 0.5px solid var(--line-1); margin-top: 6px;
+}
+.ollama-model-grid { display: flex; flex-direction: column; }
+.ollama-model-card {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 0.5px solid var(--line-1);
+}
+.ollama-model-card:last-child { border-bottom: 0; }
+.ollama-model-name {
+  font-size: 13px; color: var(--fg-1); display: flex; align-items: center; gap: 7px;
+}
+.ollama-tag {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em;
+  color: var(--accent); background: var(--accent-soft, rgba(98,126,234,.12));
+  border-radius: 3px; padding: 2px 5px; flex-shrink: 0;
+}
+.ollama-model-size {
+  font-family: var(--mono); font-size: 10px; color: var(--fg-3); margin-top: 2px;
+}
+
+/* Pull modal */
+.ollama-pull-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.72); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+}
+.ollama-pull-dialog {
+  background: var(--bg-1); border: 1px solid var(--line-2);
+  border-radius: 14px; padding: 28px 32px; width: 360px; max-width: 90vw;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5);
+}
+.ollama-pull-eyebrow {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--fg-3);
+}
+.ollama-pull-model-name { font-size: 15px; font-weight: 500; color: var(--fg-1); }
+.ollama-pull-bar {
+  height: 4px; background: var(--line-2); border-radius: 2px; overflow: hidden;
+}
+.ollama-pull-fill {
+  height: 100%; width: 0%; background: var(--accent, #627eea);
+  border-radius: 2px; transition: width .4s ease;
+}
+@keyframes ollama-slide {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(0%);    }
+  100% { transform: translateX(100%);  }
+}
+.ollama-pull-fill.indeterminate {
+  width: 40% !important;
+  animation: ollama-slide 1.4s ease-in-out infinite;
+}
+.ollama-pull-status {
+  font-family: var(--mono); font-size: 11px; color: var(--fg-3); min-height: 16px;
+}

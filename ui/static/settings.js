@@ -211,6 +211,160 @@
     root.innerHTML = ""; root.appendChild(page);
   }
 
+  /* ───────── Ollama helpers ───────── */
+
+  const _OLLAMA_POPULAR = [
+    { id: "qwen3:8b",     label: "Qwen 3 · 8B",    gb: "5.2", tag: "Recommandé" },
+    { id: "qwen2.5:7b",   label: "Qwen 2.5 · 7B",  gb: "4.4", tag: "Tool use"   },
+    { id: "qwen3:4b",     label: "Qwen 3 · 4B",     gb: "2.6", tag: "Léger"      },
+    { id: "llama3.1:8b",  label: "Llama 3.1 · 8B",  gb: "4.7", tag: ""           },
+    { id: "mistral:7b",   label: "Mistral · 7B",    gb: "4.1", tag: ""           },
+  ];
+
+  function showPullModal(modelId, onDone) {
+    const overlay = el("div", { class: "ollama-pull-overlay" });
+
+    const dialog = el("div", { class: "ollama-pull-dialog" });
+    dialog.appendChild(el("div", { class: "ollama-pull-eyebrow", text: "Téléchargement" }));
+    dialog.appendChild(el("div", { class: "ollama-pull-model-name", text: modelId }));
+
+    const barWrap = el("div", { class: "ollama-pull-bar" });
+    const barFill = el("div", { class: "ollama-pull-fill indeterminate" });
+    barWrap.appendChild(barFill);
+    dialog.appendChild(barWrap);
+
+    const statusEl = el("div", { class: "ollama-pull-status", text: "Connexion à Ollama…" });
+    dialog.appendChild(statusEl);
+
+    const closeBtn = el("button", { class: "m-btn ghost", text: "✕ Fermer" });
+    closeBtn.disabled = true;
+    closeBtn.addEventListener("click", () => { overlay.remove(); if (onDone) onDone(); });
+    dialog.appendChild(closeBtn);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    (async () => {
+      try {
+        const resp = await fetch("/api/ollama/pull", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: modelId }),
+        });
+        if (!resp.ok || !resp.body) throw new Error("HTTP " + resp.status);
+
+        const reader = resp.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() || "";
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            let d;
+            try { d = JSON.parse(line.slice(6)); } catch (_) { continue; }
+            if (d.done) {
+              barFill.classList.remove("indeterminate");
+              barFill.style.width = "100%";
+              statusEl.textContent = "Téléchargé ✓";
+              closeBtn.disabled = false;
+              return;
+            }
+            if (d.error) {
+              statusEl.textContent = "Erreur : " + d.error;
+              barFill.classList.remove("indeterminate");
+              closeBtn.disabled = false;
+              return;
+            }
+            if (d.total && d.completed) {
+              const pct = Math.round((d.completed / d.total) * 100);
+              barFill.classList.remove("indeterminate");
+              barFill.style.width = pct + "%";
+              statusEl.textContent = (d.status || "downloading") + " · " + pct + "%";
+            } else if (d.status) {
+              statusEl.textContent = d.status;
+            }
+          }
+        }
+        statusEl.textContent = "Terminé";
+        barFill.classList.remove("indeterminate");
+        barFill.style.width = "100%";
+        closeBtn.disabled = false;
+      } catch (err) {
+        statusEl.textContent = "Erreur : " + err.message;
+        barFill.classList.remove("indeterminate");
+        closeBtn.disabled = false;
+      }
+    })();
+  }
+
+  async function makeOllamaSection(llm) {
+    let data = { available: false, models: [] };
+    try { data = await J.api.get("/api/ollama/models"); } catch (_) {}
+
+    const content = el("div");
+
+    if (!data.available) {
+      const row = el("div", { class: "ollama-offline-row" });
+      row.innerHTML =
+        '<span class="ollama-dot"></span>Ollama non disponible · ' +
+        (llm.ollama_base_url || "localhost:11434");
+      content.appendChild(row);
+      content.appendChild(el("div", {
+        class: "ollama-hint",
+        text: "Démarrez Ollama pour gérer vos modèles locaux.",
+      }));
+      return ghostSec("Modèles locaux", "Ollama · function calling hors-ligne", null, content);
+    }
+
+    const downloaded = new Set(data.models.map(m => m.name || m.model || ""));
+    const currentModel = llm.ollama_model || "";
+
+    // ── Modèle actif ──
+    const names = data.models.map(m => m.name || m.model || "").filter(Boolean);
+    if (names.length) {
+      content.appendChild(settingRow("Modèle actif", "OLLAMA_MODEL",
+        makeSelect(names, currentModel, "OLLAMA_MODEL")));
+    } else {
+      content.appendChild(el("div", { class: "ollama-hint", text: "Aucun modèle téléchargé." }));
+    }
+
+    // ── Bibliothèque de téléchargement ──
+    const toDownload = _OLLAMA_POPULAR.filter(m => !downloaded.has(m.id));
+    if (toDownload.length) {
+      content.appendChild(el("div", { class: "ollama-lib-sep", text: "Télécharger un modèle" }));
+      const grid = el("div", { class: "ollama-model-grid" });
+      toDownload.forEach(m => {
+        const card = el("div", { class: "ollama-model-card" });
+        const info = el("div");
+        const nameLine = el("div", { class: "ollama-model-name" });
+        nameLine.textContent = m.label;
+        if (m.tag) {
+          const badge = el("span", { class: "ollama-tag", text: m.tag });
+          nameLine.appendChild(badge);
+        }
+        info.appendChild(nameLine);
+        info.appendChild(el("div", { class: "ollama-model-size", text: m.gb + " Go · " + m.id }));
+        card.appendChild(info);
+
+        const dlBtn = el("button", { class: "m-btn", text: "↓" });
+        dlBtn.title = "Télécharger " + m.id;
+        dlBtn.addEventListener("click", () => showPullModal(m.id, () => renderModeles()));
+        card.appendChild(dlBtn);
+        grid.appendChild(card);
+      });
+      content.appendChild(grid);
+    } else if (data.models.length) {
+      content.appendChild(el("div", { class: "ollama-hint",
+        text: "Tous les modèles recommandés sont présents." }));
+    }
+
+    return ghostSec("Modèles locaux", "Ollama · function calling hors-ligne", null, content);
+  }
+
   /* ───────── 02 Modèles & API ───────── */
   async function renderModeles() {
     const s = await getSettings();
@@ -232,6 +386,7 @@
       { label: "Modèle vision",    sub: "VISION_MODEL",           options: VISION,                             val: llm.vision_model },
     ].forEach(m => modelList.appendChild(settingRow(m.label, m.sub, makeSelect(m.options, m.val, m.sub))));
     wrap.appendChild(ghostSec("Modèles LLM", "LLM · voix · vision", null, modelList));
+    wrap.appendChild(await makeOllamaSection(llm));
 
     // ── Audio & voix ──
     const audioList = el("div");
