@@ -18,27 +18,64 @@ def _strip_think(text: str) -> str:
     return _THINK_RE.sub("", text).lstrip()
 
 
-class OllamaProvider(LLMProvider):
-    """Provider Ollama pour les modèles locaux (Qwen3, Mistral…).
+def _claude_tools_to_ollama(tools: list[dict]) -> list[dict]:
+    """Convertit le schéma d'outils interne Jarvis (format Claude) vers le format Ollama/OpenAI.
 
-    Chat-only : supports_tools retourne False (valeur de base).
-    Le function calling Ollama dépend du modèle sous-jacent et n'est pas
-    activé ici car l'API /api/chat native ne garantit pas le format
-    OpenAI tool_calls pour tous les modèles configurés.
+    Entrée  : [{"name": "...", "description": "...", "input_schema": {...}}]
+    Sortie  : [{"type": "function", "function": {"name", "description", "parameters"}}]
+    """
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": t["name"],
+                "description": t.get("description", ""),
+                "parameters": t.get("input_schema", {"type": "object", "properties": {}}),
+            },
+        }
+        for t in tools
+    ]
+
+
+class OllamaProvider(LLMProvider):
+    """Provider Ollama pour les modèles locaux (Qwen2.5/3, Llama 3.1+, Mistral…).
+
+    supports_tools retourne True : Ollama accepte le champ "tools" pour les modèles
+    compatibles (Qwen2.5/3, Llama 3.1+, Mistral…). Les modèles non-tool ignorent ce
+    champ silencieusement — tool_loop retourne alors le texte brut sans exécuter d'outil.
     """
 
     def __init__(self) -> None:
         self._base_url = settings.ollama_base_url.rstrip("/")
         self._model = settings.ollama_model
 
-    def _payload(self, messages: list[dict], system: str, stream: bool) -> dict:
-        return {
+    @property
+    def supports_tools(self) -> bool:
+        """True — Ollama route le champ "tools" vers les modèles compatibles.
+
+        Avertissement : un modèle non-tool (ex. petit Qwen3) ignorera les outils et
+        ne produira jamais de tool_calls. tool_loop terminera normalement mais sans
+        avoir exécuté d'outil — le résultat sera incomplet si une action était attendue.
+        """
+        return True
+
+    def _payload(
+        self,
+        messages: list[dict],
+        system: str,
+        stream: bool,
+        tools: list[dict] | None = None,
+    ) -> dict:
+        payload: dict = {
             "model": self._model,
             "messages": [{"role": "system", "content": system}, *messages],
             "stream": stream,
             "think": False,  # désactive le mode reasoning Qwen3 côté Ollama
             "options": {"temperature": 0.7},
         }
+        if tools:
+            payload["tools"] = _claude_tools_to_ollama(tools)
+        return payload
 
     async def complete(
         self,
@@ -48,7 +85,7 @@ class OllamaProvider(LLMProvider):
         stream: bool = False,
         context: str = "",
     ) -> str | AsyncIterator[str]:
-        payload = self._payload(messages, system, stream)
+        payload = self._payload(messages, system, stream, tools)
 
         if stream:
             return self._stream(payload)
