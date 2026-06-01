@@ -101,23 +101,26 @@
       loadMissions(),
       J.api.get("/api/tasks").catch(() => []),
     ]);
-    const urgents = inits.filter(i => i.priority === "high").slice(0, 3);
+    const shown = inits.slice(0, 5);
+    const highCount = inits.filter(i => i.priority === "high").length;
     const tasks = (tasksRaw.tasks || tasksRaw || [])
       .map(t => ({ id: t.id, label: t.title || t.label || t.text || "", done: !!(t.done || t.checked), src: t.source || "NOTION" }))
       .filter(t => t.label);
 
     const wrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "44px" } });
 
-    // À traiter (initiatives urgentes)
-    if (urgents.length) {
+    // À traiter — toujours affiché
+    {
       const list = el("div");
-      urgents.forEach(i => list.appendChild(renderInitRow(i)));
-      wrap.appendChild(ghostSec(
-        "À traiter",
-        urgents.length + " prioritaire" + (urgents.length > 1 ? "s" : ""),
-        "voir tout →",
-        list
-      ));
+      if (shown.length) {
+        shown.forEach(i => list.appendChild(renderInitRow(i)));
+      } else {
+        list.appendChild(el("div", { class: "j-empty", text: "Aucune initiative en attente" }));
+      }
+      const sub = shown.length
+        ? shown.length + " en attente" + (highCount ? " · " + highCount + " urgente" + (highCount > 1 ? "s" : "") : "")
+        : "—";
+      wrap.appendChild(ghostSec("À traiter", sub, shown.length ? "voir tout →" : null, list));
     }
 
     // Missions — toujours affiché
