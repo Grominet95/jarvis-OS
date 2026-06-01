@@ -1,6 +1,7 @@
 """Persistance des projets sur disque — JSONL pour les logs, JSON pour l'état."""
 from __future__ import annotations
 
+import fcntl
 import json
 import uuid
 from datetime import datetime
@@ -88,6 +89,87 @@ class ProjectStore:
             except Exception:
                 pass
         return entries
+
+    # ── Claim atomique (anti-double-exécution) ────────────────────────────────
+
+    def claim_step(self, project_id: str, step_id: str, worker_id: str) -> bool:
+        """Réclame atomiquement une étape pour un worker.
+
+        Utilise flock(LOCK_EX) pour garantir l'exclusivité entre processus.
+        Retourne False si l'étape est déjà réclamée par un autre worker.
+        """
+        jarvis_dir = WORKSPACE_DIR / project_id / ".jarvis"
+        jarvis_dir.mkdir(parents=True, exist_ok=True)
+        claims_file = jarvis_dir / "step_claims.json"
+        lock_path   = jarvis_dir / "claims.lock"
+
+        with lock_path.open("w") as lf:
+            fcntl.flock(lf, fcntl.LOCK_EX)
+            try:
+                claims: dict[str, str] = {}
+                if claims_file.exists():
+                    try:
+                        claims = json.loads(claims_file.read_text(encoding="utf-8"))
+                    except Exception:
+                        pass
+
+                if step_id in claims:
+                    return False  # déjà réclamée
+
+                claims[step_id] = worker_id
+                claims_file.write_text(
+                    json.dumps(claims, indent=2), encoding="utf-8"
+                )
+                return True
+            finally:
+                fcntl.flock(lf, fcntl.LOCK_UN)
+
+    def release_step_claim(self, project_id: str, step_id: str) -> None:
+        """Libère le claim d'une étape (budget pause ou fin normale)."""
+        claims_file = WORKSPACE_DIR / project_id / ".jarvis" / "step_claims.json"
+        lock_path   = WORKSPACE_DIR / project_id / ".jarvis" / "claims.lock"
+        if not claims_file.exists():
+            return
+
+        with lock_path.open("w") as lf:
+            fcntl.flock(lf, fcntl.LOCK_EX)
+            try:
+                claims: dict[str, str] = {}
+                try:
+                    claims = json.loads(claims_file.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+                claims.pop(step_id, None)
+                claims_file.write_text(json.dumps(claims, indent=2), encoding="utf-8")
+            finally:
+                fcntl.flock(lf, fcntl.LOCK_UN)
+
+    # ── Pause / reprise budget ─────────────────────────────────────────────────
+
+    def pause_for_budget(self, project: Project, current_step_id: str | None) -> None:
+        """Met le projet en pause budgétaire.
+
+        L'étape en cours repasse à PENDING pour pouvoir être reprise.
+        Libère son claim pour qu'un futur worker puisse la réclamer.
+        """
+        for step in project.steps:
+            if step.id == current_step_id and step.status == StepStatus.RUNNING:
+                step.status     = StepStatus.PENDING
+                step.started_at = None
+                step.error      = None
+                break
+
+        project.status = ProjectStatus.PAUSED
+        self.save_project(project)
+
+        if current_step_id:
+            self.release_step_claim(project.id, current_step_id)
+
+    def is_resumable(self, project: Project) -> bool:
+        """Vrai si le projet est en pause et possède des étapes PENDING à exécuter."""
+        if project.status != ProjectStatus.PAUSED:
+            return False
+        return any(s.status == StepStatus.PENDING for s in project.steps)
 
     # ── Sérialisation ─────────────────────────────────────────────────────────
 
