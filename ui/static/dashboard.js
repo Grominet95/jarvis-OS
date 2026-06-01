@@ -189,8 +189,84 @@
     root.appendChild(page);
   }
 
+  function buildInitPanel(panel, i) {
+    const raw = i.raw || {};
+    const closeBtn = el("button", { class: "panel-close", text: "✕" });
+    closeBtn.addEventListener("click", closePanel);
+
+    const hdr = el("div", { class: "mp-header" });
+    const left = el("div", { class: "mp-header-left" });
+    const badge = el("div", { class: "mp-status-badge run", text: (raw.type || i.type || "").toUpperCase().replace("_", " ") });
+    const info = el("div");
+    info.appendChild(el("div", { class: "mp-title", text: i.title }));
+    info.appendChild(el("div", { class: "mp-sub", text: i.source || "Jarvis proactif · " + (i.due || "") }));
+    left.appendChild(badge); left.appendChild(info);
+    hdr.appendChild(left); hdr.appendChild(closeBtn);
+    panel.appendChild(hdr);
+
+    const body = el("div", { class: "panel-body" });
+
+    const addSec = (title, text) => {
+      if (!text) return;
+      const s = el("div", { class: "panel-section" });
+      s.appendChild(el("div", { class: "panel-section-title", text: title }));
+      s.appendChild(el("div", { style: { fontSize: "12px", lineHeight: "1.6", color: "var(--fg-2)" }, text: text }));
+      body.appendChild(s);
+    };
+
+    addSec("Action proposée", raw.action || i.title);
+    addSec("Contexte", raw.context);
+    addSec("Raisonnement", raw.reasoning);
+
+    if (raw.draft_content) {
+      const s = el("div", { class: "panel-section" });
+      s.appendChild(el("div", { class: "panel-section-title", text: "Brouillon" }));
+      const pre = el("div", {
+        style: { fontFamily: "var(--mono)", fontSize: "11px", lineHeight: "1.6",
+                 whiteSpace: "pre-wrap", wordBreak: "break-word",
+                 background: "rgba(74,158,255,0.04)", border: "1px solid rgba(74,158,255,0.10)",
+                 borderRadius: "6px", padding: "10px 12px", color: "var(--fg-2)" },
+        text: raw.draft_content,
+      });
+      s.appendChild(pre);
+      body.appendChild(s);
+    }
+
+    // Actions
+    const actSec = el("div", { class: "panel-section", style: { display: "flex", gap: "8px", marginTop: "8px" } });
+    const approveBtn = el("button", { class: "m-btn", text: raw.type === "draft_response" ? "📤 Préparer & envoyer" : "✓ Approuver" });
+    approveBtn.addEventListener("click", async () => {
+      approveBtn.textContent = "…"; approveBtn.disabled = true;
+      try {
+        await J.api.post("/api/initiatives/" + raw.id + "/approve");
+        J.notify({ kind: "success", text: "Initiative approuvée" });
+        closePanel();
+        if (_activePage === "apercu") renderApercu(); else renderInitiatives();
+      } catch (e) { J.notify({ kind: "error", text: "Erreur : " + e.message }); approveBtn.disabled = false; approveBtn.textContent = "Approuver"; }
+    });
+    const rejectBtn = el("button", { class: "m-btn danger", text: "✗ Rejeter" });
+    rejectBtn.addEventListener("click", async () => {
+      rejectBtn.textContent = "…"; rejectBtn.disabled = true;
+      try {
+        await J.api.post("/api/initiatives/" + raw.id + "/reject");
+        J.notify({ kind: "success", text: "Initiative rejetée" });
+        closePanel();
+        if (_activePage === "apercu") renderApercu(); else renderInitiatives();
+      } catch (e) { J.notify({ kind: "error", text: "Erreur : " + e.message }); rejectBtn.disabled = false; rejectBtn.textContent = "Rejeter"; }
+    });
+    actSec.appendChild(approveBtn);
+    actSec.appendChild(rejectBtn);
+    body.appendChild(actSec);
+
+    panel.appendChild(body);
+  }
+
   function renderInitRow(i, showActions) {
-    const row = el("div", { class: "row-stripe" });
+    const row = el("div", { class: "row-stripe", style: { cursor: "pointer" } });
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      openPanel(buildInitPanel, i);
+    });
 
     // Priority bar
     const bar = el("div", { class: "row-stripe-bar " + (i.priority || "low") });
