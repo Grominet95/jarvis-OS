@@ -77,12 +77,13 @@ class ShowViewTool(Tool):
     description = (
         "Affiche ou contrôle une vue visuelle sur l'écran principal de Jarvis.\n\n"
         "Utilise cet outil quand l'utilisateur demande :\n"
-        '- Cite un lieu, une ville, un monument → action: fly_to, location: "..."\n'
-        '  Exemples: "montre Lyon", "va à Tokyo", "montre la tour Eiffel", "affiche Paris"\n'
+        '- Afficher une vue par son ID → action: show, view_id: "<id>"\n'
+        '  Le SYSTEM_PROMPT de chaque vue installée indique son view_id exact.\n'
+        '- Masquer une vue → action: hide, view_id: "<id>"\n'
+        "- Cite un lieu, une ville, un monument → action: fly_to, location: ...\n"
+        '  Exemples: "montre Lyon", "va à Tokyo", "montre la tour Eiffel"\n'
         "  Zoom recommandé: ville=10, monument/quartier=16, pays/continent=5\n"
         "  IMPORTANT: si un lieu est mentionné, toujours utiliser fly_to, pas show.\n"
-        '- "Montre le globe" / "Vue monde" / "montre le monde" → action: show, view_id: "globe"\n'
-        '- "Cache" / "Ferme" / "Retour" / "quitte la carte" → action: hide, view_id: "globe"\n'
         '- "Vue globale" / "dézoom total" → action: globe_view\n'
         '- "Zoom avant" / "plus proche" → action: zoom_in\n'
         '- "Dézoom" / "recule" → action: zoom_out\n\n'
