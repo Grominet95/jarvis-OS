@@ -189,25 +189,32 @@
 <script src="/mediapipe_vision.js"></script>
 <script src="/home.js"></script>
 <script>
-(async function loadViewSkills() {
+window.loadViewSkills = async function () {
   try {
     const r = await fetch('/api/skills/view-scripts');
     if (!r.ok) return;
     const { styles = [], scripts = [] } = await r.json();
+
+    // Retire les anciens assets de vues (data-view-skill="1")
+    document.querySelectorAll('[data-view-skill]').forEach(el => el.remove());
+
     styles.forEach(href => {
       const l = document.createElement('link');
       l.rel = 'stylesheet'; l.href = href;
+      l.dataset.viewSkill = '1';
       document.head.appendChild(l);
     });
     for (const src of scripts) {
       await new Promise((ok, err) => {
         const s = document.createElement('script');
         s.src = src; s.onload = ok; s.onerror = err;
+        s.dataset.viewSkill = '1';
         document.body.appendChild(s);
       });
     }
   } catch (e) { console.warn('[Jarvis] view skills load error:', e); }
-})();
+};
+window.loadViewSkills();
 </script>
 </body>
 </html>

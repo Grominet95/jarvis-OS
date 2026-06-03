@@ -96,6 +96,18 @@
   }
   initOrb();
 
+  // ── body.view-active : source de vérité unique pour toutes les vues ─
+  const _origViewActivate   = J.views.activate.bind(J.views);
+  const _origViewDeactivate = J.views.deactivate.bind(J.views);
+  J.views.activate = function (id, params) {
+    _origViewActivate(id, params);
+    document.body.classList.add("view-active");
+  };
+  J.views.deactivate = function (id) {
+    _origViewDeactivate(id);
+    if (!J.views._active) document.body.classList.remove("view-active");
+  };
+
   // ── Sync état orbe depuis les events voice.js ─────────────────────
   const VOICE_ORB_MAP = {
     vad_start:   "listening",
@@ -667,6 +679,16 @@
       }
 
       // ── View routing ──────────────────────────────────────────────
+      if (data.type === "reload_views") {
+        const _prevActive = J.views._active;
+        if (_prevActive) J.views.deactivate(_prevActive);
+        // Supprime aussi les scripts sans data-view-skill (chargés avant le fix)
+        document.querySelectorAll('script[src*="/skills/"]').forEach(el => el.remove());
+        document.querySelectorAll('link[href*="/skills/"]').forEach(el => el.remove());
+        window.loadViewSkills?.().then?.(() => {
+          if (_prevActive) J.views.activate(_prevActive);
+        });
+      }
       if (data.type === "show_view")    J.views.activate(data.view_id, data.params);
       if (data.type === "hide_view")    J.views.deactivate(data.view_id);
       if (data.type === "view_command") J.views.dispatch(data.view_id, data.command, data.params);

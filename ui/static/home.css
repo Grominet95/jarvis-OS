@@ -4,6 +4,8 @@
 .home-controls {
   pointer-events: auto;
   padding: 22px 24px;
+  transform-origin: top left;
+  transition: transform 0.35s cubic-bezier(.2,.8,.25,1);
 }
 
 /* Pill unique — verre dépoli macOS renforcé */
@@ -561,6 +563,8 @@ body[data-mode="home"] {
   inset: 0;
   z-index: 1;       /* below .atmo grain/vignette (z-index:2) */
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s ease;
 }
 .home-orb-wrap::after {
   content: "";
@@ -658,3 +662,15 @@ body[data-mode="home"] #j-rooms-mc {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Signature top-right ── */
+.home-signature {
+  transform-origin: top right;
+  transition: transform 0.35s cubic-bezier(.2,.8,.25,1);
+}
+
+/* ── Vue active : source de vérité unique ── */
+body.view-active .home-orb-wrap  { opacity: 0; }
+body.view-active #orb-canvas     { pointer-events: none; }   /* le canvas a pointer-events:auto explicite, la règle sur le parent ne suffit pas */
+body.view-active .home-controls  { transform: scale(0.6); }
+body.view-active .home-signature { transform: scale(0.6); }

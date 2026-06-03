@@ -635,14 +635,10 @@ body.globe-mode .panel-right {
   pointer-events: auto;
 }
 
-/* Home (home.html) — home-shell doit passer AU-DESSUS du globe (z-index: 15)
-   mais sans bloquer les clics sur la carte Mapbox */
+/* Home (home.html) — home-shell au-dessus du globe (globe-container: z-index 15) */
 body.globe-mode .home-shell {
   z-index: 20;
-  pointer-events: none;
 }
-
-/* Les contrôles à l'intérieur de home-shell restent cliquables */
 body.globe-mode .home-controls,
 body.globe-mode .hc-widget,
 body.globe-mode .cam-overlay {
