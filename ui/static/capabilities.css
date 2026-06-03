@@ -148,6 +148,10 @@ body[data-mode="capacites"] { overflow-y: auto; overflow-x: hidden; }
 .routine-name { font-size: 14px; color: var(--fg-0); line-height: 1.3; }
 .routine-desc { font-family: var(--mono); font-size: 10.5px; color: var(--fg-3); letter-spacing: 0.04em; line-height: 1.55; }
 .routine-platforms { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+.view-glyph {
+  background: rgba(54,211,153,0.08); border-color: rgba(54,211,153,.25);
+  color: var(--green);
+}
 
 /* ── Ambiances (cards) ── */
 .ambiance-grid {

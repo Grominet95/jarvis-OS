@@ -680,10 +680,19 @@
       catalog = r.skills || [];
     } catch (_) {}
 
-    const grid = el("div", { class: "skills-grid" });
-    catalog.slice(0, 12).forEach(s => {
+    const isView    = s => s.type === "view"   || (s.tags || []).includes("view");
+    const isRoutine = s => s.type === "preset" || (s.tags || []).includes("preset");
+
+    const views    = catalog.filter(s => isView(s));
+    const routines = catalog.filter(s => !isView(s) && isRoutine(s));
+    const skills   = catalog.filter(s => !isView(s) && !isRoutine(s));
+
+    function makeStoreCard(s, kind) {
+      const glyphCls = kind === "routine" ? "skill-glyph routine-glyph"
+                     : kind === "view"    ? "skill-glyph view-glyph"
+                     : "skill-glyph";
       const card = el("div", { class: "skill-card" });
-      card.appendChild(el("div", { class: "skill-glyph", text: (s.name || "?").slice(0, 3).toUpperCase() }));
+      card.appendChild(el("div", { class: glyphCls, text: (s.name || "?").slice(0, 3).toUpperCase() }));
       card.appendChild(el("div", { class: "skill-name", text: s.name }));
       if (s.description) card.appendChild(el("div", { class: "skill-desc", text: s.description.slice(0, 100) }));
 
@@ -707,11 +716,33 @@
         footer.appendChild(installBtn);
       }
       card.appendChild(footer);
-      grid.appendChild(card);
-    });
+      return card;
+    }
 
-    const wrap = el("div");
-    wrap.appendChild(ghostSec("Catalogue", catalog.length + " skills disponibles", null, grid));
+    const wrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "32px" } });
+
+    if (!catalog.length) {
+      wrap.appendChild(el("div", { class: "j-empty", text: "Catalogue indisponible" }));
+    }
+
+    if (skills.length) {
+      const grid = el("div", { class: "skills-grid" });
+      skills.forEach(s => grid.appendChild(makeStoreCard(s, "skill")));
+      wrap.appendChild(ghostSec("Skills", skills.length + " disponible" + (skills.length !== 1 ? "s" : ""), null, grid));
+    }
+
+    if (routines.length) {
+      const grid = el("div", { class: "skills-grid" });
+      routines.forEach(s => grid.appendChild(makeStoreCard(s, "routine")));
+      wrap.appendChild(ghostSec("Routines", routines.length + " disponible" + (routines.length !== 1 ? "s" : ""), null, grid));
+    }
+
+    if (views.length) {
+      const grid = el("div", { class: "skills-grid" });
+      views.forEach(s => grid.appendChild(makeStoreCard(s, "view")));
+      wrap.appendChild(ghostSec("Vues", views.length + " disponible" + (views.length !== 1 ? "s" : ""), null, grid));
+    }
+
     const page = pageWrapper("store", "Le store de skills", '<span class="v">' + catalog.length + '</span> disponibles', wrap);
     root.innerHTML = ""; root.appendChild(page);
   }
