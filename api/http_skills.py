@@ -70,6 +70,7 @@ async def get_installed_skills() -> dict:
 @router.post("/api/skills/install/{skill_name}")
 async def install_skill(skill_name: str, request: Request) -> dict:
     """Installe un skill depuis le repo jarvis-skills."""
+    from background.notifications import broadcast_event
     from skills.installer import skill_installer
     from skills.registry import skill_registry
 
@@ -78,12 +79,14 @@ async def install_skill(skill_name: str, request: Request) -> dict:
         tool_registry = getattr(request.app.state, "tool_registry", None)
         if tool_registry:
             tool_registry.replace_skill_tools(*skill_registry.get_all_tools())
+        broadcast_event({"type": "reload_views"})
     return result
 
 
 @router.delete("/api/skills/uninstall/{skill_name}")
 async def uninstall_skill(skill_name: str, request: Request) -> dict:
     """Désinstalle un skill."""
+    from background.notifications import broadcast_event
     from skills.installer import skill_installer
     from skills.registry import skill_registry
 
@@ -92,12 +95,15 @@ async def uninstall_skill(skill_name: str, request: Request) -> dict:
         tool_registry = getattr(request.app.state, "tool_registry", None)
         if tool_registry:
             tool_registry.replace_skill_tools(*skill_registry.get_all_tools())
+        broadcast_event({"type": "reload_views"})
     return result
 
 
 @router.get("/api/skills/view-scripts")
 async def get_view_scripts() -> dict:
-    """Retourne les chemins JS/CSS des skills de type vue installés."""
+    """Retourne les chemins JS/CSS des skills de type vue installés, avec hash de contenu."""
+    import hashlib
+
     base = Path("ui/static/skills")
     scripts, styles = [], []
     if base.exists():
@@ -106,10 +112,11 @@ async def get_view_scripts() -> dict:
                 continue
             name = skill_static.name
             for f in sorted(skill_static.iterdir()):
+                v = hashlib.md5(f.read_bytes()).hexdigest()[:8]
                 if f.suffix == ".js":
-                    scripts.append(f"/skills/{name}/{f.name}")
+                    scripts.append(f"/skills/{name}/{f.name}?v={v}")
                 elif f.suffix == ".css":
-                    styles.append(f"/skills/{name}/{f.name}")
+                    styles.append(f"/skills/{name}/{f.name}?v={v}")
     return {"scripts": scripts, "styles": styles}
 
 
