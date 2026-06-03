@@ -351,7 +351,7 @@
     const gc  = document.getElementById('globe-container');
     document.getElementById('globe-toggle')?.classList.add('active');
     document.body.classList.add('globe-mode');
-    if (orb) { orb.style.transition = 'opacity 350ms ease'; orb.style.opacity = '0'; orb.style.pointerEvents = 'none'; }
+    if (orb) { orb.style.opacity = ''; orb.style.transition = ''; orb.style.pointerEvents = ''; }
     if (gc)  { gc.style.display = 'block'; gc.getBoundingClientRect(); gc.style.opacity = '1'; }
     await _init();
     if (_mapReady) { _autoRotate = true; _map.resize(); _startData(); _startRotation(); }
@@ -364,7 +364,7 @@
     const gc  = document.getElementById('globe-container');
     document.getElementById('globe-toggle')?.classList.remove('active');
     document.body.classList.remove('globe-mode');
-    if (orb) { orb.style.transition = 'opacity 400ms ease 150ms'; orb.style.opacity = '1'; orb.style.pointerEvents = ''; }
+    if (orb) { orb.style.opacity = ''; orb.style.transition = ''; orb.style.pointerEvents = ''; }
     if (gc)  {
       gc.style.opacity = '0';
       _hideTimer = setTimeout(() => { _hideTimer = null; gc.style.display = 'none'; }, 400);
