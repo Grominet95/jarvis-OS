@@ -76,27 +76,37 @@ class ShowViewTool(Tool):
     name = "show_view"
     description = (
         "Affiche ou contrôle une vue visuelle sur l'écran principal de Jarvis.\n\n"
-        "Utilise cet outil quand l'utilisateur demande :\n"
-        '- Afficher une vue par son ID → action: show, view_id: "<id>"\n'
-        '  Le SYSTEM_PROMPT de chaque vue installée indique son view_id exact.\n'
-        '- Masquer une vue / retour à la sphère d\'accueil → action: home\n'
-        '  Utiliser quand : "reviens", "retour", "ferme", "vue de base", "sphère", "home"\n'
-        '- Masquer une vue précise → action: hide, view_id: "<id>"\n'
-        "- Cite un lieu, une ville, un monument → action: fly_to, location: ...\n"
-        '  Exemples: "montre Lyon", "va à Tokyo", "montre la tour Eiffel"\n'
-        "  Zoom recommandé: ville=10, monument/quartier=16, pays/continent=5\n"
-        "  IMPORTANT: si un lieu est mentionné, toujours utiliser fly_to, pas show.\n"
-        '- "Vue globale" / "dézoom total" → action: globe_view\n'
-        '- "Zoom avant" / "plus proche" → action: zoom_in\n'
-        '- "Dézoom" / "recule" → action: zoom_out\n\n'
-        "Pour fly_to, le globe s'affiche automatiquement avant la navigation."
+        "ACTIONS GLOBALES :\n"
+        '- show : afficher une vue par son ID (le SYSTEM_PROMPT de chaque vue donne son view_id exact)\n'
+        '- hide : masquer une vue précise\n'
+        '- home : retour à la sphère d\'accueil — pour "reviens", "retour", "ferme", "sphère"\n\n'
+        "ACTIONS GLOBE UNIQUEMENT (lieux terrestres réels) :\n"
+        '- fly_to : naviguer vers une ville, monument, pays sur Terre.\n'
+        '  ⚠️ STRICTEMENT pour des lieux GÉOGRAPHIQUES TERRESTRES.\n'
+        '  ❌ NE JAMAIS utiliser pour planètes, étoiles, constellations, objets célestes,\n'
+        "     personnages, marques, sociétés — même si le nom ressemble à un lieu.\n"
+        '  ✓ "Lyon", "Tokyo", "tour Eiffel", "mont Fuji"\n'
+        '  ✗ "Vénus", "Mars" (planète), "Orion", "Bételgeuse", "Andromède"\n'
+        "  Zoom : ville=10, monument=16, pays=5.\n"
+        '- globe_view : dézoom total ("vue globale")\n'
+        '- zoom_in / zoom_out : zoom avant / arrière sur le globe\n\n'
+        "ACTIONS VUE-SPÉCIFIQUES (autres vues que le globe) :\n"
+        '- view_command : envoyer une commande à une vue active.\n'
+        "  Utilise ceci quand l'utilisateur demande quelque chose qui correspond à une\n"
+        "  commande exposée par la vue active (le SYSTEM_PROMPT de la vue les liste).\n"
+        '  Ex. astronomie : view_command(view_id="astronomy", command="focus_constellation", params={"name": "Orion"})\n\n'
+        "Pour fly_to, le globe s'affiche automatiquement."
     )
     input_schema: dict = {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["show", "hide", "home", "fly_to", "zoom_out", "zoom_in", "globe_view"],
+                "enum": [
+                    "show", "hide", "home",
+                    "fly_to", "zoom_out", "zoom_in", "globe_view",
+                    "view_command",
+                ],
                 "description": "Action à effectuer.",
             },
             "view_id": {
@@ -106,7 +116,15 @@ class ShowViewTool(Tool):
             },
             "location": {
                 "type": "string",
-                "description": "Nom du lieu à afficher (requis pour fly_to).",
+                "description": "Lieu géographique TERRESTRE (fly_to uniquement).",
+            },
+            "command": {
+                "type": "string",
+                "description": "Commande spécifique à la vue (pour view_command).",
+            },
+            "params": {
+                "type": "object",
+                "description": "Paramètres pour view_command (clé/valeur libre).",
             },
             "zoom": {
                 "type": "integer",
@@ -129,6 +147,8 @@ class ShowViewTool(Tool):
         view_id: str = "globe",
         location: str | None = None,
         zoom: int = 10,
+        command: str | None = None,
+        params: dict | None = None,
         **_: object,
     ) -> ToolResult:
         if action == "show":
@@ -177,6 +197,19 @@ class ShowViewTool(Tool):
                 {"type": "view_command", "view_id": "globe", "command": "zoom_in", "params": {}}
             )
             return ToolResult(content="Zoom avant.")
+
+        if action == "view_command":
+            if not command:
+                return ToolResult(content="Paramètre command requis.", is_error=True)
+            self._broadcast(
+                {
+                    "type": "view_command",
+                    "view_id": view_id,
+                    "command": command,
+                    "params": params or {},
+                }
+            )
+            return ToolResult(content=f"Commande {command} envoyée à {view_id}.")
 
         if action == "globe_view":
             self._broadcast({"type": "show_view", "view_id": "globe"})
