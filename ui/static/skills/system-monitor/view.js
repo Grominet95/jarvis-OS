@@ -129,7 +129,7 @@
     .sm-eyebrow { font-family:var(--mono,monospace); font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--fg-3,rgba(220,232,255,.4)); }
 
     /* Palier 1 — jauges + cerveau */
-    .sm-top { display:grid; grid-template-columns:1fr 1fr 1fr 1.22fr; gap:16px; height:248px; flex-shrink:0; }
+    .sm-top { display:grid; grid-template-columns:1fr 1fr 1fr 1.22fr; gap:16px; height:248px; flex-shrink:0; margin-right:280px; }
     .sm-gauge { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:18px 14px; }
     .sm-gauge-label { position:absolute; top:16px; left:18px; }
     .sm-ringwrap { position:relative; width:150px; height:150px; flex-shrink:0; }

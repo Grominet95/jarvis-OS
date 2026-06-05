@@ -105,6 +105,8 @@
             ['17h', 9, 61], ['18h', 9, 3], ['19h', 8, 3], ['20h', 8, 3]],
   };
 
+  const CITIES = ['Paris', 'Tokyo', 'New York', 'Londres', 'Sydney', 'Berlin', 'Dubaï', 'Los Angeles'];
+
   /* ─── Scènes de ciel (Canvas) ───────────────────────────────────────────── */
   const SKY = {
     rain:   { g: ['#070a12', '#0c1320', '#101a28'], glow: null, rain: 110, clouds: 6, cloudA: .16, stars: 0 },
@@ -199,7 +201,7 @@
 
     // widget Conditions haut-droite
     widget = document.createElement('div');
-    Object.assign(widget.style, { position: 'absolute', right: '32px', top: '92px', zIndex: '7', width: '266px',
+    Object.assign(widget.style, { position: 'absolute', right: '32px', top: '230px', zIndex: '7', width: '266px',
       background: 'rgba(10,14,22,.7)', border: '1px solid var(--line-2,rgba(220,232,255,.1))', borderRadius: 'var(--r-4,16px)',
       backdropFilter: 'blur(18px) saturate(150%)', webkitBackdropFilter: 'blur(18px) saturate(150%)', padding: '18px',
       boxShadow: '0 24px 60px -24px rgba(0,0,0,.6)' });
@@ -214,6 +216,44 @@
         </div>`).join('')}
       </div>`;
     container.appendChild(widget);
+
+    // sélecteur de villes
+    const _pickerSep = document.createElement('div');
+    _pickerSep.style.cssText = 'margin-top:18px;padding-top:16px;border-top:1px solid rgba(220,232,255,.06)';
+    const _pickerLbl = document.createElement('div');
+    _pickerLbl.style.cssText = 'font-family:var(--mono,monospace);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(220,232,255,.4);margin-bottom:10px';
+    _pickerLbl.textContent = 'CHANGER DE VILLE';
+    _pickerSep.appendChild(_pickerLbl);
+    const _chips = document.createElement('div');
+    _chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px';
+    CITIES.forEach(function(city) {
+      const active = city.toLowerCase() === (data.name || '').toLowerCase();
+      const chip = document.createElement('button');
+      chip.style.cssText = 'font-family:var(--mono,monospace);font-size:10px;letter-spacing:.06em;padding:5px 11px;border-radius:999px;cursor:pointer;transition:all .15s;border:1px solid '
+        + (active ? 'rgba(74,158,255,.35)' : 'rgba(220,232,255,.1)') + ';background:'
+        + (active ? 'rgba(74,158,255,.12)' : 'transparent') + ';color:'
+        + (active ? '#4A9EFF' : 'rgba(220,232,255,.58)');
+      chip.textContent = city;
+      chip.addEventListener('click', function() { geocodeAndFetch(city); });
+      chip.addEventListener('mouseenter', function() { if (!active) { chip.style.borderColor = 'rgba(74,158,255,.2)'; chip.style.color = 'rgba(220,232,255,.82)'; } });
+      chip.addEventListener('mouseleave', function() { if (!active) { chip.style.borderColor = 'rgba(220,232,255,.1)'; chip.style.color = 'rgba(220,232,255,.58)'; } });
+      _chips.appendChild(chip);
+    });
+    _pickerSep.appendChild(_chips);
+    const _inputRow = document.createElement('div');
+    _inputRow.style.cssText = 'display:flex;gap:6px';
+    const _input = document.createElement('input');
+    _input.type = 'text'; _input.placeholder = 'Autre ville…';
+    _input.style.cssText = 'flex:1;font-family:var(--mono,monospace);font-size:11px;background:rgba(220,232,255,.04);border:1px solid rgba(220,232,255,.1);border-radius:8px;padding:7px 10px;color:rgba(220,232,255,.78);outline:none';
+    const _btn = document.createElement('button');
+    _btn.textContent = '→';
+    _btn.style.cssText = 'font-size:14px;background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.25);border-radius:8px;padding:7px 13px;color:#4A9EFF;cursor:pointer';
+    function _submit() { const v = _input.value.trim(); if (v) { geocodeAndFetch(v); _input.value = ''; } }
+    _btn.addEventListener('click', _submit);
+    _input.addEventListener('keydown', function(e) { if (e.key === 'Enter') _submit(); });
+    _inputRow.appendChild(_input); _inputRow.appendChild(_btn);
+    _pickerSep.appendChild(_inputRow);
+    widget.appendChild(_pickerSep);
 
     // bandeau horaire bas
     band = document.createElement('div');
