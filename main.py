@@ -17,6 +17,7 @@ from loguru import logger
 
 import channels.telegram_bot as _tg_module
 from agent.orchestrator import ProjectOrchestrator
+from agent.reflexion import Reflexion
 from api.admin import _ui_router as admin_ui_router
 from api.admin import router as admin_router
 from api.deezer import router as deezer_router
@@ -50,6 +51,8 @@ from llm.factory import create_background_llm, get_llm_provider
 from memory.auto_dream import AutoDream
 from memory.consolidation import ConsolidationAgent, CrossSessionRecall
 from memory.index import MemoryIndex
+from memory.ingest import MemoryIngest
+from memory.kernel import MemoryKernel
 from memory.search import FTSIndex, VectorIndex
 from memory.sessions import SessionStore
 from memory.topics import TopicStore
@@ -279,9 +282,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     # ── [/BACKENDS] ──────────────────────────────────────────────────────────
 
+    # PHASE 2/3 — Memory Kernel + Reflexion post-mission (plomberie minimale, option b).
+    # ConsolidationAgent et AutoDream restent SANS memory_ingest pour l'instant : leurs
+    # hooks PHASE 3 (Q3=a) attendent une activation future. Ici on plombe uniquement
+    # le chemin orchestrator → worker → reflexion → ingest pour matérialiser la DoD §5.
+    _memory_kernel = MemoryKernel(memory_dir / "jarvis_memory.db")
+    _memory_ingest = MemoryIngest(kernel=_memory_kernel, llm=background_llm)
+    _reflexion = Reflexion(
+        llm=background_llm,
+        kernel=_memory_kernel,
+        memory_ingest=_memory_ingest,
+    )
+
     orchestrator = ProjectOrchestrator(
         broadcast_event=proactive_queue.broadcast_event,
         budget_guard=_budget_guard,
+        reflexion=_reflexion,
     )
 
     # ── [INITIATIVES] ────────────────────────────────────────────────────────
