@@ -196,14 +196,43 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         user_model_path=user_model_path,
     )
     session_manager = SessionManager(store=session_store)
+
+    # ── Memory Kernel + Ingest (PHASE 2/3, MOUVEMENT 2 option D) ────────────
+    # Le Kernel est TOUJOURS instancié (la PHASE 2 Reflexion en a besoin pour
+    # les leçons de mission). L'ingestion BATCH des sessions conversationnelles
+    # est branchée UNIQUEMENT sur AutoDream.deep (passe nocturne à 3h), sous
+    # contrôle du flag settings.ingest_deep_enabled (défaut False).
+    #
+    # ConsolidationAgent + AutoDream micro (hooks à chaque message) NE SONT
+    # JAMAIS branchés au Kernel : décision Generative Agents (synthèse
+    # périodique sur la conversation complète, pas extraction à chaud
+    # message-par-message qui doublonnerait et ferait du bruit).
+    _memory_kernel = MemoryKernel(memory_dir / "jarvis_memory.db")
+    _memory_ingest = MemoryIngest(kernel=_memory_kernel, llm=background_llm)
+    _deep_ingest = _memory_ingest if settings.ingest_deep_enabled else None
+    if settings.ingest_deep_enabled:
+        logger.warning(
+            "Memory Kernel DEEP INGEST activé : "
+            "AutoDream.deep ingérera les sessions à chaque passe nocturne (3h)."
+        )
+    else:
+        logger.info(
+            "Memory Kernel DEEP INGEST désactivé "
+            "(settings.ingest_deep_enabled=False) — flip pour activer."
+        )
+
     consolidation = ConsolidationAgent(
-        llm=background_llm, memory_index=memory_index, topic_store=topic_store
+        llm=background_llm,
+        memory_index=memory_index,
+        topic_store=topic_store,
+        memory_ingest=None,  # JAMAIS branché — choix d'archi (cf. ci-dessus).
     )
 
     auto_dream = AutoDream(
         llm=background_llm,
         prefs_path=user_prefs_path,
         sessions_dir=memory_dir / "sessions",
+        memory_ingest=_deep_ingest,  # consommé UNIQUEMENT par _run_deep.
     )
 
     notifications = NotificationQueue()
@@ -282,12 +311,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     # ── [/BACKENDS] ──────────────────────────────────────────────────────────
 
-    # PHASE 2/3 — Memory Kernel + Reflexion post-mission (plomberie minimale, option b).
-    # ConsolidationAgent et AutoDream restent SANS memory_ingest pour l'instant : leurs
-    # hooks PHASE 3 (Q3=a) attendent une activation future. Ici on plombe uniquement
-    # le chemin orchestrator → worker → reflexion → ingest pour matérialiser la DoD §5.
-    _memory_kernel = MemoryKernel(memory_dir / "jarvis_memory.db")
-    _memory_ingest = MemoryIngest(kernel=_memory_kernel, llm=background_llm)
+    # PHASE 2 — Reflexion post-mission. Toujours actif (ingestion uniquement à la
+    # clôture d'une mission, fréquence basse) ; consomme le _memory_ingest
+    # construit plus haut.
     _reflexion = Reflexion(
         llm=background_llm,
         kernel=_memory_kernel,

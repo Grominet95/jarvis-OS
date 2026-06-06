@@ -123,3 +123,33 @@ async def trigger_autodream(request: Request) -> dict:
         name="autodream-manual",
     )
     return {"triggered": True}
+
+
+@router.post("/api/memory/trigger-deep")
+async def trigger_deep(request: Request) -> dict:
+    """Force une passe AutoDream.deep_analyze() sans attendre 3h du matin.
+
+    Outil d'observation pour la phase d'activation (MOUVEMENT 2 option D) :
+    permet de déclencher une ingestion batch à la demande, regarder ce qu'elle
+    produit via scripts/observe_kernel_ingest.py, ajuster le prompt si bruit,
+    re-déclencher — itération en minutes au lieu d'une nuit.
+
+    Garde-fou : refuse si settings.ingest_deep_enabled=False. L'endpoint NE
+    DOIT PAS contourner le flag de bascule, sinon on crée une porte
+    d'ingestion qui shunte l'interrupteur principal.
+    """
+    from config.settings import settings
+
+    if not settings.ingest_deep_enabled:
+        raise HTTPException(
+            503,
+            "Ingestion deep désactivée (settings.ingest_deep_enabled=False). "
+            "Flip le flag avant d'utiliser cet endpoint.",
+        )
+
+    auto_dream = getattr(request.app.state, "auto_dream", None)
+    if not auto_dream:
+        raise HTTPException(503, "AutoDream non disponible")
+
+    asyncio.create_task(auto_dream.deep_analyze(), name="autodream-deep-manual")
+    return {"triggered": True, "scope": "deep"}

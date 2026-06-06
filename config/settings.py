@@ -120,6 +120,20 @@ class Settings(BaseSettings):
         default="memory_data",
         description="Répertoire racine des données mémoire (MEMORY.md, topics/, sessions/).",
     )
+    ingest_deep_enabled: bool = Field(
+        default=False,
+        description=(
+            "Active l'ingestion BATCH des sessions dans le Memory Kernel lors de "
+            "la passe nocturne AutoDream.deep_analyze() (1× par 24h à 3h du mat). "
+            "Une seule extraction par session JSONL — pas une boucle par message — "
+            "donc le dédoublonnage intra-batch est garanti par le matcher v2. "
+            "Les hooks micro (consolidation._run + auto_dream._run_micro à chaque "
+            "échange) NE sont JAMAIS branchés au Kernel : c'est une décision "
+            "Generative Agents (synthèse périodique sur la conversation complète, "
+            "pas extraction à chaud message par message). "
+            "Désactivé par défaut tant que la trace 3-5 jours n'a pas été validée."
+        ),
+    )
 
     # ── Outils ────────────────────────────────────────────────
     cli_whitelist_path: str = Field(
