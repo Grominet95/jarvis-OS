@@ -23,6 +23,15 @@
     3: "SANDBOX", 4: "MODIFY_PROJECT", 5: "EXTERNAL_ACTION",
   };
 
+  const PATCH_LABELS = {
+    archive_fact:           "Fact à archiver",
+    mark_skill_stale:       "Skill peu utilisée",
+    archive_skill:          "Skill obsolète",
+    reject_stale_candidate: "Candidate en attente",
+    review_contradiction:   "Contradictions à revoir",
+    review_initiative:      "Initiative oubliée",
+  };
+
   function fmtDeadline(iso) {
     if (!iso) return null;
     const d = new Date(iso);
@@ -193,13 +202,15 @@
     root.appendChild(page);
   }
 
-  /* ───────── Initiatives + Skills à valider (inbox unifiée) ─────────
-     Un seul écran d'arbitrage : initiatives proactives en haut, puis
-     candidates du Skill Lab à promouvoir/rejeter en dessous. */
+  /* ───────── Initiatives + Skills à valider + Maintenance Curator ─────────
+     Inbox unifiée d'arbitrage : un seul écran pour tout ce qui demande
+     ma décision (initiatives proactives, candidates Skill Lab, patches
+     Curator). Trois sections distinctes, ordonnées par urgence visuelle. */
   async function renderInitiatives() {
-    const [inits, skills] = await Promise.all([
+    const [inits, skills, curatorReport] = await Promise.all([
       loadInitiatives(),
       _loadSkillsPending(),
+      _loadCuratorReport(),
     ]);
 
     /* ── Section 1 — Initiatives ── */
@@ -230,11 +241,29 @@
       ));
     }
 
+    /* ── Section 3 — Maintenance (Curator PHASE 6) ── */
+    if (curatorReport && curatorReport.patches && curatorReport.patches.length) {
+      const patches = curatorReport.patches;
+      const patchList = el("div");
+      patches.forEach((p, idx) => patchList.appendChild(_renderPatchRow(p, idx, renderInitiatives)));
+      const scanDate = curatorReport.generated_at
+        ? new Date(curatorReport.generated_at).toLocaleString("fr") : "—";
+      wrap.appendChild(ghostSec(
+        "Maintenance",
+        patches.length + " suggestion" + (patches.length>1?"s":"") + " · scan " + scanDate,
+        el("span", { class: "badge badge--maintenance", text: "MAINTENANCE" }),
+        patchList
+      ));
+    }
+
     const page = pageWrapper(
       "initiatives",
       "Ce qui mérite ton arbitrage",
       '<span class="v">' + inits.length + '</span> à traiter'
-        + (skills.length ? ' · <span class="v">' + skills.length + '</span> skill' + (skills.length>1?'s':'') : ''),
+        + (skills.length ? ' · <span class="v">' + skills.length + '</span> skill' + (skills.length>1?'s':'') : '')
+        + (curatorReport && curatorReport.patches && curatorReport.patches.length
+            ? ' · <span class="v">' + curatorReport.patches.length + '</span> patch'
+              + (curatorReport.patches.length>1?'s':'') : ''),
       wrap
     );
     root.innerHTML = "";
@@ -295,6 +324,103 @@
     right.appendChild(promote); right.appendChild(reject);
     row.appendChild(right);
     return row;
+  }
+
+  /* ───────── Maintenance (Curator patches) ─────────
+     Routage par type vers les endpoints PROPRES — apply_patch (403) n'est
+     JAMAIS appelé. Pas d'ack persistant : le rapport se régénère sur l'état
+     réel à chaque scan, les patches obsolètes disparaîtront d'eux-mêmes. */
+
+  async function _loadCuratorReport() {
+    try { return await J.api.get("/api/curator/latest"); }
+    catch (_) { return null; }
+  }
+
+  function _renderPatchRow(patch, idx, reload) {
+    const row = el("div", { class: "row-stripe patch-row" });
+    const bar = el("div", { class: "row-stripe-bar low" });
+    row.appendChild(bar);
+
+    const inner = el("div", { class: "row-stripe-inner" });
+    inner.appendChild(el("div", { class: "row-stripe-title", text: patch.description }));
+    const meta = el("div", { class: "row-stripe-meta" });
+    meta.appendChild(el("span", { class: "badge badge--solid", text: PATCH_LABELS[patch.kind] || patch.kind }));
+    meta.appendChild(el("span", { text: "cible : " + patch.target }));
+    if (patch.reason) {
+      meta.appendChild(el("span", { style: { opacity: ".4" }, text: "·" }));
+      meta.appendChild(el("span", { text: patch.reason }));
+    }
+    inner.appendChild(meta);
+    row.appendChild(inner);
+
+    const right = el("div", { class: "row-stripe-right" });
+    _appendPatchActions(right, patch, idx, reload);
+    row.appendChild(right);
+    return row;
+  }
+
+  function _appendPatchActions(container, patch, idx, reload) {
+    switch (patch.kind) {
+      case "archive_fact": {
+        const btn = el("button", { class: "m-btn", text: "✓ Archiver ce fact" });
+        btn.addEventListener("click", async () => {
+          if (!confirm("Archiver le fact " + patch.target + " ?\nTrace un event human_correction en audit.")) return;
+          btn.disabled = true; btn.textContent = "…";
+          try {
+            await J.api.post("/api/memory/correct", {
+              target_fact_id: patch.target,
+              new_status: "archived",
+              correction_text: "Archivé via patch Curator #" + idx,
+            });
+            J.notify({ kind: "success", text: "Fact archivé — event tracé en audit" });
+            if (reload) reload();
+          } catch (e) {
+            J.notify({ kind: "error", text: e.message });
+            btn.disabled = false; btn.textContent = "✓ Archiver ce fact";
+          }
+        });
+        container.appendChild(btn);
+        break;
+      }
+      case "reject_stale_candidate": {
+        const btn = el("button", { class: "m-btn danger", text: "✗ Rejeter cette candidate" });
+        btn.addEventListener("click", async () => {
+          if (!confirm("Rejeter la candidate " + patch.target + " ?")) return;
+          btn.disabled = true; btn.textContent = "…";
+          try {
+            await J.api.post("/api/skills/lab/" + encodeURIComponent(patch.target) + "/reject");
+            J.notify({ kind: "info", text: patch.target + " rejetée" });
+            if (reload) reload();
+          } catch (e) {
+            J.notify({ kind: "error", text: e.message });
+            btn.disabled = false; btn.textContent = "✗ Rejeter cette candidate";
+          }
+        });
+        container.appendChild(btn);
+        break;
+      }
+      case "review_initiative": {
+        const btn = el("button", { class: "m-btn", text: "↑ Voir l'initiative" });
+        btn.addEventListener("click", () => {
+          /* Scroll vers la section "En attente" qui contient l'initiative. */
+          const tgt = document.querySelector(".ghost-sec");
+          if (tgt) tgt.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        container.appendChild(btn);
+        break;
+      }
+      case "mark_skill_stale":
+      case "archive_skill":
+      case "review_contradiction":
+      default: {
+        const txt = el("span", {
+          text: "Consultatif — pas d'action atomique",
+          style: { fontSize: "11px", color: "var(--fg-3)", fontStyle: "italic" },
+        });
+        container.appendChild(txt);
+        break;
+      }
+    }
   }
 
   /* PHASE 6 §10.1 — bloc gouvernance pour le panel détail.

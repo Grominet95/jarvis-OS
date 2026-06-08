@@ -414,3 +414,24 @@ body[data-mode="workspace"] { overflow-y: auto; overflow-x: hidden; }
   color: #c193e2;
   border: 1px solid rgba(155, 89, 182, 0.32);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Inbox unifiée — section "Maintenance" (Curator PHASE 6)
+   Badge neutre/gris pour signaler que la maintenance n'est jamais
+   urgente. Titre dégraissé visuellement pour ne pas concurrencer
+   les vraies initiatives proactives.
+───────────────────────────────────────────────────────────── */
+
+.badge--maintenance {
+  background: rgba(220, 232, 255, 0.05);
+  color: var(--fg-3);
+  border: 1px solid var(--line-2);
+}
+
+.skill-row .row-stripe-bar.med,
+.patch-row .row-stripe-bar.low {
+  /* Réutilise les barres latérales existantes — aucune surcharge. */
+}
+.patch-row .row-stripe-title {
+  font-weight: 400; /* moins de poids visuel — la maintenance n'est pas urgente */
+}
