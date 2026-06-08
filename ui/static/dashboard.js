@@ -88,7 +88,14 @@
     l.appendChild(el("div", { class: "ghost-sec-title", text: title }));
     if (sub) l.appendChild(el("div", { class: "ghost-sec-sub", text: sub }));
     hd.appendChild(l);
-    if (right) hd.appendChild(el("div", { class: "ghost-sec-r", text: right }));
+    if (right) {
+      const r = el("div", { class: "ghost-sec-r" });
+      /* Accepte un Node (badge DOM) OU une string (texte simple).
+         Avant : text: right forçait textContent → le HTML s'affichait littéral. */
+      if (right instanceof Node) r.appendChild(right);
+      else r.textContent = String(right);
+      hd.appendChild(r);
+    }
     sec.appendChild(hd);
     sec.appendChild(content);
     return sec;
