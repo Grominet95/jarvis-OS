@@ -2,9 +2,117 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
 router = APIRouter()
+
+
+# ── Skill Lab API (PHASE 4) ──────────────────────────────────────────────────
+
+
+def _lab(request: Request):  # noqa: ANN202 — type circulaire
+    lab = getattr(request.app.state, "skill_lab", None)
+    if lab is None:
+        raise HTTPException(503, "SkillLab non disponible — main.py n'a pas câblé.")
+    return lab
+
+
+def _lifecycle(request: Request):  # noqa: ANN202
+    lc = getattr(request.app.state, "skill_lifecycle", None)
+    if lc is None:
+        raise HTTPException(503, "SkillLifecycle non disponible.")
+    return lc
+
+
+def _record_to_dict(record) -> dict:  # noqa: ANN001
+    return {
+        "name": record.name,
+        "status": record.status.value,
+        "confidence": record.confidence,
+        "support_count": record.support_count,
+        "last_used_at": record.last_used_at.isoformat() if record.last_used_at else None,
+        "source_event_id": record.source_event_id,
+        "sandbox_notes": record.sandbox_notes,
+        "created_at": record.created_at.isoformat(),
+        "promoted_at": record.promoted_at.isoformat() if record.promoted_at else None,
+        "archived_at": record.archived_at.isoformat() if record.archived_at else None,
+        "updated_at": record.updated_at.isoformat(),
+    }
+
+
+@router.get("/api/skills/lab/candidates")
+async def list_lab_candidates(
+    request: Request,
+    status: str | None = None,
+) -> list[dict]:
+    """Liste les SkillRecord du lifecycle, filtrable par status.
+
+    status ∈ {candidate, sandboxed_pass, sandboxed_fail, active, stale,
+    archived, rejected}.
+    """
+    from skills.lifecycle import SkillStatus
+
+    lc = _lifecycle(request)
+    if status is None:
+        records = lc.list_all()
+    else:
+        try:
+            s = SkillStatus(status)
+        except ValueError:
+            raise HTTPException(400, f"Status invalide : {status}") from None
+        records = lc.list_by_status(s)
+    return [_record_to_dict(r) for r in records]
+
+
+@router.post("/api/skills/lab/{name}/promote")
+async def promote_lab_skill(name: str, request: Request) -> dict:
+    """Validation humaine : installe la skill candidate.
+
+    Refuse 409 si la skill n'est pas en SANDBOXED_PASS.
+    """
+    lab = _lab(request)
+    record = lab.promote(name)
+    if record is None:
+        raise HTTPException(
+            409,
+            f"Promotion refusée pour '{name}' : skill inconnue, non en "
+            "SANDBOXED_PASS, ou collision avec une skill installée.",
+        )
+    return {"ok": True, "record": _record_to_dict(record)}
+
+
+@router.post("/api/skills/lab/{name}/reject")
+async def reject_lab_skill(
+    name: str,
+    request: Request,
+    reason: str = "",
+    delete_files: bool = False,
+) -> dict:
+    """Validation humaine refusée. delete_files=true supprime aussi le dossier."""
+    lab = _lab(request)
+    record = lab.reject(name, reason=reason, delete_files=delete_files)
+    if record is None:
+        raise HTTPException(404, f"Skill '{name}' inconnue.")
+    return {"ok": True, "record": _record_to_dict(record)}
+
+
+@router.post("/api/skills/lab/scan")
+async def trigger_lab_scan(request: Request) -> dict:
+    """Déclenche un scan polling du Kernel à la demande (outil d'observation).
+
+    Équivalent du /api/memory/trigger-deep du MOUVEMENT 2 PHASE 3 : permet
+    d'itérer rapidement sur la pipeline sans attendre le passage nocturne.
+    """
+    lab = _lab(request)
+    result = await lab.scan_kernel()
+    return {
+        "events_examined": result.events_examined,
+        "candidates_generated": result.candidates_generated,
+        "sandbox_passed": result.sandbox_passed,
+        "sandbox_failed": result.sandbox_failed,
+        "skipped_already_handled": result.skipped_already_handled,
+        "errors": result.errors,
+    }
 
 
 # ── Skills API ────────────────────────────────────────────────────────────────
