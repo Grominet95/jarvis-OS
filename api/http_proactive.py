@@ -21,7 +21,14 @@ class ConfirmBody(BaseModel):
 
 @router.get("/api/initiatives")
 async def get_initiatives() -> list[dict]:
-    """Initiatives en attente (mode VALIDATE)."""
+    """Initiatives en attente (mode VALIDATE).
+
+    Réponse étendue PHASE 6 avec les 7 champs §10.1 (autonomy_level,
+    permission_required, cost_max_usd, risk, deadline, next_action,
+    requires_validation) — consommée par dashboard.js pour afficher le
+    badge "NIVEAU 5 — VALIDATION FORCÉE" et le bloc gouvernance.
+    Ajout rétro-compatible : aucun champ historique retiré.
+    """
     from proactive.store import InitiativeStore
 
     store = InitiativeStore()
@@ -38,6 +45,14 @@ async def get_initiatives() -> list[dict]:
             "execution_mode": i.execution_mode,
             "draft_content": i.draft_content,
             "created_at": i.created_at.isoformat(),
+            # ── PHASE 6 §10.1 — champs gouvernance ──
+            "autonomy_level": int(i.autonomy_level),
+            "permission_required": i.permission_required,
+            "cost_max_usd": i.cost_max_usd,
+            "risk": i.risk,
+            "deadline": i.deadline.isoformat() if i.deadline else None,
+            "next_action": i.next_action,
+            "requires_validation": i.requires_validation,
         }
         for i in initiatives
     ]
