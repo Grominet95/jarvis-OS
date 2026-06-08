@@ -43,10 +43,12 @@ class Scheduler:
         proactive: ProactiveQueue,
         auto_dream: AutoDream,
         calendar_tool: CalendarListTool,
+        skill_lab: object | None = None,
     ) -> None:
         self._proactive = proactive
         self._auto_dream = auto_dream
         self._calendar_tool = calendar_tool
+        self._skill_lab = skill_lab  # PHASE 4 — SkillLab pour polling nocturne
         self._tasks: list[asyncio.Task] = []
         self._routine_tasks: list[asyncio.Task] = []
 
@@ -56,6 +58,10 @@ class Scheduler:
             asyncio.create_task(self._calendar_loop(), name="scheduler-calendar"),
             asyncio.create_task(self._autodream_loop(), name="scheduler-autodream"),
         ]
+        if self._skill_lab is not None:
+            self._tasks.append(
+                asyncio.create_task(self._skill_lab_loop(), name="scheduler-skill-lab")
+            )
         logger.info("Scheduler started", tasks=len(self._tasks))
 
     def stop(self) -> None:
@@ -253,3 +259,34 @@ class Scheduler:
             await asyncio.sleep(delay)
             logger.info("AutoDream deep démarré")
             await self._auto_dream.deep_analyze()
+
+    # ── Skill Lab nocturne (PHASE 4) ─────────────────────────
+    # Polling Kernel des events skill_candidate_proposal — décision F=b.
+    # Tourne 5 min APRÈS AutoDream deep pour que les leçons fraîchement
+    # ingérées puissent être prises en compte si elles ont déclenché un
+    # signal skill_candidate (rare mais possible si une leçon batch génère
+    # un skill_candidate_proposal indirectement).
+
+    async def _skill_lab_loop(self) -> None:
+        if self._skill_lab is None:
+            return
+        while True:
+            # 3h05 du matin (5 min après AutoDream deep). Pas critique : si on
+            # rate la fenêtre, le prochain run sera dans 24h, c'est cohérent
+            # avec la fréquence batch de la mémoire.
+            delay = _seconds_until(3) + 300
+            logger.debug("Skill Lab scan planifié", seconds=int(delay))
+            await asyncio.sleep(delay)
+            try:
+                logger.info("Skill Lab scan nocturne démarré")
+                result = await self._skill_lab.scan_kernel()
+                logger.info(
+                    "Skill Lab scan terminé",
+                    examined=result.events_examined,
+                    generated=result.candidates_generated,
+                    passed=result.sandbox_passed,
+                    failed=result.sandbox_failed,
+                    skipped=result.skipped_already_handled,
+                )
+            except Exception as exc:  # noqa: BLE001 — un scan raté ne tue pas la boucle
+                logger.warning("Skill Lab scan échec", error=str(exc))
