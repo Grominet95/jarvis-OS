@@ -381,6 +381,77 @@
     return wrap;
   }
 
+  function escapeHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function openCorrectionModal(fact, onDone) {
+    /* Modal minimal — overlay + carte. Pas de dépendance externe. */
+    const ov = el("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;";
+    const card = el("div");
+    card.style.cssText = "background:#0a0a0a;border:1px solid #2a2a2a;border-radius:10px;padding:24px;max-width:540px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.6);";
+    card.innerHTML = '<div style="font-family:Space Grotesk,Geist,sans-serif;font-size:18px;margin-bottom:6px;color:#d4af6a;">Corriger un fact</div>'
+      + '<div style="font-size:12px;color:#888;margin-bottom:18px;">Trace un event <code>human_correction</code> en audit immuable (§6.7).</div>'
+      + '<div style="font-size:13px;margin-bottom:14px;padding:10px;background:rgba(255,255,255,.04);border-radius:6px;">'
+      + '<span style="color:#aaa">' + escapeHtml(fact.subject) + ' · </span>'
+      + '<span style="color:#d4af6a">' + escapeHtml(fact.predicate) + '</span> · '
+      + '<span>' + escapeHtml(fact.object) + '</span></div>';
+
+    const labelObj = el("label", { text: "Nouvel objet (vide = inchangé)" });
+    labelObj.style.cssText = "display:block;font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;";
+    card.appendChild(labelObj);
+    const inObj = el("input"); inObj.type = "text"; inObj.placeholder = fact.object;
+    inObj.style.cssText = "width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:5px;color:#eee;margin-bottom:14px;font-size:13px;font-family:Geist,sans-serif;";
+    card.appendChild(inObj);
+
+    const labelSt = el("label", { text: "Nouveau statut" });
+    labelSt.style.cssText = "display:block;font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;";
+    card.appendChild(labelSt);
+    const inSt = el("select");
+    ["", "active", "superseded", "archived", "needs_review"].forEach(v => {
+      const o = el("option"); o.value = v; o.textContent = v || "(inchangé)"; inSt.appendChild(o);
+    });
+    inSt.style.cssText = "width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:5px;color:#eee;margin-bottom:14px;font-size:13px;";
+    card.appendChild(inSt);
+
+    const labelTxt = el("label", { text: "Motif" });
+    labelTxt.style.cssText = "display:block;font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;";
+    card.appendChild(labelTxt);
+    const inTxt = el("textarea"); inTxt.rows = 2; inTxt.placeholder = "Pourquoi cette correction…";
+    inTxt.style.cssText = "width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:5px;color:#eee;margin-bottom:18px;font-size:13px;font-family:Geist,sans-serif;resize:vertical;";
+    card.appendChild(inTxt);
+
+    const row = el("div"); row.style.cssText = "display:flex;justify-content:flex-end;gap:8px;";
+    const cancel = el("button", { class: "m-btn", text: "Annuler" });
+    cancel.addEventListener("click", () => ov.remove());
+    const save = el("button", { class: "m-btn m-btn--save", text: "Appliquer" });
+    save.addEventListener("click", async () => {
+      save.disabled = true; save.textContent = "…";
+      try {
+        const body = { target_fact_id: fact.id, correction_text: inTxt.value || "" };
+        if (inObj.value.trim()) body.new_object = inObj.value.trim();
+        if (inSt.value) body.new_status = inSt.value;
+        await J.api.post("/api/memory/correct", body);
+        J.notify({ kind: "success", text: "Correction appliquée — event tracé en audit" });
+        ov.remove();
+        if (onDone) onDone();
+      } catch (e) {
+        J.notify({ kind: "error", text: e.message });
+        save.disabled = false; save.textContent = "Appliquer";
+      }
+    });
+    row.appendChild(cancel); row.appendChild(save);
+    card.appendChild(row);
+
+    ov.appendChild(card);
+    ov.addEventListener("click", (ev) => { if (ev.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+    inObj.focus();
+  }
+
   function ghostSec(title, sub, right, content) {
     const sec = el("div", { class: "ghost-sec" });
     const hd = el("div", { class: "ghost-sec-hd" });
@@ -1340,15 +1411,72 @@
   /* ─────────────────────────────────────────
      09 Mémoire
   ───────────────────────────────────────── */
+  function relTime(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso); const now = new Date();
+    const sec = Math.round((now - d) / 1000);
+    if (sec < 60) return "à l'instant";
+    if (sec < 3600) return Math.round(sec / 60) + " min";
+    if (sec < 86400) return Math.round(sec / 3600) + " h";
+    if (sec < 86400 * 30) return Math.round(sec / 86400) + " j";
+    return d.toLocaleDateString("fr");
+  }
+
   async function renderMemoire() {
-    let topics = [], index = "";
+    let topics = [], index = "", facts = [];
     try {
       topics = await J.api.get("/api/memory/topics");
       const idx = await J.api.get("/api/memory/index");
       index = idx.content || "";
     } catch (_) {}
+    try {
+      facts = await J.api.get("/api/memory/facts?status=active&limit=200");
+    } catch (_) {}
 
     const wrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "40px" } });
+
+    /* ── Facts (Kernel SQL — construit ici, appendé en bas de la page) ── */
+    const factsList = el("div", { style: { display: "flex", flexDirection: "column", gap: "8px" } });
+    if (!facts.length) {
+      factsList.appendChild(el("div", { class: "j-empty", text: "Aucun fact actif dans le Kernel" }));
+    } else {
+      /* Group by category for legibility */
+      const byCat = {};
+      facts.forEach(f => { (byCat[f.category] = byCat[f.category] || []).push(f); });
+      const cats = Object.keys(byCat).sort();
+      cats.forEach(cat => {
+        const catHead = el("div", { class: "mem-cat-head", text: cat + " · " + byCat[cat].length });
+        catHead.style.cssText = "font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-top:14px;margin-bottom:4px;";
+        factsList.appendChild(catHead);
+        byCat[cat].forEach(f => {
+          const row = el("div", { class: "fact-row" });
+          row.style.cssText = "display:grid;grid-template-columns:1fr 90px 80px 80px auto;gap:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.06);border-radius:6px;align-items:center;background:rgba(255,255,255,.02);";
+
+          const txt = el("div");
+          txt.innerHTML = '<span style="color:#aaa">' + escapeHtml(f.subject) + ' · </span>'
+            + '<span style="color:#d4af6a">' + escapeHtml(f.predicate) + '</span> · '
+            + '<span>' + escapeHtml(f.object) + '</span>';
+          row.appendChild(txt);
+
+          row.appendChild(el("div", { text: "conf " + (f.confidence * 100).toFixed(0) + "%", style: { fontSize: "11px", color: "#888", textAlign: "right", fontFamily: "Geist Mono, monospace" } }));
+          row.appendChild(el("div", { text: f.decay_policy, style: { fontSize: "11px", color: "#888", textAlign: "center" } }));
+          row.appendChild(el("div", { text: relTime(f.last_seen_at), style: { fontSize: "11px", color: "#888", textAlign: "right" } }));
+
+          const corrBtn = el("button", { class: "m-btn", text: "Corriger" });
+          corrBtn.style.cssText = "padding:4px 10px;font-size:11px;";
+          corrBtn.addEventListener("click", () => openCorrectionModal(f, () => renderMemoire()));
+          row.appendChild(corrBtn);
+
+          factsList.appendChild(row);
+        });
+      });
+    }
+    const factsSection = ghostSec(
+      "Facts (Kernel)",
+      facts.length + " actifs · régénéré à chaque passe deep",
+      null,
+      factsList
+    );
 
     /* ── Index MEMORY.md (éditable) ── */
     const indexWrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } });
@@ -1464,7 +1592,15 @@
     }
     wrap.appendChild(ghostSec("Topics", topics.length + " fichiers", null, list));
 
-    const page = pageWrapper("memoire", "La mémoire de Jarvis", '<span class="v">' + topics.length + '</span> topics', wrap);
+    /* Facts en bas — la vraie fenêtre Kernel SQL, sous l'Index et les Topics. */
+    wrap.appendChild(factsSection);
+
+    const page = pageWrapper(
+      "memoire",
+      "La mémoire de Jarvis",
+      '<span class="v">' + facts.length + '</span> facts · <span class="v">' + topics.length + '</span> topics',
+      wrap
+    );
     root.innerHTML = ""; root.appendChild(page);
   }
 
