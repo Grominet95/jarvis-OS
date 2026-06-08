@@ -660,6 +660,11 @@ app.include_router(routines_router)
 from api.http_curator import router as curator_router  # noqa: E402
 
 app.include_router(curator_router)
+
+# ── [UI/M5] État de santé des connecteurs (Réglages → Connexions)
+from api.http_connectors import router as connectors_router  # noqa: E402
+
+app.include_router(connectors_router)
 # ── [/SURFACE] ───────────────────────────────────────────────────────────────
 
 
