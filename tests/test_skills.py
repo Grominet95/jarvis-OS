@@ -69,15 +69,16 @@ def _make_mock_llm(response: str) -> MagicMock:
 
 
 @pytest.mark.asyncio
-async def test_propose_skill_cree_les_fichiers(tmp_path: Path) -> None:
-    """propose_skill génère SKILL.md, skill.yaml et skill.py valides."""
+async def test_propose_skill_candidate_cree_les_fichiers(tmp_path: Path) -> None:
+    """propose_skill_candidate génère SKILL.md, skill.yaml et skill.py valides."""
     from skills.synthesizer import SkillSynthesizer
 
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    with patch("skills.synthesizer.SKILLS_INSTALLED_DIR", tmp_path):
-        skill_name = await synth.propose_skill(_SAMPLE_TRAJECTORY)
+    skill_name = await synth.propose_skill_candidate(
+        _SAMPLE_TRAJECTORY, target_dir=tmp_path
+    )
 
     skill_dir = tmp_path / skill_name
     assert skill_dir.exists(), f"Dossier skill absent : {skill_dir}"
@@ -87,15 +88,16 @@ async def test_propose_skill_cree_les_fichiers(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_propose_skill_skill_md_valide(tmp_path: Path) -> None:
+async def test_propose_skill_candidate_skill_md_valide(tmp_path: Path) -> None:
     """Le SKILL.md généré a un frontmatter valide (name + description)."""
     from skills.synthesizer import SkillSynthesizer
 
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    with patch("skills.synthesizer.SKILLS_INSTALLED_DIR", tmp_path):
-        skill_name = await synth.propose_skill(_SAMPLE_TRAJECTORY)
+    skill_name = await synth.propose_skill_candidate(
+        _SAMPLE_TRAJECTORY, target_dir=tmp_path
+    )
 
     skill_md = (tmp_path / skill_name / "SKILL.md").read_text(encoding="utf-8")
     import re
@@ -108,15 +110,18 @@ async def test_propose_skill_skill_md_valide(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_propose_skill_skill_yaml_contient_system_prompt(tmp_path: Path) -> None:
+async def test_propose_skill_candidate_skill_yaml_contient_system_prompt(
+    tmp_path: Path,
+) -> None:
     """Le skill.yaml contient un system_prompt non vide."""
     from skills.synthesizer import SkillSynthesizer
 
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    with patch("skills.synthesizer.SKILLS_INSTALLED_DIR", tmp_path):
-        skill_name = await synth.propose_skill(_SAMPLE_TRAJECTORY)
+    skill_name = await synth.propose_skill_candidate(
+        _SAMPLE_TRAJECTORY, target_dir=tmp_path
+    )
 
     with (tmp_path / skill_name / "skill.yaml").open(encoding="utf-8") as f:
         meta = yaml.safe_load(f)
@@ -125,17 +130,16 @@ async def test_propose_skill_skill_yaml_contient_system_prompt(tmp_path: Path) -
 
 
 @pytest.mark.asyncio
-async def test_propose_skill_nom_invalide_leve_erreur(tmp_path: Path) -> None:
-    """propose_skill lève ValueError si le LLM retourne un nom invalide."""
+async def test_propose_skill_candidate_nom_invalide_leve_erreur(tmp_path: Path) -> None:
+    """propose_skill_candidate lève ValueError si le LLM retourne un nom invalide."""
     from skills.synthesizer import SkillSynthesizer
 
     bad_md = "---\nname: INVALID_NAME_WITH_CAPS\ndescription: test\n---\nBody."
     mock_llm = _make_mock_llm(bad_md)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    with patch("skills.synthesizer.SKILLS_INSTALLED_DIR", tmp_path):
-        with pytest.raises(ValueError, match="kebab-case"):
-            await synth.propose_skill(_SAMPLE_TRAJECTORY)
+    with pytest.raises(ValueError, match="kebab-case"):
+        await synth.propose_skill_candidate(_SAMPLE_TRAJECTORY, target_dir=tmp_path)
 
 
 @pytest.mark.asyncio
@@ -189,8 +193,9 @@ async def test_skill_synthetise_chargeable_par_le_registry(tmp_path: Path) -> No
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    with patch("skills.synthesizer.SKILLS_INSTALLED_DIR", tmp_path):
-        skill_name = await synth.propose_skill(_SAMPLE_TRAJECTORY)
+    skill_name = await synth.propose_skill_candidate(
+        _SAMPLE_TRAJECTORY, target_dir=tmp_path
+    )
 
     # Charge le skill directement depuis le dossier temporaire
     from skills.registry import SkillRegistry
@@ -333,22 +338,37 @@ def test_is_valid_name_kebab_case() -> None:
 
 @pytest.mark.asyncio
 async def test_skill_create_tool_succes(tmp_path: Path) -> None:
-    """SkillCreateTool retourne un ToolResult non-erreur sur succès."""
+    """SkillCreateTool retourne un ToolResult non-erreur sur succès via le Lab."""
+    from memory.kernel import MemoryKernel
+    from skills.lab import SkillLab
+    from skills.lifecycle import SkillLifecycle
     from skills.synthesizer import SkillSynthesizer
     from tools.skills import SkillCreateTool
 
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
-    tool = SkillCreateTool(synthesizer=synth)
+    kernel = MemoryKernel(db_path=tmp_path / "memory.db")
+    lifecycle = SkillLifecycle(db_path=tmp_path / "memory.db")
+    lab = SkillLab(
+        kernel=kernel,
+        lifecycle=lifecycle,
+        synthesizer=synth,
+        candidates_dir=tmp_path / "candidates",
+        installed_dir=tmp_path / "installed",
+    )
+    tool = SkillCreateTool(lab=lab)
 
-    with patch("skills.synthesizer.SKILLS_INSTALLED_DIR", tmp_path):
-        result = await tool.execute(
-            task_description="Recherche web multi-sources.",
-            result="Synthèse des résultats.",
-        )
+    result = await tool.execute(
+        task_description="Recherche web multi-sources.",
+        result="Synthèse des résultats.",
+    )
 
     assert not result.is_error, f"Erreur inattendue : {result.content}"
     assert "web-research" in result.content
+    # CRITIQUE : passe par le Lab, donc en attente de validation humaine.
+    assert "validation humaine" in result.content.lower()
+    # Et JAMAIS dans installed/
+    assert not (tmp_path / "installed" / "web-research").exists()
 
 
 @pytest.mark.asyncio

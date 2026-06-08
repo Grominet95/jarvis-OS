@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from llm.base import LLMProvider
 
 SKILLS_INSTALLED_DIR = Path("skills/installed")
+SKILLS_CANDIDATES_DIR = Path("skills/candidates")
 
 # ── Prompts ───────────────────────────────────────────────────────────────────
 
@@ -102,8 +103,11 @@ class SkillSynthesizer:
     Usage::
 
         synth = SkillSynthesizer()
-        skill_name = await synth.propose_skill(trajectory)
-        await synth.improve_skill(skill_name, "Nouvelle leçon apprises.")
+        # PHASE 4 : on génère une candidate dans candidates_dir, JAMAIS
+        # directement dans installed/. La promotion exige une validation
+        # humaine via SkillLab.promote().
+        skill_name = await synth.propose_skill_candidate(trajectory)
+        await synth.improve_skill(skill_name, "Nouvelle leçon apprise.")
     """
 
     def __init__(self, llm: LLMProvider | None = None) -> None:
@@ -115,18 +119,25 @@ class SkillSynthesizer:
 
     # ── API publique ──────────────────────────────────────────────────────────
 
-    async def propose_skill(self, trajectory: dict) -> str:
-        """Génère un skill depuis une trajectoire de tâche réussie.
+    async def propose_skill_candidate(
+        self,
+        trajectory: dict,
+        target_dir: Path | None = None,
+    ) -> str:
+        """PHASE 4 : génère une skill et l'écrit dans `target_dir / {name}/`.
+
+        Variante non-installante de `propose_skill` — la skill est en zone
+        tampon et n'est PAS chargée par SkillRegistry tant que le Skill Lab
+        ne l'a pas testée en sandbox et que l'humain ne l'a pas validée.
 
         Args:
-            trajectory: dict avec clés optionnelles :
-                - messages      : list[dict] — historique de conversation
-                - tool_calls    : list[dict] — outils appelés (name, result)
-                - result        : str — résultat final de la tâche
-                - task_description : str — description de la tâche accomplie
+            trajectory : dict identique à propose_skill.
+            target_dir : dossier racine où écrire {name}/. Par défaut
+              SKILLS_CANDIDATES_DIR (skills/candidates). Surchargeable par le
+              SkillLab pour tester avec un dossier isolé.
 
         Returns:
-            Nom du skill créé (= nom du dossier dans skills/installed/).
+            Nom du skill candidate (kebab-case, = nom du dossier candidate).
         """
         skill_md = await self._llm_propose(trajectory)
         name = self._extract_name(skill_md)
@@ -136,14 +147,15 @@ class SkillSynthesizer:
                 f"Début de la réponse :\n{skill_md[:400]}"
             )
 
-        skill_dir = SKILLS_INSTALLED_DIR / name
-        skill_dir.mkdir(parents=True, exist_ok=True)
+        root = target_dir if target_dir is not None else SKILLS_CANDIDATES_DIR
+        cand_dir = root / name
+        cand_dir.mkdir(parents=True, exist_ok=True)
 
         fm = self._parse_frontmatter(skill_md)
         body = self._extract_body(skill_md)
 
-        (skill_dir / "SKILL.md").write_text(skill_md, encoding="utf-8")
-        (skill_dir / "skill.yaml").write_text(
+        (cand_dir / "SKILL.md").write_text(skill_md, encoding="utf-8")
+        (cand_dir / "skill.yaml").write_text(
             yaml.dump(
                 self._to_jarvis_yaml(fm, body),
                 Dumper=_BlockDumper,
@@ -152,12 +164,12 @@ class SkillSynthesizer:
             ),
             encoding="utf-8",
         )
-        (skill_dir / "skill.py").write_text(
+        (cand_dir / "skill.py").write_text(
             self._generate_skill_py(name),
             encoding="utf-8",
         )
 
-        logger.info("Skill synthétisé", name=name, path=str(skill_dir))
+        logger.info("Skill candidate générée", name=name, path=str(cand_dir))
         return name
 
     async def improve_skill(self, skill_name: str, new_experience: str) -> None:

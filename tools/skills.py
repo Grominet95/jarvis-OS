@@ -7,18 +7,29 @@ from typing import TYPE_CHECKING
 from tools.base import Tool, ToolResult
 
 if TYPE_CHECKING:
+    from skills.lab import SkillLab
     from skills.synthesizer import SkillSynthesizer
 
 
 class SkillCreateTool(Tool):
-    """Crée un nouveau skill depuis la tâche courante."""
+    """Propose une nouvelle skill candidate via le SkillLab (PHASE 4).
+
+    Le LLM ne peut PLUS installer une skill directement : ce tool passe
+    obligatoirement par `SkillLab.propose_from_trajectory()` qui écrit en
+    zone tampon `skills/candidates/{name}/` ET lance le test sandbox.
+    La promotion vers `skills/installed/` exige une validation humaine
+    explicite via l'endpoint `POST /api/skills/lab/{name}/promote`.
+    """
 
     name = "skill_create"
     description = (
-        "Synthétise un nouveau skill Jarvis depuis une tâche complexe accomplie. "
+        "Propose une nouvelle skill Jarvis CANDIDATE depuis une tâche accomplie. "
+        "La skill est générée puis testée en sandbox automatique. "
+        "Elle N'EST PAS installée tant qu'un humain ne l'a pas validée via "
+        "l'endpoint /api/skills/lab/{name}/promote — c'est intentionnel pour "
+        "éviter qu'un agent installe du code arbitraire dans le système. "
         "Appeler après avoir réussi une tâche non-triviale et répétable pour "
-        "persister le savoir-faire en tant que skill réutilisable. "
-        "Fournir un résumé de la tâche, les outils utilisés et le résultat."
+        "soumettre le savoir-faire à la validation."
     )
     input_schema = {
         "type": "object",
@@ -47,12 +58,11 @@ class SkillCreateTool(Tool):
         "required": ["task_description"],
     }
 
-    def __init__(self, synthesizer: SkillSynthesizer | None = None) -> None:
-        if synthesizer is None:
-            from skills.synthesizer import SkillSynthesizer
-
-            synthesizer = SkillSynthesizer()
-        self._synthesizer = synthesizer
+    def __init__(self, lab: SkillLab) -> None:
+        # Lab requis : aucun chemin sans gate. Pas de fallback "construct
+        # default" pour éviter qu'un appelant oublie l'injection et bypass
+        # accidentellement le sandbox.
+        self._lab = lab
 
     async def execute(  # type: ignore[override]
         self,
@@ -68,14 +78,38 @@ class SkillCreateTool(Tool):
             "result": result,
         }
         try:
-            skill_name = await self._synthesizer.propose_skill(trajectory)
-            return ToolResult(
-                content=f"Skill '{skill_name}' créé dans skills/installed/{skill_name}/."
-            )
-        except ValueError as exc:
-            return ToolResult(content=f"Génération échouée : {exc}", is_error=True)
+            record = await self._lab.propose_from_trajectory(trajectory)
         except Exception as exc:  # noqa: BLE001
-            return ToolResult(content=f"Erreur inattendue : {exc}", is_error=True)
+            return ToolResult(content=f"Erreur Lab : {exc}", is_error=True)
+
+        if record is None:
+            return ToolResult(
+                content=(
+                    "Génération de la candidate échouée (LLM down ou JSON "
+                    "non parsable). Aucune skill créée."
+                ),
+                is_error=True,
+            )
+
+        if record.status.value == "sandboxed_pass":
+            return ToolResult(
+                content=(
+                    f"Skill candidate '{record.name}' générée et test sandbox VERT. "
+                    f"En attente de validation humaine "
+                    f"(POST /api/skills/lab/{record.name}/promote). "
+                    f"La skill n'est PAS installée tant que la validation "
+                    f"n'a pas eu lieu."
+                )
+            )
+        # SANDBOXED_FAIL — la skill est rejetée par le gate
+        return ToolResult(
+            content=(
+                f"Skill candidate '{record.name}' REJETÉE par le test sandbox. "
+                f"Cause : {record.sandbox_notes or '(détail manquant)'}. "
+                f"Aucune installation."
+            ),
+            is_error=True,
+        )
 
 
 class SkillImproveTool(Tool):
