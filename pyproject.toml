@@ -91,6 +91,11 @@ line-ending = "lf"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+# Pendant la migration Phase B, on garde l'ancien layout en racine ET
+# on charge la nouvelle disposition src/jarvis/. Le pythonpath final
+# (src/ uniquement) sera figé en B.3 quand pyproject.toml passera au
+# src-layout strict.
+pythonpath = ["src", "."]
 markers = [
     "integration: tests qui exercent des composants lourds (HTTP middleware réel, Docker backend, vraies connexions réseau). Exclus par 'pytest -m \"not integration\"' — le gate par-commit des Phases B et C (CDC §A.1.5).",
 ]
