@@ -7,4 +7,4 @@ import settings`) jusqu'à la Phase B (§B.1 table de migration).
 
 from __future__ import annotations
 
-from kernel.settings import _VALID_WHISPER, Settings, settings  # noqa: F401
+from jarvis.kernel.settings import _VALID_WHISPER, Settings, settings  # noqa: F401

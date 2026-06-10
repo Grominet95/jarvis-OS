@@ -30,7 +30,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
-from kernel.schemas import (
+from jarvis.kernel.schemas import (
     ContextItem,
     Event,
     Fact,

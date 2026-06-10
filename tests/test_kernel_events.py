@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from kernel.events import (
+from jarvis.kernel.events import (
     BudgetThresholdReached,
     EventBus,
     MemoryIngested,

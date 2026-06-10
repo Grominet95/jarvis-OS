@@ -8,7 +8,7 @@ depuis la Phase A. Ce fichier reste pour préserver les imports existants
 
 from __future__ import annotations
 
-from kernel.vocab import (  # noqa: F401
+from jarvis.kernel.vocab import (  # noqa: F401
     AUTO_MAX_LEVEL,
     CATEGORIES,
     PREDICATES,

@@ -16,7 +16,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from kernel.vocab import AccessLevel, AutonomyLevel
+from jarvis.kernel.vocab import AccessLevel, AutonomyLevel
 
 # ════════════════════════════════════════════════════════════════════════════
 # Section 1 — Memory (ex-memory/schemas.py)

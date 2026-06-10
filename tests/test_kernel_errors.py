@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kernel.errors import (
+from jarvis.kernel.errors import (
     BudgetExceeded,
     JarvisError,
     LLMError,

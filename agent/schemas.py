@@ -7,7 +7,7 @@ les imports existants (`from agent.schemas import …`) jusqu'à la Phase B.
 
 from __future__ import annotations
 
-from kernel.schemas import (  # noqa: F401
+from jarvis.kernel.schemas import (  # noqa: F401
     LogEntry,
     Project,
     ProjectStatus,
