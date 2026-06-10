@@ -16,12 +16,11 @@ if TYPE_CHECKING:
     from jarvis.providers.memory.consolidation import CrossSessionRecall
 
 
-# Import paresseux de l'orchestrateur — évite les imports circulaires
-def _get_orchestrator(app_state: object) -> object:  # type: ignore[return]
-    return getattr(app_state, "orchestrator", None)
-
-
 # ── Singleton tool registry (pour les presets) ───────────────────────────────
+# Élimination programmée à la bascule app.py → bootstrap.build() (CDC §C.1.4).
+# Utilisé par capabilities/tools/preset.py et interfaces/api/http_skills.py
+# qui n'ont pas encore accès au Container. Conservé jusqu'à ce que TOUS les
+# constructeurs lourds soient injectés (cf. directive Barth — éviter l'état hybride).
 _tool_registry_instance: object = None
 
 
@@ -39,6 +38,17 @@ _FALLBACK = "Désolé chef, j'ai eu un souci — je regarde."
 
 class Gateway:
     """Point d'entrée unique. Gère session, notifications, routing et agent.
+
+    Phase C : le constructeur Gateway était DÉJÀ bien injecté en pré-C
+    (5 dépendances reçues par paramètres typés). Le commit Phase C qui le
+    documente n'a quasi rien à changer côté Gateway lui-même — c'est le
+    payoff du travail d'architecture déjà fait. Modifications du commit :
+      - suppression du dead code `_get_orchestrator(app_state)` (défini mais
+        jamais appelé, antipattern qui suggérait que Gateway devait fouiller
+        dans app.state — il ne doit pas).
+      - docstring enrichie pour signaler les 2 singletons restants
+        (`_tool_registry_instance`) à éliminer à la bascule app.py →
+        bootstrap.build().
 
     Flux double-passe pour les outils (CF) :
     1. Premier appel LLM streamé : détection du tag + ack text + capture tool_use.
