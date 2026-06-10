@@ -11,7 +11,6 @@ import logging
 import os
 import sys
 import warnings
-from pathlib import Path
 
 from dotenv import load_dotenv
 from livekit.agents import (
@@ -129,94 +128,36 @@ def _voice_broadcast(event: dict) -> None:
 
 
 def _build_voice_tools() -> list:
-    """Retourne les LiveKit tools en miroir du mode texte (main.py)."""
+    """Retourne les LiveKit tools en miroir du mode texte (jarvis.app).
 
-    from config.settings import settings
+    Phase C — Étape 1B : re-câblé sur bootstrap.build() partagé. Le process
+    voix appelle son PROPRE `bootstrap.build()` (second composition root —
+    process séparé du process API, ils partagent l'état via le SQLite WAL
+    de MemoryKernel). Les 13 `__import__("jarvis.capabilities.tools.X")`
+    lambdas qui re-instanciaient chaque outil disparaissent au profit de
+    `container.tool_registry` — UNE source de vérité pour les outils
+    enregistrés.
 
-    _root = PROJECT_ROOT
-    _google_creds = (_root / settings.google_credentials_path).resolve()
-    _gmail_token = (_root / "config/google_gmail_token.json").resolve()
-    _calendar_token = (_root / settings.google_token_path).resolve()
-    _allowed_roots = [Path(r).expanduser().resolve() for r in settings.file_search_roots]
+    Conséquence : la voix a désormais accès à TOUS les outils enregistrés
+    dans le ToolRegistry du Container, et plus seulement le sous-ensemble
+    historique de 13. Le sous-ensemble pertinent pour la voix vs les
+    outils écrits-only (memory_search, etc.) sera filtré au cas par cas
+    dans un commit ultérieur si nécessaire — à ce stade, on accepte
+    l'élargissement (toutes les fonctions LiveKit sont déclarées, le LLM
+    voix choisit lesquelles appeler selon le contexte).
+    """
+    from jarvis.bootstrap import build
 
-    jarvis_tools = []
+    # Container voix : SON PROPRE composition root (process séparé du process
+    # API — ils partagent l'état via le SQLite WAL de MemoryKernel, cf.
+    # PRAGMA WAL+busy_timeout posé en C.1.8).
+    container = build()
 
-    _tool_factories = [
-        ("weather", lambda: __import__("jarvis.capabilities.tools.weather", fromlist=["WeatherTool"]).WeatherTool()),
-        ("browser", lambda: __import__("jarvis.capabilities.tools.browser", fromlist=["BrowserTool"]).BrowserTool()),
-        ("vision", lambda: __import__("jarvis.capabilities.tools.vision", fromlist=["VisionTool"]).VisionTool()),
-        (
-            "filesystem",
-            lambda: [
-                __import__("jarvis.capabilities.tools.filesystem", fromlist=["ReadFileTool"]).ReadFileTool(
-                    allowed_roots=_allowed_roots
-                ),
-                __import__("jarvis.capabilities.tools.filesystem", fromlist=["FindFilesTool"]).FindFilesTool(
-                    allowed_roots=_allowed_roots
-                ),
-            ],
-        ),
-        (
-            "cli",
-            lambda: [
-                __import__("jarvis.capabilities.tools.cli", fromlist=["CLIRunnerTool"]).CLIRunnerTool(
-                    whitelist_path=Path(settings.cli_whitelist_path)
-                ),
-                __import__("jarvis.capabilities.tools.cli", fromlist=["ExecuteCLITool"]).ExecuteCLITool(),
-            ],
-        ),
-        (
-            "calendar",
-            lambda: [
-                __import__("jarvis.capabilities.tools.calendar", fromlist=["CalendarListTool"]).CalendarListTool(
-                    credentials_path=_google_creds, token_path=_calendar_token
-                ),
-                __import__("jarvis.capabilities.tools.calendar", fromlist=["CalendarCreateTool"]).CalendarCreateTool(
-                    credentials_path=_google_creds, token_path=_calendar_token
-                ),
-            ],
-        ),
-        (
-            "notion",
-            lambda: __import__("jarvis.capabilities.tools.notion", fromlist=["NotionTasksTool"]).NotionTasksTool(),
-        ),
-        (
-            "memory",
-            lambda: __import__(
-                "jarvis.capabilities.tools.memory", fromlist=["MemoryTopicWriteTool"]
-            ).MemoryTopicWriteTool(),
-        ),
-        ("spotify", lambda: __import__("jarvis.capabilities.tools.spotify", fromlist=["SpotifyTool"]).SpotifyTool()),
-        (
-            "gmail",
-            lambda: __import__("jarvis.capabilities.tools.gmail", fromlist=["GmailListTool"]).GmailListTool(
-                credentials_path=_google_creds, token_path=_gmail_token
-            ),
-        ),
-        (
-            "preset",
-            lambda: __import__("jarvis.capabilities.tools.preset", fromlist=["ExecutePresetTool"]).ExecutePresetTool(),
-        ),
-    ]
-
-    for name, factory in _tool_factories:
-        try:
-            result = factory()
-            if isinstance(result, list):
-                jarvis_tools += result
-            else:
-                jarvis_tools.append(result)
-        except Exception as e:
-            logger.warning("Outil '%s' non chargé: %s", name, e)
-
-    # Outils des skills installés (BambuLab, Fusion360…)
-    try:
-        from jarvis.capabilities.skills.registry import SkillRegistry
-
-        reg = SkillRegistry.get_instance()
-        jarvis_tools += reg.get_all_tools()
-    except Exception as e:
-        logger.warning("Skill tools non chargés: %s", e)
+    # tool_registry contient déjà les outils enregistrés via register() + les
+    # outils des skills installés via replace_skill_tools(*skill_registry.
+    # get_all_tools()) — voir bootstrap.build() section 5. Pas besoin
+    # d'appel séparé à SkillRegistry ici.
+    jarvis_tools = list(container.tool_registry._tools.values())
 
     tools = [_make_livekit_tool(t) for t in jarvis_tools]
     logger.info("Voice tools chargés: %s", [t._info.name for t in tools])
