@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from channels.base import ChannelAdapter, IncomingMessage, MessageTarget, Platform
+from jarvis.interfaces.channels.base import ChannelAdapter, IncomingMessage, MessageTarget, Platform
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -55,9 +55,9 @@ def test_channel_adapter_est_abstract() -> None:
 
 def test_tous_les_stubs_implementent_linterface() -> None:
     """WhatsApp, Signal, Slack implémentent ChannelAdapter (sans TypeError)."""
-    from channels.signal_bot import SignalChannel
-    from channels.slack_bot import SlackChannel
-    from channels.whatsapp import WhatsAppChannel
+    from jarvis.interfaces.channels.signal_bot import SignalChannel
+    from jarvis.interfaces.channels.slack_bot import SlackChannel
+    from jarvis.interfaces.channels.whatsapp import WhatsAppChannel
 
     for cls in (WhatsAppChannel, SignalChannel, SlackChannel):
         adapter = cls()
@@ -66,7 +66,7 @@ def test_tous_les_stubs_implementent_linterface() -> None:
 
 
 def test_telegram_channel_est_un_channel_adapter() -> None:
-    from channels.telegram_bot import TelegramChannel
+    from jarvis.interfaces.channels.telegram_bot import TelegramChannel
 
     ch = TelegramChannel()
     assert isinstance(ch, ChannelAdapter)
@@ -74,7 +74,7 @@ def test_telegram_channel_est_un_channel_adapter() -> None:
 
 
 def test_discord_channel_est_un_channel_adapter() -> None:
-    from channels.discord_bot import DiscordChannel
+    from jarvis.interfaces.channels.discord_bot import DiscordChannel
 
     ch = DiscordChannel()
     assert isinstance(ch, ChannelAdapter)
@@ -100,7 +100,7 @@ def test_session_key_discord() -> None:
 @pytest.mark.asyncio
 async def test_dispatch_appelle_jarvis_et_envoie_reponse(tmp_path: Path) -> None:
     """dispatch() appelle jarvis_gateway.handle() et adapter.send()."""
-    from channels.gateway import MessagingGateway
+    from jarvis.interfaces.channels.gateway import MessagingGateway
 
     jarvis_gw = _make_jarvis_gateway(session_id="sess-1", response="OK !")
     gw = MessagingGateway(jarvis_gateway=jarvis_gw, session_map_path=tmp_path / "sessions.json")
@@ -132,7 +132,7 @@ async def test_dispatch_appelle_jarvis_et_envoie_reponse(tmp_path: Path) -> None
 @pytest.mark.asyncio
 async def test_dispatch_session_id_passe_au_deuxieme_appel(tmp_path: Path) -> None:
     """Le session_id retourné au 1er dispatch est reutilisé au 2ème."""
-    from channels.gateway import MessagingGateway
+    from jarvis.interfaces.channels.gateway import MessagingGateway
 
     jarvis_gw = _make_jarvis_gateway(session_id="sess-xyz")
     gw = MessagingGateway(jarvis_gateway=jarvis_gw, session_map_path=tmp_path / "sessions.json")
@@ -166,7 +166,7 @@ async def test_dispatch_session_id_passe_au_deuxieme_appel(tmp_path: Path) -> No
 @pytest.mark.asyncio
 async def test_continuite_session_meme_user_cross_plateforme(tmp_path: Path) -> None:
     """Deux plateformes différentes ont des sessions indépendantes pour le même user_id."""
-    from channels.gateway import MessagingGateway
+    from jarvis.interfaces.channels.gateway import MessagingGateway
 
     jarvis_gw = MagicMock()
     sess_tg = MagicMock()
@@ -215,7 +215,7 @@ async def test_continuite_session_meme_user_cross_plateforme(tmp_path: Path) -> 
 @pytest.mark.asyncio
 async def test_session_map_persistee_sur_disque(tmp_path: Path) -> None:
     """La session map est sauvegardée en JSON après dispatch."""
-    from channels.gateway import MessagingGateway
+    from jarvis.interfaces.channels.gateway import MessagingGateway
 
     jarvis_gw = _make_jarvis_gateway(session_id="persisted-id")
     path = tmp_path / "map.json"
@@ -244,7 +244,7 @@ async def test_session_map_persistee_sur_disque(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_session_map_rechargee_depuis_disque(tmp_path: Path) -> None:
     """Une gateway relancée restaure la session map depuis le fichier JSON."""
-    from channels.gateway import MessagingGateway
+    from jarvis.interfaces.channels.gateway import MessagingGateway
 
     path = tmp_path / "map.json"
     path.write_text(json.dumps({"telegram:5": "restored-sess"}), encoding="utf-8")
@@ -277,7 +277,7 @@ async def test_session_map_rechargee_depuis_disque(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_telegram_on_message_mode_dispatch_cb(tmp_path: Path) -> None:
     """Quand dispatch_cb est injecté, _on_message l'appelle en priorité."""
-    from channels.telegram_bot import TelegramChannel
+    from jarvis.interfaces.channels.telegram_bot import TelegramChannel
 
     ch = TelegramChannel()
     dispatched: list[IncomingMessage] = []
@@ -307,7 +307,7 @@ async def test_telegram_on_message_mode_dispatch_cb(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_telegram_on_message_mode_legacy() -> None:
     """Sans dispatch_cb, _on_message utilise le legacy gateway."""
-    from channels.telegram_bot import TelegramChannel
+    from jarvis.interfaces.channels.telegram_bot import TelegramChannel
 
     session = MagicMock()
     session.id = "leg-sess"

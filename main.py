@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
-import channels.telegram_bot as _tg_module
+import jarvis.interfaces.channels.telegram_bot as _tg_module
 from jarvis.interfaces.api.admin import _ui_router as admin_ui_router
 from jarvis.interfaces.api.admin import router as admin_router
 from jarvis.interfaces.api.deezer import router as deezer_router
@@ -37,7 +37,7 @@ from jarvis.interfaces.api.widgets import router as widgets_router
 from jarvis.engine.background.notifications import NotificationQueue, ProactiveQueue
 from jarvis.engine.background.scheduler import Scheduler
 from jarvis.engine.background.worker import BackgroundWorker
-from channels.telegram_bot import TelegramChannel, get_telegram_channel
+from jarvis.interfaces.channels.telegram_bot import TelegramChannel, get_telegram_channel
 from config.settings import settings
 from jarvis.capabilities.skills.registry import skill_registry
 from jarvis.capabilities.tools.browser import BrowserTool
@@ -538,8 +538,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # ── [GATEWAY] ────────────────────────────────────────────────────────────
     from jarvis.interfaces.api.channels import router as channels_router
-    from channels.discord_bot import DiscordChannel
-    from channels.gateway import MessagingGateway
+    from jarvis.interfaces.channels.discord_bot import DiscordChannel
+    from jarvis.interfaces.channels.gateway import MessagingGateway
     from jarvis.engine.connectivity import is_offline_mode
 
     _messaging_gw: MessagingGateway | None = None

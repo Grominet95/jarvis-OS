@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from channels.base import ChannelAdapter, IncomingMessage, MessageTarget
+from jarvis.interfaces.channels.base import ChannelAdapter, IncomingMessage, MessageTarget
 
 if TYPE_CHECKING:
     from jarvis.engine.gateway import Gateway as JarvisGateway

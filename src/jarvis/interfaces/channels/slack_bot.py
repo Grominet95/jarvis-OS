@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from channels.base import ChannelAdapter, MessageTarget, Platform
+from jarvis.interfaces.channels.base import ChannelAdapter, MessageTarget, Platform
 
 
 class SlackChannel(ChannelAdapter):

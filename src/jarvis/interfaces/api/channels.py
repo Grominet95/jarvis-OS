@@ -10,7 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 from loguru import logger
 
-from channels.base import IncomingMessage, Platform
+from jarvis.interfaces.channels.base import IncomingMessage, Platform
 
 router = APIRouter(prefix="/api/channels", tags=["channels"])
 

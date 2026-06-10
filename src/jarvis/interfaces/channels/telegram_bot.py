@@ -51,7 +51,7 @@ _tg_filter = _TelegramNetworkFilter()
 logging.getLogger("telegram").addFilter(_tg_filter)
 logging.getLogger("httpx").addFilter(_tg_filter)
 
-from channels.base import ChannelAdapter, IncomingMessage, MessageTarget, Platform  # noqa: E402
+from jarvis.interfaces.channels.base import ChannelAdapter, IncomingMessage, MessageTarget, Platform  # noqa: E402
 
 try:
     from telegram import Update
@@ -68,7 +68,7 @@ except ImportError:
     TELEGRAM_AVAILABLE = False
 
 if TYPE_CHECKING:
-    from channels.base import DispatchCallback
+    from jarvis.interfaces.channels.base import DispatchCallback
 
 
 _telegram_instance: TelegramChannel | None = None
