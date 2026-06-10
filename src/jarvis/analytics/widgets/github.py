@@ -5,7 +5,7 @@ import os
 
 import httpx
 
-from analytics.widgets.base import WidgetBase, WidgetData
+from jarvis.analytics.widgets.base import WidgetBase, WidgetData
 
 
 class GitHubWidget(WidgetBase):

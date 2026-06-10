@@ -9,32 +9,32 @@ from fastapi.responses import FileResponse
 from loguru import logger
 from pydantic import BaseModel
 
-from hardware.macropad_2k.arduino_cli import find_arduino_cli, install_arduino_cli
-from hardware.macropad_2k.flasher import compile_firmware, upload_firmware
-from hardware.macropad_2k.launcher import (
+from jarvis.hardware.macropad_2k.arduino_cli import find_arduino_cli, install_arduino_cli
+from jarvis.hardware.macropad_2k.flasher import compile_firmware, upload_firmware
+from jarvis.hardware.macropad_2k.launcher import (
     create_app_launcher,
     is_windows,
     list_installed_apps,
     open_device_manager,
 )
-from hardware.macropad_2k.models import (
+from jarvis.hardware.macropad_2k.models import (
     KeypadUsbStatus,
     WorkspaceProfileBundle,
     get_active_profile,
 )
-from hardware.macropad_2k.paths import (
+from jarvis.hardware.macropad_2k.paths import (
     arduino_cli_executable,
     firmware_root,
     is_valid_workspace,
 )
-from hardware.macropad_2k.profile_store import (
+from jarvis.hardware.macropad_2k.profile_store import (
     load_bundle,
     load_default_workspace,
     migrate_to_bundle,
     persist_bundle,
     save_default_workspace,
 )
-from hardware.macropad_2k.usb import usb_status
+from jarvis.hardware.macropad_2k.usb import usb_status
 
 router = APIRouter(prefix="/api/macropad", tags=["macropad"])
 _ui_router = APIRouter()

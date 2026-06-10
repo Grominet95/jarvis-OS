@@ -537,7 +537,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     set_approval_checker(approval_checker)
 
     # Initialiser le registry analytics (charge la config sauvegardée)
-    from analytics.registry import analytics_registry as _analytics_registry
+    from jarvis.analytics.registry import analytics_registry as _analytics_registry
 
     logger.info("AnalyticsRegistry initialisé", widgets=len(_analytics_registry.get_active()))
 

@@ -4,7 +4,7 @@ import json
 from datetime import date, timedelta
 from pathlib import Path
 
-from analytics.widgets.base import WidgetBase, WidgetData
+from jarvis.analytics.widgets.base import WidgetBase, WidgetData
 
 
 class ConsoWidget(WidgetBase):

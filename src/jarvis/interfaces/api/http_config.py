@@ -632,7 +632,7 @@ async def get_devices() -> list:
     )
 
     try:
-        from hardware.macropad_2k.usb import usb_status
+        from jarvis.hardware.macropad_2k.usb import usb_status
 
         st = usb_status()
         hid = bool(st.get("hidPresent"))

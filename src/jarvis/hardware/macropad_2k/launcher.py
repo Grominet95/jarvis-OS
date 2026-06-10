@@ -8,7 +8,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from hardware.macropad_2k.paths import launchers_dir
+from jarvis.hardware.macropad_2k.paths import launchers_dir
 
 
 def is_windows() -> bool:

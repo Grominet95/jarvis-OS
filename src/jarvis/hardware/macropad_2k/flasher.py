@@ -10,17 +10,17 @@ from pathlib import Path
 
 from loguru import logger
 
-from hardware.macropad_2k.arduino_cli import (
+from jarvis.hardware.macropad_2k.arduino_cli import (
     BOARD_INDEX,
     FQBN,
     ensure_arduino_cli,
     ensure_ch55x_core,
     run_cli,
 )
-from hardware.macropad_2k.firmware_gen import generate
-from hardware.macropad_2k.ihex import ihex_to_bin_file
-from hardware.macropad_2k.models import KeypadProfile
-from hardware.macropad_2k.paths import (
+from jarvis.hardware.macropad_2k.firmware_gen import generate
+from jarvis.hardware.macropad_2k.ihex import ihex_to_bin_file
+from jarvis.hardware.macropad_2k.models import KeypadProfile
+from jarvis.hardware.macropad_2k.paths import (
     build_dir,
     output_dir,
     sketch_dir,

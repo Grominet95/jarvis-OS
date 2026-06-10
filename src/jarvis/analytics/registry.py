@@ -7,12 +7,12 @@ from pathlib import Path
 
 from loguru import logger
 
-from analytics.widgets.base import WidgetBase, WidgetConfig, WidgetData
-from analytics.widgets.conso import ConsoWidget
-from analytics.widgets.discord import DiscordWidget
-from analytics.widgets.github import GitHubWidget
-from analytics.widgets.jarvis_stats import JarvisStatsWidget
-from analytics.widgets.youtube import YouTubeWidget
+from jarvis.analytics.widgets.base import WidgetBase, WidgetConfig, WidgetData
+from jarvis.analytics.widgets.conso import ConsoWidget
+from jarvis.analytics.widgets.discord import DiscordWidget
+from jarvis.analytics.widgets.github import GitHubWidget
+from jarvis.analytics.widgets.jarvis_stats import JarvisStatsWidget
+from jarvis.analytics.widgets.youtube import YouTubeWidget
 
 # Catalogue de tous les widgets disponibles
 ALL_WIDGETS: dict[str, type[WidgetBase]] = {
