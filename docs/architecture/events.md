@@ -66,25 +66,37 @@ la gate.
 
 ### `NotificationRequested`
 
-| Champ      | Type     | Description                                       |
-| ---------- | -------- | ------------------------------------------------- |
-| `channel`  | `str`    | `"websocket"` \| `"telegram"` \| autre canal cible. |
-| `payload`  | `dict`   | Données structurées passées tel quel au sink.     |
-| `priority` | `str`    | `"low"` \| `"normal"` \| `"high"` (défaut `normal`). |
+| Champ      | Type     | Description                                                  |
+| ---------- | -------- | ------------------------------------------------------------ |
+| `channel`  | `str`    | `"user"` (NotificationQueue) \| `"websocket"` (dashboard).   |
+| `payload`  | `dict`   | Données structurées passées tel quel au sink ; pour `"user"`, lit `payload["content"]`. |
+| `priority` | `str`    | `"low"` \| `"normal"` \| `"high"` (défaut `normal`).         |
 
 **Émetteurs.**
-- Réservé pour les couches basses qui n'ont pas accès à un callback
-  `broadcast_event` injecté. En Phase D, l'émetteur explicite reste à
-  câbler au cas par cas — les call-sites historiques qui ont déjà un
-  `broadcast_event` (worker, budget, etc.) gardent leur pattern pour
-  ne pas casser la sémantique fine du payload.
+- `engine/background/worker.py::BackgroundWorker._notify` (helper privé) —
+  publie après chaque exécution de `BackgroundTask` :
+  - **Succès** : `channel="user"`, `payload={"content": <résumé LLM>}`,
+    `priority="normal"`.
+  - **Échec** : `channel="user"`, `payload={"content": "Tâche échouée : <err>"}`,
+    `priority="high"`.
+  Fallback : si `bus=None` (tests legacy), tombe sur
+  `NotificationQueue.add()` direct — comportement strictement identique.
+
+NB : les autres call-sites historiques qui appellent encore directement
+`notifications.add(...)` ou `proactive_queue.broadcast_event(...)` —
+`gateway.py` (échec d'outil), `proactive/engine.py` (initiative texte) —
+restent volontairement sur leur pattern callback parce qu'ils sont
+intra-couche (engine ↔ engine) et qu'aucun bénéfice de découplage
+architectural ne justifierait la traversée du bus. Le bus est ici réservé
+aux **vraies traversées de couches** (cf. BACKLOG si on veut généraliser).
 
 **Abonnés.**
-- `bootstrap.py::_wire_events::_on_notification_requested` — si
-  `channel == "websocket"`, forward le payload à
-  `proactive_queue.broadcast_event`. Sinon, lit `payload.content` et
-  pousse vers `NotificationQueue.add()` (texte simple pour Telegram /
-  mémoire utilisateur).
+- `bootstrap.py::_wire_events::_on_notification_requested` :
+  - `channel == "websocket"` → forward le payload à
+    `proactive_queue.broadcast_event` (dashboard / clients WS).
+  - `channel == "user"` (défaut) → lit `payload["content"]` et pousse
+    vers `NotificationQueue.add()` — sera injecté dans le prochain
+    prompt système / parlé.
 
 ### `BudgetThresholdReached`
 

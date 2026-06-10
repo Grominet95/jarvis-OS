@@ -9,6 +9,7 @@ from loguru import logger
 
 from jarvis.engine.background.notifications import NotificationQueue
 from jarvis.kernel.contracts import LLMProvider, ToolRegistry
+from jarvis.kernel.events import EventBus, NotificationRequested
 
 _BG_SYSTEM = (
     "Tu es Jarvis. Exécute la tâche demandée avec les outils disponibles. "
@@ -43,12 +44,27 @@ class BackgroundWorker:
         llm: LLMProvider,
         notifications: NotificationQueue,
         tool_registry: ToolRegistry | None = None,
+        bus: EventBus | None = None,
     ) -> None:
         self._llm = llm
-        self._notifications = notifications
+        self._notifications = notifications  # fallback si bus=None (legacy tests)
         self._tool_registry = tool_registry
+        self._bus = bus
         self._queue: asyncio.Queue[BackgroundTask] = asyncio.Queue()
         self._history: deque[TaskRecord] = deque(maxlen=_HISTORY_MAX)
+
+    async def _notify(self, content: str, *, priority: str = "normal") -> None:
+        """Publie NotificationRequested si bus, fallback sur la queue sinon."""
+        if self._bus is not None:
+            await self._bus.publish(
+                NotificationRequested(
+                    channel="user",
+                    payload={"content": content},
+                    priority=priority,
+                )
+            )
+        else:
+            self._notifications.add(content)
 
     def submit(self, task: BackgroundTask) -> None:
         self._queue.put_nowait(task)
@@ -67,7 +83,7 @@ class BackgroundWorker:
                 record.error = str(e)
                 record.completed_at = datetime.now(UTC).isoformat()
                 logger.error("BackgroundTask failed", session_id=task.session_id, error=str(e))
-                self._notifications.add(f"Tâche échouée : {e}")
+                await self._notify(f"Tâche échouée : {e}", priority="high")
             finally:
                 self._history.append(record)
                 self._queue.task_done()
@@ -98,5 +114,5 @@ class BackgroundWorker:
 
         record.result = result.strip()
         record.completed_at = datetime.now(UTC).isoformat()
-        self._notifications.add(result.strip())
+        await self._notify(result.strip())
         logger.info("BackgroundTask done", session_id=task.session_id)

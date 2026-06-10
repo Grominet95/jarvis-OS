@@ -372,7 +372,10 @@ def build(settings: Settings | None = None) -> Container:
 
     approval_checker = ApprovalChecker(broadcast_event=proactive_queue.broadcast_event)
     worker = BackgroundWorker(
-        llm=llm, notifications=notifications, tool_registry=tool_registry
+        llm=llm,
+        notifications=notifications,
+        tool_registry=tool_registry,
+        bus=bus,
     )
 
     # ── 12. Engine L2 — Mission (orchestrator + reflexion) ─────────────────
@@ -610,14 +613,19 @@ def _wire_events(
         )
 
     async def _on_notification_requested(event: NotificationRequested) -> None:
-        """Couche basse demande notification UI/canal."""
+        """Couche basse demande notification UI/canal.
+
+        Channels reconnus :
+          - "user" (défaut texte) : push dans NotificationQueue — sera
+            injecté dans le prochain prompt système ou parlé.
+          - "websocket" : forward le payload tel quel pour le dashboard.
+        """
         if event.channel == "websocket":
             proactive_queue.broadcast_event(event.payload)
-        else:
-            # Texte simple pour les canaux non-WS (telegram, mémoire user, …)
-            content = event.payload.get("content", "")
-            if content:
-                notifications.add(content)
+            return
+        content = event.payload.get("content", "")
+        if content:
+            notifications.add(content)
 
     bus.subscribe(BudgetThresholdReached, _on_budget_threshold)
     bus.subscribe(MissionCompleted, _on_mission_completed)

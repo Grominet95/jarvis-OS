@@ -19,6 +19,7 @@ from jarvis.kernel.events import (
     BudgetThresholdReached,
     EventBus,
     MemoryIngested,
+    NotificationRequested,
 )
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -131,3 +132,82 @@ async def test_memory_ingest_publie_MemoryIngested() -> None:
     assert captured[0].event_id == "evt_001"
     assert captured[0].fact_count == 0
     assert captured[0].source == "conversation"
+
+
+# ── BackgroundWorker → NotificationRequested ──────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_background_worker_publie_NotificationRequested_sur_succes() -> None:
+    """Tâche background réussie → NotificationRequested(channel=user) publié."""
+    from jarvis.engine.background.notifications import NotificationQueue
+    from jarvis.engine.background.worker import BackgroundTask, BackgroundWorker
+
+    bus = EventBus()
+    captured: list[NotificationRequested] = []
+
+    async def handler(ev: NotificationRequested) -> None:
+        captured.append(ev)
+
+    bus.subscribe(NotificationRequested, handler)
+
+    fake_llm = MagicMock()
+    fake_llm.supports_tools = False
+    fake_llm.complete = AsyncMock(return_value="tâche faite, voici le résumé")
+
+    worker = BackgroundWorker(
+        llm=fake_llm,
+        notifications=NotificationQueue(),
+        bus=bus,
+    )
+
+    await worker._execute(
+        BackgroundTask(session_id="s1", instruction="résume X"),
+        MagicMock(),
+    )
+
+    assert len(captured) == 1
+    assert captured[0].channel == "user"
+    assert captured[0].payload["content"] == "tâche faite, voici le résumé"
+    assert captured[0].priority == "normal"
+
+
+@pytest.mark.asyncio
+async def test_background_worker_publie_NotificationRequested_sur_echec() -> None:
+    """Exception dans la tâche → NotificationRequested(priority=high) publié."""
+    from jarvis.engine.background.notifications import NotificationQueue
+    from jarvis.engine.background.worker import BackgroundTask, BackgroundWorker, TaskRecord
+
+    bus = EventBus()
+    captured: list[NotificationRequested] = []
+
+    async def handler(ev: NotificationRequested) -> None:
+        captured.append(ev)
+
+    bus.subscribe(NotificationRequested, handler)
+
+    fake_llm = MagicMock()
+    worker = BackgroundWorker(
+        llm=fake_llm,
+        notifications=NotificationQueue(),
+        bus=bus,
+    )
+
+    # Court-circuite _execute pour forcer l'exception
+    async def _raise(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("boom")
+
+    worker._execute = _raise  # type: ignore[method-assign]
+
+    # Émule un cycle de run_loop sans démarrer la boucle infinie :
+    task = BackgroundTask(session_id="s2", instruction="essaie X")
+    record = TaskRecord(session_id=task.session_id, instruction=task.instruction)
+    try:
+        await worker._execute(task, record)
+    except RuntimeError as e:
+        await worker._notify(f"Tâche échouée : {e}", priority="high")
+
+    assert len(captured) == 1
+    assert captured[0].channel == "user"
+    assert "boom" in captured[0].payload["content"]
+    assert captured[0].priority == "high"
