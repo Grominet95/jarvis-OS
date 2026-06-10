@@ -13,8 +13,8 @@ import math
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from memory.kernel import MemoryKernel
-from memory.schemas import DecayPolicy, Fact, FactStatus, RelationType
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.schemas import DecayPolicy, Fact, FactStatus, RelationType
 
 # ── Constantes du score ──────────────────────────────────────────────────────
 

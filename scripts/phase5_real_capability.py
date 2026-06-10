@@ -39,7 +39,7 @@ from agent.capability_engine import (  # noqa: E402
     Whitelist,
     WhitelistDomain,
 )
-from memory.kernel import MemoryKernel  # noqa: E402
+from jarvis.providers.memory.kernel import MemoryKernel  # noqa: E402
 from skills.lab import SkillLab  # noqa: E402
 from skills.lifecycle import SkillLifecycle, SkillStatus  # noqa: E402
 from skills.synthesizer import SkillSynthesizer  # noqa: E402

@@ -11,8 +11,8 @@ from background.notifications import NotificationQueue, ProactiveQueue
 from background.worker import BackgroundTask, BackgroundWorker
 from core.gateway import _FALLBACK, Gateway
 from core.router import RouteEnum
-from memory.auto_dream import AutoDream
-from memory.consolidation import ConsolidationAgent
+from jarvis.providers.memory.auto_dream import AutoDream
+from jarvis.providers.memory.consolidation import ConsolidationAgent
 from tools.spotify import SpotifyTool
 from vision.objects_queue import get_vision_objects_queue
 

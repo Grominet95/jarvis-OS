@@ -6,10 +6,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from memory.index import MemoryIndex
-from memory.search import VectorIndex, _chunk_text
-from memory.sessions import SessionStore
-from memory.topics import TopicStore
+from jarvis.providers.memory.index import MemoryIndex
+from jarvis.providers.memory.search import VectorIndex, _chunk_text
+from jarvis.providers.memory.sessions import SessionStore
+from jarvis.providers.memory.topics import TopicStore
 from tools.memory import MemoryLoadTopicTool, MemorySearchTool
 
 # ── SessionStore ──────────────────────────────────────────────
@@ -147,7 +147,7 @@ def test_session_persist_callback(tmp_path: Path) -> None:
 
 def test_session_manager_restore_from_jsonl(tmp_path: Path) -> None:
     from core.session import SessionManager
-    from memory.sessions import SessionStore
+    from jarvis.providers.memory.sessions import SessionStore
 
     # UUID valide requis — les sessions sont toujours identifiées par uuid4()
     session_id = "12345678-1234-5678-1234-567812345678"

@@ -23,7 +23,7 @@ from agent.capability_engine import (
     _tokenize,
 )
 from jarvis.providers.llm.base import LLMProvider
-from memory.kernel import MemoryKernel
+from jarvis.providers.memory.kernel import MemoryKernel
 from skills.lab import SkillLab
 from skills.lifecycle import SkillLifecycle, SkillStatus
 from skills.synthesizer import SkillSynthesizer
@@ -100,7 +100,7 @@ def _make_engine(
 
     Renvoie (engine, kernel, lifecycle, installed_dir).
     """
-    db_path = tmp_path / "memory.db"
+    db_path = tmp_path / "jarvis.providers.memory.db"
     cand_dir = tmp_path / "candidates"
     installed_dir = tmp_path / "installed"
     llm = _FakeLLM(skill_md=skill_md)

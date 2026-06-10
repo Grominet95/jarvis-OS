@@ -18,8 +18,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from memory.kernel import MemoryKernel
-from memory.schemas import Fact, FactStatus
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.schemas import Fact, FactStatus
 
 # ── Mapping catégorie → fichier MD (§6.7) ─────────────────────────────────────
 

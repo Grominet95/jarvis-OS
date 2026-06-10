@@ -4,11 +4,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from config.settings import settings
-from memory.topics import TopicStore
+from jarvis.providers.memory.topics import TopicStore
 from tools.base import Tool, ToolResult
 
 if TYPE_CHECKING:
-    from memory.search import FTSIndex, VectorIndex
+    from jarvis.providers.memory.search import FTSIndex, VectorIndex
 
 
 def _is_invalid_filename(filename: str) -> bool:

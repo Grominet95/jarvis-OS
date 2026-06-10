@@ -22,11 +22,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from memory.ingest import MemoryIngest  # noqa: E402
-from memory.kernel import MemoryKernel  # noqa: E402
-from memory.mirror import MemoryMirror  # noqa: E402
-from memory.retrieval import MemoryRetrieval  # noqa: E402
-from memory.schemas import FactStatus  # noqa: E402
+from jarvis.providers.memory.ingest import MemoryIngest  # noqa: E402
+from jarvis.providers.memory.kernel import MemoryKernel  # noqa: E402
+from jarvis.providers.memory.mirror import MemoryMirror  # noqa: E402
+from jarvis.providers.memory.retrieval import MemoryRetrieval  # noqa: E402
+from jarvis.providers.memory.schemas import FactStatus  # noqa: E402
 
 # ── Scénario simulé : 12 échanges sur ~2 semaines ────────────────────────────
 

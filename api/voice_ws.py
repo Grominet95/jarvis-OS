@@ -16,8 +16,8 @@ from background.worker import BackgroundTask, BackgroundWorker
 from config.settings import settings
 from core.gateway import _FALLBACK, Gateway
 from core.router import RouteEnum
-from memory.auto_dream import AutoDream
-from memory.consolidation import ConsolidationAgent
+from jarvis.providers.memory.auto_dream import AutoDream
+from jarvis.providers.memory.consolidation import ConsolidationAgent
 
 router = APIRouter()
 

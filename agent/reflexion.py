@@ -23,8 +23,8 @@ from loguru import logger
 
 from agent.schemas import Project, ProjectStatus, StepStatus
 from jarvis.providers.llm.base import LLMProvider
-from memory.ingest import MemoryIngest
-from memory.kernel import MemoryKernel
+from jarvis.providers.memory.ingest import MemoryIngest
+from jarvis.providers.memory.kernel import MemoryKernel
 
 # Statuts considérés comme "fin de mission" (§5.1).
 # PAUSED est exclu : la mission est reprenable, ce n'est pas une fin.

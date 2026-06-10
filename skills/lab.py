@@ -38,7 +38,7 @@ from pathlib import Path
 from loguru import logger
 
 from agent.docker_executor import DockerExecutor
-from memory.kernel import MemoryKernel
+from jarvis.providers.memory.kernel import MemoryKernel
 from skills.lifecycle import SkillLifecycle, SkillRecord, SkillStatus
 from skills.synthesizer import (
     SKILLS_CANDIDATES_DIR,

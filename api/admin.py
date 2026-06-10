@@ -65,7 +65,7 @@ def _memory_dir(request: Request) -> Path:
 
 @router.get("/sessions", response_model=list[SessionMeta])
 async def list_sessions(request: Request) -> list[SessionMeta]:
-    from memory.sessions import SessionStore
+    from jarvis.providers.memory.sessions import SessionStore
 
     store: SessionStore = SessionStore(_memory_dir(request) / "sessions")
     result = []
@@ -91,7 +91,7 @@ async def list_sessions(request: Request) -> list[SessionMeta]:
 
 @router.get("/sessions/{session_id}", response_model=list[SessionMessage])
 async def get_session(session_id: str, request: Request) -> list[SessionMessage]:
-    from memory.sessions import SessionStore
+    from jarvis.providers.memory.sessions import SessionStore
 
     store: SessionStore = SessionStore(_memory_dir(request) / "sessions")
     path = store._find(session_id)  # noqa: SLF001

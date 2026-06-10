@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from jarvis.providers.llm.base import LLMProvider
-from memory.kernel import MemoryKernel
+from jarvis.providers.memory.kernel import MemoryKernel
 from skills.lab import SkillLab
 from skills.lifecycle import SkillLifecycle, SkillStatus
 from skills.synthesizer import SkillSynthesizer
@@ -79,8 +79,8 @@ async def test_skill_create_tool_ne_produit_jamais_dans_installed(
 
     llm = _FakeLLM(skill_md=_VALID_SKILL_MD)
     synth = SkillSynthesizer(llm=llm)
-    kernel = MemoryKernel(db_path=tmp_path / "memory.db")
-    lifecycle = SkillLifecycle(db_path=tmp_path / "memory.db")
+    kernel = MemoryKernel(db_path=tmp_path / "jarvis.providers.memory.db")
+    lifecycle = SkillLifecycle(db_path=tmp_path / "jarvis.providers.memory.db")
     lab = SkillLab(
         kernel=kernel,
         lifecycle=lifecycle,
@@ -141,8 +141,8 @@ async def test_skill_create_tool_meme_avec_skill_cassee_ne_pollue_pas_installed(
         "raise RuntimeError('skill cassée — backdoor test')\n"
     )
 
-    kernel = MemoryKernel(db_path=tmp_path / "memory.db")
-    lifecycle = SkillLifecycle(db_path=tmp_path / "memory.db")
+    kernel = MemoryKernel(db_path=tmp_path / "jarvis.providers.memory.db")
+    lifecycle = SkillLifecycle(db_path=tmp_path / "jarvis.providers.memory.db")
     lab = SkillLab(
         kernel=kernel,
         lifecycle=lifecycle,

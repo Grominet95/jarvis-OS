@@ -28,8 +28,8 @@ from loguru import logger
 
 from core.vocab import CATEGORIES, PREDICATES
 from jarvis.providers.llm.base import LLMProvider
-from memory.kernel import MemoryKernel, _new_id, normalize
-from memory.schemas import (
+from jarvis.providers.memory.kernel import MemoryKernel, _new_id, normalize
+from jarvis.providers.memory.schemas import (
     DecayPolicy,
     Event,
     Fact,

@@ -13,7 +13,7 @@ from core.router import RouteEnum, SpeedRouter
 from core.session import Session, SessionManager
 
 if TYPE_CHECKING:
-    from memory.consolidation import CrossSessionRecall
+    from jarvis.providers.memory.consolidation import CrossSessionRecall
 
 
 # Import paresseux de l'orchestrateur — évite les imports circulaires

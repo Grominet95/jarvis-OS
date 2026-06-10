@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from jarvis.providers.llm.base import LLMProvider
-from memory.kernel import MemoryKernel
+from jarvis.providers.memory.kernel import MemoryKernel
 from skills.lab import SkillLab
 from skills.lifecycle import SkillLifecycle, SkillStatus
 from skills.synthesizer import SkillSynthesizer
@@ -88,12 +88,12 @@ def workspace(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def kernel(workspace: Path) -> MemoryKernel:
-    return MemoryKernel(workspace / "memory.db")
+    return MemoryKernel(workspace / "jarvis.providers.memory.db")
 
 
 @pytest.fixture
 def lifecycle(workspace: Path) -> SkillLifecycle:
-    return SkillLifecycle(db_path=workspace / "memory.db")
+    return SkillLifecycle(db_path=workspace / "jarvis.providers.memory.db")
 
 
 def _make_lab(

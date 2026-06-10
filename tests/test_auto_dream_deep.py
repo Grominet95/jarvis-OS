@@ -23,10 +23,10 @@ from pathlib import Path
 import pytest
 
 from jarvis.providers.llm.base import LLMProvider
-from memory.auto_dream import AutoDream
-from memory.ingest import MemoryIngest
-from memory.kernel import MemoryKernel
-from memory.schemas import FactStatus
+from jarvis.providers.memory.auto_dream import AutoDream
+from jarvis.providers.memory.ingest import MemoryIngest
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.schemas import FactStatus
 
 # ── Fake LLM dispatcher ───────────────────────────────────────────────────────
 

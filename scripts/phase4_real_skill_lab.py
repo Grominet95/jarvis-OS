@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from memory.kernel import MemoryKernel  # noqa: E402
+from jarvis.providers.memory.kernel import MemoryKernel  # noqa: E402
 from skills.lab import SkillLab  # noqa: E402
 from skills.lifecycle import SkillLifecycle, SkillRecord, SkillStatus  # noqa: E402
 from skills.synthesizer import SkillSynthesizer  # noqa: E402
@@ -92,7 +92,7 @@ async def cas_nominal(workspace: Path) -> bool:
     print("  CAS NOMINAL — pattern 'génération d'articles markdown'")
     print("=" * 70)
 
-    db_path = workspace / "memory.db"
+    db_path = workspace / "jarvis.providers.memory.db"
     if db_path.exists():
         db_path.unlink()
     cand_dir = workspace / "candidates"

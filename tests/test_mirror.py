@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from memory.kernel import MemoryKernel
-from memory.mirror import MemoryMirror
-from memory.schemas import DecayPolicy, Fact, FactStatus
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.mirror import MemoryMirror
+from jarvis.providers.memory.schemas import DecayPolicy, Fact, FactStatus
 
 
 def _make_fact(

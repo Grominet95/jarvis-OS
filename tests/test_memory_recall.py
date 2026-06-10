@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from memory.search import FTSIndex, VectorIndex
+from jarvis.providers.memory.search import FTSIndex, VectorIndex
 
 # ── 1. FTSIndex ───────────────────────────────────────────────────────────────
 
@@ -138,7 +138,7 @@ class TestCrossSessionRecall:
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("_force_api_mode")
     async def test_recall_retourne_resume(self, tmp_path: Path) -> None:
-        from memory.consolidation import CrossSessionRecall
+        from jarvis.providers.memory.consolidation import CrossSessionRecall
 
         fts = FTSIndex(db_path=tmp_path / "fts.db")
         await fts.add("s1.jsonl", "user: Je veux du café\nassistant: Bien sûr chef")
@@ -157,7 +157,7 @@ class TestCrossSessionRecall:
 
     @pytest.mark.asyncio
     async def test_recall_retourne_none_si_index_vide(self, tmp_path: Path) -> None:
-        from memory.consolidation import CrossSessionRecall
+        from jarvis.providers.memory.consolidation import CrossSessionRecall
 
         fts = FTSIndex(db_path=tmp_path / "fts.db")
         mock_vector = MagicMock()
@@ -172,7 +172,7 @@ class TestCrossSessionRecall:
 
     @pytest.mark.asyncio
     async def test_recall_retourne_none_si_query_vide(self, tmp_path: Path) -> None:
-        from memory.consolidation import CrossSessionRecall
+        from jarvis.providers.memory.consolidation import CrossSessionRecall
 
         fts = FTSIndex(db_path=tmp_path / "fts.db")
         mock_vector = MagicMock()
@@ -187,7 +187,7 @@ class TestCrossSessionRecall:
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("_force_api_mode")
     async def test_recall_resilient_si_llm_plante(self, tmp_path: Path) -> None:
-        from memory.consolidation import CrossSessionRecall
+        from jarvis.providers.memory.consolidation import CrossSessionRecall
 
         fts = FTSIndex(db_path=tmp_path / "fts.db")
         await fts.add("s1.jsonl", "Contenu de session")
@@ -205,7 +205,7 @@ class TestCrossSessionRecall:
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("_force_api_mode")
     async def test_recall_deduplique_par_doc_id(self, tmp_path: Path) -> None:
-        from memory.consolidation import CrossSessionRecall
+        from jarvis.providers.memory.consolidation import CrossSessionRecall
 
         fts = FTSIndex(db_path=tmp_path / "fts.db")
         await fts.add("s1.jsonl", "Texte FTS")
@@ -242,14 +242,14 @@ class TestUserModel:
 
     @pytest.mark.asyncio
     async def test_load_vide_si_fichier_absent(self, tmp_path: Path) -> None:
-        from memory.user_model import UserModel
+        from jarvis.providers.memory.user_model import UserModel
 
         model = UserModel(llm=MagicMock(), model_path=tmp_path / "user_model.md")
         assert model.load() == ""
 
     @pytest.mark.asyncio
     async def test_load_lit_fichier(self, tmp_path: Path) -> None:
-        from memory.user_model import UserModel
+        from jarvis.providers.memory.user_model import UserModel
 
         path = tmp_path / "user_model.md"
         path.write_text("- Préfère le café\n", encoding="utf-8")
@@ -258,7 +258,7 @@ class TestUserModel:
 
     @pytest.mark.asyncio
     async def test_update_ecrit_le_fichier(self, tmp_path: Path) -> None:
-        from memory.user_model import UserModel
+        from jarvis.providers.memory.user_model import UserModel
 
         path = tmp_path / "user_model.md"
         mock_llm = MagicMock()
@@ -272,7 +272,7 @@ class TestUserModel:
 
     @pytest.mark.asyncio
     async def test_fire_cree_une_task(self, tmp_path: Path) -> None:
-        from memory.user_model import UserModel
+        from jarvis.providers.memory.user_model import UserModel
 
         mock_llm = MagicMock()
         mock_llm.complete = AsyncMock(return_value="- Modèle mis à jour")
@@ -285,7 +285,7 @@ class TestUserModel:
 
     @pytest.mark.asyncio
     async def test_update_safe_silencieux_si_llm_plante(self, tmp_path: Path) -> None:
-        from memory.user_model import UserModel
+        from jarvis.providers.memory.user_model import UserModel
 
         mock_llm = MagicMock()
         mock_llm.complete = AsyncMock(side_effect=RuntimeError("LLM down"))
@@ -357,13 +357,13 @@ class TestSessionStoreListAll:
     """SessionStore.list_all() retourne tous les fichiers JSONL."""
 
     def test_list_all_vide(self, tmp_path: Path) -> None:
-        from memory.sessions import SessionStore
+        from jarvis.providers.memory.sessions import SessionStore
 
         store = SessionStore(tmp_path / "sessions")
         assert store.list_all() == []
 
     def test_list_all_retourne_tous(self, tmp_path: Path) -> None:
-        from memory.sessions import SessionStore
+        from jarvis.providers.memory.sessions import SessionStore
 
         sessions_dir = tmp_path / "sessions"
         store = SessionStore(sessions_dir)

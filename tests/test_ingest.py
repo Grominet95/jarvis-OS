@@ -14,14 +14,14 @@ from pathlib import Path
 import pytest
 
 from jarvis.providers.llm.base import LLMProvider
-from memory.ingest import (
+from jarvis.providers.memory.ingest import (
     CONFIDENCE_EXPLICIT,
     CONFIDENCE_INFERENCE,
     CONFIRM_DELTA,
     MemoryIngest,
 )
-from memory.kernel import MemoryKernel
-from memory.schemas import FactStatus, ObservationType, RelationType
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.schemas import FactStatus, ObservationType, RelationType
 
 # ── Fake LLM contrôlé ─────────────────────────────────────────────────────────
 
@@ -371,7 +371,7 @@ async def test_max_5_facts_par_ingest(kernel: MemoryKernel) -> None:
 
 async def test_decay_policy_par_categorie(kernel: MemoryKernel) -> None:
     """goal → fast, identity → none, preference → medium."""
-    from memory.schemas import DecayPolicy
+    from jarvis.providers.memory.schemas import DecayPolicy
 
     llm = _ScriptedLLM(
         [

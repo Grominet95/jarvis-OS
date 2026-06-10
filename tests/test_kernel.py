@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from memory.kernel import MemoryKernel, normalize
-from memory.schemas import (
+from jarvis.providers.memory.kernel import MemoryKernel, normalize
+from jarvis.providers.memory.schemas import (
     DecayPolicy,
     Fact,
     FactStatus,

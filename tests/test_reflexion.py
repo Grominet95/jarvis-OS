@@ -25,9 +25,9 @@ from agent.reflexion import Reflexion
 from agent.schemas import Project, ProjectStatus, Step, StepStatus
 from core.vocab import AccessLevel
 from jarvis.providers.llm.base import LLMProvider
-from memory.ingest import MemoryIngest
-from memory.kernel import MemoryKernel
-from memory.schemas import FactStatus
+from jarvis.providers.memory.ingest import MemoryIngest
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.schemas import FactStatus
 
 # ── Fakes ──────────────────────────────────────────────────────────────────────
 

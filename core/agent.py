@@ -13,8 +13,8 @@ from jarvis.providers.llm.api import ToolCapture
 from jarvis.providers.llm.base import LLMProvider
 
 if TYPE_CHECKING:
-    from memory.index import MemoryIndex
-    from memory.topics import TopicStore
+    from jarvis.providers.memory.index import MemoryIndex
+    from jarvis.providers.memory.topics import TopicStore
     from skills.registry import SkillRegistry
     from tools.registry import ToolRegistry
 

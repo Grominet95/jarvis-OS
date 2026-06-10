@@ -19,7 +19,7 @@ from background.routines import (
     next_cron_datetime,
 )
 from config.settings import settings
-from memory.auto_dream import AutoDream
+from jarvis.providers.memory.auto_dream import AutoDream
 from tools.calendar import CalendarListTool
 
 

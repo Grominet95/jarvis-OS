@@ -27,7 +27,7 @@ from typing import Any
 
 from loguru import logger
 
-from memory.schemas import (
+from jarvis.providers.memory.schemas import (
     DecayPolicy,
     Event,
     Fact,

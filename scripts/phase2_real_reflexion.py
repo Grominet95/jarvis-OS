@@ -34,9 +34,9 @@ from agent.reflexion import Reflexion  # noqa: E402
 from agent.schemas import Project, Step, validate_step  # noqa: E402
 from agent.worker_agent import WorkerAgent  # noqa: E402
 from core.vocab import AccessLevel  # noqa: E402
-from memory.ingest import MemoryIngest  # noqa: E402
-from memory.kernel import MemoryKernel  # noqa: E402
-from memory.schemas import FactStatus  # noqa: E402
+from jarvis.providers.memory.ingest import MemoryIngest  # noqa: E402
+from jarvis.providers.memory.kernel import MemoryKernel  # noqa: E402
+from jarvis.providers.memory.schemas import FactStatus  # noqa: E402
 
 
 def build_success_steps() -> list[Step]:

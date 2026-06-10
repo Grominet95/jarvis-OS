@@ -28,8 +28,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config.settings import settings  # noqa: E402
-from memory.kernel import MemoryKernel  # noqa: E402
-from memory.schemas import FactStatus  # noqa: E402
+from jarvis.providers.memory.kernel import MemoryKernel  # noqa: E402
+from jarvis.providers.memory.schemas import FactStatus  # noqa: E402
 
 
 def _fmt_date(iso: str) -> str:

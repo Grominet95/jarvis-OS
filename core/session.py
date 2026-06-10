@@ -50,7 +50,7 @@ class SessionManager:
 
     def _try_restore(self, session_id: str) -> Session | None:
         """Tente de restaurer une session depuis le JSONL. Retourne None si introuvable."""
-        from memory.sessions import SessionStore  # import local pour éviter le cycle
+        from jarvis.providers.memory.sessions import SessionStore  # import local pour éviter le cycle
 
         if not isinstance(self._store, SessionStore):
             return None
@@ -79,7 +79,7 @@ class SessionManager:
 
     def _attach_store(self, session: Session, sid: str) -> None:
         if self._store is not None:
-            from memory.sessions import SessionStore
+            from jarvis.providers.memory.sessions import SessionStore
 
             if isinstance(self._store, SessionStore):
                 session.set_persist(lambda role, content: self._store.append(sid, role, content))  # type: ignore[union-attr]

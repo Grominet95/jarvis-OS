@@ -133,7 +133,7 @@ async def list_memory_facts(
     pour l'UI Atelier/Mémoire. Lecture seule — la correction passe par
     POST /api/memory/correct.
     """
-    from memory.schemas import FactStatus
+    from jarvis.providers.memory.schemas import FactStatus
 
     kernel = getattr(request.app.state, "memory_kernel", None)
     if kernel is None:
@@ -174,7 +174,7 @@ async def correct_memory_fact(body: _CorrectionBody, request: Request) -> dict:
     en audit immuable et met à jour le fact. C'est l'UNIQUE chemin d'écriture
     légitime sur la mémoire depuis l'UI — le miroir Markdown reste lecture seule.
     """
-    from memory.schemas import FactStatus
+    from jarvis.providers.memory.schemas import FactStatus
 
     kernel = getattr(request.app.state, "memory_kernel", None)
     if kernel is None:

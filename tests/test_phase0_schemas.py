@@ -25,7 +25,7 @@ from core.vocab import (
     AccessLevel,
     AutonomyLevel,
 )
-from memory.schemas import (
+from jarvis.providers.memory.schemas import (
     DecayPolicy,
     Event,
     Fact,

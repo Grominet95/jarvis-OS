@@ -10,7 +10,7 @@ import numpy as np
 from loguru import logger
 
 if TYPE_CHECKING:
-    from memory.topics import TopicStore
+    from jarvis.providers.memory.topics import TopicStore
 
 _DEFAULT_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 _CHUNK_TOKENS = 500

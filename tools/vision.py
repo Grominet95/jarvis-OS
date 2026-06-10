@@ -86,7 +86,7 @@ class VisionTool(Tool):
 
         # ── Recall — pas de capture ───────────────────────────────────────────
         if action == "recall":
-            from memory import visual_memory
+            from jarvis.providers.memory import visual_memory
 
             matches = await visual_memory.search(question)
             if matches:
@@ -188,7 +188,7 @@ class VisionTool(Tool):
 
     async def _store_memory(self, description: str, source: str, action: str, context: str) -> None:
         try:
-            from memory import visual_memory
+            from jarvis.providers.memory import visual_memory
 
             await visual_memory.store(description=description, source=source, context=context)
         except Exception as e:

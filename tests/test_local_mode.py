@@ -16,7 +16,7 @@ from core.session import SessionManager
 from jarvis.providers.llm.api import AnthropicProvider
 from jarvis.providers.llm.base import LLMProvider
 from jarvis.providers.llm.local import OllamaProvider
-from memory.consolidation import CrossSessionRecall
+from jarvis.providers.memory.consolidation import CrossSessionRecall
 
 # ── Fixtures de mode ──────────────────────────────────────────────────────────
 

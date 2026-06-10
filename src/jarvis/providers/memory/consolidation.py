@@ -9,12 +9,12 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from jarvis.providers.llm.base import LLMProvider
-from memory.index import MemoryIndex
-from memory.topics import TopicStore
+from jarvis.providers.memory.index import MemoryIndex
+from jarvis.providers.memory.topics import TopicStore
 
 if TYPE_CHECKING:
-    from memory.ingest import MemoryIngest
-    from memory.search import FTSIndex, VectorIndex
+    from jarvis.providers.memory.ingest import MemoryIngest
+    from jarvis.providers.memory.search import FTSIndex, VectorIndex
 
 _PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "consolidation.md"
 _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)

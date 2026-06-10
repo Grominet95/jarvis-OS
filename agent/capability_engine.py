@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING
 import yaml
 from loguru import logger
 
-from memory.kernel import MemoryKernel
+from jarvis.providers.memory.kernel import MemoryKernel
 from skills.lab import SkillLab
 from skills.lifecycle import SkillRecord, SkillStatus
 

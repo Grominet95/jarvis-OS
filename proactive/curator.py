@@ -30,12 +30,12 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from memory.schemas import DecayPolicy, FactStatus
+from jarvis.providers.memory.schemas import DecayPolicy, FactStatus
 from skills.lifecycle import SkillStatus
 
 if TYPE_CHECKING:
     from core.budget import BudgetGuard
-    from memory.kernel import MemoryKernel
+    from jarvis.providers.memory.kernel import MemoryKernel
     from proactive.store import InitiativeStore
     from skills.lifecycle import SkillLifecycle
 
@@ -208,7 +208,7 @@ class Curator:
 
     def _scan_facts(self, report: CuratorReport) -> None:
         """Pour chaque fact ACTIVE, calcule si son âge dépasse N demi-vies."""
-        from memory.schemas import Fact  # import tardif
+        from jarvis.providers.memory.schemas import Fact  # import tardif
 
         active: list[Fact] = self._kernel.list_facts_by_status(FactStatus.ACTIVE)
         superseded = self._kernel.count_facts(FactStatus.SUPERSEDED)

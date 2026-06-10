@@ -17,8 +17,8 @@ from unittest.mock import patch as mock_patch
 import pytest
 
 from core.vocab import AutonomyLevel
-from memory.kernel import MemoryKernel
-from memory.schemas import DecayPolicy, Fact, FactStatus
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.schemas import DecayPolicy, Fact, FactStatus
 from proactive.curator import (
     _PROTECTED_PATHS,
     Curator,
@@ -82,12 +82,12 @@ def _make_fact(
 
 @pytest.fixture
 def kernel(tmp_path: Path) -> MemoryKernel:
-    return MemoryKernel(tmp_path / "memory.db")
+    return MemoryKernel(tmp_path / "jarvis.providers.memory.db")
 
 
 @pytest.fixture
 def lifecycle(tmp_path: Path) -> SkillLifecycle:
-    return SkillLifecycle(db_path=tmp_path / "memory.db")
+    return SkillLifecycle(db_path=tmp_path / "jarvis.providers.memory.db")
 
 
 @pytest.fixture

@@ -48,15 +48,15 @@ from core.gateway import Gateway
 from core.session import SessionManager
 from jarvis.providers.llm.api import AnthropicProvider
 from jarvis.providers.llm.factory import create_background_llm, get_llm_provider
-from memory.auto_dream import AutoDream
-from memory.consolidation import ConsolidationAgent, CrossSessionRecall
-from memory.index import MemoryIndex
-from memory.ingest import MemoryIngest
-from memory.kernel import MemoryKernel
-from memory.search import FTSIndex, VectorIndex
-from memory.sessions import SessionStore
-from memory.topics import TopicStore
-from memory.user_model import UserModel
+from jarvis.providers.memory.auto_dream import AutoDream
+from jarvis.providers.memory.consolidation import ConsolidationAgent, CrossSessionRecall
+from jarvis.providers.memory.index import MemoryIndex
+from jarvis.providers.memory.ingest import MemoryIngest
+from jarvis.providers.memory.kernel import MemoryKernel
+from jarvis.providers.memory.search import FTSIndex, VectorIndex
+from jarvis.providers.memory.sessions import SessionStore
+from jarvis.providers.memory.topics import TopicStore
+from jarvis.providers.memory.user_model import UserModel
 from proactive.engine import ProactiveEngine
 from skills.registry import skill_registry
 from tools.browser import BrowserTool
@@ -213,7 +213,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Miroir Markdown du Kernel (§6.7) — régénéré en passe nocturne deep,
     # SQLite → MD strictement unidirectionnel. Lisible via Atelier/Mémoire/Facts.
-    from memory.mirror import MemoryMirror
+    from jarvis.providers.memory.mirror import MemoryMirror
 
     _memory_mirror = MemoryMirror(_memory_kernel, memory_dir / "mirror")
     app.state.memory_kernel = _memory_kernel
