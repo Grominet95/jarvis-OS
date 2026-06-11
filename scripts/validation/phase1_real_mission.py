@@ -22,13 +22,13 @@ from pathlib import Path
 # Path bootstrap pour exécution directe.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.settings import settings
 from jarvis.engine.mission.project_store import ProjectStore  # noqa: E402
 from jarvis.engine.mission.quality_checker import QualityChecker
 from jarvis.engine.mission.schemas import Project, Step, validate_step  # noqa: E402
 from jarvis.engine.mission.verifier import Verifier
 from jarvis.engine.mission.worker_agent import WorkerAgent  # noqa: E402
 from jarvis.engine.vocab import AccessLevel  # noqa: E402
+from jarvis.kernel.settings import settings
 from jarvis.providers.llm.api import AnthropicProvider
 
 # ── Mission ──────────────────────────────────────────────────────────────────

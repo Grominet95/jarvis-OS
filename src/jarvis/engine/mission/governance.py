@@ -14,10 +14,10 @@ from enum import StrEnum
 
 from loguru import logger
 
-from config.approvals import ApprovalConfig, ApprovalMode
 from jarvis.engine.audit import AuditEntry, AuditLog
 from jarvis.engine.budget import BudgetGuard
 from jarvis.engine.vocab import AUTO_MAX_LEVEL, AccessLevel
+from jarvis.kernel.approvals import ApprovalConfig, ApprovalMode
 
 
 class GateDecision(StrEnum):

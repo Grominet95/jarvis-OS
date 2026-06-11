@@ -7,10 +7,10 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
 
-from config.settings import settings
 from jarvis.capabilities.skills.registry import skill_registry
 from jarvis.engine.mission.project_store import WORKSPACE_DIR
 from jarvis.kernel.paths import MEMORY_DATA_DIR
+from jarvis.kernel.settings import settings
 
 router = APIRouter()
 

@@ -19,8 +19,6 @@ from fastapi import APIRouter, Query, Request
 from loguru import logger
 from pydantic import BaseModel
 
-from config.approvals import approval_config as _approval_cfg
-from config.settings import settings as _s
 from jarvis.interfaces.api.config._env import (
     _LLM_HOT_SWAP_KEYS,
     _RESTART_KEYS,
@@ -30,6 +28,8 @@ from jarvis.interfaces.api.config._env import (
     _read_env,
     _write_env,
 )
+from jarvis.kernel.approvals import approval_config as _approval_cfg
+from jarvis.kernel.settings import settings as _s
 from jarvis.providers.llm.factory import create_background_llm, get_llm_provider
 
 router = APIRouter()

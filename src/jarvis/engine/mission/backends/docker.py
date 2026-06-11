@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from loguru import logger
 
-from config.settings import settings
 from jarvis.engine.mission.backends.base import BackendResult, ExecutionBackend
 from jarvis.engine.mission.docker_executor import DockerExecutor
+from jarvis.kernel.settings import settings
 
 
 class DockerBackend(ExecutionBackend):

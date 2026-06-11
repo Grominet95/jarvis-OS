@@ -7,7 +7,7 @@ import numpy as np
 from loguru import logger
 from numpy.typing import NDArray
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 # Modèles faster-whisper valides — nova-2 (Deepgram) et autres cloud STT ne sont pas valides ici
 _VALID_WHISPER = frozenset(

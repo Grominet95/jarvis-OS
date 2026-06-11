@@ -10,9 +10,9 @@ import httpx
 from loguru import logger
 from piper import PiperVoice
 
-from config.settings import settings
 from jarvis.kernel.contracts import UsageTracker
 from jarvis.kernel.schemas import UsageEntry, calculate_cost
+from jarvis.kernel.settings import settings
 
 
 class TTSEngine:

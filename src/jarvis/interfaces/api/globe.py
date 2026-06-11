@@ -11,8 +11,8 @@ import httpx
 from fastapi import APIRouter
 from loguru import logger
 
-from config.settings import settings
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/globe", tags=["globe"])
 

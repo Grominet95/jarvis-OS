@@ -12,7 +12,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 
 class JobStatus(StrEnum):

@@ -7,8 +7,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.settings import settings
 from jarvis.engine.mission.backends.base import BackendResult, ExecutionBackend
+from jarvis.kernel.settings import settings
 
 
 class LocalBackend(ExecutionBackend):

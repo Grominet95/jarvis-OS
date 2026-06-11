@@ -13,9 +13,9 @@ from google.genai import types as _t
 from loguru import logger
 from openai import AsyncOpenAI
 
-from config.settings import settings
 from jarvis.kernel.contracts import UsageTracker
 from jarvis.kernel.schemas import ToolCapture, UsageEntry, calculate_cost
+from jarvis.kernel.settings import settings
 from jarvis.providers.llm.base import LLMProvider
 
 _MAX_TOOL_ITERATIONS = 20

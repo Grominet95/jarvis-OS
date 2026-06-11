@@ -15,9 +15,9 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.settings import settings
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.approval import get_approval_checker
+from jarvis.kernel.settings import settings
 
 _ORCA_CLI = "/Applications/OrcaSlicer.app/Contents/MacOS/OrcaSlicer"
 

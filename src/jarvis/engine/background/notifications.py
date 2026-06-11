@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 from loguru import logger
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 
 @dataclass

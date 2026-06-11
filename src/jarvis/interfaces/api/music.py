@@ -3,10 +3,10 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from config.settings import settings
 from jarvis.interfaces.api import deezer as _dz
 from jarvis.interfaces.api import local_music as _lm
 from jarvis.interfaces.api import spotify as _sp
+from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/music")
 

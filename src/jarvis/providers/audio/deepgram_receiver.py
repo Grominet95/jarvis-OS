@@ -8,7 +8,7 @@ import numpy as np
 from loguru import logger
 from numpy.typing import NDArray
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 _DEEPGRAM_WS_URL = "wss://api.deepgram.com/v1/listen"
 

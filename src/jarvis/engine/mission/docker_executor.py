@@ -10,7 +10,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 
 class DockerExecutor:

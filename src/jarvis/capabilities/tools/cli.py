@@ -10,8 +10,8 @@ from pathlib import Path
 import yaml
 from loguru import logger
 
-from config.settings import settings
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.settings import settings
 
 # ── Whitelist binaires autorisés pour execute_cli ────────────────────────────
 CLI_WHITELIST: frozenset[str] = frozenset(

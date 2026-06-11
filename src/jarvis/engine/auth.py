@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from loguru import logger
 from starlette.requests import HTTPConnection
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 # Chemins exemptés de l'authentification Bearer.
 # Un préfixe couvre toutes ses sous-routes.

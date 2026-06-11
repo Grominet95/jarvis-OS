@@ -8,13 +8,13 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from loguru import logger
 
-from config.settings import settings
 from jarvis.capabilities.tools.spotify_auth import (
     _TOKEN_URL,
     _basic_auth,
     _get_access_token,
     _save_token,
 )
+from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/spotify")
 

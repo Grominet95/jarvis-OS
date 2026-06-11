@@ -11,8 +11,6 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.approvals import approval_config
-from config.settings import settings
 from jarvis.engine.audit import AuditLog
 from jarvis.engine.budget import BudgetGuard
 from jarvis.engine.mission.docker_executor import DockerExecutor
@@ -25,9 +23,11 @@ from jarvis.engine.mission.schemas import LogEntry, Project, ProjectStatus, Step
 from jarvis.engine.mission.verifier import Verifier
 from jarvis.engine.mission.worker_cli import WorkerCLITool
 from jarvis.engine.vocab import AccessLevel
+from jarvis.kernel.approvals import approval_config
 from jarvis.kernel.contracts import LLMProvider
 from jarvis.kernel.events import EventBus, MissionCompleted
 from jarvis.kernel.paths import PROMPTS_DIR
+from jarvis.kernel.settings import settings
 
 # ── Constantes PHASE 1 ─────────────────────────────────────────────────────────
 

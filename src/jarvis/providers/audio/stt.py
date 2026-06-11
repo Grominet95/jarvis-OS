@@ -7,7 +7,7 @@ from faster_whisper import WhisperModel
 from loguru import logger
 from numpy.typing import NDArray
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 _model: WhisperModel | None = None
 

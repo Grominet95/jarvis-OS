@@ -9,12 +9,11 @@ import asyncio
 
 from loguru import logger
 
-from config.approvals import ApprovalMode, approval_config
-
 # Phase F : le singleton vit en `jarvis.kernel.approval` pour permettre aux
 # tools plugin de capabilities/ d'y accéder sans violer RÈGLE 2. Ces
 # ré-exports gardent les call-sites historiques compatibles.
 from jarvis.kernel.approval import get_approval_checker, set_approval_checker  # noqa: F401
+from jarvis.kernel.approvals import ApprovalMode, approval_config
 
 
 class ApprovalChecker:

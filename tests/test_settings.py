@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from config.settings import Settings
+from jarvis.kernel.settings import Settings
 
 
 def test_settings_load() -> None:

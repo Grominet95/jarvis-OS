@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from config.settings import settings
 from jarvis.kernel.contracts import UsageTracker
+from jarvis.kernel.settings import settings
 from jarvis.providers.llm.api import get_api_provider
 from jarvis.providers.llm.base import LLMProvider
 from jarvis.providers.llm.local import OllamaProvider

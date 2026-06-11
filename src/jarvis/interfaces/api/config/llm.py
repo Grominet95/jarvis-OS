@@ -16,7 +16,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from config.settings import settings as _s
+from jarvis.kernel.settings import settings as _s
 
 router = APIRouter()
 

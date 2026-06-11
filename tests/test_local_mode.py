@@ -23,7 +23,7 @@ from jarvis.providers.memory.consolidation import CrossSessionRecall
 
 @pytest.fixture
 def local_mode() -> Iterator[None]:
-    from config.settings import settings
+    from jarvis.kernel.settings import settings
 
     old = settings.llm_provider
     object.__setattr__(settings, "llm_provider", "local")
@@ -33,7 +33,7 @@ def local_mode() -> Iterator[None]:
 
 @pytest.fixture
 def api_mode() -> Iterator[None]:
-    from config.settings import settings
+    from jarvis.kernel.settings import settings
 
     old = settings.llm_provider
     object.__setattr__(settings, "llm_provider", "api")

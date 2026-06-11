@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from config.settings import settings
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.contracts import FTSIndex, TopicStore, VectorIndex
+from jarvis.kernel.settings import settings
 
 
 def _is_invalid_filename(filename: str) -> bool:

@@ -24,10 +24,10 @@ from typing import Any, Protocol
 
 from loguru import logger
 
-from config.approvals import ApprovalMode, approval_config
-from config.settings import settings
 from jarvis.engine.proactive.schemas import Initiative, InitiativeType
 from jarvis.engine.proactive.store import InitiativeStore
+from jarvis.kernel.approvals import ApprovalMode, approval_config
+from jarvis.kernel.settings import settings
 
 # Signature du callable d'envoi d'email injecté : reçoit le brouillon parsé et
 # les chemins credentials/token, retourne l'id du message envoyé. Le callable

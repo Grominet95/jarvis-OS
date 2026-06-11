@@ -13,7 +13,7 @@ import numpy as np
 import sounddevice as sd
 from loguru import logger
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 
 class ClapDetector:

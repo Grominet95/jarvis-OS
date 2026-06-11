@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 
 def is_offline_mode() -> bool:

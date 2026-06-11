@@ -18,8 +18,8 @@ import asyncio
 import httpx
 from loguru import logger
 
-from config.settings import settings
 from jarvis.kernel.permissions import permissions as _perm_store
+from jarvis.kernel.settings import settings
 from jarvis.providers.vision.face_recognizer import FaceRecognizer
 from jarvis.providers.vision.object_detector import ObjectDetector
 from jarvis.providers.vision.objects_queue import get_vision_objects_queue

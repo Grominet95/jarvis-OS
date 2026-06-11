@@ -6,11 +6,11 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger as _log
 from pydantic import BaseModel
 
-from config.settings import settings as _s
 from jarvis.capabilities.tools.gmail import send_gmail_draft
 from jarvis.engine.proactive.initiative_generator import InitiativeGenerator
 from jarvis.engine.proactive.schemas import InitiativeType
 from jarvis.engine.proactive.store import InitiativeStore
+from jarvis.kernel.settings import settings as _s
 
 router = APIRouter()
 

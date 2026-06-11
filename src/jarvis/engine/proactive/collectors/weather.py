@@ -5,10 +5,10 @@ from datetime import datetime
 import httpx
 from loguru import logger
 
-from config.settings import settings
 from jarvis.engine.proactive.collectors.base import CollectorBase
 from jarvis.engine.proactive.schemas import ContextItem, ItemType, Priority
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.settings import settings
 
 
 class WeatherCollector(CollectorBase):

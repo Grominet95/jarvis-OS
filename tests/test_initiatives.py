@@ -379,7 +379,7 @@ class TestExecutorDraftResponse:
             today = datetime.now().strftime("%Y-%m-%d")
             _write_initiative(tmp_path, init, today)
 
-            from config.approvals import ApprovalMode, approval_config
+            from jarvis.kernel.approvals import ApprovalMode, approval_config
 
             original_mode = approval_config.email_send
             approval_config.email_send = ApprovalMode.NEVER

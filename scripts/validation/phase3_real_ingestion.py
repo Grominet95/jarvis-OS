@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 from jarvis.providers.llm.api import AnthropicProvider
 from jarvis.providers.memory.ingest import MemoryIngest  # noqa: E402
 from jarvis.providers.memory.kernel import MemoryKernel  # noqa: E402

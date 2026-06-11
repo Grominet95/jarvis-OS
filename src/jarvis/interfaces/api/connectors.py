@@ -25,7 +25,7 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 router = APIRouter()
 

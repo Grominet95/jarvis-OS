@@ -23,7 +23,7 @@ from pathlib import Path
 import httpx
 from loguru import logger
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 _TOKEN_URL = "https://accounts.spotify.com/api/token"
 

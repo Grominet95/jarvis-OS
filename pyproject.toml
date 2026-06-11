@@ -126,7 +126,13 @@ dev = [
 ]
 
 [tool.importlinter]
-root_package = "jarvis"
+# `root_packages` (pluriel) — `config/` à la racine est un namespace DATA
+# (JSON/YAML) avec quelques modules Python loaders historiques. On le déclare
+# dans le graphe pour que la RÈGLE 4 puisse interdire son import depuis
+# `jarvis.*` — sinon `config` reste hors-graphe et la règle est invisible.
+# Cf. F.7 : closure du shim racine survivant à audit_imports + import-linter
+# (3e gate fantôme après C8 et B4a).
+root_packages = ["jarvis", "config"]
 
 # Le contrat de couches strict (`type = "layers"`) n'exprime pas correctement
 # la topologie du projet (cf. CDC §2.2) parce que :
@@ -137,8 +143,9 @@ root_package = "jarvis"
 #     monter, mais voice/agent n'a pas besoin de routers ;
 #   - les 4 sous-packages L1 (providers, capabilities, analytics, hardware)
 #     ne s'importent pas entre eux (RÈGLE 2).
-# Solution : 3 contrats `forbidden` qui encodent fidèlement les 3 RÈGLES
-# du CDC. Le "layering" implicite tombe directement de cette table d'interdictions.
+# Solution : 4 contrats `forbidden` qui encodent fidèlement les 3 RÈGLES
+# du CDC + la fermeture explicite du shim racine `config/` (RÈGLE 4).
+# Le "layering" implicite tombe directement de cette table d'interdictions.
 
 [[tool.importlinter.contracts]]
 name = "RÈGLE 1 — Kernel indépendant"
@@ -197,6 +204,30 @@ forbidden_modules = [
 ignore_imports = [
     "jarvis.engine.mission.worker_agent -> jarvis.capabilities.tools.fusion",
 ]
+
+[[tool.importlinter.contracts]]
+# Le shim racine `config/` est un namespace DATA — JSON/YAML qui restent à la
+# racine du repo (décision Q1). Les loaders Python associés vivent dans
+# `jarvis.kernel.*` et lisent les fichiers via `kernel.paths.CONFIG_DIR`
+# (absolu). Aucun module sous `jarvis.*` ne doit importer `config.*` :
+# le `from config.X import …` est l'ancien namespace pré-B.3 qui a survécu
+# trois gates (audit_imports lazy-only, import-linter root_package="jarvis"
+# uniquement). B9 cold-install l'a attrapé en juin : sur clone neuf, le
+# wheel n'embarque que `src/jarvis/` et l'app ne boote pas. F.7 ferme.
+name = "RÈGLE 4 — Aucun module sous jarvis.* n'importe le shim racine `config/`"
+type = "forbidden"
+source_modules = [
+    "jarvis.kernel",
+    "jarvis.providers",
+    "jarvis.capabilities",
+    "jarvis.analytics",
+    "jarvis.hardware",
+    "jarvis.engine",
+    "jarvis.interfaces",
+    "jarvis.app",
+    "jarvis.bootstrap",
+]
+forbidden_modules = ["config"]
 
 [tool.mypy]
 # Scope strict : kernel + test de conformité des Protocols (CDC §F.1.3bis).

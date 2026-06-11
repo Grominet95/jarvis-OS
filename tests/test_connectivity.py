@@ -4,13 +4,13 @@ from collections.abc import Iterator
 
 import pytest
 
-from config.settings import Settings
+from jarvis.kernel.settings import Settings
 
 
 @pytest.fixture
 def local_mode() -> Iterator[None]:
     """Bascule settings en mode local pour la durée du test."""
-    from config.settings import settings
+    from jarvis.kernel.settings import settings
 
     old = settings.llm_provider
     object.__setattr__(settings, "llm_provider", "local")
@@ -21,7 +21,7 @@ def local_mode() -> Iterator[None]:
 @pytest.fixture
 def api_mode() -> Iterator[None]:
     """Bascule settings en mode api pour la durée du test."""
-    from config.settings import settings
+    from jarvis.kernel.settings import settings
 
     old = settings.llm_provider
     object.__setattr__(settings, "llm_provider", "api")

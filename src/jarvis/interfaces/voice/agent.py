@@ -27,10 +27,10 @@ from livekit.agents.voice.room_io import AudioInputOptions, RoomOptions
 from livekit.plugins import deepgram, elevenlabs, silero
 from livekit.plugins import google as lk_google
 
-from config.settings import settings
 from jarvis.bootstrap import build
 from jarvis.capabilities.skills.registry import SkillRegistry
 from jarvis.kernel.paths import PROJECT_ROOT  # noqa: E402
+from jarvis.kernel.settings import settings
 
 load_dotenv(PROJECT_ROOT / ".env")
 

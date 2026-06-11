@@ -8,7 +8,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 import httpx
 from loguru import logger
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 from jarvis.providers.llm.base import LLMProvider
 
 # Strip <think>...</think> au cas où Ollama les laisse passer (fallback)

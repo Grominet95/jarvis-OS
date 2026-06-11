@@ -12,7 +12,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from loguru import logger
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/google")
 

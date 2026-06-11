@@ -9,7 +9,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse, RedirectResponse
 from loguru import logger
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/deezer")
 

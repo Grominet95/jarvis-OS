@@ -14,10 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from config.approvals import ApprovalConfig, ApprovalMode
 from jarvis.engine.audit import AuditLog
 from jarvis.engine.mission.governance import GateContext, GateDecision, Governance
 from jarvis.engine.vocab import AccessLevel
+from jarvis.kernel.approvals import ApprovalConfig, ApprovalMode
 
 # ── Fakes ──────────────────────────────────────────────────────────────────────
 

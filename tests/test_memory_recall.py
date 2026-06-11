@@ -124,7 +124,7 @@ class TestTranscriptToText:
 @pytest.fixture(autouse=False)
 def _force_api_mode() -> Iterator[None]:
     """Force le mode 'api' pour les tests CrossSessionRecall qui vérifient l'appel LLM."""
-    from config.settings import settings
+    from jarvis.kernel.settings import settings
 
     old = settings.llm_provider
     object.__setattr__(settings, "llm_provider", "api")

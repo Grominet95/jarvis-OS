@@ -7,7 +7,7 @@ from dataclasses import asdict
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from config.approvals import ApprovalMode, approval_config, save_approval_config
+from jarvis.kernel.approvals import ApprovalMode, approval_config, save_approval_config
 from jarvis.kernel.permissions import permissions as _perm_store
 
 router = APIRouter()

@@ -28,7 +28,7 @@ def client() -> TestClient:
 
 def test_trigger_deep_refuse_si_flag_desactive(client: TestClient) -> None:
     """Si ingest_deep_enabled=False, l'endpoint refuse (503)."""
-    with patch("config.settings.settings.ingest_deep_enabled", False):
+    with patch("jarvis.kernel.settings.settings.ingest_deep_enabled", False):
         r = client.post("/api/memory/trigger-deep")
     assert r.status_code == 503
     assert "désactivée" in r.json()["detail"].lower()
@@ -36,7 +36,7 @@ def test_trigger_deep_refuse_si_flag_desactive(client: TestClient) -> None:
 
 def test_trigger_deep_passe_si_flag_active(client: TestClient) -> None:
     """Si ingest_deep_enabled=True, l'endpoint déclenche deep_analyze()."""
-    with patch("config.settings.settings.ingest_deep_enabled", True):
+    with patch("jarvis.kernel.settings.settings.ingest_deep_enabled", True):
         r = client.post("/api/memory/trigger-deep")
     assert r.status_code == 200
     assert r.json() == {"triggered": True, "scope": "deep"}
@@ -50,7 +50,7 @@ def test_trigger_deep_503_si_pas_d_autodream() -> None:
     app.include_router(router)
     # Pas de auto_dream injecté
     c = TestClient(app)
-    with patch("config.settings.settings.ingest_deep_enabled", True):
+    with patch("jarvis.kernel.settings.settings.ingest_deep_enabled", True):
         r = c.post("/api/memory/trigger-deep")
     assert r.status_code == 503
     assert "autodream" in r.json()["detail"].lower()
@@ -65,7 +65,7 @@ def test_trigger_deep_flag_off_court_circuite_avant_lookup_autodream() -> None:
     app = FastAPI()
     app.include_router(router)
     c = TestClient(app)
-    with patch("config.settings.settings.ingest_deep_enabled", False):
+    with patch("jarvis.kernel.settings.settings.ingest_deep_enabled", False):
         r = c.post("/api/memory/trigger-deep")
     assert r.status_code == 503
     # Le message doit mentionner le flag, pas l'absence d'auto_dream

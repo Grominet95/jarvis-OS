@@ -16,7 +16,6 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 import jarvis.interfaces.channels.telegram_bot as _tg_module
-from config.settings import settings
 from jarvis.analytics.registry import analytics_registry as _analytics_registry
 from jarvis.bootstrap import build
 from jarvis.capabilities.skills.dev_extensions import mount_dev_views
@@ -49,6 +48,7 @@ from jarvis.interfaces.channels.gateway import MessagingGateway
 from jarvis.interfaces.channels.telegram_bot import TelegramChannel, get_telegram_channel
 from jarvis.kernel.connectivity import is_offline_mode
 from jarvis.kernel.paths import UI_STATIC_DIR
+from jarvis.kernel.settings import settings
 from jarvis.providers.audio.clap_detector import ClapDetector
 from jarvis.providers.memory.search import FTSIndex
 from jarvis.providers.vision.daemon import run_vision_daemon

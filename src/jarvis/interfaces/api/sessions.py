@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from config.settings import settings
+from jarvis.kernel.settings import settings
 
 router = APIRouter()
 

@@ -16,7 +16,6 @@ from unittest.mock import patch
 
 import pytest
 
-from config.approvals import ApprovalConfig, ApprovalMode
 from jarvis.engine.audit import AuditLog
 from jarvis.engine.mission.governance import Governance
 from jarvis.engine.mission.project_store import ProjectStore
@@ -30,6 +29,7 @@ from jarvis.engine.mission.schemas import (
 from jarvis.engine.mission.verifier import VerificationResult, Verifier
 from jarvis.engine.mission.worker_agent import WorkerAgent
 from jarvis.engine.vocab import AccessLevel
+from jarvis.kernel.approvals import ApprovalConfig, ApprovalMode
 from jarvis.providers.llm.base import LLMProvider
 
 # ── Fakes ──────────────────────────────────────────────────────────────────────

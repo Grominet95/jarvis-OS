@@ -10,10 +10,10 @@ from loguru import logger
 from openai import AsyncOpenAI
 from PIL import Image, ImageGrab
 
-from config.settings import settings
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.contracts import VisualMemory
 from jarvis.kernel.permissions import permissions as _perms
+from jarvis.kernel.settings import settings
 
 
 class VisionTool(Tool):

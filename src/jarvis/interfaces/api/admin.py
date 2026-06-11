@@ -8,11 +8,11 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from config.settings import settings
 from jarvis.engine.background.notifications import NotificationQueue
 from jarvis.engine.background.scheduler import Scheduler
 from jarvis.engine.background.worker import BackgroundWorker
 from jarvis.kernel.paths import PROJECT_ROOT, UI_STATIC_DIR
+from jarvis.kernel.settings import settings
 from jarvis.providers.memory.sessions import SessionStore
 
 _PROJECT_ROOT = PROJECT_ROOT

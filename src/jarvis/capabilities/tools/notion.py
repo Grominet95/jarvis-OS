@@ -3,8 +3,8 @@ from __future__ import annotations
 import httpx
 from loguru import logger
 
-from config.settings import settings
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.settings import settings
 
 
 class NotionTasksTool(Tool):

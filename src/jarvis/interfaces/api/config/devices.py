@@ -20,10 +20,10 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
-from config.settings import settings as _s
 from jarvis.hardware.bluetooth import parse_bt_macos, parse_bt_windows
 from jarvis.hardware.macropad_2k.usb import usb_status
 from jarvis.interfaces.api.config._env import _read_env
+from jarvis.kernel.settings import settings as _s
 
 router = APIRouter()
 

@@ -37,7 +37,6 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.settings import settings
 from jarvis.capabilities.skills.lifecycle import SkillLifecycle, SkillRecord, SkillStatus
 from jarvis.capabilities.skills.synthesizer import (
     SKILLS_CANDIDATES_DIR,
@@ -47,6 +46,7 @@ from jarvis.capabilities.skills.synthesizer import (
 from jarvis.engine.mission.docker_executor import DockerExecutor
 from jarvis.kernel.contracts import MemoryStore as MemoryKernel
 from jarvis.kernel.paths import PROJECT_ROOT
+from jarvis.kernel.settings import settings
 
 # Plafond du nombre d'events skill_candidate_proposal traités par scan.
 _MAX_EVENTS_PER_SCAN = 20
