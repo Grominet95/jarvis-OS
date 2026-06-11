@@ -30,7 +30,7 @@ from jarvis.engine.background.routines import (  # noqa: E402
     RunStatus,
     TriggerType,
 )
-from jarvis.interfaces.api.http_routines import router as routines_router  # noqa: E402
+from jarvis.interfaces.api.routines import router as routines_router  # noqa: E402
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

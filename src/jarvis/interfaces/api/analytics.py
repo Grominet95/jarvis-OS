@@ -1,4 +1,9 @@
-"""Analytics — stats Jarvis locales + YouTube Data API v3."""
+"""Analytics — stats Jarvis locales + YouTube Data API v3 + routes API.
+
+Phase E §E.1.2 : fusion `analytics.py` (logique) + `http_analytics.py`
+(routes) en un seul module — convention E2a (un router par domaine,
+nommage aligné).
+"""
 
 from __future__ import annotations
 
@@ -6,8 +11,13 @@ import json
 import os
 from datetime import UTC, datetime, timedelta
 
+from fastapi import APIRouter, Request
+
+from jarvis.analytics.registry import analytics_registry
 from jarvis.engine.mission.project_store import ProjectStore
 from jarvis.kernel.paths import MEMORY_DATA_DIR
+
+router = APIRouter()
 
 # ── Jarvis stats ──────────────────────────────────────────────────────────────
 
@@ -180,3 +190,83 @@ async def get_analytics_summary() -> dict:
         "jarvis": jarvis if not isinstance(jarvis, Exception) else None,
         "youtube": youtube if not isinstance(youtube, Exception) else None,
     }
+
+
+# ── Analytics API (legacy) ────────────────────────────────────────────────────
+
+
+@router.get("/api/analytics/jarvis")
+async def analytics_jarvis(days: int = 30) -> dict:
+    return await get_jarvis_stats(days)
+
+
+@router.get("/api/analytics/youtube")
+async def analytics_youtube(days: int = 7) -> dict:
+    return await get_youtube_stats(days)
+
+
+@router.get("/api/analytics/summary")
+async def analytics_summary() -> dict:
+    return await get_analytics_summary()
+
+
+# ── Analytics Widget System ───────────────────────────────────────────────────
+
+
+@router.get("/api/analytics/catalog")
+async def get_analytics_catalog() -> dict:
+    """Catalogue de tous les widgets disponibles."""
+    return {"widgets": analytics_registry.get_catalog()}
+
+
+@router.get("/api/analytics/data")
+async def get_analytics_data() -> dict:
+    """Fetch les données de tous les widgets actifs."""
+    data = await analytics_registry.fetch_all()
+    return {
+        "widgets": {
+            wid: {
+                "success": wd.success,
+                "data": wd.data,
+                "error": wd.error,
+                "cached": wd.cached,
+            }
+            for wid, wd in data.items()
+        }
+    }
+
+
+@router.get("/api/analytics/active")
+async def get_active_widgets() -> dict:
+    """Liste des widgets actifs avec leurs manifests."""
+    return {"widgets": [w.to_manifest() for w in analytics_registry.get_active()]}
+
+
+@router.post("/api/analytics/add/{widget_id}")
+async def add_widget(widget_id: str, request: Request) -> dict:
+    """Active un widget."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    return analytics_registry.add(widget_id, settings=body)
+
+
+@router.delete("/api/analytics/remove/{widget_id}")
+async def remove_widget(widget_id: str) -> dict:
+    """Désactive un widget."""
+    return analytics_registry.remove(widget_id)
+
+
+@router.post("/api/analytics/refresh")
+async def refresh_analytics() -> dict:
+    """Force le refresh des données analytics."""
+    data = await analytics_registry.fetch_all()
+    return {"refreshed": len(data)}
+
+
+@router.post("/api/analytics/reorder")
+async def reorder_widgets(request: Request) -> dict:
+    """Sauvegarde le nouvel ordre des widgets."""
+    body = await request.json()
+    return analytics_registry.reorder(body.get("order", []))

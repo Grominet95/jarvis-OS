@@ -27,19 +27,19 @@ from jarvis.engine.background.notifications import set_proactive_queue
 from jarvis.engine.background.routines import ROUTINES_ENABLED, Routine, RoutineStore
 from jarvis.interfaces.api.admin import _ui_router as admin_ui_router
 from jarvis.interfaces.api.admin import router as admin_router
+from jarvis.interfaces.api.budget import router as budget_router
 from jarvis.interfaces.api.channels import router as channels_router
 from jarvis.interfaces.api.deezer import router as deezer_router
 from jarvis.interfaces.api.globe import router as globe_router
 from jarvis.interfaces.api.google_oauth import router as google_oauth_router
 from jarvis.interfaces.api.http import _log_sink
 from jarvis.interfaces.api.http import router as http_router
-from jarvis.interfaces.api.http_budget import router as budget_router
-from jarvis.interfaces.api.http_routines import router as routines_router
 from jarvis.interfaces.api.local_music import router as local_music_router
 from jarvis.interfaces.api.macropad_2k import _ui_router as macropad_ui_router
 from jarvis.interfaces.api.macropad_2k import router as macropad_router
 from jarvis.interfaces.api.music import router as music_router
 from jarvis.interfaces.api.projects import router as projects_router
+from jarvis.interfaces.api.routines import router as routines_router
 from jarvis.interfaces.api.spotify import router as spotify_router
 from jarvis.interfaces.api.voice_ws import router as voice_router
 from jarvis.interfaces.api.websocket import router as ws_router
@@ -318,12 +318,12 @@ app.include_router(budget_router)
 app.include_router(routines_router)
 
 # ── [PHASE 6] Curator + Command Center routes
-from jarvis.interfaces.api.http_curator import router as curator_router  # noqa: E402
+from jarvis.interfaces.api.curator import router as curator_router  # noqa: E402
 
 app.include_router(curator_router)
 
 # ── [UI/M5] État de santé des connecteurs (Réglages → Connexions)
-from jarvis.interfaces.api.http_connectors import router as connectors_router  # noqa: E402
+from jarvis.interfaces.api.connectors import router as connectors_router  # noqa: E402
 
 app.include_router(connectors_router)
 # ── [/SURFACE] ───────────────────────────────────────────────────────────────
