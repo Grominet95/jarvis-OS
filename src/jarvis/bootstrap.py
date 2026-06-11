@@ -181,12 +181,23 @@ class Container:
     command_center: CommandCenter
 
 
-def build(settings: Settings | None = None) -> Container:
+def build(
+    settings: Settings | None = None,
+    llm_override: LLMProvider | None = None,
+) -> Container:
     """Construit le graphe d'objets dans l'ordre strict (CDC §C.1).
 
     Synchrone, sans réseau (GATE C6). Les async tasks (reindex FTS,
     vector_index, worker loop, scheduler, proactive_engine) sont
     lancées par les callers après build().
+
+    `llm_override` : si fourni, remplace les trois providers LLM
+    (`llm`, `background_llm`, `voice_llm`) par cette unique instance.
+    Utilisé par `scripts/validation/smoke_runtime.py --fake-llm` pour
+    injecter un `FakeLLMProvider` déterministe sans toucher au .env
+    ni au factory. Démontre que l'injection LLM passe par le VRAI
+    chemin du graphe — un override cassé fait planter `assert
+    isinstance(llm, LLMProvider)` plus bas.
     """
     # ── 1. Settings ────────────────────────────────────────────────────────
     if settings is None:
@@ -214,15 +225,20 @@ def build(settings: Settings | None = None) -> Container:
 
     # ── 4bis. Providers L1 — LLM ───────────────────────────────────────────
 
-    llm = get_llm_provider(tracker=tracker)
-    background_llm = create_background_llm(tracker=tracker)
-    voice_llm: LLMProvider = (
-        get_llm_provider(tracker=tracker)
-        if settings.llm_provider == "local"
-        else AnthropicProvider(
-            model=settings.voice_anthropic_model, max_tokens=1024, tracker=tracker
+    if llm_override is not None:
+        llm = llm_override
+        background_llm = llm_override
+        voice_llm: LLMProvider = llm_override
+    else:
+        llm = get_llm_provider(tracker=tracker)
+        background_llm = create_background_llm(tracker=tracker)
+        voice_llm = (
+            get_llm_provider(tracker=tracker)
+            if settings.llm_provider == "local"
+            else AnthropicProvider(
+                model=settings.voice_anthropic_model, max_tokens=1024, tracker=tracker
+            )
         )
-    )
 
     # ── 4ter. Providers L1 — TTS (singleton module-level — set_tracker post-construction) ─
 

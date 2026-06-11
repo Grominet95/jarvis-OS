@@ -4,6 +4,61 @@
 # ================================================================
 set -euo pipefail
 
+# ── Mode CI / non-interactif (Phase F §B.9) ──────────────────────
+# `setup.sh --ci` : crée la disposition de données (memory_data/,
+# vision_data/faces/, skills_data/{installed,candidates}/, workspace/),
+# génère un .env minimal pour les tests si absent, lance `uv sync`,
+# puis exit 0 SANS lancer le wizard. Utilisé par le job GitHub Actions
+# `b9_cold_install`. Aucun téléchargement de modèles ML lourds (cf.
+# CDC §C.1.7 — le smoke utilise --fake-llm).
+if [[ "${1:-}" == "--ci" ]]; then
+  echo "JARVIS V3 — setup --ci (mode non-interactif)"
+
+  # Disposition cible (cf. kernel/paths.py)
+  mkdir -p memory_data/sessions \
+           memory_data/topics \
+           memory_data/conso \
+           memory_data/initiatives \
+           memory_data/curator_reports \
+           vision_data/faces \
+           skills_data/installed \
+           skills_data/candidates \
+           workspace/projects
+  echo "  ✓ Disposition créée (memory_data/, vision_data/, skills_data/)"
+
+  # .env minimal si absent (clés stubs — le smoke utilise --fake-llm)
+  if [[ ! -f .env ]]; then
+    # Mode CI fake-llm : aucune clé réelle requise, le boot n'appelle jamais
+    # l'API. Cette valeur sentinel doit rester ostensiblement non-secrète —
+    # ne JAMAIS y coller une clé réelle (le fichier est dans un repo public).
+    cat > .env <<'EOF'
+LLM_PROVIDER=api
+API_BACKEND=anthropic
+ANTHROPIC_API_KEY=unused-in-fake-llm-mode
+ANTHROPIC_MODEL=claude-sonnet-4-6
+VOICE_ANTHROPIC_MODEL=claude-haiku-4-5-20251001
+USER_FIRSTNAME=B9
+HOME_CITY=Paris
+MEMORY_DIR=memory_data
+EOF
+    echo "  ✓ .env minimal généré"
+  else
+    echo "  ✓ .env pré-existant conservé"
+  fi
+
+  # uv sync — toutes deps (les deps système doivent déjà être installées)
+  if command -v uv > /dev/null 2>&1; then
+    uv sync --frozen --group dev
+    echo "  ✓ uv sync terminé"
+  else
+    echo "  ! uv absent du PATH — installer uv avant 'setup.sh --ci'"
+    exit 1
+  fi
+
+  echo "setup --ci OK"
+  exit 0
+fi
+
 # ── Couleurs & styles ────────────────────────────────────────────
 RESET='\033[0m'
 BOLD='\033[1m'

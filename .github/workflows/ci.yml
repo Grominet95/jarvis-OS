@@ -10,6 +10,10 @@ on:
   schedule:
     # Lane lourde hebdomadaire : lundi 06:00 UTC.
     - cron: "0 6 * * 1"
+  workflow_dispatch:
+    # Permet de déclencher manuellement `full` et `b9_cold_install` via
+    # l'UI GitHub Actions ou `gh workflow run ci.yml --ref <branch>`.
+    # Indispensable pour B9 en fin de Phase F (avant le merge vers main).
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
@@ -96,3 +100,92 @@ jobs:
 
       - name: Pytest (suite complète, incl. integration)
         run: uv run pytest -q
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # B9 — INSTALL À FROID (CDC §B.9 — gates_B8_B9.md)
+  # Prouve qu'un clone neuf du repo, sur une machine neuve, peut être
+  # installé ET booter effectivement. Ne se contente pas d'un pytest qui
+  # passe (lane `full`) : exige setup.sh exit 0, layout nouveau
+  # (memory_data/, vision_data/faces/, skills_data/installed/), et un
+  # smoke_runtime --fake-llm qui imprime BOOT OK.
+  #
+  # Déclenchement : same as `full` (main + scheduled + workflow_dispatch).
+  # ───────────────────────────────────────────────────────────────────────────
+  b9_cold_install:
+    name: B9 — Install à froid (setup.sh + smoke_runtime --fake-llm)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout NEUF (pas de cache, pas de state local)
+        uses: actions/checkout@v4
+
+      - name: System dependencies (mêmes paquets que la lane full)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            libopenblas-dev \
+            liblapack-dev \
+            portaudio19-dev \
+            libgl1 \
+            python3-dev
+
+      - name: Install uv (pas de cache pour vraiment partir à froid)
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+
+      - name: État initial — vérifier qu'AUCUN dossier de données n'existe encore
+        run: |
+          for d in memory_data vision_data skills_data; do
+            if [ -d "$d" ]; then
+              echo "FAIL : '$d' existe DÉJÀ avant setup.sh (checkout non neuf ?)"
+              exit 1
+            fi
+          done
+          echo "✅ avant setup : memory_data/ vision_data/ skills_data/ absents"
+
+      - name: Run setup.sh --ci (mode non-interactif, exit code 0 exigé)
+        # `setup.sh --ci` : créé la disposition, génère .env minimal si absent,
+        # lance uv sync. Cf. setup.sh top — bloc `--ci` ajouté en Phase F §B.9.
+        run: bash setup.sh --ci
+
+      - name: Vérifier la NOUVELLE disposition (memory_data/, vision_data/, skills_data/)
+        run: |
+          ok=1
+          for d in memory_data memory_data/topics memory_data/sessions \
+                   vision_data/faces \
+                   skills_data/installed; do
+            if [ -d "$d" ]; then
+              echo "✅ $d créé"
+            else
+              echo "❌ $d MANQUANT"
+              ok=0
+            fi
+          done
+          # Anti-régression : l'ANCIENNE disposition ne doit pas exister.
+          for old in src/jarvis/capabilities/skills/installed vision/faces; do
+            if [ -d "$old" ]; then
+              echo "❌ ancienne disposition '$old' présente — régression layout"
+              ok=0
+            fi
+          done
+          if [ $ok -ne 1 ]; then
+            echo "FAIL B9 : layout incorrect"
+            exit 1
+          fi
+          echo "✅ Layout B9 OK"
+
+      # uv sync est déjà fait par setup.sh --ci ci-dessus.
+
+      - name: Smoke runtime — bootstrap.build() + 3 hot-paths + BOOT OK
+        run: |
+          # Le smoke vérifie : LLM via Gateway, bus event handler, tool
+          # dépendant d'un provider injecté. Doit imprimer "BOOT OK" et
+          # exit 0. Tout échec d'injection fait FAIL distinct (cf. test
+          # de mortalité documenté en commit).
+          uv run python scripts/validation/smoke_runtime.py --fake-llm
+
+      - name: B9 verdict
+        run: echo "GATE B9 ✅ — install OK, layout OK, boot OK"
