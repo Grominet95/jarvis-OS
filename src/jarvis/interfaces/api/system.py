@@ -91,13 +91,11 @@ async def jarvis_doctor() -> dict:
     except Exception:
         checks["docker"] = {"status": "error", "detail": "Non installé"}
 
-
     mem_topics = MEMORY_DATA_DIR / "topics"
     topics = list(mem_topics.glob("*.md")) if mem_topics.exists() else []
     checks["memory"] = {"status": "ok", "detail": f"{len(topics)} topics"}
 
     try:
-
         skills = skill_registry.list_installed()
         checks["skills"] = {"status": "ok", "detail": f"{len(skills)} installés"}
     except Exception:

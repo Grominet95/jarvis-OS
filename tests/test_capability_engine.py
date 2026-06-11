@@ -172,9 +172,7 @@ async def test_match_existing_skill_evite_le_lab(tmp_path: Path) -> None:
             "tags": ["météo", "climat", "prévisions"],
         }
     ]
-    engine, kernel, lifecycle, _ = _make_engine(
-        tmp_path, installed_skills=installed
-    )
+    engine, kernel, lifecycle, _ = _make_engine(tmp_path, installed_skills=installed)
 
     resolution = await engine.detect_and_propose(
         description="Je veux afficher la météo et les prévisions pour demain"
@@ -197,9 +195,7 @@ async def test_match_existing_tool_evite_le_lab(tmp_path: Path) -> None:
             "input_schema": {"type": "object", "properties": {}},
         }
     ]
-    engine, _, lifecycle, _ = _make_engine(
-        tmp_path, available_tools=available_tools
-    )
+    engine, _, lifecycle, _ = _make_engine(tmp_path, available_tools=available_tools)
 
     resolution = await engine.detect_and_propose(
         description="Je veux récupérer les données météo actuelles"
@@ -228,9 +224,7 @@ async def test_nouvelle_candidate_delegue_au_lab(tmp_path: Path) -> None:
     assert resolution.candidate_record.status == SkillStatus.SANDBOXED_PASS
 
     # CRITIQUE : la candidate est en zone tampon, PAS dans installed/
-    assert not installed_dir.exists() or not (
-        installed_dir / "test-capability-skill"
-    ).exists()
+    assert not installed_dir.exists() or not (installed_dir / "test-capability-skill").exists()
     # Lifecycle reflète SANDBOXED_PASS
     record = lifecycle.get("test-capability-skill")
     assert record is not None
@@ -279,9 +273,7 @@ async def test_jamais_auto_install_meme_avec_whitelist_match(tmp_path: Path) -> 
 
 async def test_meme_avec_flag_off_aucune_auto_install(tmp_path: Path) -> None:
     """Flag OFF (défaut) : strictement aucune auto-install. Comportement par défaut."""
-    engine, _, lifecycle, installed_dir = _make_engine(
-        tmp_path, auto_install=False
-    )
+    engine, _, lifecycle, installed_dir = _make_engine(tmp_path, auto_install=False)
 
     resolution = await engine.detect_and_propose(
         description="Convertir un fichier CSV en JSON structuré"
@@ -362,9 +354,7 @@ async def test_sandbox_rejette_renvoie_sandbox_rejected(tmp_path: Path) -> None:
         "raise RuntimeError('skill volontairement cassée — test PHASE 5')\n"
     )
 
-    resolution = await engine.detect_and_propose(
-        description="Convertir un format XML obscur"
-    )
+    resolution = await engine.detect_and_propose(description="Convertir un format XML obscur")
 
     assert resolution.kind == ResolutionKind.SANDBOX_REJECTED
     record = lifecycle.get("test-capability-skill")
@@ -380,9 +370,7 @@ async def test_event_capability_gap_recorded_dans_kernel(tmp_path: Path) -> None
     """Toute résolution trace un Event dans le Kernel pour audit + pipeline ingest."""
     engine, kernel, _, _ = _make_engine(tmp_path)
 
-    resolution = await engine.detect_and_propose(
-        description="Tester l'enregistrement event"
-    )
+    resolution = await engine.detect_and_propose(description="Tester l'enregistrement event")
 
     assert resolution.event_id is not None
     evt = kernel.get_event(resolution.event_id)

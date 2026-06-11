@@ -167,7 +167,6 @@ async def main() -> int:
     if db_path.exists():
         db_path.unlink()
 
-
     llm = AnthropicProvider(max_tokens=1024, model=settings.voice_anthropic_model)
     kernel = MemoryKernel(db_path)
     ingest = MemoryIngest(kernel=kernel, llm=llm)

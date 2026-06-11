@@ -131,9 +131,7 @@ class Reflexion:
                     },
                 )
             except Exception as exc:  # noqa: BLE001
-                logger.warning(
-                    "Reflexion: skill_candidate signal échec", error=str(exc)
-                )
+                logger.warning("Reflexion: skill_candidate signal échec", error=str(exc))
 
         return lesson
 
@@ -156,9 +154,7 @@ class Reflexion:
             return None
         data = _parse_lesson_json(raw)
         if data is None:
-            logger.debug(
-                "Reflexion: JSON non parsable", preview=raw[:200] if raw else ""
-            )
+            logger.debug("Reflexion: JSON non parsable", preview=raw[:200] if raw else "")
             return None
 
         return MissionLesson(
@@ -201,7 +197,7 @@ class Reflexion:
             "## Tâche\n"
             "Produis une leçon d'exécution sous forme de JSON strict, "
             "respectant ce schéma :\n"
-            '{\n'
+            "{\n"
             '  "what_worked": "1-2 phrases sur ce qui a fonctionné (vide si tout a '
             'échoué)",\n'
             '  "what_failed": "1-2 phrases sur ce qui a échoué (vide si succès)",\n'
@@ -239,9 +235,7 @@ class Reflexion:
         if lesson.root_cause:
             lines.append(f"Cause probable : {lesson.root_cause}")
         if lesson.corrective_action:
-            lines.append(
-                f"Action corrective : jarvis decided {lesson.corrective_action}"
-            )
+            lines.append(f"Action corrective : jarvis decided {lesson.corrective_action}")
         else:
             lines.append(
                 "Action corrective : jarvis decided continuer cette approche pour "

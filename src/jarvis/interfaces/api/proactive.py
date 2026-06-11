@@ -68,8 +68,6 @@ async def get_initiatives() -> list[dict]:
 async def approve_initiative(initiative_id: str, request: Request) -> dict:
     import asyncio
 
-
-
     store = InitiativeStore()
     init = store.get_by_id(initiative_id)
     if not init:
@@ -79,7 +77,6 @@ async def approve_initiative(initiative_id: str, request: Request) -> dict:
 
     try:
         if init.type == InitiativeType.DRAFT_RESPONSE:
-
             msg_id = await send_gmail_draft(
                 draft_content=init.draft_content or "",
                 credentials_path=Path(_s.google_credentials_path),
@@ -170,7 +167,9 @@ async def list_proactive_initiatives(
     days: int = Query(default=7, ge=1, le=30),
     status: str | None = Query(default=None),
 ) -> list[dict]:
-    """Liste les initiatives récentes (multi-jours). status=pending|done|dismissed|… ou absent=tous.
+    """Liste les initiatives récentes (multi-jours).
+
+    status=pending|done|dismissed|… ou absent=tous.
     """
 
     store = InitiativeStore()

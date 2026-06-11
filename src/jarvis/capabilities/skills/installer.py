@@ -200,7 +200,7 @@ class SkillInstaller:
             skill_py = (
                 "from skills.base import SkillBase\n\n\n"
                 f"class {class_name}Skill(SkillBase):\n"
-                f'    SYSTEM_PROMPT = (\n'
+                f"    SYSTEM_PROMPT = (\n"
                 f'        "Vue \\"{view_id}\\" : {description}\\n"\n'
                 f'        "Afficher : show_view(action=\\"show\\", view_id=\\"{view_id}\\").\\n"\n'
                 f'        "Masquer : show_view(action=\\"hide\\", view_id=\\"{view_id}\\").\\n"\n'
@@ -210,7 +210,7 @@ class SkillInstaller:
                 f'        "spécifiques, les invoquer via "\n'
                 f'        "show_view(action=\\"view_command\\", view_id=\\"{view_id}\\", "\n'
                 f'        "command=..., params={{...}})."\n'
-                f'    )\n\n'
+                f"    )\n\n"
                 "    def get_tools(self) -> list:\n"
                 "        return []\n"
             )

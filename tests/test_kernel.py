@@ -85,9 +85,7 @@ def test_event_log_immuable(tmp_path: Path) -> None:
 
 def test_event_avec_metadata(tmp_path: Path) -> None:
     k = MemoryKernel(tmp_path / "m.db")
-    evt = k.log_event(
-        "exchange", "voice", "content", metadata={"session_id": "abc", "score": 0.9}
-    )
+    evt = k.log_event("exchange", "voice", "content", metadata={"session_id": "abc", "score": 0.9})
     fetched = k.get_event(evt.id)
     assert fetched is not None
     assert fetched.metadata_json is not None

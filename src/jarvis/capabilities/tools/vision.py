@@ -88,7 +88,6 @@ class VisionTool(Tool):
 
         # ── Recall — pas de capture ───────────────────────────────────────────
         if action == "recall":
-
             matches = await self._visual_memory.search(question)
             if matches:
                 return ToolResult(
@@ -189,10 +188,7 @@ class VisionTool(Tool):
 
     async def _store_memory(self, description: str, source: str, action: str, context: str) -> None:
         try:
-
-            await self._visual_memory.store(
-                description=description, source=source, context=context
-            )
+            await self._visual_memory.store(description=description, source=source, context=context)
         except Exception as e:
             logger.debug("Visual memory store failed", error=str(e))
 
@@ -308,7 +304,6 @@ class VisionTool(Tool):
     def _resize_jpeg(self, jpeg_bytes: bytes) -> bytes:
         """Redimensionne un JPEG si l'écran dépasse vision_screen_max_width."""
         try:
-
             img = Image.open(io.BytesIO(jpeg_bytes))
             max_w = settings.vision_screen_max_width
             if img.width <= max_w:

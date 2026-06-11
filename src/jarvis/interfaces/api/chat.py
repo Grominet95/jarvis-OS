@@ -66,7 +66,6 @@ async def voice_speak(body: dict) -> dict:
     if not text:
         return {"status": "error", "audio_b64": None}
 
-
     audio_bytes = await tts_engine.synthesize(text)
     return {
         "status": "ok",
@@ -86,7 +85,6 @@ async def voice_generate(body: VoiceGenerateRequest, request: Request) -> Stream
     Partage la session si session_id fourni.
     """
     import asyncio
-
 
     gateway = request.app.state.voice_gateway
     worker = request.app.state.worker
@@ -152,7 +150,6 @@ async def get_voice_token(session_id: str | None = None) -> dict:  # noqa: ARG00
     """Génère un token LiveKit et dispatche l'agent jarvis dans la room."""
     import os
     import uuid
-
 
     api_key = os.getenv("LIVEKIT_API_KEY")
     api_secret = os.getenv("LIVEKIT_API_SECRET")

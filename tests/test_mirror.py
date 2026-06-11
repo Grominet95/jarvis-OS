@@ -75,9 +75,7 @@ def test_bandeau_warning_present(tmp_path: Path, kernel: MemoryKernel) -> None:
     assert "NE PAS ÉDITER" in content
 
 
-def test_edition_manuelle_ecrasee_a_la_regeneration(
-    tmp_path: Path, kernel: MemoryKernel
-) -> None:
+def test_edition_manuelle_ecrasee_a_la_regeneration(tmp_path: Path, kernel: MemoryKernel) -> None:
     """Une modification manuelle du miroir disparaît à l'export suivant. DB inchangée."""
     kernel.insert_fact(_make_fact("f1", category="preference", obj="café"))
     mirror = MemoryMirror(kernel, tmp_path / "mirror")
@@ -109,19 +107,13 @@ def test_needs_review_fichier_separe(tmp_path: Path, kernel: MemoryKernel) -> No
     assert "à revoir" in content.lower()
 
 
-def test_uncertain_beliefs_separes_par_confidence(
-    tmp_path: Path, kernel: MemoryKernel
-) -> None:
+def test_uncertain_beliefs_separes_par_confidence(tmp_path: Path, kernel: MemoryKernel) -> None:
     """Un fact persona/belief à faible confidence va dans uncertain-beliefs."""
     kernel.insert_fact(
-        _make_fact(
-            "low", category="persona", confidence=0.3, predicate="communicates_as"
-        )
+        _make_fact("low", category="persona", confidence=0.3, predicate="communicates_as")
     )
     kernel.insert_fact(
-        _make_fact(
-            "high", category="persona", confidence=0.85, predicate="communicates_as"
-        )
+        _make_fact("high", category="persona", confidence=0.85, predicate="communicates_as")
     )
 
     mirror = MemoryMirror(kernel, tmp_path / "mirror")

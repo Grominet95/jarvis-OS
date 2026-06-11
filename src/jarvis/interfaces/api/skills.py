@@ -138,7 +138,6 @@ async def get_skills_catalog() -> dict:
 async def get_installed_skills() -> dict:
     """Liste des skills installés, enrichie avec env_status, apps_status et capabilities."""
 
-
     env_values = dotenv_values(".env")
     enriched = []
     for s in skill_registry.list_installed():
@@ -210,7 +209,6 @@ async def get_view_scripts() -> dict:
     import hashlib
 
     import yaml
-
 
     base = UI_STATIC_DIR / "skills"
     installed = SKILLS_INSTALLED_DIR

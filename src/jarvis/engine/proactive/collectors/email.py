@@ -92,7 +92,6 @@ class EmailCollector(CollectorBase):
             logger.debug("EmailCollector ignoré — mode local")
             return []
 
-
         creds_path = Path(settings.google_credentials_path)
         token_path = Path(settings.google_token_path).parent / "google_gmail_token.json"
 

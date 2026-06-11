@@ -61,9 +61,7 @@ class _DispatchLLM(LLMProvider):
         if "extraction de mémoire" in s:
             idx = min(self.extract_calls, max(0, len(self._extract_scripts) - 1))
             self.extract_calls += 1
-            facts = (
-                self._extract_scripts[idx] if self._extract_scripts else []
-            )
+            facts = self._extract_scripts[idx] if self._extract_scripts else []
             return json.dumps({"facts": facts})
         if "arbitre" in s:
             self.arbiter_calls += 1
@@ -79,9 +77,7 @@ class _DispatchLLM(LLMProvider):
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 
-def _write_session(
-    sessions_dir: Path, session_id: str, lines: list[tuple[str, str]]
-) -> Path:
+def _write_session(sessions_dir: Path, session_id: str, lines: list[tuple[str, str]]) -> Path:
     """Écrit une session JSONL ; lines = [(role, content), ...]."""
     sessions_dir.mkdir(parents=True, exist_ok=True)
     path = sessions_dir / f"2026-06-06_{session_id}.jsonl"
@@ -163,9 +159,7 @@ def test_list_recent_session_files_tri_par_mtime_croissant(tmp_path: Path) -> No
     time.sleep(0.01)
     p3 = _write_session(sessions_dir, "new", [("user", "c")])
 
-    ad = AutoDream(
-        llm=_DispatchLLM(), prefs_path=tmp_path / "p.md", sessions_dir=sessions_dir
-    )
+    ad = AutoDream(llm=_DispatchLLM(), prefs_path=tmp_path / "p.md", sessions_dir=sessions_dir)
     files = ad._list_recent_session_files()
     assert files == [p1, p2, p3]
 
@@ -180,9 +174,7 @@ def test_list_recent_limite_a_5(tmp_path: Path) -> None:
         paths.append(_write_session(sessions_dir, f"s{i}", [("user", f"msg {i}")]))
         time.sleep(0.01)
 
-    ad = AutoDream(
-        llm=_DispatchLLM(), prefs_path=tmp_path / "p.md", sessions_dir=sessions_dir
-    )
+    ad = AutoDream(llm=_DispatchLLM(), prefs_path=tmp_path / "p.md", sessions_dir=sessions_dir)
     files = ad._list_recent_session_files()
     assert len(files) == 5
     assert files == paths[-5:]
@@ -196,9 +188,7 @@ async def test_ingest_recent_sessions_un_appel_par_session(
 ) -> None:
     """3 sessions → 3 appels ingest (1 par session), JAMAIS 1 par message."""
     sessions_dir = tmp_path / "sessions"
-    _write_session(
-        sessions_dir, "s1", [("user", "Je préfère Python"), ("assistant", "Noté.")]
-    )
+    _write_session(sessions_dir, "s1", [("user", "Je préfère Python"), ("assistant", "Noté.")])
     _write_session(
         sessions_dir, "s2", [("user", "Mon objectif marathon est sub-3h"), ("assistant", "OK.")]
     )
@@ -206,9 +196,12 @@ async def test_ingest_recent_sessions_un_appel_par_session(
         sessions_dir,
         "s3",
         [
-            ("user", "msg 1"), ("assistant", "rep 1"),
-            ("user", "msg 2"), ("assistant", "rep 2"),
-            ("user", "msg 3"), ("assistant", "rep 3"),  # 3 échanges dans cette session
+            ("user", "msg 1"),
+            ("assistant", "rep 1"),
+            ("user", "msg 2"),
+            ("assistant", "rep 2"),
+            ("user", "msg 3"),
+            ("assistant", "rep 3"),  # 3 échanges dans cette session
         ],
     )
 

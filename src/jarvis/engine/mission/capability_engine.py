@@ -50,12 +50,57 @@ from jarvis.kernel.schemas import SkillRecord, SkillStatus
 _MATCH_THRESHOLD = 0.2
 _STOP_WORDS = frozenset(
     {
-        "de", "du", "la", "le", "les", "un", "une", "des", "à", "au", "aux",
-        "et", "ou", "en", "pour", "par", "sur", "dans", "avec", "sans",
-        "the", "a", "an", "for", "to", "of", "in", "on", "with", "without",
-        "je", "tu", "il", "elle", "vous", "nous", "ils",
-        "ce", "cette", "ces", "mon", "ma", "mes", "ton", "ta", "tes",
-        "qui", "que", "quoi", "comment", "pourquoi",
+        "de",
+        "du",
+        "la",
+        "le",
+        "les",
+        "un",
+        "une",
+        "des",
+        "à",
+        "au",
+        "aux",
+        "et",
+        "ou",
+        "en",
+        "pour",
+        "par",
+        "sur",
+        "dans",
+        "avec",
+        "sans",
+        "the",
+        "a",
+        "an",
+        "for",
+        "to",
+        "of",
+        "in",
+        "on",
+        "with",
+        "without",
+        "je",
+        "tu",
+        "il",
+        "elle",
+        "vous",
+        "nous",
+        "ils",
+        "ce",
+        "cette",
+        "ces",
+        "mon",
+        "ma",
+        "mes",
+        "ton",
+        "ta",
+        "tes",
+        "qui",
+        "que",
+        "quoi",
+        "comment",
+        "pourquoi",
     }
 )
 
@@ -118,9 +163,7 @@ class Whitelist:
                     name=str(d.get("name", "")),
                     max_access_level=str(d.get("max_access_level", "WRITE_LOCAL")),
                     allowed_categories=list(d.get("allowed_categories", []) or []),
-                    description_must_contain=list(
-                        d.get("description_must_contain", []) or []
-                    ),
+                    description_must_contain=list(d.get("description_must_contain", []) or []),
                 )
             )
         return cls(domains=domains)
@@ -268,9 +311,7 @@ class CapabilityEngine:
         # Étape 2 — tool existant ?
         existing_tool = self._match_existing_tool(description)
         if existing_tool is not None:
-            event_id = self._record_event(
-                description, ResolutionKind.EXISTING_TOOL, existing_tool
-            )
+            event_id = self._record_event(description, ResolutionKind.EXISTING_TOOL, existing_tool)
             return CapabilityGapResolution(
                 description=description,
                 kind=ResolutionKind.EXISTING_TOOL,
@@ -281,9 +322,7 @@ class CapabilityEngine:
 
         # Étape 3 — déléguer au Lab (génération + sandbox).
         trajectory = self._build_trajectory(description, example_input)
-        record = await self._lab.propose_from_trajectory(
-            trajectory, source_event_id=None
-        )
+        record = await self._lab.propose_from_trajectory(trajectory, source_event_id=None)
         if record is None:
             event_id = self._record_event(
                 description,

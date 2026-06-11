@@ -36,11 +36,17 @@ from jarvis.providers.memory.schemas import FactStatus  # noqa: E402
 # coexistences sont DÉLIBÉRÉMENT placées pour tester la réconciliation.
 SCENARIO: list[tuple[int, str]] = [
     # Jour 1 — Premiers faits explicites
-    (1, "Barth : Je suis développeur, et je préfère travailler en Python. "
-        "Mon style de vie inclut beaucoup de course à pied — je vise sub-3h au marathon."),
+    (
+        1,
+        "Barth : Je suis développeur, et je préfère travailler en Python. "
+        "Mon style de vie inclut beaucoup de course à pied — je vise sub-3h au marathon.",
+    ),
     # Jour 2 — Nouveau fait compatible (vélo en plus de la course)
-    (2, "Barth : Cette semaine j'ai aussi commencé le vélo le dimanche, "
-        "en complément de mes sorties running. C'est une nouvelle habitude."),
+    (
+        2,
+        "Barth : Cette semaine j'ai aussi commencé le vélo le dimanche, "
+        "en complément de mes sorties running. C'est une nouvelle habitude.",
+    ),
     # Jour 3 — Répétition (même préférence Python) → doit confirmer pas dupliquer
     (3, "Barth : Encore Python aujourd'hui, je trouve ça vraiment efficace."),
     # Jour 5 — Préférence d'outil différente mais coexistante (sur tool, non stable)
@@ -50,8 +56,11 @@ SCENARIO: list[tuple[int, str]] = [
     # Jour 8 — Confirmation explicite de l'objectif marathon
     (8, "Barth : Pour info mon objectif marathon reste sub-3h pour cette année."),
     # Jour 10 — CONTRADICTION sur catégorie stable (goal) → supersession attendue
-    (10, "Barth : Je révise mon objectif marathon. Je vise maintenant 3h10, "
-         "sub-3h c'était trop ambitieux."),
+    (
+        10,
+        "Barth : Je révise mon objectif marathon. Je vise maintenant 3h10, "
+        "sub-3h c'était trop ambitieux.",
+    ),
     # Jour 11 — Identity stable (devrait créer fact identity persistant)
     (11, "Barth : Je suis aussi entrepreneur, je monte une boîte de hardware."),
     # Jour 12 — Répétition du nouveau goal → confirmation
@@ -104,8 +113,10 @@ async def main() -> int:
     # ── Export miroir MD ────────────────────────────────────────────────────
     mirror = MemoryMirror(kernel, mirror_dir)
     report = mirror.export()
-    print(f"## Miroir MD exporté : {report.facts_exported} facts dans "
-          f"{len(report.files_written)} fichiers\n")
+    print(
+        f"## Miroir MD exporté : {report.facts_exported} facts dans "
+        f"{len(report.files_written)} fichiers\n"
+    )
     for f in report.files_written:
         print(f"  - {f}")
 
@@ -133,15 +144,16 @@ async def main() -> int:
     if superseded:
         print("\n## Facts superseded (preuve d'archivage non destructif)")
         for f in superseded:
-            print(f"  [{f.category}] {f.subject} {f.predicate} {f.object}  "
-                  f"(était à conf {f.confidence:.2f})")
+            print(
+                f"  [{f.category}] {f.subject} {f.predicate} {f.object}  "
+                f"(était à conf {f.confidence:.2f})"
+            )
             for rel in kernel.list_relations(f.id):
                 if rel.to_fact_id == f.id:
                     succ = kernel.get_fact(rel.from_fact_id)
                     if succ:
                         print(
-                            f"     → remplacé par : "
-                            f"{succ.subject} {succ.predicate} {succ.object}"
+                            f"     → remplacé par : {succ.subject} {succ.predicate} {succ.object}"
                         )
 
     if kernel.count_facts(FactStatus.NEEDS_REVIEW):
@@ -156,8 +168,10 @@ async def main() -> int:
         results = retrieval.retrieve(query, k=3)
         print(f"\n  query : '{query}'")
         for r in results:
-            print(f"    score={r.score:.3f}  rel={r.relevance:.2f}  "
-                  f"rec={r.recency:.2f}  : {r.fact.subject} {r.fact.predicate} {r.fact.object}")
+            print(
+                f"    score={r.score:.3f}  rel={r.relevance:.2f}  "
+                f"rec={r.recency:.2f}  : {r.fact.subject} {r.fact.predicate} {r.fact.object}"
+            )
             for c in r.contradictions:
                 print(f"      ⚠ contradiction connue : {c.subject} {c.predicate} {c.object}")
 
@@ -167,30 +181,41 @@ async def main() -> int:
     n_super = kernel.count_facts(FactStatus.SUPERSEDED)
     # Critère 1 : pas d'explosion de doublons (12 échanges → < 12 facts actifs attendus
     # grâce aux confirmations + supersessions)
-    print(f"  ✓ Pas d'explosion de doublons : {n_active} facts actifs pour "
-          f"{len(SCENARIO)} échanges {'PASS' if n_active <= len(SCENARIO) else 'FAIL'}")
+    print(
+        f"  ✓ Pas d'explosion de doublons : {n_active} facts actifs pour "
+        f"{len(SCENARIO)} échanges {'PASS' if n_active <= len(SCENARIO) else 'FAIL'}"
+    )
     # Critère 2 : supersession s'est produite au moins une fois
-    print(f"  {'✅' if n_super > 0 else '❌'} Supersession déclenchée : "
-          f"{n_super} fact(s) superseded "
-          f"{'PASS' if n_super > 0 else 'FAIL — pas de supersession détectée'}")
+    print(
+        f"  {'✅' if n_super > 0 else '❌'} Supersession déclenchée : "
+        f"{n_super} fact(s) superseded "
+        f"{'PASS' if n_super > 0 else 'FAIL — pas de supersession détectée'}"
+    )
     # Critère 3 : coexistence (course + vélo, OU python + go) — au moins 2 facts
     # même subject+predicate avec objects différents
     coexist = sum(
-        1 for f in actives
+        1
+        for f in actives
         if any(
-            g.id != f.id and g.subject == f.subject
-            and g.predicate == f.predicate and g.category == f.category
+            g.id != f.id
+            and g.subject == f.subject
+            and g.predicate == f.predicate
+            and g.category == f.category
             for g in actives
         )
     )
-    print(f"  {'✅' if coexist >= 2 else '❌'} Coexistence préservée : "
-          f"{coexist // 2} paire(s) coexistante(s) "
-          f"{'PASS' if coexist >= 2 else 'FAIL'}")
+    print(
+        f"  {'✅' if coexist >= 2 else '❌'} Coexistence préservée : "
+        f"{coexist // 2} paire(s) coexistante(s) "
+        f"{'PASS' if coexist >= 2 else 'FAIL'}"
+    )
     # Critère 4 : au moins un fact a support_count > 1 (confirmation effective)
     confirmed_facts = [f for f in actives if f.support_count > 1]
-    print(f"  {'✅' if confirmed_facts else '❌'} Confirmation effective : "
-          f"{len(confirmed_facts)} fact(s) ré-observé(s) "
-          f"{'PASS' if confirmed_facts else 'FAIL'}")
+    print(
+        f"  {'✅' if confirmed_facts else '❌'} Confirmation effective : "
+        f"{len(confirmed_facts)} fact(s) ré-observé(s) "
+        f"{'PASS' if confirmed_facts else 'FAIL'}"
+    )
 
     return 0
 

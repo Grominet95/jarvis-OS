@@ -73,29 +73,36 @@ def _make_initiative(
 def _write_initiative(store_dir: Path, initiative: Initiative, date_str: str) -> None:
     log_file = store_dir / f"{date_str}.jsonl"
     with log_file.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({
-            "id": initiative.id,
-            "type": initiative.type,
-            "title": initiative.title,
-            "context": initiative.context,
-            "reasoning": initiative.reasoning,
-            "action": initiative.action,
-            "priority": initiative.priority,
-            "execution_mode": initiative.execution_mode,
-            "draft_content": initiative.draft_content,
-            "mission_description": initiative.mission_description,
-            "status": initiative.status,
-            "created_at": initiative.created_at.isoformat(),
-        }) + "\n")
+        f.write(
+            json.dumps(
+                {
+                    "id": initiative.id,
+                    "type": initiative.type,
+                    "title": initiative.title,
+                    "context": initiative.context,
+                    "reasoning": initiative.reasoning,
+                    "action": initiative.action,
+                    "priority": initiative.priority,
+                    "execution_mode": initiative.execution_mode,
+                    "draft_content": initiative.draft_content,
+                    "mission_description": initiative.mission_description,
+                    "status": initiative.status,
+                    "created_at": initiative.created_at.isoformat(),
+                }
+            )
+            + "\n"
+        )
 
 
 # ── Helpers store ──────────────────────────────────────────────────────────────
+
 
 def make_store(tmp_path: Path) -> InitiativeStore:
     with patch("jarvis.engine.proactive.store.INITIATIVES_DIR", tmp_path):
         store = InitiativeStore()
     # Monkey-patch le répertoire de données
     import jarvis.engine.proactive.store as _store_mod
+
     _orig = _store_mod.INITIATIVES_DIR
     _store_mod.INITIATIVES_DIR = tmp_path
     return store
@@ -103,19 +110,20 @@ def make_store(tmp_path: Path) -> InitiativeStore:
 
 # ── Tests : Store multi-jours ─────────────────────────────────────────────────
 
-class TestStoreMultiDay:
 
+class TestStoreMultiDay:
     def test_load_pending_all_reads_multiple_days(self, tmp_path: Path) -> None:
         """load_pending_all() doit trouver des initiatives datant de plusieurs jours."""
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
             store = InitiativeStore()
-            today    = datetime.now().strftime("%Y-%m-%d")
+            today = datetime.now().strftime("%Y-%m-%d")
             yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-            i_today     = _make_initiative(offset_days=0)
+            i_today = _make_initiative(offset_days=0)
             i_yesterday = _make_initiative(offset_days=1)
 
             _write_initiative(tmp_path, i_today, today)
@@ -130,13 +138,14 @@ class TestStoreMultiDay:
 
     def test_load_pending_all_excludes_non_pending(self, tmp_path: Path) -> None:
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
             store = InitiativeStore()
             yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-            done_init    = _make_initiative(status="done", offset_days=1)
+            done_init = _make_initiative(status="done", offset_days=1)
             pending_init = _make_initiative(status="pending", offset_days=1)
 
             _write_initiative(tmp_path, done_init, yesterday)
@@ -152,6 +161,7 @@ class TestStoreMultiDay:
     def test_get_by_id_finds_yesterday(self, tmp_path: Path) -> None:
         """get_by_id() doit trouver une initiative datant d'hier."""
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
@@ -168,6 +178,7 @@ class TestStoreMultiDay:
 
     def test_get_by_id_returns_none_for_unknown(self, tmp_path: Path) -> None:
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
@@ -179,6 +190,7 @@ class TestStoreMultiDay:
     def test_update_status_finds_yesterday(self, tmp_path: Path) -> None:
         """update_status() doit mettre à jour une initiative d'hier."""
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
@@ -197,13 +209,14 @@ class TestStoreMultiDay:
 
     def test_list_recent_filters_by_status(self, tmp_path: Path) -> None:
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
             store = InitiativeStore()
             today = datetime.now().strftime("%Y-%m-%d")
             pending = _make_initiative(status="pending")
-            done    = _make_initiative(status="done")
+            done = _make_initiative(status="done")
             _write_initiative(tmp_path, pending, today)
             _write_initiative(tmp_path, done, today)
 
@@ -217,12 +230,13 @@ class TestStoreMultiDay:
 
 # ── Tests : Engine restauration ───────────────────────────────────────────────
 
-class TestEngineRestore:
 
+class TestEngineRestore:
     @pytest.mark.asyncio
     async def test_restart_broadcasts_initiatives_restored(self, tmp_path: Path) -> None:
         """Au démarrage, l'engine doit broadcaster initiatives_restored si des pending existent."""
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
@@ -233,6 +247,7 @@ class TestEngineRestore:
             events: list[dict] = []
 
             from jarvis.engine.background.notifications import NotificationQueue
+
             nq = NotificationQueue()
 
             from jarvis.engine.proactive.context_builder import ContextBuilder
@@ -264,6 +279,7 @@ class TestEngineRestore:
     async def test_restore_empty_broadcasts_nothing(self, tmp_path: Path) -> None:
         """Si aucune initiative pending, _restore_pending ne broadcast rien."""
         import jarvis.engine.proactive.store as _store_mod
+
         orig_dir = _store_mod.INITIATIVES_DIR
         _store_mod.INITIATIVES_DIR = tmp_path
         try:
@@ -289,18 +305,21 @@ class TestEngineRestore:
 
 # ── Tests : Executor ──────────────────────────────────────────────────────────
 
+
 def _make_executor(
     tmp_path: Path,
     orchestrator: object | None = None,
     budget_guard: object | None = None,
 ) -> tuple:
     import jarvis.engine.proactive.store as _store_mod
+
     orig_dir = _store_mod.INITIATIVES_DIR
     _store_mod.INITIATIVES_DIR = tmp_path
     store = InitiativeStore()
     events: list[dict] = []
 
     from jarvis.engine.proactive.executor import InitiativeExecutor
+
     executor = InitiativeExecutor(
         store=store,
         broadcast_event=events.append,
@@ -311,11 +330,11 @@ def _make_executor(
 
 
 class TestExecutorDraftResponse:
-
     @pytest.mark.asyncio
     async def test_run_returns_draft_ready_without_sending(self, tmp_path: Path) -> None:
         """run() sur DRAFT_RESPONSE retourne draft_ready et ne déclenche pas d'envoi."""
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path)
         try:
             init = _make_initiative(InitiativeType.DRAFT_RESPONSE)
@@ -336,6 +355,7 @@ class TestExecutorDraftResponse:
     async def test_confirm_blocked_if_not_awaiting(self, tmp_path: Path) -> None:
         """confirm() échoue si l'initiative n'est pas en awaiting_confirm."""
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path)
         try:
             init = _make_initiative(InitiativeType.DRAFT_RESPONSE, status="pending")
@@ -352,6 +372,7 @@ class TestExecutorDraftResponse:
     async def test_confirm_blocked_when_approval_never(self, tmp_path: Path) -> None:
         """confirm() est bloqué si email_send=NEVER dans approval_config."""
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path)
         try:
             init = _make_initiative(InitiativeType.DRAFT_RESPONSE, status="awaiting_confirm")
@@ -359,6 +380,7 @@ class TestExecutorDraftResponse:
             _write_initiative(tmp_path, init, today)
 
             from config.approvals import ApprovalMode, approval_config
+
             original_mode = approval_config.email_send
             approval_config.email_send = ApprovalMode.NEVER
             try:
@@ -374,6 +396,7 @@ class TestExecutorDraftResponse:
     async def test_two_step_flow_sends_only_after_confirm(self, tmp_path: Path) -> None:
         """Flux complet : run → draft_ready → confirm → envoi."""
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path)
         try:
             init = _make_initiative(InitiativeType.DRAFT_RESPONSE)
@@ -404,7 +427,6 @@ class TestExecutorDraftResponse:
 
 
 class TestExecutorMission:
-
     @pytest.mark.asyncio
     async def test_run_mission_reserves_budget(self, tmp_path: Path) -> None:
         """run() AUTO_TASK doit appeler budget.reserve() avant de lancer la mission."""
@@ -474,6 +496,7 @@ class TestExecutorMission:
     @pytest.mark.asyncio
     async def test_run_mission_without_orchestrator_fails_gracefully(self, tmp_path: Path) -> None:
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path, orchestrator=None)
         try:
             init = _make_initiative(InitiativeType.AUTO_TASK)
@@ -488,11 +511,11 @@ class TestExecutorMission:
 
 
 class TestExecutorAudit:
-
     @pytest.mark.asyncio
     async def test_audit_event_broadcast_on_run(self, tmp_path: Path) -> None:
         """Un événement initiative_audit doit être broadcast à chaque run()."""
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path)
         try:
             init = _make_initiative(InitiativeType.INFO)
@@ -513,11 +536,11 @@ class TestExecutorAudit:
 
 
 class TestExecutorInfoTypes:
-
     @pytest.mark.asyncio
     async def test_reminder_handled_without_external_action(self, tmp_path: Path) -> None:
         """REMINDER, SUGGESTION, INFO, ALERT → handled sans action externe."""
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path)
         try:
             for itype in (
@@ -541,7 +564,6 @@ class TestExecutorInfoTypes:
 
 
 class TestNoAutoFire:
-
     def test_auto_mode_not_wired_to_executor(self) -> None:
         """ExecutionMode.AUTO ne doit pas être câblé à un chemin d'exécution externe
         dans l'engine."""
@@ -555,7 +577,7 @@ class TestNoAutoFire:
         # Plus précis : la branche AUTO ne doit pas contenir de create_task / send
         auto_block_start = source.find("ExecutionMode.AUTO")
         if auto_block_start >= 0:
-            auto_block = source[auto_block_start:auto_block_start + 300]
+            auto_block = source[auto_block_start : auto_block_start + 300]
             assert "send" not in auto_block.lower() or "send" not in auto_block
             assert "create_task" not in auto_block
 
@@ -563,6 +585,7 @@ class TestNoAutoFire:
     async def test_run_blocked_for_non_pending(self, tmp_path: Path) -> None:
         """run() est refusé si l'initiative n'est pas en status 'pending'."""
         import jarvis.engine.proactive.store as _store_mod
+
         executor, store, events, orig_dir = _make_executor(tmp_path)
         try:
             # Initiative déjà done

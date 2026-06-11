@@ -208,5 +208,3 @@ class BudgetGuard:
             },
             "projects": projects,
         }
-
-

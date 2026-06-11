@@ -206,9 +206,7 @@ def test_initiative_legacy_jsonl_compat_ascendante(
 # ── 2. Curator détecte les skills stale ──────────────────────────────────────
 
 
-async def test_curator_detecte_skill_stale(
-    curator: Curator, lifecycle: SkillLifecycle
-) -> None:
+async def test_curator_detecte_skill_stale(curator: Curator, lifecycle: SkillLifecycle) -> None:
     """Une skill ACTIVE non utilisée depuis > 30j → patch MARK_SKILL_STALE proposé."""
     # Skill "vieille" qui n'a pas été utilisée
     lifecycle.create_candidate("skill-old")
@@ -222,8 +220,7 @@ async def test_curator_detecte_skill_stale(
     old = (datetime.now() - timedelta(days=60)).isoformat()
     with sqlite3.connect(lifecycle.db_path) as conn:
         conn.execute(
-            "UPDATE skills SET created_at=?, promoted_at=?, updated_at=? "
-            "WHERE name=?",
+            "UPDATE skills SET created_at=?, promoted_at=?, updated_at=? WHERE name=?",
             (old, old, old, "skill-old"),
         )
         conn.commit()
@@ -238,9 +235,7 @@ async def test_curator_detecte_skill_stale(
 # ── 3. Curator détecte les facts à archiver par decay ────────────────────────
 
 
-async def test_curator_detecte_facts_decay(
-    curator: Curator, kernel: MemoryKernel
-) -> None:
+async def test_curator_detecte_facts_decay(curator: Curator, kernel: MemoryKernel) -> None:
     """Fact FAST decay vieux de > 3 demi-vies (42j) → patch ARCHIVE_FACT."""
     f = _make_fact("fact_old", decay=DecayPolicy.FAST, age_days=50.0)
     kernel.insert_fact(f)
@@ -252,9 +247,7 @@ async def test_curator_detecte_facts_decay(
     assert archive_patches[0].target == "fact_old"
 
 
-async def test_curator_ignore_facts_recents(
-    curator: Curator, kernel: MemoryKernel
-) -> None:
+async def test_curator_ignore_facts_recents(curator: Curator, kernel: MemoryKernel) -> None:
     """Fact récent (< demi-vie) → pas de patch decay proposé."""
     f = _make_fact("fact_recent", decay=DecayPolicy.FAST, age_days=2.0)
     kernel.insert_fact(f)
@@ -265,9 +258,7 @@ async def test_curator_ignore_facts_recents(
     assert len(archive_patches) == 0
 
 
-async def test_curator_ignore_facts_decay_none(
-    curator: Curator, kernel: MemoryKernel
-) -> None:
+async def test_curator_ignore_facts_decay_none(curator: Curator, kernel: MemoryKernel) -> None:
     """Fact DecayPolicy.NONE (identity) → jamais archivé, peu importe l'âge."""
     f = _make_fact("fact_identity", decay=DecayPolicy.NONE, age_days=10000.0)
     kernel.insert_fact(f)
@@ -335,9 +326,7 @@ def test_is_protected_path() -> None:
 # ── 5. Curator produit un rapport persisté ──────────────────────────────────
 
 
-async def test_curator_scan_persiste_le_rapport(
-    curator: Curator, tmp_path: Path
-) -> None:
+async def test_curator_scan_persiste_le_rapport(curator: Curator, tmp_path: Path) -> None:
     """Chaque scan écrit un JSON timestampé + le miroir latest.md."""
     report = await curator.scan()
     json_files = sorted((tmp_path / "curator_reports").glob("*.json"))

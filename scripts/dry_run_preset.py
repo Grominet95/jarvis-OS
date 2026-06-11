@@ -155,9 +155,7 @@ def print_dry_run(name: str, preset_dir: Path, yaml_meta: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Affiche la séquence d'un preset sans l'exécuter."
-    )
+    parser = argparse.ArgumentParser(description="Affiche la séquence d'un preset sans l'exécuter.")
     parser.add_argument("name", help="Nom du preset (ex. mode-streameur).")
     args = parser.parse_args(argv)
 

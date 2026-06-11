@@ -358,9 +358,7 @@ async def test_sans_kernel_lecon_produite_mais_non_persistee() -> None:
 
 
 async def test_format_text_inclut_jarvis_decided(kernel: MemoryKernel) -> None:
-    llm = _DualLLM(
-        reflect_response=_lesson_dict(corrective_action="prendre du recul avant d'agir")
-    )
+    llm = _DualLLM(reflect_response=_lesson_dict(corrective_action="prendre du recul avant d'agir"))
     reflexion = Reflexion(llm=llm, kernel=kernel)
     project = _make_project()
     await reflexion.reflect(project)

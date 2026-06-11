@@ -156,7 +156,6 @@ class WorkerCLITool:
         if err:
             return err
 
-
         backend = get_backend(str(self._workspace), docker_executor=self._docker)
 
         if backend is None:

@@ -102,14 +102,13 @@ class Settings(BaseSettings):
     api_token: str = Field(
         default="",
         description=(
-            "Token Bearer attendu si api_auth_enabled=True. "
-            "Générer avec : openssl rand -hex 32"
+            "Token Bearer attendu si api_auth_enabled=True. Générer avec : openssl rand -hex 32"
         ),
     )
     cors_allow_origins: list[str] = Field(
         default_factory=list,
         description=(
-            "Origines CORS autorisées (ex: [\"http://mon-pc.tailscale:8000\"]). "
+            'Origines CORS autorisées (ex: ["http://mon-pc.tailscale:8000"]). '
             "Vide + auth désactivée = localhost par défaut. "
             "Ne jamais laisser vide avec auth activée et exposition réseau."
         ),

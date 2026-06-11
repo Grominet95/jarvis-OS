@@ -258,7 +258,6 @@ class WorkerAgent:
         if self._governance is not None:
             return
 
-
         audit_path = Path(self._project.workspace_path) / ".jarvis" / "audit.jsonl"
         self._governance = Governance(
             approval_config=approval_config,
@@ -285,7 +284,6 @@ class WorkerAgent:
         # On le construit après la sélection du backend pour qu'il pointe sur le bon CLI.
 
         if settings.docker_enabled:
-
             available = await DockerExecutor.is_available()
             if not available:
                 await self._log("warning", "Docker non disponible — fallback V1 direct")
@@ -519,8 +517,7 @@ class WorkerAgent:
                         "project_id": self._project.id,
                         "step_id": step.id,
                         "message": (
-                            "Budget atteint — projet mis en pause."
-                            " Reprise possible après recharge."
+                            "Budget atteint — projet mis en pause. Reprise possible après recharge."
                         ),
                     }
                 )
@@ -563,8 +560,7 @@ class WorkerAgent:
             # Non vérifié — préparer un nouvel essai (s'il en reste un)
             prev_issues = verdict.issues
             step.verification_notes = (
-                f"[{attempt + 1}/{_VERIFICATION_MAX_RETRIES}] "
-                f"[{verdict.layer}] {verdict.notes}"
+                f"[{attempt + 1}/{_VERIFICATION_MAX_RETRIES}] [{verdict.layer}] {verdict.notes}"
             )[:500]
             self._pending_issues.extend(verdict.issues)
             await self._log(

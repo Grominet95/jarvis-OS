@@ -6,6 +6,7 @@ Usage : uv run python scripts/migration/snapshot_routes.py > routes.txt
 Tout gate de routes ultérieur (B5b, C7b, E2b) est un `diff` contre
 la baseline capturée en Phase A — sortie vide exigée.
 """
+
 from __future__ import annotations
 
 try:

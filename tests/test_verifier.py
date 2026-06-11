@@ -102,9 +102,7 @@ def _verdict_json(verified: bool, issues: list[str] | None = None, notes: str = 
 
 
 async def test_couche1_fichier_vide_bloque_avant_llm(tmp_path: Path) -> None:
-    project, step, files_before = _make_project_step(
-        tmp_path, verification_command="true"
-    )
+    project, step, files_before = _make_project_step(tmp_path, verification_command="true")
     # On crée un fichier vide pour faire échouer la couche 1
     (Path(project.workspace_path) / "vide.py").write_text("")
 

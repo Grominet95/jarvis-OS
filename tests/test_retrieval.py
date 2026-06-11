@@ -97,13 +97,9 @@ def test_retrieve_ignore_les_superseded(kernel: MemoryKernel) -> None:
 def test_score_combine_4_axes(kernel: MemoryKernel) -> None:
     """Plus haute importance × confidence × récence → score plus élevé."""
     # f1 : importance/confidence haute, récent
-    kernel.insert_fact(
-        _make_fact("haut", obj="python", importance=0.9, confidence=0.95)
-    )
+    kernel.insert_fact(_make_fact("haut", obj="python", importance=0.9, confidence=0.95))
     # f2 : même contenu mais importance/confidence basse
-    kernel.insert_fact(
-        _make_fact("bas", obj="python", importance=0.2, confidence=0.3)
-    )
+    kernel.insert_fact(_make_fact("bas", obj="python", importance=0.2, confidence=0.3))
     results = MemoryRetrieval(kernel).retrieve("python", k=2)
     assert results[0].fact.id == "haut"
     assert results[1].fact.id == "bas"

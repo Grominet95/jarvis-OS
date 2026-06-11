@@ -68,7 +68,6 @@ class ProjectOrchestrator:
             for step in project.steps:
                 validate_step(step)
         except ValueError as exc:
-
             project.status = ProjectStatus.FAILED
             self._store.save_project(project)
             logger.error(

@@ -74,8 +74,7 @@ def main() -> int:
         )
         sources = list(
             conn.execute(
-                "SELECT source, COUNT(*) AS n FROM events "
-                "GROUP BY source ORDER BY n DESC LIMIT 10"
+                "SELECT source, COUNT(*) AS n FROM events GROUP BY source ORDER BY n DESC LIMIT 10"
             ).fetchall()
         )
     print("\n## Events par type")
@@ -93,13 +92,11 @@ def main() -> int:
         ).fetchone()[0]
         # Premier / dernier event session_summary
         first_session = conn.execute(
-            "SELECT created_at FROM events WHERE type=? "
-            "ORDER BY created_at ASC LIMIT 1",
+            "SELECT created_at FROM events WHERE type=? ORDER BY created_at ASC LIMIT 1",
             ("session_summary",),
         ).fetchone()
         last_session = conn.execute(
-            "SELECT created_at FROM events WHERE type=? "
-            "ORDER BY created_at DESC LIMIT 1",
+            "SELECT created_at FROM events WHERE type=? ORDER BY created_at DESC LIMIT 1",
             ("session_summary",),
         ).fetchone()
     print("\n## Ingestion BATCH DEEP")
@@ -110,17 +107,13 @@ def main() -> int:
         try:
             span = (datetime.fromisoformat(last) - datetime.fromisoformat(first)).days
             print(
-                f"  période couverte    : {_fmt_date(first)} → "
-                f"{_fmt_date(last)} ({span} jour(s))"
+                f"  période couverte    : {_fmt_date(first)} → {_fmt_date(last)} ({span} jour(s))"
             )
         except ValueError:
             print(f"  période             : {_fmt_date(first)} → {_fmt_date(last)}")
 
     # ── Doublons (support_count > 1) ──────────────────────────────────────
-    confirmed = [
-        f for f in kernel.list_facts_by_status(FactStatus.ACTIVE)
-        if f.support_count > 1
-    ]
+    confirmed = [f for f in kernel.list_facts_by_status(FactStatus.ACTIVE) if f.support_count > 1]
     print("\n## Confirmations (signal que le matcher v2 fait son travail)")
     print(f"  facts ré-observés (support_count > 1) : {len(confirmed)}")
     if confirmed:

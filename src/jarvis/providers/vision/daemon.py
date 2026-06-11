@@ -50,7 +50,6 @@ async def run_vision_daemon() -> None:
         logger.error("Vision daemon: opencv-python non installé — daemon désactivé")
         return
 
-
     detector = ObjectDetector(confidence=settings.vision_yolo_confidence)
     objects_q = get_vision_objects_queue()
 

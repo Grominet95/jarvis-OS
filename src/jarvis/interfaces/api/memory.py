@@ -187,8 +187,7 @@ async def correct_memory_fact(body: _CorrectionBody, request: Request) -> dict:
         except ValueError:
             raise HTTPException(
                 400,
-                f"Status invalide '{body.new_status}'. Valeurs : "
-                f"{[s.value for s in FactStatus]}",
+                f"Status invalide '{body.new_status}'. Valeurs : {[s.value for s in FactStatus]}",
             ) from None
 
     event, fact = kernel.apply_correction(

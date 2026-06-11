@@ -50,9 +50,7 @@ PKGS: frozenset[str] = frozenset(
     }
 )
 
-EXCLUDE_DIRS: frozenset[str] = frozenset(
-    {".git", "tests", ".venv", "__pycache__", "workspace"}
-)
+EXCLUDE_DIRS: frozenset[str] = frozenset({".git", "tests", ".venv", "__pycache__", "workspace"})
 
 
 def _is_inter_pkg(module: str | None) -> bool:

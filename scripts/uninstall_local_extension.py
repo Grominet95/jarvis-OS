@@ -42,9 +42,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if refused:
         for p in refused:
-            sys.stderr.write(
-                f"Refus : '{p}' existe mais n'est pas un symlink. Ignoré.\n"
-            )
+            sys.stderr.write(f"Refus : '{p}' existe mais n'est pas un symlink. Ignoré.\n")
 
     if not removed:
         sys.stderr.write(f"Aucun lien dev pour '{args.name}'.\n")

@@ -24,9 +24,7 @@ from jarvis.capabilities.skills.registry import SKILLS_INSTALLED_DIR, SkillRegis
 def _installed_skill_names() -> set[str]:
     """Set des noms de skills physiquement installés (depuis le disque)."""
     return {
-        d.name
-        for d in SKILLS_INSTALLED_DIR.iterdir()
-        if d.is_dir() and (d / "skill.py").exists()
+        d.name for d in SKILLS_INSTALLED_DIR.iterdir() if d.is_dir() and (d / "skill.py").exists()
     }
 
 
@@ -114,9 +112,7 @@ def test_c_mount_dev_views_inerte_avec_zone_vide(
 # ── (d) override : skill dev shadow installed du même nom ────────────────────
 
 
-def test_d_override_dev_shadow_installed(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_d_override_dev_shadow_installed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Un skill dev /skills/<X> doit masquer skills/installed/<X> quand X
     existe déjà côté installed."""
     installed = _installed_skill_names()
@@ -145,9 +141,7 @@ def test_d_override_dev_shadow_installed(
     assert loaded is not None, f"Skill '{target}' devrait être chargé depuis dev"
     # Le shadow est marqué version 99.0.0-dev → preuve que c'est bien la
     # version dev qui a été chargée, pas l'installée.
-    assert loaded.version == "99.0.0-dev", (
-        f"Override raté : version chargée = {loaded.version}"
-    )
+    assert loaded.version == "99.0.0-dev", f"Override raté : version chargée = {loaded.version}"
     # __dir doit pointer vers la zone dev, pas vers skills/installed/.
     loaded_dir = Path(loaded.metadata["__dir"])
     assert loaded_dir == dev_skill.resolve(), (

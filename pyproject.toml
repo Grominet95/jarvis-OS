@@ -73,15 +73,21 @@ select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # pyflakes
-    "I",   # isort
+    "I",   # isort (déjà activé pré-F — gardé)
     "B",   # flake8-bugbear
     "UP",  # pyupgrade
     "ANN", # flake8-annotations
     "ASYNC", # flake8-async
+    "TID", # flake8-tidy-imports (Phase F : interdit `from . import …`
+           # relatifs au-delà du package et bannit certains imports)
 ]
 ignore = [
     "ASYNC240",  # pathlib dans async OK — on est sur asyncio, pas trio/anyio
 ]
+
+[tool.ruff.lint.flake8-tidy-imports]
+# Interdit les imports relatifs au-delà du package (RÈGLE 1 du CDC §2.2).
+ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
 # src/jarvis/interfaces/voice/agent.py (ex-voice_agent.py) contient 13

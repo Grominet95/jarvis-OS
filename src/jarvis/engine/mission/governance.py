@@ -128,9 +128,7 @@ class Governance:
 
     def _category_axis(self, ctx: GateContext) -> GateDecision:
         # Catégorie inconnue → comportement par défaut conservateur : ASK.
-        mode: ApprovalMode = getattr(
-            self._approval_config, ctx.action_category, ApprovalMode.ASK
-        )
+        mode: ApprovalMode = getattr(self._approval_config, ctx.action_category, ApprovalMode.ASK)
         if mode == ApprovalMode.ALWAYS:
             return GateDecision.AUTO
         if mode == ApprovalMode.NEVER:

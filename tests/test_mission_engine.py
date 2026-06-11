@@ -218,9 +218,7 @@ async def test_step_non_verifie_bloque_progression(tmp_path: Path) -> None:
         title="Test blocage",
         mission="Test",
         workspace_path=str(workspace),
-        steps=[
-            _step(f"s{i}", criterion=f"crit {i}") for i in range(1, 4)
-        ],
+        steps=[_step(f"s{i}", criterion=f"crit {i}") for i in range(1, 4)],
     )
 
     store = ProjectStore()
@@ -249,6 +247,7 @@ async def test_step_non_verifie_bloque_progression(tmp_path: Path) -> None:
 
         # Broadcast no-op
         broadcasts: list[dict] = []
+
         def _broadcast(evt: dict) -> None:
             broadcasts.append(evt)
 

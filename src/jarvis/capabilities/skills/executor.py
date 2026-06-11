@@ -180,7 +180,6 @@ class PresetExecutor:
 
         audio_bytes = await self._tts.synthesize(step.text)
 
-
         await broadcast_audio(audio_bytes)
 
         return {"status": "done", "message": f"TTS : {step.text[:50]}"}

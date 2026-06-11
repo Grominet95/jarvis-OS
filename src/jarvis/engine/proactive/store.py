@@ -67,9 +67,7 @@ class InitiativeStore:
         from datetime import date, timedelta
 
         cutoff = (date.today() - timedelta(days=days - 1)).strftime("%Y-%m-%d")
-        return sorted(
-            f for f in INITIATIVES_DIR.glob("*.jsonl") if f.stem >= cutoff
-        )
+        return sorted(f for f in INITIATIVES_DIR.glob("*.jsonl") if f.stem >= cutoff)
 
     def _parse_initiative(self, data: dict) -> Initiative:
         # PHASE 6 — nouveaux champs avec .get(...) defaults pour compat JSONL legacy.
@@ -159,9 +157,7 @@ class InitiativeStore:
                         "cost_max_usd": initiative.cost_max_usd,
                         "risk": initiative.risk,
                         "deadline": (
-                            initiative.deadline.isoformat()
-                            if initiative.deadline
-                            else None
+                            initiative.deadline.isoformat() if initiative.deadline else None
                         ),
                         "next_action": initiative.next_action,
                         "requires_validation": initiative.requires_validation,

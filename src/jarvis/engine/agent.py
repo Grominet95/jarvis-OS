@@ -84,8 +84,11 @@ class Agent:
         if _s.llm_provider == "local":
             llm_id = f"Ollama / {_s.ollama_model}"
         else:
-            _model_map = {"anthropic": _s.anthropic_model, "mistral": _s.mistral_model,
-                          "openai": _s.openai_model}
+            _model_map = {
+                "anthropic": _s.anthropic_model,
+                "mistral": _s.mistral_model,
+                "openai": _s.openai_model,
+            }
             llm_id = _model_map.get(_s.api_backend, _s.anthropic_model)
         dynamic_parts.append(f"## Moteur LLM actif\n\nTu tournes sur **{llm_id}**.")
 

@@ -241,7 +241,6 @@ def build(settings: Settings | None = None) -> Container:
     )
     _deep_ingest = memory_ingest if settings.ingest_deep_enabled else None
 
-
     auto_dream = AutoDream(
         llm=background_llm,
         prefs_path=user_prefs_path,
@@ -253,7 +252,6 @@ def build(settings: Settings | None = None) -> Container:
     # ── 5. Capabilities L1 — Skill registry + Tools ─────────────────────────
 
     skill_registry.reload()
-
 
     _root = CONFIG_DIR.parent  # PROJECT_ROOT
     _google_creds = (_root / settings.google_credentials_path).resolve()
@@ -381,9 +379,7 @@ def build(settings: Settings | None = None) -> Container:
 
     # ── 12. Engine L2 — Mission (orchestrator + reflexion) ─────────────────
 
-    reflexion = Reflexion(
-        llm=background_llm, kernel=memory_kernel, memory_ingest=memory_ingest
-    )
+    reflexion = Reflexion(llm=background_llm, kernel=memory_kernel, memory_ingest=memory_ingest)
     orchestrator = ProjectOrchestrator(
         broadcast_event=proactive_queue.broadcast_event,
         store=ProjectStore(),
@@ -632,5 +628,3 @@ def _wire_events(
     bus.subscribe(MissionCompleted, _on_mission_completed)
     bus.subscribe(MemoryIngested, _on_memory_ingested)
     bus.subscribe(NotificationRequested, _on_notification_requested)
-
-

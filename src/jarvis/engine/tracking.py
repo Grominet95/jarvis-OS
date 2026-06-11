@@ -323,5 +323,3 @@ class UsageTracker:
             except (ValueError, IndexError):
                 pass
         return [round(h, 6) for h in hours]
-
-

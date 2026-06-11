@@ -99,7 +99,6 @@ class TTSEngine:
 
     def _piper_sync(self, text: str) -> bytes:
 
-
         if self._piper_voice is None:
             model_path = Path(settings.piper_model_path)
             if not model_path.exists():

@@ -328,9 +328,7 @@ class SkillLab:
                 "metadata_json": evt.metadata_json,
             }
         trajectory = self._event_to_trajectory(event_payload)
-        return await self.propose_from_trajectory(
-            trajectory, source_event_id=event_id
-        )
+        return await self.propose_from_trajectory(trajectory, source_event_id=event_id)
 
     async def propose_from_trajectory(
         self,
@@ -368,9 +366,7 @@ class SkillLab:
             return None
 
         # 2) Enregistre dans le lifecycle (status=CANDIDATE par défaut).
-        self._lifecycle.create_candidate(
-            name=skill_name, source_event_id=source_event_id
-        )
+        self._lifecycle.create_candidate(name=skill_name, source_event_id=source_event_id)
 
         # 3) Test sandbox — le gate critique.
         return await self.test_in_sandbox(skill_name)
@@ -491,7 +487,9 @@ class SkillLab:
             except TimeoutError:
                 # Tue le container
                 killer = await asyncio.create_subprocess_exec(
-                    "docker", "kill", container_name,
+                    "docker",
+                    "kill",
+                    container_name,
                     stdout=asyncio.subprocess.DEVNULL,
                     stderr=asyncio.subprocess.DEVNULL,
                 )
@@ -518,11 +516,9 @@ class SkillLab:
         script_path = cand_abs / "_skill_sandbox_test.py"
         # Remplace /workspace/candidate par cand_abs et /jarvis_src par jarvis_root
         # On crée un script adapté au mode direct.
-        direct_script = (
-            _SANDBOX_TEST_SCRIPT
-            .replace('Path("/workspace/candidate")', f'Path(r"{cand_abs}")')
-            .replace('"/jarvis_src"', f'r"{jarvis_root}"')
-        )
+        direct_script = _SANDBOX_TEST_SCRIPT.replace(
+            'Path("/workspace/candidate")', f'Path(r"{cand_abs}")'
+        ).replace('"/jarvis_src"', f'r"{jarvis_root}"')
         script_path.write_text(direct_script, encoding="utf-8")
 
         try:

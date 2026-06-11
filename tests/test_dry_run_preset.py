@@ -46,9 +46,7 @@ def _run(args: list[str], dev_root: Path) -> subprocess.CompletedProcess:
 # ── Découverte ───────────────────────────────────────────────────────────────
 
 
-def test_find_preset_zone_dev_prioritaire(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_find_preset_zone_dev_prioritaire(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     dev = tmp_path / "dev"
     _write_preset(
         dev / "presets",

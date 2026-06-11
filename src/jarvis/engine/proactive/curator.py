@@ -361,8 +361,7 @@ class Curator:
             )
         elif report.budget_status == "warning":
             report.notes.append(
-                f"Budget global en alerte : "
-                f"{global_block.get('utilization_pct', 0):.0f}% utilisé."
+                f"Budget global en alerte : {global_block.get('utilization_pct', 0):.0f}% utilisé."
             )
 
     # ── Étape 5 — initiatives proactives ──────────────────────────────────────
@@ -374,12 +373,8 @@ class Curator:
             logger.warning("Curator: initiatives load échec", error=str(exc))
             return
         report.initiatives_pending = sum(1 for i in recent if i.status == "pending")
-        report.initiatives_validated_recent = sum(
-            1 for i in recent if i.status == "approved"
-        )
-        report.initiatives_rejected_recent = sum(
-            1 for i in recent if i.status == "rejected"
-        )
+        report.initiatives_validated_recent = sum(1 for i in recent if i.status == "approved")
+        report.initiatives_rejected_recent = sum(1 for i in recent if i.status == "rejected")
 
         # Propose review pour initiatives pending > 3 jours (probablement obsolètes)
         now = datetime.now()
@@ -418,10 +413,7 @@ class Curator:
         refused: list[str] = []
         for p in patches:
             if is_protected_path(p.target):
-                refused.append(
-                    f"Patch {p.kind.value} sur '{p.target}' refusé : noyau "
-                    "protégé §11."
-                )
+                refused.append(f"Patch {p.kind.value} sur '{p.target}' refusé : noyau protégé §11.")
                 logger.warning(
                     "Curator: patch sur fichier protégé refusé",
                     kind=p.kind.value,

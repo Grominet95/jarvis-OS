@@ -16,7 +16,7 @@ from config.settings import settings
 _EXEMPT_EXACT: frozenset[str] = frozenset({"/health", "/api/health"})
 _EXEMPT_PREFIXES: Sequence[str] = (
     "/api/channels/",  # webhooks — vérification de signature propre
-    "/api/google/",    # OAuth Google — redirect navigateur, header impossible
+    "/api/google/",  # OAuth Google — redirect navigateur, header impossible
 )
 
 
@@ -57,7 +57,7 @@ async def verify_api_token(request: HTTPConnection) -> None:
         )
         raise HTTPException(status_code=401, detail="Token Bearer requis.")
 
-    token = auth_header[len("Bearer "):]
+    token = auth_header[len("Bearer ") :]
     expected = settings.api_token
     if not expected or not hmac.compare_digest(
         token.encode("utf-8"),

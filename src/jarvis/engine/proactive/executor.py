@@ -133,10 +133,13 @@ class InitiativeExecutor:
     async def _prepare_draft(self, init: Initiative) -> dict:
         """Retourne le brouillon sans envoyer — attend une 2e confirmation via /confirm."""
         draft = init.draft_content or init.action
-        self._store.update_initiative(init.id, {
-            "status": "awaiting_confirm",
-            "draft_content": draft,
-        })
+        self._store.update_initiative(
+            init.id,
+            {
+                "status": "awaiting_confirm",
+                "draft_content": draft,
+            },
+        )
         return {
             "status": "draft_ready",
             "draft": draft,
@@ -205,10 +208,13 @@ class InitiativeExecutor:
         mission = init.mission_description or init.action
         try:
             project = await self._orchestrator.create_and_run(mission)
-            self._store.update_initiative(init.id, {
-                "status": "in_progress",
-                "mission_description": mission,
-            })
+            self._store.update_initiative(
+                init.id,
+                {
+                    "status": "in_progress",
+                    "mission_description": mission,
+                },
+            )
             return {
                 "status": "mission_launched",
                 "project_id": project.id,
@@ -241,6 +247,4 @@ class InitiativeExecutor:
             "timestamp": datetime.now(UTC).isoformat(),
         }
         self._broadcast(event)
-        logger.info(
-            f"InitiativeExecutor AUDIT [{step}] {init.title!r} → {result.get('status')}"
-        )
+        logger.info(f"InitiativeExecutor AUDIT [{step}] {init.title!r} → {result.get('status')}")

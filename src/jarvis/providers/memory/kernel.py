@@ -215,9 +215,7 @@ class MemoryKernel:
 
     def get_event(self, event_id: str) -> Event | None:
         with self._conn() as conn:
-            row = conn.execute(
-                "SELECT * FROM events WHERE id = ?", (event_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
         return self._row_to_event(row) if row else None
 
     def count_events(self) -> int:
@@ -281,14 +279,10 @@ class MemoryKernel:
 
     def get_fact(self, fact_id: str) -> Fact | None:
         with self._conn() as conn:
-            row = conn.execute(
-                "SELECT * FROM facts WHERE id = ?", (fact_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM facts WHERE id = ?", (fact_id,)).fetchone()
         return self._row_to_fact(row) if row else None
 
-    def find_active_match(
-        self, subject: str, predicate: str, category: str
-    ) -> Fact | None:
+    def find_active_match(self, subject: str, predicate: str, category: str) -> Fact | None:
         """Cherche un fact ACTIF avec même (subject, predicate, category) normalisés.
 
         Sert au matching de réconciliation §6.4 étape 4.
@@ -302,13 +296,8 @@ class MemoryKernel:
             ).fetchone()
         return self._row_to_fact(row) if row else None
 
-    def list_facts_by_status(
-        self, status: FactStatus, limit: int | None = None
-    ) -> list[Fact]:
-        sql = (
-            "SELECT * FROM facts WHERE status=? "
-            "ORDER BY last_seen_at DESC"
-        )
+    def list_facts_by_status(self, status: FactStatus, limit: int | None = None) -> list[Fact]:
+        sql = "SELECT * FROM facts WHERE status=? ORDER BY last_seen_at DESC"
         if limit is not None:
             sql += f" LIMIT {int(limit)}"
         with self._conn() as conn:
@@ -320,8 +309,7 @@ class MemoryKernel:
     ) -> list[Fact]:
         with self._conn() as conn:
             rows = conn.execute(
-                "SELECT * FROM facts WHERE category=? AND status=? "
-                "ORDER BY last_seen_at DESC",
+                "SELECT * FROM facts WHERE category=? AND status=? ORDER BY last_seen_at DESC",
                 (normalize(category), status.value),
             ).fetchall()
         return [self._row_to_fact(r) for r in rows]
@@ -466,9 +454,7 @@ class MemoryKernel:
                 fact.category,
             ]
         )
-        conn.execute(
-            "INSERT INTO facts_fts(fact_id, text) VALUES (?, ?)", (fact.id, text)
-        )
+        conn.execute("INSERT INTO facts_fts(fact_id, text) VALUES (?, ?)", (fact.id, text))
 
     # ── Human correction (§6.7) ───────────────────────────────────────────────
 

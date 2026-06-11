@@ -119,7 +119,6 @@ async def voice_ws(websocket: WebSocket) -> None:
 
     loop = asyncio.get_running_loop()
     if settings.stt_provider == "deepgram":
-
         receiver: VoiceReceiver | DeepgramReceiver = DeepgramReceiver()
     else:
         receiver = VoiceReceiver()

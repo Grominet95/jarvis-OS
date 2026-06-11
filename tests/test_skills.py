@@ -76,9 +76,7 @@ async def test_propose_skill_candidate_cree_les_fichiers(tmp_path: Path) -> None
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    skill_name = await synth.propose_skill_candidate(
-        _SAMPLE_TRAJECTORY, target_dir=tmp_path
-    )
+    skill_name = await synth.propose_skill_candidate(_SAMPLE_TRAJECTORY, target_dir=tmp_path)
 
     skill_dir = tmp_path / skill_name
     assert skill_dir.exists(), f"Dossier skill absent : {skill_dir}"
@@ -95,9 +93,7 @@ async def test_propose_skill_candidate_skill_md_valide(tmp_path: Path) -> None:
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    skill_name = await synth.propose_skill_candidate(
-        _SAMPLE_TRAJECTORY, target_dir=tmp_path
-    )
+    skill_name = await synth.propose_skill_candidate(_SAMPLE_TRAJECTORY, target_dir=tmp_path)
 
     skill_md = (tmp_path / skill_name / "SKILL.md").read_text(encoding="utf-8")
     import re
@@ -119,9 +115,7 @@ async def test_propose_skill_candidate_skill_yaml_contient_system_prompt(
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    skill_name = await synth.propose_skill_candidate(
-        _SAMPLE_TRAJECTORY, target_dir=tmp_path
-    )
+    skill_name = await synth.propose_skill_candidate(_SAMPLE_TRAJECTORY, target_dir=tmp_path)
 
     with (tmp_path / skill_name / "skill.yaml").open(encoding="utf-8") as f:
         meta = yaml.safe_load(f)
@@ -193,9 +187,7 @@ async def test_skill_synthetise_chargeable_par_le_registry(tmp_path: Path) -> No
     mock_llm = _make_mock_llm(_SAMPLE_SKILL_MD)
     synth = SkillSynthesizer(llm=mock_llm)
 
-    skill_name = await synth.propose_skill_candidate(
-        _SAMPLE_TRAJECTORY, target_dir=tmp_path
-    )
+    skill_name = await synth.propose_skill_candidate(_SAMPLE_TRAJECTORY, target_dir=tmp_path)
 
     # Charge le skill directement depuis le dossier temporaire
     from jarvis.capabilities.skills.registry import SkillRegistry

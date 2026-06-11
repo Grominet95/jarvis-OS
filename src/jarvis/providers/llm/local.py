@@ -199,11 +199,13 @@ class OllamaProvider(LLMProvider):
                 return text
 
             # Réinjecte la réponse assistant avec ses tool_calls dans l'historique
-            current.append({
-                "role": "assistant",
-                "content": msg.get("content") or "",
-                "tool_calls": raw_tool_calls,
-            })
+            current.append(
+                {
+                    "role": "assistant",
+                    "content": msg.get("content") or "",
+                    "tool_calls": raw_tool_calls,
+                }
+            )
 
             # Parse les tool calls : arguments peuvent être dict OU string JSON
             parsed: list[tuple[str, str, dict]] = []

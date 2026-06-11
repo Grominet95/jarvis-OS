@@ -457,9 +457,7 @@ async def test_arbiter_appele_sur_stable_object_different(
     old_id = r1.new_facts[0].id
 
     # Patch le verdict pour pointer sur le bon id
-    llm._arbiter_scripts = [
-        {"verdict": "same_as", "target_fact_id": old_id, "notes": ""}
-    ]
+    llm._arbiter_scripts = [{"verdict": "same_as", "target_fact_id": old_id, "notes": ""}]
 
     r2 = await ingest.ingest("...", source="t")
     assert ingest.arbiter_calls == 1

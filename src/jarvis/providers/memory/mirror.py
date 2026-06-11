@@ -87,10 +87,7 @@ class MemoryMirror:
                 # Catégorie connue mais sans fichier dédié → uncertain
                 uncertain.append(f)
                 continue
-            if (
-                f.category in ("belief", "persona")
-                and f.confidence < _UNCERTAIN_THRESHOLD
-            ):
+            if f.category in ("belief", "persona") and f.confidence < _UNCERTAIN_THRESHOLD:
                 uncertain.append(f)
                 continue
             by_file.setdefault(target, []).append(f)

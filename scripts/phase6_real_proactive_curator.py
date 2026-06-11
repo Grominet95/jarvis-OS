@@ -348,12 +348,8 @@ async def cas_b_curator_real_scan(workspace: Path) -> bool:
     has_archive_fact = any(p.kind == PatchKind.ARCHIVE_FACT for p in report.patches)
     has_skill_stale = any(p.kind == PatchKind.MARK_SKILL_STALE for p in report.patches)
     has_skill_archive = any(p.kind == PatchKind.ARCHIVE_SKILL for p in report.patches)
-    has_reject_cand = any(
-        p.kind == PatchKind.REJECT_STALE_CANDIDATE for p in report.patches
-    )
-    has_review_ini = any(
-        p.kind == PatchKind.REVIEW_INITIATIVE for p in report.patches
-    )
+    has_reject_cand = any(p.kind == PatchKind.REJECT_STALE_CANDIDATE for p in report.patches)
+    has_review_ini = any(p.kind == PatchKind.REVIEW_INITIATIVE for p in report.patches)
 
     print("\n[Évaluation CAS B]")
     print(f"  {'✅' if has_archive_fact else '❌'} ARCHIVE_FACT proposé (decay FAST 60j)")
@@ -479,9 +475,7 @@ async def cas_c_refus_auto_apply(workspace: Path) -> bool:
         requires_validation=False,  # MÊME en False, niveau 5 doit forcer validation
     )
     forced = needs_human_validation(niv5)
-    print(
-        f"  niveau=5 requires_validation=False → needs_human_validation={forced}"
-    )
+    print(f"  niveau=5 requires_validation=False → needs_human_validation={forced}")
     forced_ok = forced is True
     print(
         f"\n  {'✅' if forced_ok else '❌'} niveau 5 force validation par principe : "

@@ -176,8 +176,7 @@ class ProjectManager:
                 "et contient au moins 3 sections '##'."
             ),
             "verification_command": (
-                "test -s RAPPORT.md && grep -c '^## ' RAPPORT.md | "
-                "awk '{exit ($1 >= 3) ? 0 : 1}'"
+                "test -s RAPPORT.md && grep -c '^## ' RAPPORT.md | awk '{exit ($1 >= 3) ? 0 : 1}'"
             ),
             "access_level": int(AccessLevel.WRITE_LOCAL),
         }

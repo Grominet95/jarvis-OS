@@ -137,9 +137,7 @@ class SkillLifecycle:
 
     def get(self, name: str) -> SkillRecord | None:
         with self._conn() as conn:
-            row = conn.execute(
-                "SELECT * FROM skills WHERE name = ?", (name,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM skills WHERE name = ?", (name,)).fetchone()
         return self._row_to_record(row) if row else None
 
     def list_by_status(self, status: SkillStatus) -> list[SkillRecord]:
@@ -194,8 +192,7 @@ class SkillLifecycle:
         now = datetime.now()
         with self._conn() as conn:
             cur = conn.execute(
-                "UPDATE skills SET status = ?, promoted_at = ?, updated_at = ? "
-                "WHERE name = ?",
+                "UPDATE skills SET status = ?, promoted_at = ?, updated_at = ? WHERE name = ?",
                 (
                     SkillStatus.ACTIVE.value,
                     now.isoformat(),
@@ -253,8 +250,7 @@ class SkillLifecycle:
         now = datetime.now()
         with self._conn() as conn:
             cur = conn.execute(
-                "UPDATE skills SET status = ?, archived_at = ?, updated_at = ? "
-                "WHERE name = ?",
+                "UPDATE skills SET status = ?, archived_at = ?, updated_at = ? WHERE name = ?",
                 (
                     SkillStatus.ARCHIVED.value,
                     now.isoformat(),
@@ -308,12 +304,8 @@ class SkillLifecycle:
             source_event_id=row["source_event_id"],
             sandbox_notes=row["sandbox_notes"],
             created_at=datetime.fromisoformat(row["created_at"]),
-            promoted_at=datetime.fromisoformat(row["promoted_at"])
-            if row["promoted_at"]
-            else None,
-            archived_at=datetime.fromisoformat(row["archived_at"])
-            if row["archived_at"]
-            else None,
+            promoted_at=datetime.fromisoformat(row["promoted_at"]) if row["promoted_at"] else None,
+            archived_at=datetime.fromisoformat(row["archived_at"]) if row["archived_at"] else None,
             updated_at=datetime.fromisoformat(row["updated_at"]),
         )
 

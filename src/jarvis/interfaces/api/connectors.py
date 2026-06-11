@@ -101,87 +101,105 @@ async def connectors_status() -> list[dict]:
     items: list[dict] = []
 
     # Google Gmail
-    items.append({
-        "name": "Gmail",
-        "kind": "oauth",
-        "connected": gmail_token.exists(),
-        **_google_health(gmail_token),
-        "reconnect_url": "/api/google/auth/gmail",
-        "edit_url": "/capabilities#integrations",
-    })
+    items.append(
+        {
+            "name": "Gmail",
+            "kind": "oauth",
+            "connected": gmail_token.exists(),
+            **_google_health(gmail_token),
+            "reconnect_url": "/api/google/auth/gmail",
+            "edit_url": "/capabilities#integrations",
+        }
+    )
 
     # Google Calendar
-    items.append({
-        "name": "Google Calendar",
-        "kind": "oauth",
-        "connected": calendar_token.exists(),
-        **_google_health(calendar_token),
-        "reconnect_url": "/api/google/auth/calendar",
-        "edit_url": "/capabilities#integrations",
-    })
+    items.append(
+        {
+            "name": "Google Calendar",
+            "kind": "oauth",
+            "connected": calendar_token.exists(),
+            **_google_health(calendar_token),
+            "reconnect_url": "/api/google/auth/calendar",
+            "edit_url": "/capabilities#integrations",
+        }
+    )
 
     # Spotify
-    items.append({
-        "name": "Spotify",
-        "kind": "oauth",
-        "connected": Path(settings.spotify_token_path).exists(),
-        **_spotify_health(),
-        "reconnect_url": "/api/spotify/auth",
-        "edit_url": "/capabilities#integrations",
-    })
+    items.append(
+        {
+            "name": "Spotify",
+            "kind": "oauth",
+            "connected": Path(settings.spotify_token_path).exists(),
+            **_spotify_health(),
+            "reconnect_url": "/api/spotify/auth",
+            "edit_url": "/capabilities#integrations",
+        }
+    )
 
     # Deezer
-    items.append({
-        "name": "Deezer",
-        "kind": "oauth",
-        "connected": Path(settings.deezer_token_path).exists(),
-        **_deezer_health(),
-        "reconnect_url": "/api/deezer/auth",
-        "edit_url": "/capabilities#integrations",
-    })
+    items.append(
+        {
+            "name": "Deezer",
+            "kind": "oauth",
+            "connected": Path(settings.deezer_token_path).exists(),
+            **_deezer_health(),
+            "reconnect_url": "/api/deezer/auth",
+            "edit_url": "/capabilities#integrations",
+        }
+    )
 
     # Notion (clé API statique en .env)
     notion_ok = _env_present("NOTION_TOKEN")
-    items.append({
-        "name": "Notion",
-        "kind": "key",
-        "connected": notion_ok,
-        "token_health": "ok" if notion_ok else "missing",
-        "expires_at": None,
-        "reconnect_url": None,
-        "edit_url": "/capabilities#integrations",
-    })
+    items.append(
+        {
+            "name": "Notion",
+            "kind": "key",
+            "connected": notion_ok,
+            "token_health": "ok" if notion_ok else "missing",
+            "expires_at": None,
+            "reconnect_url": None,
+            "edit_url": "/capabilities#integrations",
+        }
+    )
 
     # Telegram (bot)
     tg_ok = _env_present("TELEGRAM_BOT_TOKEN") and _env_present("TELEGRAM_OWNER_ID")
     tg_enabled = (os.environ.get("TELEGRAM_ENABLED") or "").strip().lower() in (
-        "1", "true", "yes",
+        "1",
+        "true",
+        "yes",
     )
-    items.append({
-        "name": "Telegram",
-        "kind": "messaging",
-        "connected": tg_ok and tg_enabled,
-        "token_health": "ok" if tg_ok else "missing",
-        "expires_at": None,
-        "reconnect_url": None,
-        "edit_url": "/capabilities#integrations",
-        "enabled": tg_enabled,
-    })
+    items.append(
+        {
+            "name": "Telegram",
+            "kind": "messaging",
+            "connected": tg_ok and tg_enabled,
+            "token_health": "ok" if tg_ok else "missing",
+            "expires_at": None,
+            "reconnect_url": None,
+            "edit_url": "/capabilities#integrations",
+            "enabled": tg_enabled,
+        }
+    )
 
     # Discord (bot)
     dc_ok = _env_present("DISCORD_BOT_TOKEN") and _env_present("DISCORD_OWNER_ID")
     dc_enabled = (os.environ.get("DISCORD_ENABLED") or "").strip().lower() in (
-        "1", "true", "yes",
+        "1",
+        "true",
+        "yes",
     )
-    items.append({
-        "name": "Discord",
-        "kind": "messaging",
-        "connected": dc_ok and dc_enabled,
-        "token_health": "ok" if dc_ok else "missing",
-        "expires_at": None,
-        "reconnect_url": None,
-        "edit_url": "/capabilities#integrations",
-        "enabled": dc_enabled,
-    })
+    items.append(
+        {
+            "name": "Discord",
+            "kind": "messaging",
+            "connected": dc_ok and dc_enabled,
+            "token_health": "ok" if dc_ok else "missing",
+            "expires_at": None,
+            "reconnect_url": None,
+            "edit_url": "/capabilities#integrations",
+            "enabled": dc_enabled,
+        }
+    )
 
     return items

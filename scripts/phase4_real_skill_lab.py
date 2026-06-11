@@ -108,7 +108,6 @@ async def cas_nominal(workspace: Path) -> bool:
     if inst_dir.exists():
         shutil.rmtree(inst_dir)
 
-
     llm = AnthropicProvider(max_tokens=2048, model=settings.voice_anthropic_model)
     synth = SkillSynthesizer(llm=llm)
     kernel = MemoryKernel(db_path)
@@ -174,7 +173,6 @@ async def cas_rejet(workspace: Path) -> bool:
     cand_dir = workspace / "candidates_rejet"
     if cand_dir.exists():
         shutil.rmtree(cand_dir)
-
 
     llm = AnthropicProvider(max_tokens=512, model=settings.voice_anthropic_model)
     synth = SkillSynthesizer(llm=llm)

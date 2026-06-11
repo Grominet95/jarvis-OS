@@ -77,22 +77,22 @@ class ShowViewTool(Tool):
     description = (
         "Affiche ou contrôle une vue visuelle sur l'écran principal de Jarvis.\n\n"
         "ACTIONS GLOBALES :\n"
-        '- show : afficher une vue par son ID '
-        '(le SYSTEM_PROMPT de chaque vue donne son view_id exact)\n'
-        '- hide : masquer une vue précise\n'
+        "- show : afficher une vue par son ID "
+        "(le SYSTEM_PROMPT de chaque vue donne son view_id exact)\n"
+        "- hide : masquer une vue précise\n"
         '- home : retour à la sphère d\'accueil — pour "reviens", "retour", "ferme", "sphère"\n\n'
         "ACTIONS GLOBE UNIQUEMENT (lieux terrestres réels) :\n"
-        '- fly_to : naviguer vers une ville, monument, pays sur Terre.\n'
-        '  ⚠️ STRICTEMENT pour des lieux GÉOGRAPHIQUES TERRESTRES.\n'
-        '  ❌ NE JAMAIS utiliser pour planètes, étoiles, constellations, objets célestes,\n'
+        "- fly_to : naviguer vers une ville, monument, pays sur Terre.\n"
+        "  ⚠️ STRICTEMENT pour des lieux GÉOGRAPHIQUES TERRESTRES.\n"
+        "  ❌ NE JAMAIS utiliser pour planètes, étoiles, constellations, objets célestes,\n"
         "     personnages, marques, sociétés — même si le nom ressemble à un lieu.\n"
         '  ✓ "Lyon", "Tokyo", "tour Eiffel", "mont Fuji"\n'
         '  ✗ "Vénus", "Mars" (planète), "Orion", "Bételgeuse", "Andromède"\n'
         "  Zoom : ville=10, monument=16, pays=5.\n"
         '- globe_view : dézoom total ("vue globale")\n'
-        '- zoom_in / zoom_out : zoom avant / arrière sur le globe\n\n'
+        "- zoom_in / zoom_out : zoom avant / arrière sur le globe\n\n"
         "ACTIONS VUE-SPÉCIFIQUES (autres vues que le globe) :\n"
-        '- view_command : envoyer une commande à une vue active.\n'
+        "- view_command : envoyer une commande à une vue active.\n"
         "  Utilise ceci quand l'utilisateur demande quelque chose qui correspond à une\n"
         "  commande exposée par la vue active (le SYSTEM_PROMPT de la vue les liste).\n"
         '  Ex. astronomie : view_command(view_id="astronomy", '
@@ -105,8 +105,13 @@ class ShowViewTool(Tool):
             "action": {
                 "type": "string",
                 "enum": [
-                    "show", "hide", "home",
-                    "fly_to", "zoom_out", "zoom_in", "globe_view",
+                    "show",
+                    "hide",
+                    "home",
+                    "fly_to",
+                    "zoom_out",
+                    "zoom_in",
+                    "globe_view",
                     "view_command",
                 ],
                 "description": "Action à effectuer.",

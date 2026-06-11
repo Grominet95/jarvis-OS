@@ -263,7 +263,6 @@ Cut (CutFeatureOperation) : "Aucun corps cible" = sketch sur mauvais plan
                 is_error=True,
             )
 
-
         # Approbation pour les scripts (modifications)
         if action == "execute_script":
             checker = get_approval_checker()

@@ -151,7 +151,7 @@ def print_next_steps(ext_type: str, name: str, src: Path) -> None:
     print(f"\nExtension liée : {name} ({ext_type})")
     print("Étape suivante :")
     if ext_type == "skill":
-        print(f'  Skill   : relance Jarvis et essaie : « utilise {name} pour … »')
+        print(f"  Skill   : relance Jarvis et essaie : « utilise {name} pour … »")
     elif ext_type == "preset":
         print(f"  Preset  : python scripts/dry_run_preset.py {name}")
     elif ext_type == "view":

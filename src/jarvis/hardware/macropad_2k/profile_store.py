@@ -110,7 +110,6 @@ def load_default_workspace() -> Path | None:
         if isinstance(path, str) and is_valid_workspace(path):
             return Path(path)
 
-
     fw = firmware_root()
     if is_valid_workspace(fw):
         return fw

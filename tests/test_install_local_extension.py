@@ -41,9 +41,7 @@ def _fake_jarvis_skills(tmp_path: Path, *, validator_rc: int | None) -> Path:
     if validator_rc is not None:
         scripts = repo / "scripts"
         scripts.mkdir()
-        (scripts / "validate_catalog.py").write_text(
-            f"import sys\nsys.exit({validator_rc})\n"
-        )
+        (scripts / "validate_catalog.py").write_text(f"import sys\nsys.exit({validator_rc})\n")
     return repo
 
 
@@ -53,8 +51,7 @@ def _write_skill(parent: Path, name: str, kind: str) -> Path:
     src.mkdir()
     if kind == "skill":
         (src / "skill.py").write_text(
-            "from skills.base import SkillBase\n"
-            "class S(SkillBase):\n    SYSTEM_PROMPT = 'x'\n"
+            "from skills.base import SkillBase\nclass S(SkillBase):\n    SYSTEM_PROMPT = 'x'\n"
         )
         (src / "skill.yaml").write_text(f"name: {name}\ntype: conversational\n")
     elif kind == "preset":
@@ -64,9 +61,7 @@ def _write_skill(parent: Path, name: str, kind: str) -> Path:
         )
     elif kind == "view":
         (src / "view.js").write_text("/* view */")
-        (src / "VIEW.md").write_text(
-            f'---\nid: {name}\nname: {name}\ncommands: []\n---\n'
-        )
+        (src / "VIEW.md").write_text(f"---\nid: {name}\nname: {name}\ncommands: []\n---\n")
     return src
 
 

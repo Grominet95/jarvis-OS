@@ -148,9 +148,7 @@ class CommandCenter:
 
         # Heartbeat
         if self._heartbeat_at:
-            snap.heartbeat_seconds = (
-                datetime.now() - self._heartbeat_at
-            ).total_seconds()
+            snap.heartbeat_seconds = (datetime.now() - self._heartbeat_at).total_seconds()
 
         return snap
 
@@ -204,9 +202,7 @@ class CommandCenter:
             logger.warning("CommandCenter: budget.status() échec", error=str(exc))
             return BudgetSummary(enabled=False)
         global_block = status.get("global", {})
-        projects = [
-            {"id": k, **v} for k, v in (status.get("projects") or {}).items()
-        ]
+        projects = [{"id": k, **v} for k, v in (status.get("projects") or {}).items()]
         return BudgetSummary(
             enabled=status.get("enabled", False),
             global_spent_usd=global_block.get("spent_usd", 0.0),
@@ -238,15 +234,12 @@ class CommandCenter:
         return SkillSummary(
             by_status=by_status,
             candidates_pending_review=[
-                {"name": r.name, "created_at": r.created_at.isoformat()}
-                for r in pending
+                {"name": r.name, "created_at": r.created_at.isoformat()} for r in pending
             ],
             stale_candidates=[
                 {
                     "name": r.name,
-                    "last_used_at": r.last_used_at.isoformat()
-                    if r.last_used_at
-                    else None,
+                    "last_used_at": r.last_used_at.isoformat() if r.last_used_at else None,
                 }
                 for r in stale
             ],

@@ -97,8 +97,7 @@ class Verifier:
                 layer="structural",
                 issues=issues,
                 notes=(
-                    "Artefact mal formé (fichier vide, syntaxe invalide, "
-                    "refs HTML manquantes...)"
+                    "Artefact mal formé (fichier vide, syntaxe invalide, refs HTML manquantes...)"
                 ),
             )
         return VerificationResult(verified=True, layer="structural")
@@ -267,8 +266,20 @@ class Verifier:
         # Limite raisonnable : fichiers de texte uniquement (skip binaires lourds).
         ws = Path(workspace_path).resolve()
         text_exts = {
-            ".html", ".css", ".js", ".ts", ".py", ".json", ".md", ".txt", ".yaml",
-            ".yml", ".toml", ".xml", ".sh", ".csv",
+            ".html",
+            ".css",
+            ".js",
+            ".ts",
+            ".py",
+            ".json",
+            ".md",
+            ".txt",
+            ".yaml",
+            ".yml",
+            ".toml",
+            ".xml",
+            ".sh",
+            ".csv",
         }
 
         parts: list[str] = []

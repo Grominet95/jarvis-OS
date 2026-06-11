@@ -169,6 +169,7 @@ async def test_mistral_stream_with_capture_detects_tool() -> None:
 def test_gemini_supports_tools_true() -> None:
     """GeminiProvider annonce le support des outils."""
     import google.genai  # noqa: F401 — force le chargement avant patch (idem)
+
     with patch("google.genai.Client"):
         from jarvis.providers.llm.api import GeminiProvider
 
@@ -184,6 +185,7 @@ async def test_gemini_tool_loop_executes_tool() -> None:
     # via Calendar/Gmail Tool) — sinon `patch("google.genai.Client")` ne
     # capture pas correctement la classe selon l'ordre des tests.
     import google.genai  # noqa: F401 — force le chargement avant patch
+
     with patch("google.genai.Client") as mock_client_cls:
         mock_client = MagicMock()
         mock_client_cls.return_value = mock_client
@@ -267,6 +269,7 @@ async def test_gemini_stream_with_capture_detects_tool() -> None:
     # via Calendar/Gmail Tool) — sinon `patch("google.genai.Client")` ne
     # capture pas correctement la classe selon l'ordre des tests.
     import google.genai  # noqa: F401 — force le chargement avant patch
+
     with patch("google.genai.Client") as mock_client_cls:
         mock_client = MagicMock()
         mock_client_cls.return_value = mock_client

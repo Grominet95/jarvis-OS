@@ -21,7 +21,6 @@ async def verify_face() -> dict:
     """
     import asyncio
 
-
     recognizer = get_face_recognizer()
 
     if recognizer is not None and recognizer._available:
@@ -70,7 +69,6 @@ async def add_face(request: Request) -> dict:
 
     if not name or not path:
         raise HTTPException(400, "name et path requis")
-
 
     recognizer = get_face_recognizer()
     if recognizer is None:

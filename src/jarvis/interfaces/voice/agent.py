@@ -82,7 +82,6 @@ Réponds en français sauf si Barth parle en anglais.
 def _build_voice_instructions() -> str:
     """Prompt système = base + SYSTEM_PROMPT de chaque skill actif."""
     try:
-
         reg = SkillRegistry.get_instance()
         skill_prompt = reg.get_combined_system_prompt()
         if skill_prompt:

@@ -73,7 +73,6 @@ except ImportError:
     TELEGRAM_AVAILABLE = False
 
 
-
 _telegram_instance: TelegramChannel | None = None
 
 

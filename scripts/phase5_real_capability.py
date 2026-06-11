@@ -88,7 +88,6 @@ async def cas_nominal(workspace: Path) -> bool:
     if inst_dir.exists():
         shutil.rmtree(inst_dir)
 
-
     llm = AnthropicProvider(max_tokens=2048, model=settings.voice_anthropic_model)
     synth = SkillSynthesizer(llm=llm)
     kernel = MemoryKernel(db_path)
@@ -116,7 +115,7 @@ async def cas_nominal(workspace: Path) -> bool:
             "et chaque cellule peut contenir du JSON imbriqué entre {} pour "
             "encoder des structures."
         ),
-        example_input="id;;data;;tags\n42;;{\"name\":\"foo\"};;[\"a\",\"b\"]\n",
+        example_input='id;;data;;tags\n42;;{"name":"foo"};;["a","b"]\n',
     )
     print("\n[résolution]")
     _print_resolution(resolution)
@@ -141,8 +140,7 @@ async def cas_nominal(workspace: Path) -> bool:
         f"(attend promote() humain) : {'PASS' if not_installed else 'FAIL — DoD §8 percée'}"
     )
     not_promoted = (
-        resolution.candidate_record is None
-        or resolution.candidate_record.promoted_at is None
+        resolution.candidate_record is None or resolution.candidate_record.promoted_at is None
     )
     print(
         f"  {'✅' if not_promoted else '❌'} lifecycle.promoted_at est None : "
@@ -166,7 +164,6 @@ async def cas_refus_auto_install(workspace: Path) -> bool:
         shutil.rmtree(cand_dir)
     if inst_dir.exists():
         shutil.rmtree(inst_dir)
-
 
     llm = AnthropicProvider(max_tokens=2048, model=settings.voice_anthropic_model)
     synth = SkillSynthesizer(llm=llm)
@@ -229,8 +226,7 @@ async def cas_refus_auto_install(workspace: Path) -> bool:
         f"{'PASS' if not_installed else 'FAIL — flag inerte percé'}"
     )
     not_promoted = (
-        resolution.candidate_record is None
-        or resolution.candidate_record.promoted_at is None
+        resolution.candidate_record is None or resolution.candidate_record.promoted_at is None
     )
     print(
         f"  {'✅' if not_promoted else '❌'} pas de promotion auto MÊME avec "
@@ -254,7 +250,6 @@ async def cas_dangerous(workspace: Path) -> bool:
         shutil.rmtree(cand_dir)
     if inst_dir.exists():
         shutil.rmtree(inst_dir)
-
 
     # On COMPTE les appels LLM pour prouver qu'aucun n'est fait
     llm = AnthropicProvider(max_tokens=512, model=settings.voice_anthropic_model)
@@ -367,8 +362,7 @@ async def main() -> int:
     all_ok = nominal and refus and danger
     if all_ok:
         print(
-            "\n  ✅ DoD §8 — la boucle propose, mais refuse de s'auto-installer. "
-            "C'est la valeur."
+            "\n  ✅ DoD §8 — la boucle propose, mais refuse de s'auto-installer. C'est la valeur."
         )
     else:
         print("\n  ❌ DoD §8 non satisfaite — investiguer.")

@@ -153,7 +153,6 @@ class ScriptRPCRunner:
                         elif tool_call_count[0] >= self.MAX_TOOL_CALLS:
                             response = {"error": "Quota d'appels RPC atteint"}
                         else:
-
                             checker = get_approval_checker()
                             if checker:
                                 approved = await checker.check(

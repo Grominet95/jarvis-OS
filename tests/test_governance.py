@@ -79,9 +79,7 @@ def _ctx(
         (AccessLevel.MODIFY_CORE, GateDecision.APPROVAL),  # toujours
     ],
 )
-def test_risk_axis_isole(
-    tmp_path: Path, level: AccessLevel, expected: GateDecision
-) -> None:
+def test_risk_axis_isole(tmp_path: Path, level: AccessLevel, expected: GateDecision) -> None:
     """Catégorie ALWAYS + budget illimité : seul l'axe risque décide."""
     gov, _ = _make_governance(
         category_modes={"agent_mission": ApprovalMode.ALWAYS},
@@ -97,10 +95,7 @@ def test_risk_network_avec_dry_run_dispo(tmp_path: Path) -> None:
         category_modes={"agent_mission": ApprovalMode.ALWAYS},
         audit_path=tmp_path / "audit.jsonl",
     )
-    assert (
-        gov.gate(_ctx(access_level=AccessLevel.NETWORK, dry_run=True))
-        == GateDecision.DRY_RUN
-    )
+    assert gov.gate(_ctx(access_level=AccessLevel.NETWORK, dry_run=True)) == GateDecision.DRY_RUN
 
 
 def test_risk_install_package_jamais_dry_run(tmp_path: Path) -> None:
@@ -126,9 +121,7 @@ def test_risk_install_package_jamais_dry_run(tmp_path: Path) -> None:
         (ApprovalMode.NEVER, GateDecision.REFUSED),
     ],
 )
-def test_category_axis_isole(
-    tmp_path: Path, mode: ApprovalMode, expected: GateDecision
-) -> None:
+def test_category_axis_isole(tmp_path: Path, mode: ApprovalMode, expected: GateDecision) -> None:
     """Risque READ_ONLY + budget illimité : seul l'axe catégorie décide."""
     gov, _ = _make_governance(
         category_modes={"agent_mission": mode},
@@ -140,10 +133,7 @@ def test_category_axis_isole(
 def test_category_inconnue_fallback_ask(tmp_path: Path) -> None:
     """Catégorie absente d'ApprovalConfig → comportement conservateur ASK → APPROVAL."""
     gov, _ = _make_governance(audit_path=tmp_path / "audit.jsonl")
-    assert (
-        gov.gate(_ctx(category="categorie_inexistante"))
-        == GateDecision.APPROVAL
-    )
+    assert gov.gate(_ctx(category="categorie_inexistante")) == GateDecision.APPROVAL
 
 
 # ── 3. Axe 3 — budget (BudgetGuard) ───────────────────────────────────────────
@@ -191,9 +181,7 @@ def test_read_only_mais_never_refuse(tmp_path: Path) -> None:
         category_modes={"agent_mission": ApprovalMode.NEVER},
         audit_path=tmp_path / "audit.jsonl",
     )
-    assert (
-        gov.gate(_ctx(access_level=AccessLevel.READ_ONLY)) == GateDecision.REFUSED
-    )
+    assert gov.gate(_ctx(access_level=AccessLevel.READ_ONLY)) == GateDecision.REFUSED
 
 
 def test_network_mais_always_reste_approval_a_cause_du_risque(tmp_path: Path) -> None:
@@ -202,9 +190,7 @@ def test_network_mais_always_reste_approval_a_cause_du_risque(tmp_path: Path) ->
         category_modes={"agent_mission": ApprovalMode.ALWAYS},
         audit_path=tmp_path / "audit.jsonl",
     )
-    assert (
-        gov.gate(_ctx(access_level=AccessLevel.NETWORK)) == GateDecision.APPROVAL
-    )
+    assert gov.gate(_ctx(access_level=AccessLevel.NETWORK)) == GateDecision.APPROVAL
 
 
 def test_modify_core_toujours_approval_meme_si_ask(tmp_path: Path) -> None:
@@ -213,9 +199,7 @@ def test_modify_core_toujours_approval_meme_si_ask(tmp_path: Path) -> None:
         category_modes={"agent_mission": ApprovalMode.ASK},
         audit_path=tmp_path / "audit.jsonl",
     )
-    assert (
-        gov.gate(_ctx(access_level=AccessLevel.MODIFY_CORE)) == GateDecision.APPROVAL
-    )
+    assert gov.gate(_ctx(access_level=AccessLevel.MODIFY_CORE)) == GateDecision.APPROVAL
 
 
 def test_budget_hard_stop_domine_approval(tmp_path: Path) -> None:
@@ -226,10 +210,7 @@ def test_budget_hard_stop_domine_approval(tmp_path: Path) -> None:
         budget_remaining=0.001,
         audit_path=tmp_path / "audit.jsonl",
     )
-    assert (
-        gov.gate(_ctx(access_level=AccessLevel.NETWORK, cost=1.0))
-        == GateDecision.REFUSED
-    )
+    assert gov.gate(_ctx(access_level=AccessLevel.NETWORK, cost=1.0)) == GateDecision.REFUSED
 
 
 def test_tous_axes_permissifs_auto(tmp_path: Path) -> None:
@@ -239,9 +220,7 @@ def test_tous_axes_permissifs_auto(tmp_path: Path) -> None:
         budget_enabled=False,
         audit_path=tmp_path / "audit.jsonl",
     )
-    assert (
-        gov.gate(_ctx(access_level=AccessLevel.READ_ONLY)) == GateDecision.AUTO
-    )
+    assert gov.gate(_ctx(access_level=AccessLevel.READ_ONLY)) == GateDecision.AUTO
 
 
 # ── 5. Audit — chaque appel trace les 3 décisions partielles ──────────────────
@@ -293,9 +272,7 @@ def test_audit_chaque_appel_ajoute_une_entree(tmp_path: Path) -> None:
     "level",
     [AccessLevel.INSTALL_PACKAGE, AccessLevel.MODIFY_CORE],
 )
-def test_securite_critique_jamais_auto(
-    tmp_path: Path, level: AccessLevel
-) -> None:
+def test_securite_critique_jamais_auto(tmp_path: Path, level: AccessLevel) -> None:
     """Aucune combinaison ne doit permettre auto pour INSTALL_PACKAGE / MODIFY_CORE."""
     for mode in (ApprovalMode.ALWAYS, ApprovalMode.ASK, ApprovalMode.NEVER):
         gov, _ = _make_governance(

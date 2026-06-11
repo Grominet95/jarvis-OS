@@ -85,9 +85,7 @@ class ReportMissingCapabilityTool(Tool):
                 example_input=example_input or None,
             )
         except Exception as exc:  # noqa: BLE001
-            return ToolResult(
-                content=f"Erreur CapabilityEngine : {exc}", is_error=True
-            )
+            return ToolResult(content=f"Erreur CapabilityEngine : {exc}", is_error=True)
 
         kind = resolution.kind.value
         if kind == "existing_skill":

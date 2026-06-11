@@ -31,7 +31,6 @@ except ImportError:
     DISCORD_AVAILABLE = False
 
 
-
 class DiscordChannel(ChannelAdapter):
     """Adaptateur Discord pour le MessagingGateway Jarvis.
 

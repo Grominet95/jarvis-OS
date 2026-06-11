@@ -26,7 +26,6 @@ async def get_jarvis_stats(days: int = 30) -> dict:
     """Stats d'usage Jarvis depuis les fichiers locaux."""
     cutoff = datetime.now(UTC) - timedelta(days=days)
 
-
     # Sessions
     sessions_dir = MEMORY_DATA_DIR / "sessions"
     session_count = 0
@@ -43,7 +42,6 @@ async def get_jarvis_stats(days: int = 30) -> dict:
     # Projects / Missions
     mission_count = 0
     try:
-
         store = ProjectStore()
         projects = store.list_all() if hasattr(store, "list_all") else []
         for p in projects:

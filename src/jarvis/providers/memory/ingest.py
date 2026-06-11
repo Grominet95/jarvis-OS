@@ -356,15 +356,11 @@ class MemoryIngest:
         if siblings:
             verdict = await self._arbitrate(cand, siblings)
             if verdict.kind == "same_as" and verdict.target_fact_id:
-                target = next(
-                    (s for s in siblings if s.id == verdict.target_fact_id), None
-                )
+                target = next((s for s in siblings if s.id == verdict.target_fact_id), None)
                 if target is not None:
                     return self._confirm(target, cand, evt)
             elif verdict.kind == "contradicts" and verdict.target_fact_id:
-                target = next(
-                    (s for s in siblings if s.id == verdict.target_fact_id), None
-                )
+                target = next((s for s in siblings if s.id == verdict.target_fact_id), None)
                 if target is not None and target.category in _STABLE_CATEGORIES:
                     return self._supersede(target, cand, evt)
             # "new" ou cible introuvable → on tombe au fallback ci-dessous
@@ -403,9 +399,7 @@ class MemoryIngest:
 
     # ── Arbitre LLM ──────────────────────────────────────────────────────────
 
-    async def _arbitrate(
-        self, cand: _Candidate, possibles: list[Fact]
-    ) -> _ArbiterVerdict:
+    async def _arbitrate(self, cand: _Candidate, possibles: list[Fact]) -> _ArbiterVerdict:
         """Appelle le LLM arbitre. Comptabilise l'appel. Doute → "new"."""
         self.arbiter_calls += 1
         prompt = _build_arbiter_prompt(cand, possibles)

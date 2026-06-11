@@ -78,9 +78,7 @@ class Scheduler:
                 asyncio.create_task(self._skill_lab_loop(), name="scheduler-skill-lab")
             )
         if self._curator is not None:
-            self._tasks.append(
-                asyncio.create_task(self._curator_loop(), name="scheduler-curator")
-            )
+            self._tasks.append(asyncio.create_task(self._curator_loop(), name="scheduler-curator"))
         logger.info("Scheduler started", tasks=len(self._tasks))
 
     def stop(self) -> None:
