@@ -86,13 +86,17 @@ async def test_run_direct_refused_without_opt_in(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Sans Docker et sans allow_unsandboxed_exec=True, execute() doit refuser."""
-    import config.settings as cfg_module
+    # On mute l'INSTANCE singleton elle-même : toutes les captures
+    # `from jarvis.kernel.settings import settings` (backend_factory.py,
+    # backends/local.py, …) pointent sur la même référence — muter ses
+    # attributs affecte tous les call-sites sans avoir à patcher chaque
+    # module. La forme objet sur le module (`setattr(cfg_module, "settings",
+    # …)`) est piégée ici par le re-export `from .settings import settings`
+    # dans `jarvis/kernel/__init__.py:49` qui shadow le sous-module.
+    from jarvis.kernel.settings import settings as _settings_singleton
 
-    mock_settings = MagicMock()
-    mock_settings.docker_enabled = False
-    mock_settings.allow_unsandboxed_exec = False
-
-    monkeypatch.setattr(cfg_module, "settings", mock_settings)
+    monkeypatch.setattr(_settings_singleton, "docker_enabled", False)
+    monkeypatch.setattr(_settings_singleton, "allow_unsandboxed_exec", False)
     tool._docker = None
 
     result = await tool.execute("ls")
