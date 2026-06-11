@@ -7,7 +7,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.backends import get_backend
+from jarvis.engine.mission.backend_factory import get_backend
 
 WORKER_CLI_WHITELIST: list[str] = [
     "python",

@@ -17,10 +17,10 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.backends import get_backend
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.capabilities.tools.registry import ToolRegistry
 from jarvis.engine.agent import Agent
+from jarvis.engine.mission.backend_factory import get_backend
 from jarvis.engine.mission.backends.rpc import ScriptRPCRunner
 from jarvis.kernel.approval import get_approval_checker
 from jarvis.kernel.schemas import Session

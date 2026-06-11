@@ -183,6 +183,7 @@ forbidden_modules = [
 ignore_imports = [
     "jarvis.capabilities.tools.subagent -> jarvis.engine.agent",
     "jarvis.capabilities.tools.subagent -> jarvis.engine.mission.backends.rpc",
+    "jarvis.capabilities.tools.subagent -> jarvis.engine.mission.backend_factory",
     "jarvis.capabilities.skills.lab -> jarvis.engine.mission.docker_executor",
 ]
 

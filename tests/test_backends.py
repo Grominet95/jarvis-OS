@@ -9,13 +9,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from config.backends import BackendsConfig, BackendType, SSHConfig, get_backend
+from jarvis.engine.mission.backend_factory import get_backend
 from jarvis.engine.mission.backends.base import ExecutionBackend
 from jarvis.engine.mission.backends.docker import DockerBackend
 from jarvis.engine.mission.backends.local import LocalBackend
 from jarvis.engine.mission.backends.remote import RemoteBackend
 from jarvis.engine.mission.backends.rpc import ScriptRPCRunner, _build_stub
 from jarvis.engine.mission.backends.ssh import SSHBackend
+from jarvis.kernel.backends import BackendsConfig, BackendType, SSHConfig
 
 pytestmark = pytest.mark.integration  # CDC §A.1.5 — exercice Docker backend
 
@@ -38,32 +39,38 @@ class TestGetBackend:
 
     def test_auto_avec_docker_executor_retourne_docker(self, tmp_path: Path) -> None:
         executor = MagicMock()
-        with patch("config.backends.load_backends_config", return_value=BackendsConfig()):
-            with patch("config.backends.settings") as mock_settings:
+        with patch(
+            "jarvis.engine.mission.backend_factory.load_backends_config",
+            return_value=BackendsConfig(),
+        ):
+            with patch("jarvis.engine.mission.backend_factory.settings") as mock_settings:
                 mock_settings.docker_enabled = True
                 backend = get_backend(str(tmp_path), docker_executor=executor)
         assert isinstance(backend, DockerBackend)
 
     def test_auto_sans_docker_retourne_local(self, tmp_path: Path) -> None:
-        with patch("config.backends.load_backends_config", return_value=BackendsConfig()):
-            with patch("config.backends.settings") as mock_settings:
+        with patch(
+            "jarvis.engine.mission.backend_factory.load_backends_config",
+            return_value=BackendsConfig(),
+        ):
+            with patch("jarvis.engine.mission.backend_factory.settings") as mock_settings:
                 mock_settings.docker_enabled = False
                 backend = get_backend(str(tmp_path), docker_executor=None)
         assert isinstance(backend, LocalBackend)
 
     def test_docker_explicite_sans_executor_retourne_none(self, tmp_path: Path) -> None:
         with patch(
-            "config.backends.load_backends_config",
+            "jarvis.engine.mission.backend_factory.load_backends_config",
             return_value=BackendsConfig(default_backend=BackendType.DOCKER),
         ):
-            with patch("config.backends.settings") as mock_settings:
+            with patch("jarvis.engine.mission.backend_factory.settings") as mock_settings:
                 mock_settings.docker_enabled = True
                 backend = get_backend(str(tmp_path), docker_executor=None)
         assert backend is None
 
     def test_ssh_sans_host_retourne_none(self, tmp_path: Path) -> None:
         cfg = BackendsConfig(default_backend=BackendType.SSH, ssh=SSHConfig(host="", user=""))
-        with patch("config.backends.load_backends_config", return_value=cfg):
+        with patch("jarvis.engine.mission.backend_factory.load_backends_config", return_value=cfg):
             backend = get_backend(str(tmp_path))
         assert backend is None
 
@@ -72,13 +79,13 @@ class TestGetBackend:
             default_backend=BackendType.SSH,
             ssh=SSHConfig(host="host.example.com", user="jarvis"),
         )
-        with patch("config.backends.load_backends_config", return_value=cfg):
+        with patch("jarvis.engine.mission.backend_factory.load_backends_config", return_value=cfg):
             backend = get_backend(str(tmp_path))
         assert isinstance(backend, SSHBackend)
 
     def test_remote_retourne_remote_backend(self, tmp_path: Path) -> None:
         cfg = BackendsConfig(default_backend=BackendType.REMOTE, remote_provider="modal")
-        with patch("config.backends.load_backends_config", return_value=cfg):
+        with patch("jarvis.engine.mission.backend_factory.load_backends_config", return_value=cfg):
             backend = get_backend(str(tmp_path))
         assert isinstance(backend, RemoteBackend)
 
@@ -309,8 +316,11 @@ class TestWorkerCLIRouting:
 
         cli = WorkerCLITool(str(tmp_path), docker_executor=mock_docker)
 
-        with patch("config.backends.load_backends_config", return_value=BackendsConfig()):
-            with patch("config.backends.settings") as s:
+        with patch(
+            "jarvis.engine.mission.backend_factory.load_backends_config",
+            return_value=BackendsConfig(),
+        ):
+            with patch("jarvis.engine.mission.backend_factory.settings") as s:
                 s.docker_enabled = True
                 result = await cli.execute("ls")
 
@@ -324,10 +334,10 @@ class TestWorkerCLIRouting:
         cli = WorkerCLITool(str(tmp_path))
 
         with patch(
-            "config.backends.load_backends_config",
+            "jarvis.engine.mission.backend_factory.load_backends_config",
             return_value=BackendsConfig(default_backend=BackendType.DOCKER),
         ):
-            with patch("config.backends.settings") as s:
+            with patch("jarvis.engine.mission.backend_factory.settings") as s:
                 s.docker_enabled = True
                 # docker_executor=None + DOCKER explicite → get_backend retourne None
                 result = await cli.execute("ls")
