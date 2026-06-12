@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wake Calib — Material A/B</title>
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #06080D; }
+        body { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: rgba(160,195,255,0.55); }
+
+        #calib-grid {
+            position: fixed; inset: 0;
+            display: grid; grid-template-columns: 1fr 1fr;
+            background: #06080D;
+        }
+        .cell { position: relative; overflow: hidden; border-right: 1px solid rgba(160,195,255,0.04); }
+        .cell:last-child { border-right: none; }
+        .cell canvas { display: block; width: 100%; height: 100%; }
+        .cell .label {
+            position: absolute; top: 12px; left: 16px; z-index: 5;
+            font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+            color: rgba(160,195,255,0.65);
+            background: rgba(6,8,13,0.55);
+            padding: 5px 9px; border-radius: 3px;
+            backdrop-filter: blur(4px);
+        }
+        .cell .meta {
+            position: absolute; bottom: 12px; left: 16px; z-index: 5;
+            font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+            color: rgba(160,195,255,0.35);
+            line-height: 1.6;
+        }
+
+        #calib-controls {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
+            display: flex; gap: 10px;
+            background: rgba(6,8,13,0.7);
+            padding: 6px 10px; border-radius: 3px;
+            backdrop-filter: blur(4px);
+            font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+        }
+        #calib-controls label {
+            cursor: pointer; user-select: none;
+            color: rgba(160,195,255,0.55);
+            padding: 3px 6px;
+            transition: color 0.15s;
+        }
+        #calib-controls label:has(input:checked) { color: rgba(110, 200, 255, 0.95); }
+        #calib-controls input { display: none; }
+
+        #calib-axis {
+            position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
+            font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+            color: rgba(160,195,255,0.35);
+        }
+    </style>
+</head>
+<body>
+    <div id="calib-grid">
+        <div class="cell">
+            <div class="label">A · PointsMaterial (orb.js)</div>
+            <canvas id="canvas-left"></canvas>
+            <div class="meta">
+                size: 0.58 · opacity: 0.72 · color: #4A9EFF<br>
+                additive · alphaTest 0.001 · sizeAttenuation true
+            </div>
+        </div>
+        <div class="cell">
+            <div class="label" id="label-right">B · ShaderMaterial · #include &lt;colorspace_fragment&gt;</div>
+            <canvas id="canvas-right"></canvas>
+            <div class="meta" id="meta-right">
+                uSize: 0.58 · pixelRatio · uScale: 0.5 · height<br>
+                heat: 0 · color: #4A9EFF
+            </div>
+        </div>
+    </div>
+
+    <div id="calib-controls">
+        <label><input type="radio" name="srgb" value="include" checked> A · include colorspace_fragment</label>
+        <label><input type="radio" name="srgb" value="inline"> B · inline LinearTosRGB</label>
+        <label><input type="radio" name="srgb" value="none"> C · no sRGB encoding</label>
+    </div>
+
+    <div id="calib-axis">caméra fixe · même seed · rotation Y 0.09 rad/s · fond #06080D · pas d'atmosphère</div>
+
+    <script src="/three.min.js"></script>
+    <script src="/config/sphereStyle.js"></script>
+    <script>
+        (function () {
+            const S = window.SPHERE_STYLE;
+            const THREE = window.THREE;
+
+            // ── Positions shell — générées UNE fois, partagées ──────────────
+            const N = S.GEOMETRY.PARTICLE_COUNT;
+            const pos = new Float32Array(N * 3);
+            for (let i = 0; i < N; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi   = Math.acos(2 * Math.random() - 1);
+                const r     = S.GEOMETRY.SHELL_R_MIN + Math.random() * S.GEOMETRY.SHELL_THICKNESS;
+                pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+                pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+                pos[i*3+2] = r * Math.cos(phi);
+            }
+
+            // ── Sprite — identique à orb.js / wake_sequence.js ───────────────
+            function buildSprite() {
+                const sz = S.SPRITE.SIZE_PX;
+                const c = document.createElement('canvas');
+                c.width = sz; c.height = sz;
+                const cc = c.getContext('2d');
+                const grad = cc.createRadialGradient(sz/2, sz/2, 0, sz/2, sz/2, sz/2);
+                S.SPRITE.STOPS.forEach(function (stop) { grad.addColorStop(stop[0], stop[1]); });
+                cc.fillStyle = grad;
+                cc.fillRect(0, 0, sz, sz);
+                return new THREE.CanvasTexture(c);
+            }
+            const sprite = buildSprite();
+
+            // ── Construction d'un rendu (renderer + scene + camera) ─────────
+            function createCell(canvas) {
+                const w = canvas.clientWidth  || 600;
+                const h = canvas.clientHeight || 600;
+                const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, S.RENDER.PIXEL_RATIO_MAX));
+                renderer.setSize(w, h, false);
+                renderer.setClearColor(new THREE.Color(S.RENDER.WAKE_BG_HEX), 1);
+
+                const camera = new THREE.PerspectiveCamera(S.CAMERA.FOV, w / h, S.CAMERA.NEAR, S.CAMERA.FAR);
+                camera.position.set(0, 0, S.CAMERA.ZCAM);
+                camera.lookAt(0, 0, 0);
+
+                const scene = new THREE.Scene();
+                const geo   = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+
+                return { canvas: canvas, renderer: renderer, camera: camera, scene: scene, geo: geo, points: null, mat: null };
+            }
+
+            // ── Matériau A — PointsMaterial (référence orb.js) ──────────────
+            function buildLeftMat() {
+                return new THREE.PointsMaterial({
+                    color: S.COLOR.BASE_HEX,
+                    size: S.MATERIAL.POINT_SIZE_IDLE,        // 0.58 (relaxé, pas la valeur de boot 0.6)
+                    transparent: S.MATERIAL.TRANSPARENT,
+                    opacity: S.MATERIAL.OPACITY_IDLE,        // 0.72
+                    sizeAttenuation: S.MATERIAL.SIZE_ATTENUATION,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: S.MATERIAL.DEPTH_WRITE,
+                    map: sprite,
+                    alphaTest: S.MATERIAL.ALPHA_TEST,
+                });
+            }
+
+            // ── Matériau B — ShaderMaterial avec 3 modes sRGB diagnostiques ─
+            const VS = ''
+                + 'uniform float uSize;\n'
+                + 'uniform float uScale;\n'
+                + 'void main() {\n'
+                + '  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\n'
+                + '  gl_Position = projectionMatrix * mvPosition;\n'
+                + '  gl_PointSize = uSize * (uScale / max(-mvPosition.z, 0.0001));\n'
+                + '}\n';
+
+            const HEAT_MIX_MAX = S.COLOR.HEAT_MIX_MAX.toFixed(4);
+            const ALPHA_TEST   = S.MATERIAL.ALPHA_TEST.toFixed(4);
+
+            function buildFragmentShader(mode) {
+                let helper = '';
+                let trailer = '';
+                if (mode === 'include') {
+                    trailer = '#include <colorspace_fragment>\n';
+                } else if (mode === 'inline') {
+                    helper = ''
+                        + 'vec3 LinearTosRGB(vec3 lin) {\n'
+                        + '  vec3 a = pow(lin, vec3(0.41666)) * 1.055 - vec3(0.055);\n'
+                        + '  vec3 b = lin * 12.92;\n'
+                        + '  return mix(a, b, vec3(lessThanEqual(lin, vec3(0.0031308))));\n'
+                        + '}\n';
+                    trailer = 'gl_FragColor = vec4(LinearTosRGB(gl_FragColor.rgb), gl_FragColor.a);\n';
+                } else {
+                    // mode === 'none' : pas d'encodage sRGB en sortie
+                    trailer = '';
+                }
+                return ''
+                    + 'uniform sampler2D uMap;\n'
+                    + 'uniform vec3  uColor;\n'
+                    + 'uniform float uOpacity;\n'
+                    + 'uniform float uHeat;\n'
+                    + helper
+                    + 'void main() {\n'
+                    + '  vec4 tex = texture2D(uMap, gl_PointCoord);\n'
+                    + '  vec3 heated = mix(uColor, vec3(1.0), clamp(uHeat, 0.0, 1.0) * ' + HEAT_MIX_MAX + ');\n'
+                    + '  vec4 diffuseColor = vec4(heated, uOpacity) * tex;\n'
+                    + '  if (diffuseColor.a < ' + ALPHA_TEST + ') discard;\n'
+                    + '  gl_FragColor = diffuseColor;\n'
+                    + '  ' + trailer
+                    + '}\n';
+            }
+
+            function buildRightMat(mode, renderer, h) {
+                return new THREE.ShaderMaterial({
+                    uniforms: {
+                        uMap:     { value: sprite },
+                        uSize:    { value: S.MATERIAL.POINT_SIZE_IDLE * renderer.getPixelRatio() },
+                        uScale:   { value: 0.5 * h },
+                        uColor:   { value: new THREE.Color(S.COLOR.BASE_HEX) },
+                        uOpacity: { value: S.MATERIAL.OPACITY_IDLE },
+                        uHeat:    { value: 0.0 },
+                    },
+                    vertexShader: VS,
+                    fragmentShader: buildFragmentShader(mode),
+                    transparent: S.MATERIAL.TRANSPARENT,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: S.MATERIAL.DEPTH_WRITE,
+                });
+            }
+
+            // ── Setup les deux cellules ─────────────────────────────────────
+            const leftCanvas  = document.getElementById('canvas-left');
+            const rightCanvas = document.getElementById('canvas-right');
+            const left  = createCell(leftCanvas);
+            const right = createCell(rightCanvas);
+
+            left.mat = buildLeftMat();
+            left.points = new THREE.Points(left.geo, left.mat);
+            left.scene.add(left.points);
+
+            let rightMode = 'include';
+            right.mat = buildRightMat(rightMode, right.renderer, rightCanvas.clientHeight || 600);
+            right.points = new THREE.Points(right.geo, right.mat);
+            right.scene.add(right.points);
+
+            // ── Rotation Y partagée (continuité parfaite entre les deux) ────
+            const ROT_Y_RAD_PER_S = S.ANIM_IDLE.ROT_Y_PER_FRAME * 60;
+            let rotY = 0;
+            let lastTs = performance.now();
+
+            function tick() {
+                requestAnimationFrame(tick);
+                const now = performance.now();
+                const dt = Math.min(0.050, (now - lastTs) / 1000);
+                lastTs = now;
+                rotY += ROT_Y_RAD_PER_S * dt;
+                left.points.rotation.y  = rotY;
+                right.points.rotation.y = rotY;
+                left.renderer.render(left.scene, left.camera);
+                right.renderer.render(right.scene, right.camera);
+            }
+            tick();
+
+            // ── Resize handler ──────────────────────────────────────────────
+            function resizeCell(cell) {
+                const w = cell.canvas.clientWidth, h = cell.canvas.clientHeight;
+                cell.renderer.setSize(w, h, false);
+                cell.camera.aspect = w / h;
+                cell.camera.updateProjectionMatrix();
+                if (cell === right && right.mat.uniforms) {
+                    right.mat.uniforms.uSize.value  = S.MATERIAL.POINT_SIZE_IDLE * cell.renderer.getPixelRatio();
+                    right.mat.uniforms.uScale.value = 0.5 * h;
+                }
+            }
+            window.addEventListener('resize', function () {
+                resizeCell(left);
+                resizeCell(right);
+            });
+            // Init des bonnes dimensions au cas où clientWidth/Height était 0 à la création
+            resizeCell(left);
+            resizeCell(right);
+
+            // ── Mode switch (radio buttons) ─────────────────────────────────
+            const MODE_LABELS = {
+                'include': 'B · ShaderMaterial · #include <colorspace_fragment>',
+                'inline':  'B · ShaderMaterial · inline LinearTosRGB',
+                'none':    'B · ShaderMaterial · NO sRGB encoding (linear out)',
+            };
+            const labelRight = document.getElementById('label-right');
+
+            document.querySelectorAll('input[name="srgb"]').forEach(function (input) {
+                input.addEventListener('change', function (e) {
+                    if (!e.target.checked) return;
+                    rightMode = e.target.value;
+                    // dispose et reconstruire le matériau droite avec le nouveau mode
+                    const oldMat = right.mat;
+                    right.mat = buildRightMat(rightMode, right.renderer, rightCanvas.clientHeight || 600);
+                    right.points.material = right.mat;
+                    oldMat.dispose();
+                    labelRight.textContent = MODE_LABELS[rightMode];
+                });
+            });
+
+            // Exposé pour debug console
+            window._calib = { left: left, right: right, rotY: function () { return rotY; }, setMode: function (m) {
+                const el = document.querySelector('input[name="srgb"][value="' + m + '"]');
+                if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
+            }};
+        })();
+    </script>
+</body>
+</html>

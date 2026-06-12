@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wake Sequence — Dev</title>
+    <!-- _shared.css fournit .spotlight, .atmo, .atmo--vignette, .atmo--grain, .atmo--aurora -->
+    <link rel="stylesheet" href="/_shared.css">
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #06080D; }
+        body { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+        /* Mini overlay de contrôle dev — visible en haut, ne croise pas la sphère */
+        #wake-dev-overlay {
+            position: fixed; top: 16px; left: 16px; z-index: 10000;
+            font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+            color: rgba(160, 195, 255, 0.5);
+            display: flex; gap: 12px;
+            background: rgba(6, 8, 13, 0.6);
+            padding: 6px 10px; border-radius: 3px;
+            backdrop-filter: blur(4px);
+        }
+        #wake-dev-overlay button {
+            background: transparent; border: 1px solid rgba(160, 195, 255, 0.25);
+            color: inherit; font: inherit; padding: 3px 8px; cursor: pointer;
+            text-transform: inherit; letter-spacing: inherit;
+        }
+        #wake-dev-overlay button:hover { background: rgba(160, 195, 255, 0.06); }
+        #wake-dev-overlay [data-state] {
+            color: rgba(110, 200, 255, 0.85);
+            padding: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="wake-root"></div>
+    <div id="wake-dev-overlay">
+        <span>STATE :</span><span data-state>boot</span>
+        <button id="restart">RESTART</button>
+        <button id="skip-online">→ ONLINE</button>
+    </div>
+
+    <script src="/three.min.js"></script>
+    <script src="/config/sphereStyle.js"></script>
+    <script src="/wake_sequence.js"></script>
+    <script>
+        (function () {
+            const root  = document.getElementById('wake-root');
+            const label = document.querySelector('#wake-dev-overlay [data-state]');
+            let seq = null;
+
+            function mount() {
+                if (seq) seq.destroy();
+                root.innerHTML = '';
+                seq = window.createWakeSequence(root, {
+                    onComplete: () => console.log('[wake] ONLINE — onComplete fired at', new Date().toISOString()),
+                    userName: 'BARTH',
+                    requireFace: false, // étape 2b : phase FACE non implémentée, on saute
+                });
+                pollState();
+            }
+
+            function pollState() {
+                if (!seq) return;
+                const s = seq.getState();
+                if (label.textContent !== s) label.textContent = s;
+                requestAnimationFrame(pollState);
+            }
+
+            document.getElementById('restart').addEventListener('click', mount);
+            document.getElementById('skip-online').addEventListener('click', () => {
+                // skip clic/touche est géré par la séquence ; on déclenche un skip 3 fois
+                // (boot/face → converge → ignite → online — sauf ignite incompressible)
+                // Plus simple : remonter avec requireFace=false et envoyer 3 clics via dispatchEvent
+                ['boot', 'converge'].forEach(() => root.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
+            });
+
+            mount();
+        })();
+    </script>
+</body>
+</html>

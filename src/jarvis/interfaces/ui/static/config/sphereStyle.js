@@ -120,10 +120,13 @@
         // orb.js peint sur canvas transparent ; la séquence pose son propre fond opaque.
         ORB_CLEAR_COLOR_HEX: 0x000000,
         ORB_CLEAR_ALPHA:     0,
-        // Fond DOM commun (à vérifier sur dashboard à l'étape 2 — note du PO)
-        WAKE_BG_HEX:        '#04070e',
-        // Vignette post permanente (CDC §6.1)
-        VIGNETTE_GAIN:       0.15,        // texel × (1 − VIGNETTE_GAIN · r²)
+        // Fond DOM aligné sur le dashboard (_shared.css :17, var(--bg-0)).
+        // Le CDC mentionnait #04070e, amendé pour matcher l'existant et rendre
+        // le cross-fade structurellement invisible.
+        WAKE_BG_HEX:        '#06080D',
+        // Vignette shader désactivée : la séquence reproduit la vignette CSS
+        // du dashboard (atmo--vignette), pas de double couche.
+        VIGNETTE_GAIN:       0.0,         // texel × (1 − VIGNETTE_GAIN · r²)
     };
 
     // ═════════════════════════════════════════════════════════════════════
