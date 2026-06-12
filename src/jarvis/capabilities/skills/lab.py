@@ -30,6 +30,7 @@ from __future__ import annotations
 import asyncio
 import json
 import shutil
+import sys
 import textwrap
 import uuid
 from dataclasses import dataclass
@@ -113,6 +114,7 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     # sys.path doit déjà contenir la racine du repo. (Ce sys.path.insert
     # arrivait après exec_module dans une version antérieure ; tous les
     # skills réels étaient alors rejetés à la couche import.)
+    sys.path.insert(0, "/jarvis_deps")
     sys.path.insert(0, "/jarvis_src")
     try:
         from jarvis.capabilities.skills.base import SkillBase  # lazy: sandbox path
@@ -442,6 +444,13 @@ class SkillLab:
         container_name = f"jarvis-skill-lab-{uuid.uuid4().hex[:8]}"
         cand_abs = cand_dir.resolve()
         jarvis_root = PROJECT_ROOT / "src"
+        venv_site_packages = (
+            PROJECT_ROOT
+            / ".venv"
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+        )
 
         # Crée le script de test dans un tmpdir local et le mount aussi
         script_path = cand_abs / "_skill_sandbox_test.py"
@@ -469,6 +478,8 @@ class SkillLab:
                 f"{cand_abs}:/workspace/candidate:ro",
                 "-v",
                 f"{jarvis_root}:/jarvis_src:ro",
+                "-v",
+                f"{venv_site_packages}:/jarvis_deps:ro",
                 "-w",
                 "/workspace",
                 settings.docker_base_image,
@@ -513,12 +524,23 @@ class SkillLab:
         """
         cand_abs = cand_dir.resolve()
         jarvis_root = PROJECT_ROOT / "src"
+        venv_site_packages = (
+            PROJECT_ROOT
+            / ".venv"
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+        )
         script_path = cand_abs / "_skill_sandbox_test.py"
         # Remplace /workspace/candidate par cand_abs et /jarvis_src par jarvis_root
         # On crée un script adapté au mode direct.
-        direct_script = _SANDBOX_TEST_SCRIPT.replace(
-            'Path("/workspace/candidate")', f'Path(r"{cand_abs}")'
-        ).replace('"/jarvis_src"', f'r"{jarvis_root}"')
+        direct_script = (
+            _SANDBOX_TEST_SCRIPT.replace(
+                'Path("/workspace/candidate")', f'Path(r"{cand_abs}")'
+            )
+            .replace('"/jarvis_src"', f'r"{jarvis_root}"')
+            .replace('"/jarvis_deps"', f'r"{venv_site_packages}"')
+        )
         script_path.write_text(direct_script, encoding="utf-8")
 
         try:
