@@ -10,6 +10,7 @@
 
   function createOrbInternal(canvas) {
     const THREE = window.THREE;
+    const S     = window.SPHERE_STYLE;
 
     let destroyed = false;
     let state = "idle";
@@ -21,36 +22,33 @@
     let h = canvas.offsetHeight || 720;
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, S.RENDER.PIXEL_RATIO_MAX));
     renderer.setSize(w, h, false);
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(S.RENDER.ORB_CLEAR_COLOR_HEX, S.RENDER.ORB_CLEAR_ALPHA);
 
     // ── Camera ───────────────────────────────────────────────────────
-    const camera = new THREE.PerspectiveCamera(45, w / h, 1, 1000);
-    camera.position.z = 95;
-    let cameraZ = 95;
-    let cameraZTarget = 95;
+    const camera = new THREE.PerspectiveCamera(S.CAMERA.FOV, w / h, S.CAMERA.NEAR, S.CAMERA.FAR);
+    camera.position.z = S.CAMERA.ZCAM;
+    let cameraZ       = S.CAMERA.ZCAM;
+    let cameraZTarget = S.CAMERA.ZCAM;
 
     const scene = new THREE.Scene();
 
     // ── Sprite (circular particle, avoids square quads) ──────────────
     const sprite = (() => {
+      const sz = S.SPRITE.SIZE_PX;
       const c = document.createElement("canvas");
-      c.width = 128; c.height = 128;
+      c.width = sz; c.height = sz;
       const cc = c.getContext("2d");
-      const grad = cc.createRadialGradient(64, 64, 0, 64, 64, 64);
-      grad.addColorStop(0,    "rgba(255,255,255,1)");
-      grad.addColorStop(0.18, "rgba(255,255,255,0.95)");
-      grad.addColorStop(0.45, "rgba(255,255,255,0.38)");
-      grad.addColorStop(0.75, "rgba(255,255,255,0.09)");
-      grad.addColorStop(1,    "rgba(255,255,255,0)");
+      const grad = cc.createRadialGradient(sz / 2, sz / 2, 0, sz / 2, sz / 2, sz / 2);
+      S.SPRITE.STOPS.forEach(([offset, color]) => grad.addColorStop(offset, color));
       cc.fillStyle = grad;
-      cc.fillRect(0, 0, 128, 128);
+      cc.fillRect(0, 0, sz, sz);
       return new THREE.CanvasTexture(c);
     })();
 
     // ── Particles ────────────────────────────────────────────────────
-    const N = 22000;
+    const N = S.GEOMETRY.PARTICLE_COUNT;
     const pos   = new Float32Array(N * 3);
     const vel   = new Float32Array(N * 3);
     const phase = new Float32Array(N);
@@ -58,7 +56,7 @@
     for (let i = 0; i < N; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi   = Math.acos(2 * Math.random() - 1);
-      const r     = 27 + Math.random() * 2;
+      const r     = S.GEOMETRY.SHELL_R_MIN + Math.random() * S.GEOMETRY.SHELL_THICKNESS;
       pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
       pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
       pos[i*3+2] = r * Math.cos(phi);
@@ -69,15 +67,15 @@
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
 
     const mat = new THREE.PointsMaterial({
-      color: 0x4A9EFF,
-      size: 0.6,
-      transparent: true,
-      opacity: 0.8,
-      sizeAttenuation: true,
+      color: S.COLOR.BASE_HEX,
+      size: 0.6,                              // valeur de boot (1 frame) ; mat.size est réécrit chaque frame vers POINT_SIZE_IDLE
+      transparent: S.MATERIAL.TRANSPARENT,
+      opacity: 0.8,                           // valeur de boot (1 frame) ; mat.opacity est réécrit chaque frame vers OPACITY_IDLE
+      sizeAttenuation: S.MATERIAL.SIZE_ATTENUATION,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
+      depthWrite: S.MATERIAL.DEPTH_WRITE,
       map: sprite,
-      alphaTest: 0.001,
+      alphaTest: S.MATERIAL.ALPHA_TEST,
     });
     const points = new THREE.Points(geo, mat);
     scene.add(points);
@@ -91,11 +89,11 @@
     lineGeo.setDrawRange(0, 0);
 
     const lineMat = new THREE.LineBasicMaterial({
-      color: 0x4A9EFF,
+      color: S.COLOR.BASE_HEX,
       transparent: true,
       opacity: 0.0,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
+      depthWrite: S.MATERIAL.DEPTH_WRITE,
     });
     const lines = new THREE.LineSegments(lineGeo, lineMat);
     scene.add(lines);
@@ -125,6 +123,8 @@
     let lastElectronSpawn   = 0;
 
     // ── Lerped state parameters ───────────────────────────────────────
+    // Valeurs initiales = buffers de boot ; les cibles idle/listening/thinking/speaking
+    // sont fixées dans le switch d'animate() ci-dessous.
     let targetRadius = 28,     currentRadius = 28;
     let targetSpeed  = 0.2,    currentSpeed  = 0.2;
     let targetBright = 0.74,   currentBright = 0.74;
@@ -212,9 +212,13 @@
       // State targets
       switch (state) {
         case "idle":
-          targetRadius = 28; targetSpeed = 0.18; targetBright = 0.72;
-          targetSize = 0.58; targetLineAmount = 0.12; targetElectronRate = 0;
-          targetGlow = 0.42;
+          targetRadius = S.GEOMETRY.R;                  // 28
+          targetSpeed  = 0.18;
+          targetBright = S.MATERIAL.OPACITY_IDLE;       // 0.72
+          targetSize   = S.MATERIAL.POINT_SIZE_IDLE;    // 0.58
+          targetLineAmount   = S.ANIM_IDLE.LINE_AMOUNT_IDLE; // 0.12
+          targetElectronRate = 0;
+          targetGlow   = 0.42;
           break;
         case "listening":
           targetRadius = 27; targetSpeed = 0.26; targetBright = 0.80;
@@ -249,8 +253,8 @@
         mat.color.lerp(new THREE.Color(0x66AAFF), 0.015);   // légèrement chaud
         lineMat.color.lerp(new THREE.Color(0x66AAFF), 0.015);
       } else {
-        mat.color.lerp(new THREE.Color(0x4A9EFF), 0.015);   // accent exact
-        lineMat.color.lerp(new THREE.Color(0x4A9EFF), 0.015);
+        mat.color.lerp(new THREE.Color(S.COLOR.BASE_HEX), 0.015);     // accent exact
+        lineMat.color.lerp(new THREE.Color(S.COLOR.BASE_HEX), 0.015);
       }
 
       // ── Music beat modulation ─────────────────────────────────────
@@ -341,7 +345,7 @@
       }
       lineGeo.setDrawRange(0, lineCount * 2);
       lineGeo.attributes.position.needsUpdate = true;
-      lineMat.opacity = currentLineAmount * 0.07;
+      lineMat.opacity = currentLineAmount * S.ANIM_IDLE.LINE_OPACITY_K;
 
       // ── Electrons (thinking only) ─────────────────────────────────
       if (activeConnections.length > 0 && electronSpawnRate > 0.005) {
@@ -399,8 +403,8 @@
       // ── Camera ────────────────────────────────────────────────────
       cameraZ += (cameraZTarget - cameraZ) * 0.18;
       camera.position.z = cameraZ;
-      camera.position.x = Math.sin(t * 0.02) * 5;
-      camera.position.y = Math.cos(t * 0.03) * 3;
+      camera.position.x = Math.sin(t * S.CAMERA.OSC_X_FREQ) * S.CAMERA.OSC_X_AMPL;
+      camera.position.y = Math.cos(t * S.CAMERA.OSC_Y_FREQ) * S.CAMERA.OSC_Y_AMPL;
       camera.lookAt(0, 0, cloudZ * 0.2);
 
       renderer.render(scene, camera);
