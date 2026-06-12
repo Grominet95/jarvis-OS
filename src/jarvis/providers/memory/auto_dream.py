@@ -85,7 +85,7 @@ class AutoDream:
         try:
             await self._run_micro(user_message, assistant_message)
         except Exception as e:
-            logger.error("AutoDream micro error", error=str(e))
+            logger.exception("AutoDream micro error", error=str(e))
 
     async def _run_micro(self, user_message: str, assistant_message: str) -> None:
         prefs = self._read_prefs()
@@ -120,7 +120,7 @@ class AutoDream:
         try:
             await self._run_deep()
         except Exception as e:
-            logger.error("AutoDream deep error", error=str(e))
+            logger.exception("AutoDream deep error", error=str(e))
 
     async def _run_deep(self) -> None:
         sessions_text = self._load_recent_sessions()
