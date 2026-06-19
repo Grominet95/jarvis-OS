@@ -125,3 +125,7 @@ def _write_env(updates: dict[str, str]) -> None:
         if key not in written:
             new_lines.append(f"{key}={val}")
     _ENV_PATH.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+
+
+def write_env_batch(updates: dict[str, str]) -> None:
+    _write_env(updates)

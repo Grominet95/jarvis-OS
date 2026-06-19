@@ -81,36 +81,75 @@ suite complète, incl. les ~28 tests `@pytest.mark.integration`.
 | Docker | optionnel | Requis par la fonctionnalité code-agent |
 | `nowplaying-cli` | optionnel (macOS) | Lecture locale « now playing » — `brew install nowplaying-cli` |
 
+**Windows (supplémentaire) :**
+
+| Outil | Notes |
+|---|---|
+| Bundle offline | Release ou `scripts/release/build_bundle.ps1` — embarque Python, deps, modèles (aucun VS C++ requis pour l'install de base) |
+| [livekit-server](https://github.com/livekit/livekit/releases) | Inclus dans le bundle ; requis pour le mode vocal local |
+
 ---
 
 ## Installation
 
+L'installation se fait en **deux phases** :
+
+1. **Bundle offline** (une seule fois, avec réseau) — embarque Python, les dépendances, les modèles ML et `livekit-server`
+2. **Configuration web** (locale, sans téléchargement) — assistant sur `http://127.0.0.1:8765/setup`
+
+### Étape 1 — Préparer le bundle
+
+**Windows :**
+
+```powershell
+git clone https://github.com/Grominet95/jarvis-OS.git
+cd jarvis-OS
+.\scripts\release\build_bundle.ps1
+```
+
+**Linux / macOS :**
+
 ```bash
 git clone https://github.com/Grominet95/jarvis-OS.git
 cd jarvis-OS
+bash scripts/release/build_bundle.sh
+```
+
+> Utilisateurs finaux : télécharge une **release offline** (archive avec `bundle/` inclus) — pas de Python, C++ ou cmake à installer.
+
+### Étape 2 — Configuration web locale
+
+**Windows :**
+
+```powershell
+.\jarvis.ps1 setup
+```
+
+**Linux / macOS :**
+
+```bash
 ./jarvis eclosion
 ```
 
-Le wizard interactif :
-1. Vérifie Python 3.11+ et installe `uv` si absent
-2. Installe toutes les dépendances Python (`pyproject.toml`)
-3. Demande ta clé API Anthropic (seule clé obligatoire)
-4. Demande ton prénom (affiché lors du scan biométrique)
-5. Configure ta localisation pour le moteur proactif
-6. Propose les modules optionnels (ElevenLabs, LiveKit, AISstream)
-7. Télécharge les modèles ML (YOLOv8n, Piper TTS)
-8. Génère le `.env` et installe la commande `jarvis` globalement
+Un navigateur s'ouvre sur l'assistant (identité, clés API, modules optionnels, photo de référence). Aucun prompt terminal.
 
-> La première fois, utilise `./jarvis eclosion`. Le wizard installe ensuite la commande globalement, tu peux utiliser `jarvis` depuis n'importe où.
+### Démarrage
 
----
+**Windows :**
 
-## Démarrage
+```powershell
+.\jarvis.ps1 run
+.\jarvis.ps1 api
+```
+
+**Linux / macOS :**
 
 ```bash
-jarvis run      # serveur principal  →  localhost:8000/admin
-jarvis voice    # pipeline vocal LiveKit (optionnel)
+jarvis run
+jarvis voice
 ```
+
+Le port par défaut est `8000` ; l'assistant en choisit un autre si occupé (vérifie `PORT` dans `.env`).
 
 Les deux peuvent tourner simultanément : le voice agent délègue au gateway du serveur principal, donc ils partagent la même session, la même mémoire et les mêmes outils.
 
@@ -125,10 +164,17 @@ Tout est configuré pendant l'éclosion. Pour modifier une clé après coup, éd
 **Reconnaissance faciale (séquence Wake Up) :** pour que le scan biométrique te reconnaisse, place une photo de toi (format JPG, visage bien visible, bonne luminosité) dans :
 
 ```
-vision/faces/référence.jpg
+vision_data/faces/reference.jpg
 ```
 
-Sans cette photo, la séquence de scan s'exécute mais retourne toujours "identité non reconnue". Le dossier `vision/faces/` est gitignorés, ta photo ne sera jamais commitée.
+Sans cette photo, la séquence de scan s'exécute mais retourne toujours "identité non reconnue". Le dossier `vision_data/faces/` est gitignoré. L'upload est possible depuis l'assistant de configuration (`/setup`).
+
+Pour activer la reconnaissance faciale :
+
+```bash
+uv sync --extra vision
+# FACE_RECOGNITION_ENABLED=true dans .env
+```
 
 ---
 
