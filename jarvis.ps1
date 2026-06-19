@@ -6,6 +6,30 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
+function Get-JarvisPython {
+    $bundlePy = Join-Path $PSScriptRoot "bundle\.venv\Scripts\python.exe"
+    $venvPy = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+    if (Test-Path $bundlePy) { return $bundlePy }
+    if (Test-Path $venvPy) { return $venvPy }
+    return $null
+}
+
+function Invoke-JarvisPython {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$PyArgs)
+    $python = Get-JarvisPython
+    if ($python) {
+        & $python @PyArgs
+        return
+    }
+    & uv run python @PyArgs
+}
+
+function Get-LivekitCommand {
+    $bundled = Join-Path $PSScriptRoot "bundle\bin\livekit-server.exe"
+    if (Test-Path $bundled) { return $bundled }
+    return "livekit-server"
+}
+
 function Get-DotEnvValue {
     param(
         [string]$Key,
@@ -106,43 +130,52 @@ function Invoke-JarvisRun {
     $procs = @()
 
     Write-Host "  LiveKit  demarrage..." -ForegroundColor Yellow
+    $lkCmd = Get-LivekitCommand
     $lkProc = Start-BackgroundProcess `
-        -CommandLine 'livekit-server --dev --node-ip 127.0.0.1 --keys "devkey: devsecretdevsecretdevsecretdevsecret"' `
+        -CommandLine "$lkCmd --dev --node-ip 127.0.0.1 --keys `"devkey: devsecretdevsecretdevsecretdevsecret`"" `
         -LogPath $lkLog
     $procs += $lkProc
 
     if (Wait-HttpOk -Url "http://127.0.0.1:7880/" -TimeoutSeconds 40) {
         Write-Host "  LiveKit  ws://localhost:7880" -ForegroundColor Green
     } else {
-        Write-Host "  LiveKit  timeout — voir $lkLog" -ForegroundColor Red
+        Write-Host "  LiveKit  timeout - voir $lkLog" -ForegroundColor Red
         foreach ($p in $procs) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
         exit 1
     }
 
     Write-Host "  API      demarrage..." -ForegroundColor Yellow
+    $python = Get-JarvisPython
+    $apiCmd = if ($python) { "`"$python`" -m jarvis.app" } else { "uv run python -m jarvis.app" }
     $apiProc = Start-BackgroundProcess `
-        -CommandLine "uv run python -m jarvis.app" `
+        -CommandLine $apiCmd `
         -LogPath $apiLog
     $procs += $apiProc
 
     if (Wait-HttpOk -Url "http://127.0.0.1:$apiPort/health" -TimeoutSeconds 90) {
         Write-Host "  API      http://localhost:$apiPort" -ForegroundColor Green
     } else {
-        Write-Host "  API      timeout — voir $apiLog" -ForegroundColor Red
+        Write-Host "  API      timeout - voir $apiLog" -ForegroundColor Red
         foreach ($p in $procs) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
         exit 1
     }
 
     Write-Host "  Vocal    prechauffement (~10s)..." -ForegroundColor Yellow
+    $python = Get-JarvisPython
+    $voiceCmd = if ($python) {
+        "set PYTHONWARNINGS=ignore&& `"$python`" -m jarvis.interfaces.voice.agent dev --log-level info"
+    } else {
+        "set PYTHONWARNINGS=ignore&& uv run python -m jarvis.interfaces.voice.agent dev --log-level info"
+    }
     $voiceProc = Start-BackgroundProcess `
-        -CommandLine "set PYTHONWARNINGS=ignore&& uv run python -m jarvis.interfaces.voice.agent dev --log-level info" `
+        -CommandLine $voiceCmd `
         -LogPath $voiceLog
     $procs += $voiceProc
 
     if (Wait-LogMatch -LogPath $voiceLog -Pattern "Jarvis vocal prêt" -TimeoutSeconds 90) {
         Write-Host "  Vocal    pret" -ForegroundColor Green
     } else {
-        Write-Host "  Vocal    prechauffement long — voir $voiceLog" -ForegroundColor Yellow
+        Write-Host "  Vocal    prechauffement long - voir $voiceLog" -ForegroundColor Yellow
     }
 
     Write-Host ""
@@ -167,17 +200,18 @@ function Invoke-JarvisRun {
 }
 
 switch ($Command.ToLowerInvariant()) {
-    "eclosion" {
+    { $_ -in @("eclosion", "setup") } {
         & "$PSScriptRoot\setup.ps1"
     }
     "api" {
-        uv run python -m jarvis.app
+        Invoke-JarvisPython "-m" "jarvis.app"
     }
     "voice" {
-        uv run python -m jarvis.interfaces.voice.agent dev
+        Invoke-JarvisPython "-m" "jarvis.interfaces.voice.agent" "dev"
     }
     "livekit" {
-        livekit-server --dev --node-ip 127.0.0.1 --keys "devkey: devsecretdevsecretdevsecretdevsecret"
+        $lk = Get-LivekitCommand
+        & $lk --dev --node-ip 127.0.0.1 --keys "devkey: devsecretdevsecretdevsecretdevsecret"
     }
     { $_ -in @("run", "start") } {
         Invoke-JarvisRun
@@ -210,7 +244,8 @@ switch ($Command.ToLowerInvariant()) {
         Write-Host "    api        serveur FastAPI uniquement"
         Write-Host "    voice      pipeline vocal LiveKit"
         Write-Host "    livekit    serveur LiveKit local"
-        Write-Host "    eclosion   installation et configuration (setup.ps1)"
+        Write-Host "    setup      assistant web de configuration"
+        Write-Host "    eclosion   alias de setup"
         Write-Host "    doctor     diagnostic rapide"
         Write-Host ""
         exit 1

@@ -26,6 +26,7 @@ config/spotify_token.json
 # ── Modèles ML (binaires lourds — à télécharger via install.sh)
 yolov8n.pt
 models/
+bundle/
 
 # ── Données personnelles de Jarvis ───────────────────────────
 memory_data/

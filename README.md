@@ -73,75 +73,126 @@ suite complète, incl. les ~28 tests `@pytest.mark.integration`.
 
 ## Prérequis
 
+Deux profils distincts :
+
+### Utilisateur final (Windows, release offline)
+
+Tu télécharges une archive **avec le dossier `bundle/` déjà inclus**. Tu n'as **pas** besoin d'installer Python, uv, cmake, Visual C++ ni LiveKit sur ta machine.
+
+| Requis | Notes |
+|---|---|
+| Windows 10/11 | |
+| PowerShell | Pour lancer `jarvis.ps1` |
+| Navigateur web | Configuration sur `http://127.0.0.1:8765/setup` |
+| Clés API (LLM, etc.) | OpenAI ou Anthropic au minimum — saisies dans l'assistant web |
+
+Le bundle embarque déjà : Python 3.11, les dépendances Python, les modèles ML (YOLO, Piper), `livekit-server` et `uv.exe`.
+
+### Développeur — construire le bundle
+
+Une seule fois, **avec réseau**, pour produire `bundle/` (release ou usage local sans clone vide).
+
 | Outil | Version | Notes |
 |---|---|---|
-| Python | 3.11+ | |
-| [uv](https://docs.astral.sh/uv/) | latest | Gestionnaire de paquets |
-| [LiveKit](https://livekit.io/) | cloud ou self-hosted | Pipeline vocal uniquement |
-| Docker | optionnel | Requis par la fonctionnalité code-agent |
-| `nowplaying-cli` | optionnel (macOS) | Lecture locale « now playing » — `brew install nowplaying-cli` |
+| [uv](https://docs.astral.sh/uv/) | latest | Télécharge Python 3.11 dans `bundle/.venv` |
+| Réseau | | Téléchargement des deps, modèles et binaires |
 
-**Windows (supplémentaire) :**
+Python système et LiveKit **ne sont pas requis** : le script de build les intègre au bundle.
+
+### Modules optionnels (hors install de base)
 
 | Outil | Notes |
 |---|---|
-| [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) | Uniquement si tu installes la reconnaissance faciale (`uv sync --extra vision`) — compile `dlib` |
-| [livekit-server](https://github.com/livekit/livekit/releases) | Binaire `livekit-server.exe` dans le PATH pour le mode vocal local |
+| [LiveKit Cloud](https://livekit.io/) | Alternative au serveur local (déjà dans le bundle) |
+| Docker | Code-agent, Skill Lab sandbox |
+| `uv sync --extra vision` | Reconnaissance faciale (`dlib`) — sur Windows, peut exiger [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (workload C++) |
+| `nowplaying-cli` | macOS uniquement — lecture locale « now playing » |
 
 ---
 
 ## Installation
 
-### Linux / macOS
+### Parcours A — Utilisateur final (Windows)
+
+**Tu as reçu une release ou une archive avec `bundle/`** — aucun téléchargement à l'installation.
+
+```powershell
+# 1. Décompresser l'archive, puis ouvrir le dossier du projet
+cd jarvis-OS
+
+# 2. Configuration web (navigateur, sans prompt terminal)
+.\jarvis.ps1 setup
+
+# 3. Démarrage
+.\jarvis.ps1 run
+```
+
+L'assistant web configure l'identité, les clés API, les modules optionnels et la photo de référence. Une fois terminé, l'interface admin est sur `http://127.0.0.1:<PORT>/admin` (`PORT` dans `.env`, souvent `8000`).
+
+| Commande | Rôle |
+|---|---|
+| `.\jarvis.ps1 setup` | Assistant de configuration (`:8765`) |
+| `.\jarvis.ps1 run` | LiveKit + API + pipeline vocal |
+| `.\jarvis.ps1 api` | Serveur FastAPI seul |
+| `.\jarvis.ps1 doctor` | Diagnostic rapide |
+
+> **Sans `bundle/`** : ce parcours ne fonctionne pas. Passe au parcours B ou télécharge une release offline.
+
+### Parcours B — Construire le bundle (développeur)
+
+À faire **une fois**, avec réseau, avant de distribuer ou d'utiliser le parcours A.
+
+**Windows :**
+
+```powershell
+git clone https://github.com/Grominet95/jarvis-OS.git
+cd jarvis-OS
+.\scripts\release\build_bundle.ps1
+.\jarvis.ps1 setup
+```
+
+**Linux / macOS :**
 
 ```bash
 git clone https://github.com/Grominet95/jarvis-OS.git
 cd jarvis-OS
+bash scripts/release/build_bundle.sh
 ./jarvis eclosion
 ```
 
-### Windows
+Le script crée `bundle/` : `.venv`, modèles, `livekit-server`, `manifest.json`. Ensuite, la configuration et le démarrage suivent le même flux que le parcours A (sans nouveau téléchargement).
 
-```powershell
-git clone https://github.com/Grominet95/jarvis-OS.git
-cd jarvis-OS
-.\jarvis.ps1 eclosion
+### Parcours C — Développement sans bundle (Linux / macOS / Windows)
+
+Installation classique avec uv sur la machine (téléchargements à chaque `uv sync`) :
+
+```bash
+uv sync
+# reconnaissance faciale optionnelle :
+uv sync --extra vision
 ```
 
-Le wizard interactif (`setup.sh` ou `setup.ps1`) :
-1. Vérifie Python 3.11+ et installe `uv` si absent
-2. Installe les dépendances Python (`pyproject.toml`) — la reconnaissance faciale est **optionnelle** sur Windows
-3. Demande ta clé API Anthropic ou OpenAI
-4. Demande ton prénom (affiché lors du scan biométrique)
-5. Configure ta localisation pour le moteur proactif
-6. Propose les modules optionnels (ElevenLabs, LiveKit local ou cloud, AISstream)
-7. Télécharge les modèles ML (YOLOv8n, Piper TTS)
-8. Génère le `.env` et crée la disposition de données (`memory_data/`, `vision_data/faces/`, …)
-
-> **Linux / macOS :** `./jarvis eclosion` puis `jarvis run` depuis n'importe où (symlink global).
->
-> **Windows :** `.\jarvis.ps1 eclosion` puis `.\jarvis.ps1 run` depuis le dossier du projet.
+Puis `./jarvis eclosion` ou `.\jarvis.ps1 setup` selon l'OS.
 
 ---
 
-## Démarrage
+### Démarrage (rappel)
 
-### Linux / macOS
-
-```bash
-jarvis run      # serveur principal  →  localhost:8000/admin
-jarvis voice    # pipeline vocal LiveKit (optionnel)
-```
-
-### Windows
+**Windows :**
 
 ```powershell
-.\jarvis.ps1 run     # LiveKit + API + Voice
-.\jarvis.ps1 api     # serveur FastAPI uniquement
-.\jarvis.ps1 voice   # pipeline vocal LiveKit (optionnel)
+.\jarvis.ps1 run
+.\jarvis.ps1 api
 ```
 
-Le port par défaut est `8000` ; si occupé, `setup.ps1` en choisit un autre (vérifie `PORT` dans `.env`).
+**Linux / macOS :**
+
+```bash
+jarvis run
+jarvis voice
+```
+
+Le port par défaut est `8000` ; l'assistant en choisit un autre si occupé (vérifie `PORT` dans `.env`).
 
 Les deux peuvent tourner simultanément : le voice agent délègue au gateway du serveur principal, donc ils partagent la même session, la même mémoire et les mêmes outils.
 
@@ -149,23 +200,23 @@ Les deux peuvent tourner simultanément : le voice agent délègue au gateway du
 
 ## Configuration
 
-Tout est configuré pendant l'éclosion. Pour modifier une clé après coup, édite `.env` à la racine du projet.
+Tout est configuré via l'assistant web (`.\jarvis.ps1 setup` ou `./jarvis eclosion`). Pour modifier une clé après coup, édite `.env` à la racine du projet.
 
 **Intégrations Google (Gmail / Calendar) :** place ton `credentials.json` issu de Google Cloud Console dans `config/google_credentials.json`, puis démarre Jarvis — il ouvrira le flux d'authentification OAuth et sauvegardera les tokens en local (ils sont gitignorés).
 
 **Reconnaissance faciale (séquence Wake Up) :** pour que le scan biométrique te reconnaisse, place une photo de toi (format JPG, visage bien visible, bonne luminosité) dans :
 
 ```
-vision_data/faces/référence.jpg
+vision_data/faces/reference.jpg
 ```
 
-Sans cette photo, la séquence de scan s'exécute mais retourne toujours "identité non reconnue". Le dossier `vision_data/faces/` est gitignoré, ta photo ne sera jamais commitée.
+Sans cette photo, la séquence de scan s'exécute mais retourne toujours "identité non reconnue". Le dossier `vision_data/faces/` est gitignoré. L'upload est possible depuis l'assistant de configuration (`/setup`).
 
-Pour activer la reconnaissance faciale, installe le extra Python puis active-la dans `.env` :
+Pour activer la reconnaissance faciale :
 
 ```bash
-uv sync --extra vision        # Linux/macOS, ou Windows avec Visual Studio C++
-# FACE_RECOGNITION_ENABLED=true
+uv sync --extra vision
+# FACE_RECOGNITION_ENABLED=true dans .env
 ```
 
 ---

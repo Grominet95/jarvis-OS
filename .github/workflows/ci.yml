@@ -70,7 +70,7 @@ jobs:
         # Routes byte-identiques à la baseline — gate inchangé depuis B.
         # Skip si le projet n'est pas installé (ce qui est le cas ici).
         run: |
-          uv sync --frozen --group dev
+          uv sync --frozen --group dev --extra vision
           uv run python scripts/migration/snapshot_routes.py > /tmp/routes.now.txt
           diff scripts/migration/routes.baseline.txt /tmp/routes.now.txt
 
