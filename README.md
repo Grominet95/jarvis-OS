@@ -44,38 +44,7 @@ organisé en **4 couches strictes** validées par
 [import-linter](https://pypi.org/project/import-linter/) en CI. Chaque
 règle est exécutable, pas juste de la convention.
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│  L3 — interfaces / app / bootstrap                              │
-│  Point d'entrée serveur (app.py + bootstrap.build()),           │
-│  routers FastAPI (interfaces.api.*), pipeline voix (LiveKit).   │
-│  ─ peut importer toutes les couches en dessous                  │
-├────────────────────────────────────────────────────────────────┤
-│  L2 — engine                                                    │
-│  Gateway, Agent, BudgetGuard, Mission Engine, Proactif,         │
-│  Scheduler, Worker, NotificationQueue.                          │
-│  ─ n'importe QUE jarvis.kernel (RÈGLE 3)                        │
-│  ─ reçoit providers/capabilities PAR INJECTION                  │
-├────────────────────────────────────────────────────────────────┤
-│  L1 — providers │ capabilities │ analytics │ hardware           │
-│  Implémentations concrètes : LLM (Anthropic/Mistral/Gemini/     │
-│  Ollama), TTS, STT, Memory Kernel, Tools, Skills, parsers BT,   │
-│  Macropad. 4 sous-packages indépendants entre eux.              │
-│  ─ n'importent QUE jarvis.kernel (RÈGLE 2)                      │
-├────────────────────────────────────────────────────────────────┤
-│  L0 — kernel                                                    │
-│  Contrats (Protocols), schemas (dataclasses partagées), events  │
-│  bus, settings (pydantic), errors, paths, vocab, permissions.   │
-│  ─ n'importe RIEN du projet (stdlib + pydantic uniquement)      │
-│  ─ RÈGLE 1                                                      │
-└────────────────────────────────────────────────────────────────┘
-
-Communication montante : kernel.events.bus (pub/sub asyncio)
-  ◦ BudgetThresholdReached  ─►  NotificationQueue + UI broadcast
-  ◦ MissionCompleted        ─►  Reflexion.reflect()
-  ◦ MemoryIngested          ─►  UI broadcast (compteur facts)
-  ◦ NotificationRequested   ─►  NotificationQueue / WS
-```
+![Architecture en couches Jarvis](images/infog1.png)
 
 | Couche | Package | Rôle |
 |---|---|---|
