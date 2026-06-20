@@ -419,7 +419,7 @@
     // Fallback immédiat — l'API audio-features est dépréciée pour les nouvelles apps
     const applyBeat = (tempo, energy) => { if (_orb) _orb.setMusicBeat(tempo, energy); };
     try {
-      const { token } = await (await fetch("/api/spotify/token")).json();
+      const { token } = await (await fetch("/api/spotify/token", { headers: J.authHeaders ? J.authHeaders() : {} })).json();
       if (!token) return applyBeat(120, 0.6);
       const resp = await fetch(
         `https://api.spotify.com/v1/audio-features/${trackId}`,
@@ -458,7 +458,7 @@
         name: "JARVIS",
         getOAuthToken: async (cb) => {
           try {
-            const res = await fetch("/api/spotify/token");
+            const res = await fetch("/api/spotify/token", { headers: J.authHeaders ? J.authHeaders() : {} });
             const data = await res.json();
             cb(data.token || "");
           } catch (_) { cb(""); }
@@ -471,7 +471,7 @@
         // Enregistre le device sans transférer la lecture
         fetch("/api/spotify/transfer", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(J.authHeaders ? J.authHeaders() : {}) },
           body: JSON.stringify({ device_id }),
         }).catch(() => {});
         // Charge l'état initial (dernier joué)
@@ -623,7 +623,7 @@
       const sessionId = localStorage.getItem("jarvis_voice_session") || null;
       const resp = await fetch("/api/voice/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(J.authHeaders ? J.authHeaders() : {}) },
         body: JSON.stringify({ message: text, session_id: sessionId }),
       });
       const returnedSid = resp.headers.get("x-session-id");

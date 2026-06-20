@@ -236,7 +236,7 @@
   // mountWake() reste synchrone (le crossfade sleep/wake ne tolère aucun délai).
   // Repli sur '' (le wake n'affiche alors aucun nom).
   let _userName = '';
-  fetch('/api/wakeup/status')
+  fetch('/api/wakeup/status', { headers: window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {} })
     .then(function (r) { return r.json(); })
     .then(function (s) { _userName = (s && s.user_firstname) || ''; })
     .catch(function () {});
@@ -341,7 +341,7 @@
 <script>
 window.loadViewSkills = async function () {
   try {
-    const r = await fetch('/api/skills/view-scripts');
+    const r = await fetch('/api/skills/view-scripts', { headers: window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {} });
     if (!r.ok) return;
     const { styles = [], scripts = [] } = await r.json();
 
