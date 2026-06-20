@@ -44,7 +44,7 @@ class Settings(BaseSettings):
         default="api",
         description="'api' pour Anthropic/Mistral, 'local' pour Ollama.",
     )
-    api_backend: Literal["anthropic", "mistral", "openai"] = Field(
+    api_backend: Literal["anthropic", "mistral", "openai", "gemini"] = Field(
         default="anthropic",
         description="Backend API principal quand LLM_PROVIDER=api.",
     )

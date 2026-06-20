@@ -48,8 +48,8 @@ def read_env_file(env_path: Path) -> dict[str, str]:
 def is_setup_complete(env_path: Path | None = None) -> bool:
     path = env_path or Path(".env")
     env = read_env_file(path)
-    if not env.get("USER_FIRSTNAME", "").strip():
-        return False
-    if env.get("API_BACKEND") == "openai":
-        return bool(env.get("OPENAI_API_KEY", "").strip())
-    return bool(env.get("ANTHROPIC_API_KEY", "").strip())
+    # Le LLM est facultatif : le setup est « terminé » dès que le wizard a été
+    # validé (flag SETUP_COMPLETE) avec un prénom. La clé LLM se règle ensuite.
+    if env.get("SETUP_COMPLETE", "").strip().lower() == "true":
+        return bool(env.get("USER_FIRSTNAME", "").strip())
+    return False

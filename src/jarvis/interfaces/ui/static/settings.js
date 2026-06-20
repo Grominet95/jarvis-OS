@@ -466,6 +466,7 @@
       anthropic: ["claude-opus-4-7", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"],
       mistral:   ["mistral-large-latest", "mistral-small-latest", "open-mistral-7b"],
       openai:    ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
+      gemini:    ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro"],
     };
     const CLAUDE = MODELS_BY_BACKEND.anthropic;
     const VISION = ["gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"];
@@ -487,7 +488,7 @@
           makeSelect(models, llm.anthropic_model, "ANTHROPIC_MODEL")));
       }
       d.appendChild(settingRow("Backend", "API_BACKEND",
-        makeSelect(["anthropic", "mistral", "openai"], liveBackend, "API_BACKEND",
+        makeSelect(["anthropic", "mistral", "openai", "gemini"], liveBackend, "API_BACKEND",
           v => { liveBackend = v; refreshModelRow(v); })));
       refreshModelRow(liveBackend);
       d.appendChild(modelDiv);
