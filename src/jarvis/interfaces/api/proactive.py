@@ -125,7 +125,12 @@ async def rectify_initiative(initiative_id: str, body: RectifyBody, request: Req
     if not init:
         raise HTTPException(404, "Initiative introuvable")
 
-    generator = InitiativeGenerator(llm=request.app.state.container.background_llm)
+    _container = request.app.state.container
+    generator = InitiativeGenerator(
+        llm=_container.background_llm,
+        user_firstname=_container.settings.display_name,
+        user_profile=_container.settings.user_profile,
+    )
     new_init = await generator.rectify(init, body.correction)
     if not new_init:
         raise HTTPException(500, "Régénération échouée")

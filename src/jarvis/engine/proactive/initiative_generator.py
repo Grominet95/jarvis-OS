@@ -115,11 +115,10 @@ def _apply_caps(items: list) -> list:
     return result
 
 
-INITIATIVE_SYSTEM_PROMPT = """
-Tu es le moteur d'analyse proactif de Jarvis, assistant personnel de Barth.
-Barth : entrepreneur tech (SASU), YouTuber hardware,
-projets iPod DAP / Alfred / Chi//mp / Jarvis, Lyon.
-
+# Corps statique du prompt d'initiatives (indépendant de l'utilisateur). Le token
+# __NAME__ est substitué par le prénom configuré. Les accolades JSON sont littérales
+# (pas de .format) — on utilise .replace pour éviter tout conflit.
+_INITIATIVE_BODY = """
 Génère 5 initiatives MAX (2 HIGH max).
 Chaque champ est limité en longueur — RESPECTE ces limites absolues.
 
@@ -178,7 +177,7 @@ un rappel temporel imminent EST une action concrète (préparer / rejoindre).
 
 1. Maximum 5 initiatives par cycle, maximum 2 HIGH
 2. Zéro doublon — si un sujet a été traité dans la journée, ne pas régénérer
-3. Une initiative doit déclencher une ACTION concrète de Barth dans les 48h
+3. Une initiative doit déclencher une ACTION concrète de __NAME__ dans les 48h
    Si ce n'est pas le cas → c'est une observation, pas une initiative. Ne pas inclure.
 4. Chaque initiative doit se résumer en 10 mots max
 5. Priorité HIGH seulement si l'inaction a des conséquences réelles sous 24h
@@ -202,29 +201,46 @@ Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :
 }
 """
 
-DRAFT_SYSTEM_PROMPT = """
-Tu es Jarvis, assistant de Barth. Rédige un brouillon d'email professionnel,
-direct, 3 phrases max (50 mots max).
-Réponds UNIQUEMENT avec le corps du message, sans salutation formelle inutile, en français.
-"""
+def _initiative_system(name: str, profile: str = "") -> str:
+    """Prompt système du moteur d'initiatives, personnalisé au prénom + bio."""
+    header = f"\nTu es le moteur d'analyse proactif de Jarvis, assistant personnel de {name}."
+    if profile.strip():
+        header += f"\n{name} : {profile.strip()}"
+    return header + "\n" + _INITIATIVE_BODY.replace("__NAME__", name)
 
-RECTIFY_SYSTEM_PROMPT = """
-Tu es Jarvis, assistant proactif de Barth. Tu dois régénérer une initiative
-en intégrant la correction de l'utilisateur.
-Réponds UNIQUEMENT en JSON valide (un seul objet, pas un tableau) avec
-les mêmes champs que l'initiative originale.
-Si le type est draft_response, respecte impérativement le format :
-À: email@destinataire.com
-Sujet: RE: Sujet
-[THREAD_ID: id]
----
-Corps
-"""
+
+def _draft_system(name: str) -> str:
+    return (
+        f"\nTu es Jarvis, assistant de {name}. Rédige un brouillon d'email professionnel,\n"
+        "direct, 3 phrases max (50 mots max).\n"
+        "Réponds UNIQUEMENT avec le corps du message, sans salutation formelle inutile, en français.\n"
+    )
+
+
+def _rectify_system(name: str) -> str:
+    return (
+        f"\nTu es Jarvis, assistant proactif de {name}. Tu dois régénérer une initiative\n"
+        "en intégrant la correction de l'utilisateur.\n"
+        "Réponds UNIQUEMENT en JSON valide (un seul objet, pas un tableau) avec\n"
+        "les mêmes champs que l'initiative originale.\n"
+        "Si le type est draft_response, respecte impérativement le format :\n"
+        "À: email@destinataire.com\n"
+        "Sujet: RE: Sujet\n"
+        "[THREAD_ID: id]\n"
+        "---\n"
+        "Corps\n"
+    )
 
 
 class InitiativeGenerator:
-    def __init__(self, llm: LLMProvider) -> None:
+    def __init__(
+        self, llm: LLMProvider, user_firstname: str = "Barth", user_profile: str = ""
+    ) -> None:
         self._llm = llm
+        self._name = user_firstname
+        self._initiative_system = _initiative_system(user_firstname, user_profile)
+        self._draft_system = _draft_system(user_firstname)
+        self._rectify_system = _rectify_system(user_firstname)
 
     async def generate(self, state: WorldState) -> list[Initiative]:
         """Génère des initiatives à partir de l'état du monde."""
@@ -236,14 +252,14 @@ class InitiativeGenerator:
             return []
 
         prompt = (
-            "État du monde de Barth :\n\n"
+            f"État du monde de {self._name} :\n\n"
             f"{world_context}\n\n"
             "Génère les 5 initiatives les plus pertinentes et urgentes (3 HIGH max)."
         )
 
         response = await self._llm.complete(
             messages=[{"role": "user", "content": prompt}],
-            system=INITIATIVE_SYSTEM_PROMPT,
+            system=self._initiative_system,
             stream=False,
             context="proactive",
         )
@@ -279,7 +295,7 @@ class InitiativeGenerator:
         try:
             body = await self._llm.complete(
                 messages=[{"role": "user", "content": prompt}],
-                system=DRAFT_SYSTEM_PROMPT,
+                system=self._draft_system,
                 stream=False,
                 context="proactive",
             )
@@ -316,7 +332,7 @@ class InitiativeGenerator:
 
         response = await self._llm.complete(
             messages=[{"role": "user", "content": prompt}],
-            system=RECTIFY_SYSTEM_PROMPT,
+            system=self._rectify_system,
             stream=False,
             context="proactive",
         )
