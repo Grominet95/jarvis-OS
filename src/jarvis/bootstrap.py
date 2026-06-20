@@ -90,9 +90,12 @@ from jarvis.kernel.paths import CONFIG_DIR
 from jarvis.kernel.settings import Settings
 from jarvis.kernel.settings import settings as _default_settings
 from jarvis.providers.audio.tts import tts_engine
-from jarvis.providers.llm.api import AnthropicProvider
 from jarvis.providers.llm.base import LLMProvider
-from jarvis.providers.llm.factory import create_background_llm, get_llm_provider
+from jarvis.providers.llm.factory import (
+    create_background_llm,
+    create_voice_llm,
+    get_llm_provider,
+)
 from jarvis.providers.memory import visual_memory as _visual_memory
 from jarvis.providers.memory.auto_dream import AutoDream
 from jarvis.providers.memory.consolidation import ConsolidationAgent, CrossSessionRecall
@@ -237,13 +240,7 @@ def build(
     else:
         llm = get_llm_provider(tracker=tracker)
         background_llm = create_background_llm(tracker=tracker)
-        voice_llm = (
-            get_llm_provider(tracker=tracker)
-            if settings.llm_provider == "local"
-            else AnthropicProvider(
-                model=settings.voice_anthropic_model, max_tokens=4096, tracker=tracker
-            )
-        )
+        voice_llm = create_voice_llm(tracker=tracker)
 
     # ── 4ter. Providers L1 — TTS (singleton module-level — set_tracker post-construction) ─
 

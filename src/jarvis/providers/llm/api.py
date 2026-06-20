@@ -819,11 +819,52 @@ class GeminiProvider(LLMProvider):
 
 
 class OpenAIProvider(LLMProvider):
-    """Provider OpenAI API via SDK officiel."""
+    """Provider OpenAI API via SDK officiel.
 
-    def __init__(self, model: str | None = None) -> None:
+    Supporte le function calling natif (supports_tools=True) via le format OpenAI.
+    Les messages Anthropic (tool_use/tool_result) sont convertis automatiquement
+    par _messages_to_openai() avant chaque appel, ce qui permet à agent.synthesize()
+    et au gateway double-passe de fonctionner sans modification de engine/.
+    """
+
+    def __init__(
+        self,
+        model: str | None = None,
+        tracker: UsageTracker | None = None,
+    ) -> None:
         self._client = AsyncOpenAI(api_key=settings.openai_api_key.get_secret_value())
         self._model = model or settings.openai_model
+        self._tracker = tracker
+
+    def set_tracker(self, tracker: UsageTracker) -> None:
+        """Injection post-construction (utilisé pour providers créés par factory)."""
+        self._tracker = tracker
+
+    @property
+    def supports_tools(self) -> bool:
+        return True
+
+    def _track(self, response: Any, context: str) -> None:
+        usage = getattr(response, "usage", None)
+        if usage is None or self._tracker is None:
+            return
+        cost = calculate_cost(
+            "openai",
+            self._model,
+            input_tokens=usage.prompt_tokens,
+            output_tokens=usage.completion_tokens,
+        )
+        self._tracker.track(
+            UsageEntry(
+                timestamp=datetime.now().isoformat(),
+                provider="openai",
+                model=self._model,
+                input_tokens=usage.prompt_tokens,
+                output_tokens=usage.completion_tokens,
+                cost_usd=cost,
+                context=context,
+            )
+        )
 
     async def complete(
         self,
@@ -833,23 +874,20 @@ class OpenAIProvider(LLMProvider):
         stream: bool = False,
         context: str = "",
     ) -> str | AsyncIterator[str]:
-        # TODO: implémenter le tool calling OpenAI (function calling natif)
-        if tools:
-            raise NotImplementedError(
-                "Tool use non supporté par OpenAIProvider — utilisez AnthropicProvider."
-            )
-
-        full_messages = [{"role": "system", "content": system}, *messages]
+        full_messages = [{"role": "system", "content": system}, *_messages_to_openai(messages)]
 
         if stream:
             return self._stream(full_messages)
 
-        response = await self._client.chat.completions.create(
-            model=self._model,
-            messages=full_messages,
-        )
+        kwargs: dict = {"model": self._model, "messages": full_messages}
+        if tools:
+            kwargs["tools"] = _claude_tools_to_openai(tools)
+            kwargs["tool_choice"] = "auto"
+
+        response = await self._client.chat.completions.create(**kwargs)
         text = response.choices[0].message.content or ""
         logger.debug("OpenAI complete", model=self._model)
+        self._track(response, context)
         return text
 
     async def _stream(self, messages: list[dict]) -> AsyncIterator[str]:
@@ -864,6 +902,141 @@ class OpenAIProvider(LLMProvider):
             delta = chunk.choices[0].delta.content
             if delta:
                 yield delta
+
+    def stream_with_capture(
+        self,
+        messages: list[dict],
+        system: str,
+        tools: list[dict] | None = None,
+    ) -> tuple[AsyncIterator[str], ToolCapture]:
+        """Stream texte + capture des tool calls OpenAI (deltas streaming).
+
+        ToolCapture.calls est peuplé à l'épuisement du stream ; la passe de synthèse
+        appelle ensuite complete() avec l'historique Anthropic converti.
+        """
+        capture = ToolCapture()
+        full_messages = [{"role": "system", "content": system}, *_messages_to_openai(messages)]
+        openai_tools = _claude_tools_to_openai(tools) if tools else None
+        return self._stream_capturing(full_messages, openai_tools, capture), capture
+
+    async def _stream_capturing(
+        self,
+        messages: list[dict],
+        tools: list[dict] | None,
+        capture: ToolCapture,
+    ) -> AsyncIterator[str]:
+        """Stream texte + accumule les tool_call deltas ; peuple capture à la fin."""
+        kwargs: dict = {"model": self._model, "messages": messages, "stream": True}
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = "auto"
+
+        _calls: dict[int, dict] = {}  # index → {id, name, arguments}
+
+        stream = await self._client.chat.completions.create(**kwargs)
+        async for chunk in stream:
+            if not chunk.choices:
+                continue
+            choice = chunk.choices[0]
+            delta = choice.delta
+
+            if delta.content:
+                yield delta.content
+
+            if delta.tool_calls:
+                for tc in delta.tool_calls:
+                    idx = tc.index
+                    if idx not in _calls:
+                        _calls[idx] = {"id": "", "name": "", "arguments": ""}
+                    if tc.id:
+                        _calls[idx]["id"] = tc.id
+                    if tc.function:
+                        if tc.function.name:
+                            _calls[idx]["name"] += tc.function.name
+                        if tc.function.arguments:
+                            _calls[idx]["arguments"] += tc.function.arguments
+
+            if choice.finish_reason:
+                capture.stop_reason = choice.finish_reason
+
+        for idx in sorted(_calls.keys()):
+            call = _calls[idx]
+            try:
+                tool_input = _json.loads(call["arguments"]) if call["arguments"] else {}
+            except _json.JSONDecodeError:
+                tool_input = {}
+            capture.calls.append((call["id"], call["name"], tool_input))
+
+    async def tool_loop(
+        self,
+        messages: list[dict],
+        system: str,
+        tools: list[dict],
+        tool_executor: Callable[[str, dict], Awaitable[str]],
+        context: str = "",
+    ) -> str:
+        """Boucle tool use OpenAI (function calling natif)."""
+        current: list[dict] = [
+            {"role": "system", "content": system},
+            *_messages_to_openai(messages),
+        ]
+        openai_tools = _claude_tools_to_openai(tools)
+
+        for iteration in range(_MAX_TOOL_ITERATIONS):
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=current,
+                tools=openai_tools,
+                tool_choice="auto",
+            )
+            self._track(response, context)
+            choice = response.choices[0]
+
+            if choice.finish_reason != "tool_calls":
+                logger.debug("OpenAI tool loop done", iterations=iteration + 1)
+                return choice.message.content or ""
+
+            tc_list = choice.message.tool_calls or []
+            current.append(
+                {
+                    "role": "assistant",
+                    "content": choice.message.content,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments,
+                            },
+                        }
+                        for tc in tc_list
+                    ],
+                }
+            )
+
+            parsed: list[tuple[str, str, dict]] = []
+            for tc in tc_list:
+                try:
+                    inp = _json.loads(tc.function.arguments or "{}")
+                except _json.JSONDecodeError:
+                    inp = {}
+                parsed.append((tc.id, tc.function.name, inp))
+
+            results = await asyncio.gather(*(tool_executor(name, inp) for _, name, inp in parsed))
+            logger.debug("OpenAI tools called", names=[n for _, n, _ in parsed])
+
+            for (tool_id, _, _), result in zip(parsed, results, strict=True):
+                current.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_id,
+                        "content": result,
+                    }
+                )
+
+        logger.warning("OpenAI tool loop max iterations reached", max=_MAX_TOOL_ITERATIONS)
+        return "Je n'ai pas pu terminer — trop d'étapes."
 
     async def health_check(self) -> bool:
         try:
@@ -881,18 +1054,19 @@ class OpenAIProvider(LLMProvider):
 def get_api_provider(
     backend: str = "anthropic",
     max_tokens: int = 2048,
+    model: str | None = None,
     tracker: UsageTracker | None = None,
 ) -> LLMProvider:
     """Retourne le provider API selon le backend demandé.
 
-    `tracker` est passé à AnthropicProvider (seul provider qui pousse une
-    UsageEntry vers le tracker pour l'instant). Les autres backends
-    l'ignorent — il sera branché si/quand ils ajoutent du tracking.
+    `tracker` est passé aux providers Anthropic et OpenAI (qui poussent une
+    UsageEntry vers le tracker). Mistral l'ignore pour l'instant.
+    `model` surcharge le modèle par défaut du backend (None = modèle .env).
     """
     if backend == "gemini":
-        return GeminiProvider(max_tokens=max_tokens)
+        return GeminiProvider(model=model, max_tokens=max_tokens)
     if backend == "mistral":
         return MistralProvider()
     if backend == "openai":
-        return OpenAIProvider()
-    return AnthropicProvider(max_tokens=max_tokens, tracker=tracker)
+        return OpenAIProvider(model=model, tracker=tracker)
+    return AnthropicProvider(max_tokens=max_tokens, model=model, tracker=tracker)

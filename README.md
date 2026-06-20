@@ -202,6 +202,19 @@ Les deux peuvent tourner simultanément : le voice agent délègue au gateway du
 
 Tout est configuré via l'assistant web (`.\jarvis.ps1 setup` ou `./jarvis eclosion`). Pour modifier une clé après coup, édite `.env` à la racine du projet.
 
+**Choix du backend LLM (`API_BACKEND`) :** une seule clé est requise, celle du backend choisi. Anthropic n'est PAS obligatoire.
+
+| `API_BACKEND` | Clé requise | Notes |
+|---|---|---|
+| `anthropic` | `ANTHROPIC_API_KEY` | Le vocal in-house utilise `VOICE_ANTHROPIC_MODEL`. |
+| `openai` | `OPENAI_API_KEY` | `ANTHROPIC_API_KEY` peut rester à sa valeur d'exemple. Function calling supporté. |
+| `mistral` | `MISTRAL_API_KEY` | Function calling supporté. |
+| `local` (`LLM_PROVIDER=local`) | aucune | Ollama local. |
+
+Le backend choisi pilote le chat texte, le vocal in-house (`/ws/voice`) et les tâches background (mémoire, consolidation, auto-dream) — aucune dépendance Anthropic n'est forcée si `API_BACKEND` n'est pas `anthropic`.
+
+**Pipeline vocal LiveKit temps réel :** c'est un process séparé (`jarvis.interfaces.voice.agent`) qui utilise les plugins LLM de LiveKit. Il suit `API_BACKEND` (OpenAI / Anthropic / Mistral). Si le backend n'est pas géré côté LiveKit, il bascule sur Gemini (`GOOGLE_API_KEY` requis). Surcharge possible via `VOICE_LLM_MODEL`.
+
 **Intégrations Google (Gmail / Calendar) :** place ton `credentials.json` issu de Google Cloud Console dans `config/google_credentials.json`, puis démarre Jarvis — il ouvrira le flux d'authentification OAuth et sauvegardera les tokens en local (ils sont gitignorés).
 
 **Reconnaissance faciale (séquence Wake Up) :** pour que le scan biométrique te reconnaisse, place une photo de toi (format JPG, visage bien visible, bonne luminosité) dans :
@@ -356,7 +369,7 @@ documentés en [`docs/migration/BACKLOG.md`](docs/migration/BACKLOG.md).
 ## Stack technique
 
 - **Python 3.11** : async / FastAPI / uvicorn
-- **Anthropic Claude** (LLM principal) + Mistral / Gemini / Ollama en fallback
+- **LLM au choix** via `API_BACKEND` : Anthropic Claude, OpenAI, Mistral, ou Ollama en local (une seule clé requise)
 - **LiveKit Agents** : pipeline vocal temps réel
 - **Deepgram** : STT cloud / **faster-whisper** : STT local
 - **Piper** : TTS local / **ElevenLabs** : TTS cloud

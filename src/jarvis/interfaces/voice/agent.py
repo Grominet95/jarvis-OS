@@ -197,6 +197,68 @@ def prewarm(proc: object) -> None:
     logger.info("=" * 40)
 
 
+# ─── Routing LLM du pipeline LiveKit ───────────────────────────────────────────
+
+
+def _build_voice_llm(env: dict) -> object:
+    """Construit le LLM du pipeline vocal LiveKit selon API_BACKEND.
+
+    Le pipeline temps réel LiveKit utilise ses propres plugins LLM (process
+    séparé du gateway in-house). On route ici vers le plugin correspondant au
+    backend configuré pour ne pas forcer une dépendance Anthropic/Gemini.
+    Fallback Gemini 2.5 Flash si le plugin du backend n'est pas installé ou si
+    le backend n'est pas géré côté LiveKit.
+    """
+    backend = (env.get("API_BACKEND") or "anthropic").strip().lower()
+
+    def _gemini() -> object:
+        model = env.get("VOICE_LLM_MODEL") or "gemini-2.5-flash"
+        return lk_google.LLM(model=model, temperature=0.7)
+
+    try:
+        if backend == "openai":
+            from livekit.plugins import openai as lk_openai
+
+            model = env.get("VOICE_LLM_MODEL") or env.get("OPENAI_MODEL") or "gpt-4o-mini"
+            logger.info("Voice LLM — OpenAI %s", model)
+            return lk_openai.LLM(model=model, temperature=0.7)
+
+        if backend == "mistral":
+            from livekit.plugins import openai as lk_openai
+
+            model = env.get("VOICE_LLM_MODEL") or env.get("MISTRAL_MODEL") or "mistral-large-latest"
+            logger.info("Voice LLM — Mistral %s", model)
+            return lk_openai.LLM(
+                model=model,
+                temperature=0.7,
+                base_url="https://api.mistral.ai/v1",
+                api_key=env.get("MISTRAL_API_KEY", os.getenv("MISTRAL_API_KEY", "")),
+            )
+
+        if backend == "anthropic":
+            from livekit.plugins import anthropic as lk_anthropic
+
+            model = (
+                env.get("VOICE_LLM_MODEL")
+                or env.get("VOICE_ANTHROPIC_MODEL")
+                or env.get("ANTHROPIC_MODEL")
+                or "claude-haiku-4-5-20251001"
+            )
+            logger.info("Voice LLM — Anthropic %s", model)
+            return lk_anthropic.LLM(model=model, temperature=0.7)
+    except ImportError as exc:
+        logger.warning(
+            "Plugin LiveKit pour backend '%s' manquant (%s) — fallback Gemini. "
+            "Installer le plugin correspondant via uv sync pour router le vocal sur ce backend.",
+            backend,
+            exc,
+        )
+        return _gemini()
+
+    logger.info("Voice LLM — Gemini (backend '%s' non géré côté LiveKit)", backend)
+    return _gemini()
+
+
 # ─── Session et pipeline ───────────────────────────────────────────────────────
 
 
@@ -249,11 +311,8 @@ async def entrypoint(ctx: object) -> None:
             smart_format=True,
             interim_results=True,
         ),
-        # LLM — Gemini 2.5 Flash
-        llm=lk_google.LLM(
-            model="gemini-2.5-flash",
-            temperature=0.7,
-        ),
+        # LLM — routé selon API_BACKEND (fallback Gemini 2.5 Flash)
+        llm=_build_voice_llm(_env),
         # TTS — ElevenLabs : chunk_length_schedule courts → 1er chunk audio plus rapide.
         # streaming_latency est deprecated, on le retire.
         tts=elevenlabs.TTS(

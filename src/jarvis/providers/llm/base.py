@@ -11,8 +11,8 @@ class LLMProvider(ABC):
     def supports_tools(self) -> bool:
         """True si le provider supporte la boucle tool use.
 
-        Providers actifs : Anthropic, Mistral, Gemini.
-        Providers chat-only (False) : Ollama, OpenAI (non implémenté).
+        Providers actifs : Anthropic, Mistral, Gemini, OpenAI.
+        Providers chat-only (False) : Ollama.
         """
         return False
 

@@ -1359,8 +1359,10 @@ dependencies = [
     { name = "libusb-package" },
     { name = "livekit-agents", extra = ["deepgram", "silero", "turn-detector"] },
     { name = "livekit-api" },
+    { name = "livekit-plugins-anthropic" },
     { name = "livekit-plugins-elevenlabs" },
     { name = "livekit-plugins-google" },
+    { name = "livekit-plugins-openai" },
     { name = "loguru" },
     { name = "lxml" },
     { name = "numpy" },
@@ -1420,8 +1422,10 @@ requires-dist = [
     { name = "libusb-package", specifier = ">=1.0.26.3" },
     { name = "livekit-agents", extras = ["deepgram", "silero", "turn-detector"], specifier = ">=1.5.1" },
     { name = "livekit-api", specifier = ">=1.1.0" },
+    { name = "livekit-plugins-anthropic", specifier = ">=1.5.1" },
     { name = "livekit-plugins-elevenlabs", specifier = ">=1.5.1" },
     { name = "livekit-plugins-google", specifier = ">=1.5.1" },
+    { name = "livekit-plugins-openai", specifier = ">=1.5.1" },
     { name = "loguru", specifier = ">=0.7.2" },
     { name = "lxml", specifier = ">=5.0.0" },
     { name = "numpy", specifier = ">=1.26.0" },
@@ -1769,6 +1773,9 @@ codecs = [
 deepgram = [
     { name = "livekit-plugins-deepgram" },
 ]
+images = [
+    { name = "pillow" },
+]
 silero = [
     { name = "livekit-plugins-silero" },
 ]
@@ -1815,6 +1822,20 @@ wheels = [
 ]
 
 [[package]]
+name = "livekit-plugins-anthropic"
+version = "1.5.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anthropic" },
+    { name = "httpx" },
+    { name = "livekit-agents" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/99/79/1e1cad75c2db2afa85044cef839814401d61ee2ec677cc083950d2205d90/livekit_plugins_anthropic-1.5.7.tar.gz", hash = "sha256:788f7b061cc2d41491698f9ec44b83c618eb3e68c2f1122c1650eba3f4d65739", size = 9006, upload-time = "2026-04-30T20:38:30.561Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/45/b0/6be9e92f939f27a586ad8216f780c6ff074b89f0136275ce1c575b475c7b/livekit_plugins_anthropic-1.5.7-py3-none-any.whl", hash = "sha256:79b703cfe2a051c1bc38427d3a1ae289d56753ad8edd436ade8555fc17678999", size = 10740, upload-time = "2026-04-30T20:38:29.095Z" },
+]
+
+[[package]]
 name = "livekit-plugins-deepgram"
 version = "1.5.7"
 source = { registry = "https://pypi.org/simple" }
@@ -1853,6 +1874,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/90/fc/5078c261a1deb4672ce656994ad6c87b579f130d4cb363ad398e18f81132/livekit_plugins_google-1.5.7.tar.gz", hash = "sha256:17c1fdd87b2954496dea18fb7f3b6e1e8a97498fcb4971391c90f49de9ac4bb9", size = 40771, upload-time = "2026-04-30T20:39:17.59Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ca/f0/9fc39a7123a8809ecdcdfc87075b73912021135f200524185aa26ec0121f/livekit_plugins_google-1.5.7-py3-none-any.whl", hash = "sha256:6e2afc4bb460e692d0e5334b052747a31c6c862c582a52725c8324b14781c3ba", size = 47376, upload-time = "2026-04-30T20:39:16.322Z" },
+]
+
+[[package]]
+name = "livekit-plugins-openai"
+version = "1.5.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "livekit-agents", extra = ["codecs", "images"] },
+    { name = "openai", extra = ["realtime"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4d/8a/55be256fc2af9470f22af2c0a00a167377ed915b7d18a8b7409f6c6106b3/livekit_plugins_openai-1.5.7.tar.gz", hash = "sha256:7475114be92e2b5de4dff8bf1dfe2969e0e5ce57f3af595e123e81418983fa41", size = 42958, upload-time = "2026-04-30T20:40:02.67Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/7b/4ace1492b42554bf8c52ba24598a6c8b0b19f30d8739cd4506fb08c8a513/livekit_plugins_openai-1.5.7-py3-none-any.whl", hash = "sha256:79f6c7445e5f610290409f1802224adb1666bb26555c7b33f21978aa64f40db6", size = 49713, upload-time = "2026-04-30T20:40:01.308Z" },
 ]
 
 [[package]]
@@ -2603,6 +2637,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ed/59/bdcc6b759b8c42dd73afaf5bf8f902c04b37987a5514dbc1c64dba390fef/openai-2.32.0.tar.gz", hash = "sha256:c54b27a9e4cb8d51f0dd94972ffd1a04437efeb259a9e60d8922b8bd26fe55e0", size = 693286, upload-time = "2026-04-15T22:28:19.434Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/c1/d6e64ccd0536bf616556f0cad2b6d94a8125f508d25cfd814b1d2db4e2f1/openai-2.32.0-py3-none-any.whl", hash = "sha256:4dcc9badeb4bf54ad0d187453742f290226d30150890b7890711bda4f32f192f", size = 1162570, upload-time = "2026-04-15T22:28:17.714Z" },
+]
+
+[package.optional-dependencies]
+realtime = [
+    { name = "websockets" },
 ]
 
 [[package]]
