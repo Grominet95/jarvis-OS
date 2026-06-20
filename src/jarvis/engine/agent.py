@@ -67,6 +67,12 @@ class Agent:
         _s = self._settings
 
         static_system = _STATIC_PROMPT_PATH.read_text(encoding="utf-8")
+        # Le prompt statique est rédigé avec "Barth" comme nom par défaut ; on le
+        # remplace par le prénom configuré (USER_FIRSTNAME) pour que Jarvis appelle
+        # réellement l'utilisateur par son nom. Repli sur "Barth" si non configuré.
+        firstname = _s.display_name
+        if firstname != "Barth":
+            static_system = static_system.replace("Barth", firstname)
         if _s.quebec_mode:
             static_system += (
                 "\n\n## Mode Québécois (ACTIF)\n"
@@ -107,7 +113,7 @@ class Agent:
         if self._user_prefs_path is not None and self._user_prefs_path.exists():
             prefs = self._user_prefs_path.read_text(encoding="utf-8").strip()
             if prefs:
-                dynamic_parts.append(f"## Préférences Barth\n\n{prefs}")
+                dynamic_parts.append(f"## Préférences {firstname}\n\n{prefs}")
 
         if self._memory_index is not None:
             index_content = self._memory_index.read()
