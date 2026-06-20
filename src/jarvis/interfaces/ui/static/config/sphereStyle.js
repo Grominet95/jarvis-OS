@@ -149,11 +149,14 @@
         ACTIVATION_WIDTH:   0.58,         // p = smootherstep((uConverge − aT) / 0.58)
 
         // ── CONVERGE — spirale ─────────────────────────────────────────────
-        SPIRAL_DISP_MIN:   1.61,          // 2.5 / 1.55
-        SPIRAL_DISP_MAX:   4.19,          // 6.5 / 1.55
+        // Dispersion réduite vs CDC (1.6-4.2·R) pour que les particules
+        // restent ON-SCREEN pendant BOOT/FACE. Évite le centre vide quand
+        // le cadre face s'efface au passage CONVERGE → écran sombre.
+        SPIRAL_DISP_MIN:   0.35,          // ~10 unités du shell (était 45)
+        SPIRAL_DISP_MAX:   1.05,          // ~29 unités du shell (était 117)
         SPIRAL_TURNS_MIN:  0.8,
         SPIRAL_TURNS_MAX:  2.4,
-        SPIRAL_VERT_DISP: 1.94,          // ±3 / 1.55
+        SPIRAL_VERT_DISP:  0.60,          // ±17 unités (était ±54)
         TURBULENCE_AMPL:   0.168,         // 0.26 / 1.55
         TURBULENCE_FREQ_HZ_MIN: 0.31,
         TURBULENCE_FREQ_HZ_MAX: 0.44,

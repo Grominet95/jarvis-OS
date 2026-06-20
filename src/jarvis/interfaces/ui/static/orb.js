@@ -8,9 +8,19 @@
 (function () {
   "use strict";
 
-  function createOrbInternal(canvas) {
+  function createOrbInternal(canvas, opts) {
     const THREE = window.THREE;
     const S     = window.SPHERE_STYLE;
+
+    // ── Opts d'extension (séquence de réveil) ────────────────────────
+    // Le montage dashboard ne passe pas d'opts → comportement strictement
+    // inchangé. La séquence passe { frozen: true, onTick: fn } pour piloter
+    // positions/rotation/opacité depuis l'extérieur pendant boot→ignite.
+    // setFrozen(false) à l'entrée ONLINE bascule sur le drift dashboard
+    // sans bascule d'instance (l'orbe est partagé).
+    opts = opts || {};
+    let FROZEN    = !!opts.frozen;
+    const ON_TICK = (typeof opts.onTick === "function") ? opts.onTick : null;
 
     let destroyed = false;
     let state = "idle";
@@ -31,6 +41,12 @@
     camera.position.z = S.CAMERA.ZCAM;
     let cameraZ       = S.CAMERA.ZCAM;
     let cameraZTarget = S.CAMERA.ZCAM;
+    if (FROZEN) {
+      // Caméra strictement statique en frozen : la séquence peut muter
+      // camera.position.z via onTick pour le dolly d'ignition.
+      camera.position.set(0, 0, S.CAMERA.ZCAM);
+      camera.lookAt(0, 0, 0);
+    }
 
     const scene = new THREE.Scene();
 
@@ -181,11 +197,15 @@
       cameraZTarget = Math.max(40, Math.min(180, cameraZTarget));
     }
 
-    canvas.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup",   onMouseUp);
-    canvas.addEventListener("wheel",     onWheel, { passive: false });
-    canvas.style.cursor = "grab";
+    // En mode frozen, le pointeur de la séquence est réservé au skip.
+    // Pas de drag, pas de wheel zoom.
+    if (!FROZEN) {
+      canvas.addEventListener("mousedown", onMouseDown);
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup",   onMouseUp);
+      canvas.addEventListener("wheel",     onWheel, { passive: false });
+      canvas.style.cursor = "grab";
+    }
 
     // ── Resize ───────────────────────────────────────────────────────
     const resizeTarget = canvas.parentElement || canvas;
@@ -269,143 +289,179 @@
       mat.opacity = Math.min(1, currentBright + beatMod * beatAmp);
 
       // Auto-rotation + impulse decay
-      autoRotY += 0.0015;
-      dragVelX *= 0.88;
-      dragVelY *= 0.88;
+      if (!FROZEN) {
+        autoRotY += 0.0015;
+        dragVelX *= 0.88;
+        dragVelY *= 0.88;
+      }
 
       // ── Particle simulation ────────────────────────────────────────
-      const a = pos;
-      const effectiveRadius = currentRadius * (1 + audioLevel * 0.15) + beatMod * musicEnergy * 1.8;
+      // En mode frozen, le drift est entièrement délégué à onTick. La
+      // boucle interne est court-circuitée pour libérer le budget CPU au
+      // pilotage externe (convergence, settle, etc.).
+      if (!FROZEN) {
+        const a = pos;
+        const effectiveRadius = currentRadius * (1 + audioLevel * 0.15) + beatMod * musicEnergy * 1.8;
 
-      for (let i = 0; i < N; i++) {
-        const i3 = i * 3;
-        const x  = a[i3], y = a[i3+1], z = a[i3+2];
-        const px = phase[i];
+        for (let i = 0; i < N; i++) {
+          const i3 = i * 3;
+          const x  = a[i3], y = a[i3+1], z = a[i3+2];
+          const px = phase[i];
 
-        // 1. Noise drift (two harmonic layers, 3 axes)
-        vel[i3]   += Math.sin(t * 0.05  + px)                 * 0.001  * currentSpeed;
-        vel[i3+1] += Math.cos(t * 0.06  + px * 1.3)           * 0.001  * currentSpeed;
-        vel[i3+2] += Math.sin(t * 0.055 + px * 0.7)           * 0.001  * currentSpeed;
-        vel[i3]   += Math.sin(t * 0.02  + px * 2.1 + y * 0.1) * 0.0008 * currentSpeed;
-        vel[i3+1] += Math.cos(t * 0.025 + px * 1.7 + z * 0.1) * 0.0008 * currentSpeed;
-        vel[i3+2] += Math.sin(t * 0.022 + px * 0.9 + x * 0.1) * 0.0008 * currentSpeed;
+          // 1. Noise drift (two harmonic layers, 3 axes)
+          vel[i3]   += Math.sin(t * 0.05  + px)                 * 0.001  * currentSpeed;
+          vel[i3+1] += Math.cos(t * 0.06  + px * 1.3)           * 0.001  * currentSpeed;
+          vel[i3+2] += Math.sin(t * 0.055 + px * 0.7)           * 0.001  * currentSpeed;
+          vel[i3]   += Math.sin(t * 0.02  + px * 2.1 + y * 0.1) * 0.0008 * currentSpeed;
+          vel[i3+1] += Math.cos(t * 0.025 + px * 1.7 + z * 0.1) * 0.0008 * currentSpeed;
+          vel[i3+2] += Math.sin(t * 0.022 + px * 0.9 + x * 0.1) * 0.0008 * currentSpeed;
 
-        // 2. Radial spring — bidirectional Hooke around the shell
-        //    pulls in from outside, pushes out from inside → no center collapse
-        const dist = Math.sqrt(x*x + y*y + z*z) || 0.01;
-        const spring = (dist - effectiveRadius) * 0.003;
-        vel[i3]   -= (x / dist) * spring;
-        vel[i3+1] -= (y / dist) * spring;
-        vel[i3+2] -= (z / dist) * spring;
+          // 2. Radial spring — bidirectional Hooke around the shell
+          //    pulls in from outside, pushes out from inside → no center collapse
+          const dist = Math.sqrt(x*x + y*y + z*z) || 0.01;
+          const spring = (dist - effectiveRadius) * 0.003;
+          vel[i3]   -= (x / dist) * spring;
+          vel[i3+1] -= (y / dist) * spring;
+          vel[i3+2] -= (z / dist) * spring;
 
-        // 3. Damping
-        vel[i3]   *= 0.989;
-        vel[i3+1] *= 0.989;
-        vel[i3+2] *= 0.989;
+          // 3. Damping
+          vel[i3]   *= 0.989;
+          vel[i3+1] *= 0.989;
+          vel[i3+2] *= 0.989;
 
-        // 4. Drag impulse — tangential (perpendicular to radius)
-        //    yaw  → tangent Y-axis: (-z,  0,  x) / r
-        //    pitch → tangent X-axis: ( 0,  z, -y) / r
-        if (Math.abs(dragVelX) > 0.001 || Math.abs(dragVelY) > 0.001) {
-          vel[i3]   += (-z / dist) * dragVelY * 0.28;
-          vel[i3+2] += ( x / dist) * dragVelY * 0.28;
-          vel[i3+1] += ( z / dist) * dragVelX * 0.28;
-          vel[i3+2] += (-y / dist) * dragVelX * 0.28;
+          // 4. Drag impulse — tangential (perpendicular to radius)
+          //    yaw  → tangent Y-axis: (-z,  0,  x) / r
+          //    pitch → tangent X-axis: ( 0,  z, -y) / r
+          if (Math.abs(dragVelX) > 0.001 || Math.abs(dragVelY) > 0.001) {
+            vel[i3]   += (-z / dist) * dragVelY * 0.28;
+            vel[i3+2] += ( x / dist) * dragVelY * 0.28;
+            vel[i3+1] += ( z / dist) * dragVelX * 0.28;
+            vel[i3+2] += (-y / dist) * dragVelX * 0.28;
+          }
+
+          // Integrate
+          a[i3]   += vel[i3];
+          a[i3+1] += vel[i3+1];
+          a[i3+2] += vel[i3+2];
         }
-
-        // Integrate
-        a[i3]   += vel[i3];
-        a[i3+1] += vel[i3+1];
-        a[i3+2] += vel[i3+2];
+        geo.attributes.position.needsUpdate = true;
       }
-      geo.attributes.position.needsUpdate = true;
 
-      // ── Lines + active connections (for electron rails) ────────────
-      const lineDistance = 8;
-      const maxDistSq = lineDistance * lineDistance;
-      const step = Math.max(1, Math.floor(N / 600)); // = 10 for N=6000
+      // ── Lines + active connections (skip in frozen) ────────────────
+      if (!FROZEN) {
+        const a = pos;
+        const lineDistance = 8;
+        const maxDistSq = lineDistance * lineDistance;
+        const step = Math.max(1, Math.floor(N / 600)); // = 10 for N=6000
 
-      let lineCount = 0;
-      activeConnections.length = 0;
+        let lineCount = 0;
+        activeConnections.length = 0;
 
-      for (let i = 0; i < N && lineCount < MAX_LINES; i += step) {
-        const x1 = a[i*3], y1 = a[i*3+1], z1 = a[i*3+2];
-        for (let j = i + step; j < N && lineCount < MAX_LINES; j += step) {
-          const dx = a[j*3] - x1, dy = a[j*3+1] - y1, dz = a[j*3+2] - z1;
-          if (dx*dx + dy*dy + dz*dz < maxDistSq) {
-            const idx = lineCount * 6;
-            linePos[idx]   = x1;       linePos[idx+1] = y1;       linePos[idx+2] = z1;
-            linePos[idx+3] = a[j*3];   linePos[idx+4] = a[j*3+1]; linePos[idx+5] = a[j*3+2];
-            if (activeConnections.length < 500) {
-              activeConnections.push({ x1, y1, z1, x2: a[j*3], y2: a[j*3+1], z2: a[j*3+2] });
+        for (let i = 0; i < N && lineCount < MAX_LINES; i += step) {
+          const x1 = a[i*3], y1 = a[i*3+1], z1 = a[i*3+2];
+          for (let j = i + step; j < N && lineCount < MAX_LINES; j += step) {
+            const dx = a[j*3] - x1, dy = a[j*3+1] - y1, dz = a[j*3+2] - z1;
+            if (dx*dx + dy*dy + dz*dz < maxDistSq) {
+              const idx = lineCount * 6;
+              linePos[idx]   = x1;       linePos[idx+1] = y1;       linePos[idx+2] = z1;
+              linePos[idx+3] = a[j*3];   linePos[idx+4] = a[j*3+1]; linePos[idx+5] = a[j*3+2];
+              if (activeConnections.length < 500) {
+                activeConnections.push({ x1, y1, z1, x2: a[j*3], y2: a[j*3+1], z2: a[j*3+2] });
+              }
+              lineCount++;
             }
-            lineCount++;
           }
         }
-      }
-      lineGeo.setDrawRange(0, lineCount * 2);
-      lineGeo.attributes.position.needsUpdate = true;
-      lineMat.opacity = currentLineAmount * S.ANIM_IDLE.LINE_OPACITY_K;
+        lineGeo.setDrawRange(0, lineCount * 2);
+        lineGeo.attributes.position.needsUpdate = true;
+        lineMat.opacity = currentLineAmount * S.ANIM_IDLE.LINE_OPACITY_K;
 
-      // ── Electrons (thinking only) ─────────────────────────────────
-      if (activeConnections.length > 0 && electronSpawnRate > 0.005) {
-        if (activeElectrons.length < 3 && (t - lastElectronSpawn) > 1.0) {
-          const conn = activeConnections[Math.floor(Math.random() * activeConnections.length)];
-          activeElectrons.push({
-            sx: conn.x1, sy: conn.y1, sz: conn.z1,
-            ex: conn.x2, ey: conn.y2, ez: conn.z2,
-            t: 0,
-            speed: 0.003 + Math.random() * 0.003,
-          });
-          lastElectronSpawn = t;
+        // Electrons (thinking only)
+        if (activeConnections.length > 0 && electronSpawnRate > 0.005) {
+          if (activeElectrons.length < 3 && (t - lastElectronSpawn) > 1.0) {
+            const conn = activeConnections[Math.floor(Math.random() * activeConnections.length)];
+            activeElectrons.push({
+              sx: conn.x1, sy: conn.y1, sz: conn.z1,
+              ex: conn.x2, ey: conn.y2, ez: conn.z2,
+              t: 0,
+              speed: 0.003 + Math.random() * 0.003,
+            });
+            lastElectronSpawn = t;
+          }
         }
+
+        let ek = 0;
+        for (let e = activeElectrons.length - 1; e >= 0; e--) {
+          const el = activeElectrons[e];
+          el.t += el.speed;
+          if (el.t >= 1) { activeElectrons.splice(e, 1); continue; }
+          electronPos[ek*3]   = el.sx + (el.ex - el.sx) * el.t;
+          electronPos[ek*3+1] = el.sy + (el.ey - el.sy) * el.t;
+          electronPos[ek*3+2] = el.sz + (el.ez - el.sz) * el.t;
+          ek++;
+        }
+        electronGeo.setDrawRange(0, ek);
+        electronGeo.attributes.position.needsUpdate = true;
+      } else {
+        // En frozen, masquer lignes et électrons (cohérent avec un orbe en cours d'assemblage).
+        lineGeo.setDrawRange(0, 0);
+        electronGeo.setDrawRange(0, 0);
+        lineMat.opacity = 0;
       }
 
-      let ek = 0;
-      for (let e = activeElectrons.length - 1; e >= 0; e--) {
-        const el = activeElectrons[e];
-        el.t += el.speed;
-        if (el.t >= 1) { activeElectrons.splice(e, 1); continue; }
-        electronPos[ek*3]   = el.sx + (el.ex - el.sx) * el.t;
-        electronPos[ek*3+1] = el.sy + (el.ey - el.sy) * el.t;
-        electronPos[ek*3+2] = el.sz + (el.ez - el.sz) * el.t;
-        ek++;
+
+      // ── Breath Z — skip en frozen ──────────────────────────────────
+      if (!FROZEN) {
+        let zTarget = Math.sin(t * 0.10) * 0.8;
+        if (state === "thinking")      zTarget = Math.sin(t * 0.16) * 1.4 + Math.sin(t * 0.41) * 0.5;
+        else if (state === "speaking") zTarget = Math.sin(t * 0.11) * 1.0;
+
+        cloudZVel += (zTarget - cloudZ) * 0.008;
+        cloudZVel *= 0.94;
+        cloudZ    += cloudZVel;
+
+        points.position.z       = cloudZ;
+        lines.position.z        = cloudZ;
+        electronPoints.position.z = cloudZ;
       }
-      electronGeo.setDrawRange(0, ek);
-      electronGeo.attributes.position.needsUpdate = true;
 
 
-      // ── Breath Z — amplitudes très faibles, pas de zoom visible ─────
-      let zTarget = Math.sin(t * 0.10) * 0.8;
-      if (state === "thinking")      zTarget = Math.sin(t * 0.16) * 1.4 + Math.sin(t * 0.41) * 0.5;
-      else if (state === "speaking") zTarget = Math.sin(t * 0.11) * 1.0;
+      // ── Rotation (auto + drag) — skip en frozen, géré par onTick ────
+      if (!FROZEN) {
+        const rotY = dragRotY + autoRotY;
+        const rotX = dragRotX;
 
-      cloudZVel += (zTarget - cloudZ) * 0.008;
-      cloudZVel *= 0.94;
-      cloudZ    += cloudZVel;
+        points.rotation.y         = rotY;
+        lines.rotation.y          = rotY;
+        electronPoints.rotation.y = rotY;
+        points.rotation.x         = rotX;
+        lines.rotation.x          = rotX;
+        electronPoints.rotation.x = rotX;
+      }
 
-      points.position.z       = cloudZ;
-      lines.position.z        = cloudZ;
-      electronPoints.position.z = cloudZ;
+      // ── Camera — skip en frozen, séquence pilote z (dolly) via onTick ──
+      if (!FROZEN) {
+        cameraZ += (cameraZTarget - cameraZ) * 0.18;
+        camera.position.z = cameraZ;
+        camera.position.x = Math.sin(t * S.CAMERA.OSC_X_FREQ) * S.CAMERA.OSC_X_AMPL;
+        camera.position.y = Math.cos(t * S.CAMERA.OSC_Y_FREQ) * S.CAMERA.OSC_Y_AMPL;
+        camera.lookAt(0, 0, cloudZ * 0.2);
+      }
 
-
-      // ── Rotation (auto + drag) ────────────────────────────────────
-      const rotY = dragRotY + autoRotY;
-      const rotX = dragRotX;
-
-      points.rotation.y         = rotY;
-      lines.rotation.y          = rotY;
-      electronPoints.rotation.y = rotY;
-      points.rotation.x         = rotX;
-      lines.rotation.x          = rotX;
-      electronPoints.rotation.x = rotX;
-
-      // ── Camera ────────────────────────────────────────────────────
-      cameraZ += (cameraZTarget - cameraZ) * 0.18;
-      camera.position.z = cameraZ;
-      camera.position.x = Math.sin(t * S.CAMERA.OSC_X_FREQ) * S.CAMERA.OSC_X_AMPL;
-      camera.position.y = Math.cos(t * S.CAMERA.OSC_Y_FREQ) * S.CAMERA.OSC_Y_AMPL;
-      camera.lookAt(0, 0, cloudZ * 0.2);
+      // ── Hook séquence — appelé AVANT render, peut muter positions/rotation/camera/material
+      if (ON_TICK) {
+        ON_TICK({
+          positions: pos,
+          geometry: geo,
+          material: mat,
+          points: points,
+          scene: scene,
+          camera: camera,
+          renderer: renderer,
+          t: t,
+          phase: phase,
+        });
+      }
 
       renderer.render(scene, camera);
     }
@@ -431,12 +487,47 @@
         camera.aspect = nw / nh;
         camera.updateProjectionMatrix();
       },
+      // ── Hooks séquence ────────────────────────────────────────────
+      // Disponibles que opts.frozen soit vrai ou non, mais ne sont
+      // exploités par la séquence qu'en frozen.
+      getPositions:     function () { return pos; },
+      getPhase:         function () { return phase; },          // randoms init par particule
+      commitPositions:  function () { geo.attributes.position.needsUpdate = true; },
+      getPoints:        function () { return points; },         // rotation, position.z (cloudZ)
+      getGeometry:      function () { return geo; },
+      getMaterial:      function () { return mat; },            // opacity, size, color
+      getCamera:        function () { return camera; },         // dolly
+      getScene:         function () { return scene; },          // ajout d'overlays (beam, nucleus, ocean)
+      getParticleCount: function () { return N; },
+      isFrozen:         function () { return FROZEN; },
+      setFrozen:        function (value) {
+        const next = !!value;
+        if (next === FROZEN) return;
+        const wasFrozen = FROZEN;
+        FROZEN = next;
+        if (wasFrozen && !FROZEN) {
+          // Unfreeze : on rattache drag + wheel, on remet cameraZ à sa cible.
+          canvas.addEventListener("mousedown", onMouseDown);
+          window.addEventListener("mousemove", onMouseMove);
+          window.addEventListener("mouseup",   onMouseUp);
+          canvas.addEventListener("wheel",     onWheel, { passive: false });
+          canvas.style.cursor = "grab";
+        } else if (!wasFrozen && FROZEN) {
+          canvas.removeEventListener("mousedown", onMouseDown);
+          window.removeEventListener("mousemove", onMouseMove);
+          window.removeEventListener("mouseup",   onMouseUp);
+          canvas.removeEventListener("wheel",     onWheel);
+          canvas.style.cursor = "";
+        }
+      },
       destroy() {
         destroyed = true;
-        canvas.removeEventListener("mousedown", onMouseDown);
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup",   onMouseUp);
-        canvas.removeEventListener("wheel",     onWheel);
+        if (!FROZEN) {
+          canvas.removeEventListener("mousedown", onMouseDown);
+          window.removeEventListener("mousemove", onMouseMove);
+          window.removeEventListener("mouseup",   onMouseUp);
+          canvas.removeEventListener("wheel",     onWheel);
+        }
         ro.disconnect();
         renderer.dispose();
         geo.dispose();
@@ -451,12 +542,12 @@
   }
 
   window.createJarvisOrb = function (canvas, opts) {
-    return createOrbInternal(canvas);
+    return createOrbInternal(canvas, opts);
   };
 
   // `new JarvisOrb(canvas)` still works — constructor returning an object
   // causes `new` to return that object instead of `this`
   window.JarvisOrb = function (canvas, opts) {
-    return createOrbInternal(canvas);
+    return createOrbInternal(canvas, opts);
   };
 })();
