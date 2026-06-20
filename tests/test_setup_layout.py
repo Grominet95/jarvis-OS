@@ -88,5 +88,24 @@ def test_is_setup_complete_defaults_to_anthropic_backend(tmp_path: Path) -> None
     assert is_setup_complete(env) is True
 
 
+def test_is_setup_complete_flag_true_without_key(tmp_path: Path) -> None:
+    # LLM facultatif : le flag SETUP_COMPLETE suffit même sans clé API.
+    env = tmp_path / ".env"
+    _write(env, "USER_FIRSTNAME=Max\nANTHROPIC_API_KEY=\nSETUP_COMPLETE=true\n")
+    assert is_setup_complete(env) is True
+
+
+def test_is_setup_complete_flag_true_requires_firstname(tmp_path: Path) -> None:
+    env = tmp_path / ".env"
+    _write(env, "SETUP_COMPLETE=true\n")
+    assert is_setup_complete(env) is False
+
+
+def test_is_setup_complete_gemini_ok(tmp_path: Path) -> None:
+    env = tmp_path / ".env"
+    _write(env, "USER_FIRSTNAME=Max\nAPI_BACKEND=gemini\nGEMINI_API_KEY=g-key\n")
+    assert is_setup_complete(env) is True
+
+
 def test_is_setup_complete_missing_file(tmp_path: Path) -> None:
     assert is_setup_complete(tmp_path / "absent.env") is False
