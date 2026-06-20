@@ -6,6 +6,13 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
+function Repair-BundleVenv {
+    $rehome = Join-Path $PSScriptRoot "scripts\release\rehome_bundle.ps1"
+    if (Test-Path $rehome) {
+        & $rehome -ProjectRoot $PSScriptRoot
+    }
+}
+
 function Get-JarvisPython {
     $bundlePy = Join-Path $PSScriptRoot "bundle\.venv\Scripts\python.exe"
     $venvPy = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
@@ -198,6 +205,8 @@ function Invoke-JarvisRun {
         Write-Host "  Jarvis arrete" -ForegroundColor DarkGray
     }
 }
+
+Repair-BundleVenv
 
 switch ($Command.ToLowerInvariant()) {
     { $_ -in @("eclosion", "setup") } {

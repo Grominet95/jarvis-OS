@@ -86,7 +86,7 @@ Tu télécharges une archive **avec le dossier `bundle/` déjà inclus**. Tu n'a
 | Navigateur web | Configuration sur `http://127.0.0.1:8765/setup` |
 | Clés API (LLM, etc.) | OpenAI ou Anthropic au minimum — saisies dans l'assistant web |
 
-Le bundle embarque déjà : Python 3.11, les dépendances Python, les modèles ML (YOLO, Piper), `livekit-server` et `uv.exe`.
+Le bundle embarque déjà : un Python 3.11 **autonome et relocalisable** (`bundle/python`), un environnement virtuel (`bundle/.venv`), les dépendances Python, les modèles ML (YOLO, Piper), `livekit-server` et `uv.exe`. Au premier `setup`, l'environnement est automatiquement ré-ancré sur la machine cible (aucun chemin absolu de la machine de build n'est requis).
 
 ### Développeur — construire le bundle
 
@@ -94,7 +94,7 @@ Une seule fois, **avec réseau**, pour produire `bundle/` (release ou usage loca
 
 | Outil | Version | Notes |
 |---|---|---|
-| [uv](https://docs.astral.sh/uv/) | latest | Télécharge Python 3.11 dans `bundle/.venv` |
+| [uv](https://docs.astral.sh/uv/) | latest | Télécharge un Python 3.11 relocalisable dans `bundle/python` + venv `bundle/.venv` |
 | Réseau | | Téléchargement des deps, modèles et binaires |
 
 Python système et LiveKit **ne sont pas requis** : le script de build les intègre au bundle.

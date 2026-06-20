@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+if [[ -f "$ROOT/scripts/release/rehome_bundle.sh" ]]; then
+  bash "$ROOT/scripts/release/rehome_bundle.sh" "$ROOT" || true
+fi
+
 if [[ "${1:-}" == "--ci" ]]; then
   echo "JARVIS V3 — setup --ci (mode non-interactif)"
 
@@ -85,7 +90,12 @@ if [[ -z "$PYTHON_BIN" ]]; then
 fi
 
 if ! "$PYTHON_BIN" -c "import jarvis.setup_app" 2>/dev/null; then
-  uv pip install --python "$PYTHON_BIN" -e .
+  UV_CMD="uv"
+  [[ -x bundle/bin/uv ]] && UV_CMD="bundle/bin/uv"
+  # Bundle case: deps already installed, only the editable link needs
+  # (re)registering -> --no-deps avoids any network call.
+  "$UV_CMD" pip install --python "$PYTHON_BIN" --no-deps -e . \
+    || "$UV_CMD" pip install --python "$PYTHON_BIN" -e .
 fi
 
 echo ""

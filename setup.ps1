@@ -15,6 +15,13 @@ function Ask-BuildBundle {
     return $raw.Trim().ToLowerInvariant() -in @("y", "yes", "o", "oui")
 }
 
+function Repair-BundleVenv {
+    $rehome = Join-Path $PSScriptRoot "scripts\release\rehome_bundle.ps1"
+    if (Test-Path $rehome) {
+        & $rehome -ProjectRoot $PSScriptRoot
+    }
+}
+
 function Get-JarvisPython {
     $bundlePy = Join-Path $PSScriptRoot "bundle\.venv\Scripts\python.exe"
     $venvPy = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
@@ -42,14 +49,29 @@ function Ensure-Uv {
     }
 }
 
+function Get-BundledUv {
+    $bundledUv = Join-Path $PSScriptRoot "bundle\bin\uv.exe"
+    if (Test-Path $bundledUv) { return $bundledUv }
+    if (Ensure-Command "uv") { return "uv" }
+    return $null
+}
+
 function Ensure-JarvisPackage {
     param([string]$PythonPath)
     & $PythonPath -c "import jarvis.setup_app" 2>$null
     if ($LASTEXITCODE -eq 0) { return }
-    if (-not (Ensure-Command "uv")) { throw "jarvis package missing in venv and uv unavailable." }
-    uv pip install --python $PythonPath -e .
-    if ($LASTEXITCODE -ne 0) { throw "jarvis package install failed." }
+    $uvCmd = Get-BundledUv
+    if (-not $uvCmd) { throw "jarvis package missing in venv and uv unavailable." }
+    # Bundle case: deps are already installed in the venv, only the editable
+    # link needs (re)registering -> offline + no-deps avoids any network call.
+    & $uvCmd pip install --python $PythonPath --no-deps -e .
+    if ($LASTEXITCODE -ne 0) {
+        & $uvCmd pip install --python $PythonPath -e .
+        if ($LASTEXITCODE -ne 0) { throw "jarvis package install failed." }
+    }
 }
+
+Repair-BundleVenv
 
 if ($Ci) {
     Write-Host "JARVIS V3 - setup --Ci (mode non-interactif)" -ForegroundColor Cyan

@@ -4,6 +4,7 @@ Set-Location ..\..
 
 $bundleRoot = Join-Path (Get-Location) "bundle"
 $venvPath = Join-Path $bundleRoot ".venv"
+$pythonDir = Join-Path $bundleRoot "python"
 $modelsDir = Join-Path $bundleRoot "models"
 $piperDir = Join-Path $modelsDir "piper"
 $binDir = Join-Path $bundleRoot "bin"
@@ -31,26 +32,45 @@ if (-not (Ensure-Command "uv")) {
 
 New-Item -ItemType Directory -Path $bundleRoot, $modelsDir, $piperDir, $binDir -Force | Out-Null
 
-Write-Host "[1/5] Sync Python env into bundle/.venv" -ForegroundColor Cyan
-if (Test-Path $venvPath) {
-    Remove-Item -Recurse -Force $venvPath
-}
-uv venv $venvPath --python 3.11
-uv sync --python $venvPath
-if ($LASTEXITCODE -ne 0) { throw "uv sync failed." }
-uv pip install --python $venvPath -e .
-if ($LASTEXITCODE -ne 0) { throw "jarvis package install failed." }
+# A standalone Python is embedded and the venv is created with the std `venv`
+# module (--copies). uv's own venv uses a trampoline with the base interpreter
+# path baked into python.exe, which is NOT relocatable across machines. The std
+# venv reads `home` from pyvenv.cfg, so it can be re-homed on the target machine
+# (see scripts/release/rehome_bundle.ps1).
+Write-Host "[1/6] Embed relocatable Python into bundle/python" -ForegroundColor Cyan
+if (Test-Path $pythonDir) { Remove-Item -Recurse -Force $pythonDir }
+$pyInstallCache = Join-Path $bundleRoot ".python-install"
+if (Test-Path $pyInstallCache) { Remove-Item -Recurse -Force $pyInstallCache }
+$env:UV_PYTHON_INSTALL_DIR = $pyInstallCache
+uv python install 3.11
+if ($LASTEXITCODE -ne 0) { throw "uv python install failed." }
+$managedPython = Get-ChildItem $pyInstallCache -Recurse -Filter "python.exe" | Select-Object -First 1
+if (-not $managedPython) { throw "managed python.exe not found after install." }
+$managedRoot = Split-Path $managedPython.FullName -Parent
+New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
+Copy-Item (Join-Path $managedRoot "*") $pythonDir -Recurse -Force
+Remove-Item -Recurse -Force $pyInstallCache
+$bundleBasePython = Join-Path $pythonDir "python.exe"
+if (-not (Test-Path $bundleBasePython)) { throw "bundle base python missing." }
 
+Write-Host "[2/6] Create relocatable venv (std venv --copies)" -ForegroundColor Cyan
+if (Test-Path $venvPath) { Remove-Item -Recurse -Force $venvPath }
+& $bundleBasePython -m venv --copies $venvPath
+if ($LASTEXITCODE -ne 0) { throw "venv creation failed." }
 $bundlePython = Join-Path $venvPath "Scripts\python.exe"
-if (-not (Test-Path $bundlePython)) { throw "bundle python missing." }
+if (-not (Test-Path $bundlePython)) { throw "bundle venv python missing." }
+
+Write-Host "[3/6] Install deps + jarvis into venv" -ForegroundColor Cyan
+uv pip install --python $bundlePython -e .
+if ($LASTEXITCODE -ne 0) { throw "jarvis package install failed." }
 & $bundlePython -c "import jarvis.setup_app"
 if ($LASTEXITCODE -ne 0) { throw "jarvis.setup_app not importable in bundle venv." }
 
-Write-Host "[2/5] Copy uv binary" -ForegroundColor Cyan
+Write-Host "[4/6] Copy uv binary" -ForegroundColor Cyan
 $uvExe = (Get-Command uv).Source
 Copy-Item $uvExe (Join-Path $binDir "uv.exe") -Force
 
-Write-Host "[3/5] Download ML models" -ForegroundColor Cyan
+Write-Host "[5/6] Download ML models" -ForegroundColor Cyan
 if (-not (Test-Path "yolov8n.pt")) {
     & $bundlePython -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
 }
@@ -64,7 +84,7 @@ if (-not (Test-Path $piperOnnx)) {
     curl.exe -L --silent -o $piperJson "$baseUrl/fr_FR-upmc-medium.onnx.json"
 }
 
-Write-Host "[4/5] Download livekit-server" -ForegroundColor Cyan
+Write-Host "[6/6] Download livekit-server" -ForegroundColor Cyan
 $lkTarget = Join-Path $binDir "livekit-server.exe"
 if (-not (Test-Path $lkTarget)) {
     $release = Invoke-RestMethod -Uri "https://api.github.com/repos/livekit/livekit/releases/latest" -Headers @{ "User-Agent" = "jarvis-bundle" }
@@ -90,12 +110,14 @@ if (-not (Test-Path $lkTarget)) {
     Remove-Item $extractDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Write-Host "[5/5] Write manifest" -ForegroundColor Cyan
+Write-Host "Write manifest" -ForegroundColor Cyan
 $manifest = @{
-    version = "1"
+    version = "2"
     platform = "windows"
     python = "3.11"
     venv = ".venv"
+    python_home = "python"
+    relocatable = $true
     models = @{
         yolo = "models/yolov8n.pt"
         piper_onnx = "models/piper/fr_FR-upmc-medium.onnx"
