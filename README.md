@@ -174,6 +174,12 @@ uv sync --extra vision
 
 Puis `./jarvis eclosion` ou `.\jarvis.ps1 setup` selon l'OS.
 
+> **Serveur distant / headless (VPS, conteneur) :** la détection de double-clap
+> (`CLAP_DETECTION_ENABLED`) et le pipeline vocal local écoutent le micro **de la
+> machine qui héberge Jarvis**. Sur un VPS sans périphérique audio, ces fonctions
+> ne se déclenchent jamais (un avertissement explicite est désormais logué au
+> démarrage). Mets `CLAP_DETECTION_ENABLED=false` dans `.env` pour ce type d'install.
+
 ---
 
 ### Démarrage (rappel)

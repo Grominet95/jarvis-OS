@@ -165,9 +165,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             container.proactive_queue.broadcast_event({"type": "wake_up", "trigger": "clap"})
             logger.info("Wake up triggered by clap")
 
+        # start() logue lui-même son démarrage effectif (ou un avertissement clair
+        # si aucun micro n'est disponible, cf. cas headless/VPS).
         clap_detector = ClapDetector(callback=_on_clap)
         asyncio.create_task(clap_detector.start(), name="clap-detector")
-        logger.info("ClapDetector started")
 
     worker_task = asyncio.create_task(container.worker.run_loop(), name="background-worker")
     container.scheduler.start()

@@ -48,20 +48,51 @@ class ClapDetector:
         self._loop: asyncio.AbstractEventLoop | None = None
 
     async def start(self) -> None:
-        """Lance le daemon de détection en background."""
+        """Lance le daemon de détection en background.
+
+        Sur un serveur headless (VPS, conteneur Docker) sans périphérique audio
+        d'entrée, la détection de clap ne peut pas fonctionner : le double-clap
+        suppose un micro physique sur la machine qui héberge Jarvis. On le signale
+        explicitement et on s'arrête proprement, plutôt que de tourner dans le vide
+        (ou de mourir silencieusement dans la task asyncio).
+        """
         self._running = True
         self._loop = asyncio.get_event_loop()
+
+        try:
+            sd.check_input_settings(
+                samplerate=self.SAMPLE_RATE, channels=1, dtype="float32"
+            )
+        except Exception as exc:  # noqa: BLE001 — PortAudioError, ValueError, OSError…
+            logger.warning(
+                "ClapDetector désactivé : aucun périphérique audio d'entrée détecté "
+                "({}). Normal sur un serveur headless/VPS : le double-clap nécessite un "
+                "micro sur la machine hôte. Mets CLAP_DETECTION_ENABLED=false pour "
+                "masquer cet avertissement.",
+                exc,
+            )
+            self._running = False
+            return
+
         logger.info("ClapDetector started", threshold=self._threshold)
 
-        with sd.InputStream(
-            samplerate=self.SAMPLE_RATE,
-            channels=1,
-            blocksize=self.BLOCK_SIZE,
-            dtype="float32",
-            callback=self._audio_callback,
-        ):
-            while self._running:  # noqa: ASYNC110 — Event refactoring hors scope (stream sounddevice)
-                await asyncio.sleep(0.1)
+        try:
+            with sd.InputStream(
+                samplerate=self.SAMPLE_RATE,
+                channels=1,
+                blocksize=self.BLOCK_SIZE,
+                dtype="float32",
+                callback=self._audio_callback,
+            ):
+                while self._running:  # noqa: ASYNC110 — Event refactoring hors scope (stream sounddevice)
+                    await asyncio.sleep(0.1)
+        except sd.PortAudioError as exc:
+            logger.warning(
+                "ClapDetector arrêté : erreur audio PortAudio ({}). Micro hôte "
+                "indisponible ?",
+                exc,
+            )
+            self._running = False
 
     def stop(self) -> None:
         self._running = False
