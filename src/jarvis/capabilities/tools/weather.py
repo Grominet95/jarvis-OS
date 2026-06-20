@@ -12,7 +12,7 @@ class WeatherTool(Tool):
     name = "get_weather"
     description = (
         "Obtient la météo actuelle pour une ville. "
-        "Utilise cet outil quand Barth demande la météo, la température ou le temps qu'il fait."
+        "Utilise cet outil quand l'utilisateur demande la météo, la température ou le temps qu'il fait."
     )
     input_schema = {
         "type": "object",

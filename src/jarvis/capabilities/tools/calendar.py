@@ -58,8 +58,8 @@ class CalendarListTool(Tool):
 
     name = "list_calendar_events"
     description = (
-        "Liste les prochains événements du Google Calendar de Barth. "
-        "Utilise cet outil quand Barth demande son agenda, son planning ou ses rendez-vous."
+        "Liste les prochains événements du Google Calendar de l'utilisateur. "
+        "Utilise cet outil quand l'utilisateur demande son agenda, son planning ou ses rendez-vous."
     )
     input_schema = {
         "type": "object",
@@ -125,8 +125,8 @@ class CalendarCreateTool(Tool):
 
     name = "create_calendar_event"
     description = (
-        "Crée un nouvel événement dans le Google Calendar de Barth. "
-        "Utilise cet outil quand Barth veut ajouter un rendez-vous ou un rappel."
+        "Crée un nouvel événement dans le Google Calendar de l'utilisateur. "
+        "Utilise cet outil quand l'utilisateur veut ajouter un rendez-vous ou un rappel."
     )
     input_schema = {
         "type": "object",

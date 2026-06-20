@@ -60,8 +60,8 @@ class ReadFileTool(Tool):
 
     name = "read_file"
     description = (
-        "Lit le contenu d'un fichier texte sur le Mac de Barth (lecture seule, aucune "
-        "modification). Utilise cet outil quand Barth demande de lire ou analyser un fichier."
+        "Lit le contenu d'un fichier texte sur le Mac de l'utilisateur (lecture seule, aucune "
+        "modification). Utilise cet outil quand l'utilisateur demande de lire ou analyser un fichier."
     )
     input_schema = {
         "type": "object",
@@ -117,8 +117,8 @@ class FindFilesTool(Tool):
 
     name = "find_files"
     description = (
-        "Cherche des fichiers par nom ou extension sur le Mac de Barth. "
-        "Utilise cet outil quand Barth demande de trouver des fichiers."
+        "Cherche des fichiers par nom ou extension sur le Mac de l'utilisateur. "
+        "Utilise cet outil quand l'utilisateur demande de trouver des fichiers."
     )
     input_schema = {
         "type": "object",

@@ -38,10 +38,12 @@ class SpawnSubagentTool(Tool):
 
     name = "spawn_subagent"
     description = (
-        "Délègue une tâche à un sous-agent isolé avec son propre contexte. "
-        "Retourne un résumé compact. "
-        "Utilise pour les workstreams parallèles ou les tâches longues "
-        "sans polluer le contexte courant."
+        "Délègue une tâche INTERNE (sans livrable persistent à sauvegarder) "
+        "à un sous-agent isolé avec son propre contexte. Retourne un résumé "
+        "compact. Réservé aux sous-questions ou analyses temporaires dont le "
+        "résultat est consommé immédiatement. "
+        "INTERDIT pour toute demande qui produit un fichier, document, email "
+        "ou script que l'utilisateur voudra retrouver — émets [BG:PROJECT] à la place."
     )
     input_schema = {
         "type": "object",
