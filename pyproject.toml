@@ -32,7 +32,7 @@ dependencies = [
     "google-auth-oauthlib>=1.0.0",
     # Audio
     "faster-whisper>=1.1.0",
-    "openai>=1.50.0",
+    "openai>=2.43.0",
     "numpy>=1.26.0",
     "piper-tts>=1.2.0",
     "RealtimeSTT>=0.3.0",
