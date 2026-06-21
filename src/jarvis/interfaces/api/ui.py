@@ -25,6 +25,8 @@ def inject_client_config(html: str) -> str:
         "<script>"
         f"window.JARVIS_API_TOKEN={json.dumps(token)};"
         f"window.JARVIS_API_BASE={json.dumps(api_base)};"
+        f"window.JARVIS_WAKEUP_ENABLED={json.dumps(bool(settings.wakeup_enabled))};"
+        f"window.JARVIS_FACE_ENABLED={json.dumps(bool(settings.face_recognition_enabled))};"
         "</script>"
     )
     marker = "</head>"

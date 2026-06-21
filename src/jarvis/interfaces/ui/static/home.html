@@ -195,7 +195,12 @@
 (function () {
   const params = new URLSearchParams(location.search);
   const mode   = params.get('wake');
-  if (mode === '0') return;             // skip total
+  if (mode === '0') return;             // skip total (dev)
+  // WAKEUP_ENABLED=false → accès direct au dashboard, aucune séquence de veille.
+  // Sans ce garde-fou, sur une install sans micro (VPS/headless) l'écran
+  // « double clap pour réveiller » bloque tout accès (le seul déclencheur est
+  // le clap, désactivé). ?wake=1 force quand même la séquence (dev).
+  if (mode !== '1' && window.JARVIS_WAKEUP_ENABLED === false) return;
   window.__jarvisWakeActive = true;
   window.__jarvisWakeForceImmediate = (mode === '1');
   // Cache TOUT le chrome dashboard sauf l'orbe (le wake utilise #orb-canvas).
@@ -270,7 +275,9 @@
 
     seq = window.createWakeSequence(root, {
       userName:     _userName,
-      requireFace:  true,
+      // Scan facial seulement si la reconnaissance faciale est activée (sinon, sur
+      // une install sans photo de référence / sans caméra, ça force un scan inutile).
+      requireFace:  window.JARVIS_FACE_ENABLED === true,
       targetCanvas: document.getElementById('orb-canvas'),
       onComplete:   onWakeComplete,
       onFailure:    onWakeFailure,
