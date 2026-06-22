@@ -1,0 +1,31 @@
+services:
+  jarvis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jarvis-os
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # Données persistantes (mémoire, sessions, skills) — survivent aux rebuilds
+      - jarvis-data:/app/memory_data
+      - jarvis-skills:/app/skills_data
+      - jarvis-workspace:/app/workspace
+      # Modèle TTS Piper, téléchargé manuellement (hors image)
+      - ./models:/app/models:ro
+      - ./config:/app/config
+      - ./.env:/app/.env
+    networks:
+      - jarvis-net
+
+networks:
+  jarvis-net:
+    driver: bridge
+
+volumes:
+  jarvis-data:
+  jarvis-skills:
+  jarvis-workspace:
