@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Tests d'ingestion — le cœur dur de la PHASE 3 (CDC §6.4–§6.5).
 
 Couvre les 3 cas de réconciliation + vocabulaire fermé + confidence.

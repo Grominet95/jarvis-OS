@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Spotify OAuth token management — Phase E §E.1.1.
 
 Le tool `capabilities/tools/spotify.py` ET le router OAuth

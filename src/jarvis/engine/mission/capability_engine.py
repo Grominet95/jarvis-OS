@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Capability Engine (CDC §8) — détection de gap + délégation au SkillLab.
 
 C'est la phase la plus DANGEREUSE du projet (cf. CDC §8 anti-patterns).

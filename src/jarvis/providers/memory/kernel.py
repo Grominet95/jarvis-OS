@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Memory Kernel — couche d'accès SQLite source de vérité unique (CDC §6.1, §6.2).
 
 Une base unique `memory_data/jarvis_memory.db`, quatre tables (events, facts,

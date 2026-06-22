@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Mission réelle PHASE 6 — Proactive Engine & Curator (CDC §10).
 
 But (cf. feedback_real_run_dod en mémoire) : les 19 tests PHASE 6 mockent une

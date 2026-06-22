@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Curator nocturne (CDC §10.3) — rapport + patches PROPOSÉS, jamais appliqués MVP.
 
 Tourne dans la passe nocturne (scheduler à 3h10, après AutoDream deep 3h et

@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Tests du CapabilityEngine (CDC §8) — détection + délégation + sécurité.
 
 Les cas négatifs (jamais d'auto-install, INSTALL_PACKAGE bloqué) sont

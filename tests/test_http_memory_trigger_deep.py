@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Tests de l'endpoint /api/memory/trigger-deep (MOUVEMENT 2 option D).
 
 L'endpoint est un outil d'observation : il déclenche AutoDream.deep_analyze()

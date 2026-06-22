@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Wiring des canaux messaging au boot du process API.
 
 Hors-Container par design (CDC §C.1) : Telegram/Discord/MessagingGateway

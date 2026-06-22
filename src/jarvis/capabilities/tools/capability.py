@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Tool LLM pour signaler un manque de capacité (PHASE 5 §8).
 
 Le voice/text agent appelle ce tool quand il identifie qu'il ne sait pas

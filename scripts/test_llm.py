@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """
 Script de validation Phase 1 — appelle LLMProvider.complete() et affiche la réponse.
 Usage : uv run python scripts/test_llm.py [--stream] [--provider anthropic|openai|mistral|ollama]

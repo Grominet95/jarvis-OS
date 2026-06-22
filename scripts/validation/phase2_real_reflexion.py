@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Mission réelle PHASE 2 — réflexion post-mission avec vrai LLM (CDC §5 DoD).
 
 But (cf. feedback_real_run_dod en mémoire) : les 13 tests reflexion mockent le

@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Trace d'observation de l'ingestion Kernel (MOUVEMENT 2 option D).
 
 À lancer APRÈS 3-5 jours d'usage réel avec settings.ingest_deep_enabled=true.

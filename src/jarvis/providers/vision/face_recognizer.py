@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """
 Face recognition avec face_recognition (ageitgey/dlib).
 Compare les frames webcam avec les visages de référence dans vision_data/faces/.

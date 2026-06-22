@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Pattern script-via-RPC : un pipeline multi-étapes = un seul tour LLM.
 
 Architecture (transport fichiers — fonctionne local ET Docker via volume monté) :

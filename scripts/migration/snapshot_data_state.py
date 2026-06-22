@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 Barthélemy Houot
+# This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
+# See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
+
 """Baseline de l'état runtime sur disque — CDC §A.1.4.
 
 L'état runtime (memory_data/, config/*.json, skills/installed/, vision_data/faces/)
