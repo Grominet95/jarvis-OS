@@ -4,6 +4,10 @@ version = "0.2.0"
 description = "Jarvis — assistant personnel intelligent vocal temps réel"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
+license = "AGPL-3.0-or-later"
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+]
 dependencies = [
     # Web framework
     "fastapi>=0.115.0",
