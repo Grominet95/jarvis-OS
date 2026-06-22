@@ -91,7 +91,7 @@ class GmailListTool(Tool):
         except Exception as e:
             return ToolResult(content=f"Erreur credentials Gmail : {e}", is_error=True)
 
-        label_ids = "UNREAD" if unread_only else "INBOX"
+        label_ids = ["UNREAD", "INBOX"] if unread_only else ["INBOX"]
         params = {"labelIds": label_ids, "maxResults": max_results}
 
         try:
