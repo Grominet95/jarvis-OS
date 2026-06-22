@@ -26,6 +26,7 @@ from livekit.agents import (
 from livekit.agents.voice.room_io import AudioInputOptions, RoomOptions
 from livekit.plugins import deepgram, elevenlabs, silero
 from livekit.plugins import google as lk_google
+from livekit.plugins.google.beta import gemini_tts
 
 from jarvis.bootstrap import build
 from jarvis.capabilities.skills.registry import SkillRegistry
@@ -280,6 +281,27 @@ async def entrypoint(ctx: object) -> None:
 
     logger.info("TTS config — quebec=%s model=%s voice=%s", _quebec, _tts_model, _voice_id)
 
+    # TTS sélectionnable via TTS_PROVIDER : 'gemini' (voix Google naturelle) ou
+    # 'elevenlabs' (défaut). 'piper' n'a pas de plugin LiveKit → repli ElevenLabs.
+    _tts_provider = _env.get("TTS_PROVIDER", "elevenlabs").strip().lower()
+    if _tts_provider == "gemini":
+        _tts = gemini_tts.TTS(
+            model=_env.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
+            voice_name=_env.get("GEMINI_TTS_VOICE", "Kore"),
+            api_key=_env.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY", "")),
+        )
+        logger.info("TTS pipeline = Gemini (%s / %s)",
+                    _env.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
+                    _env.get("GEMINI_TTS_VOICE", "Kore"))
+    else:
+        _tts = elevenlabs.TTS(
+            model=_tts_model,
+            voice_id=_voice_id,
+            api_key=_env.get("ELEVENLABS_API_KEY", os.getenv("ELEVENLABS_API_KEY", "")),
+            encoding="pcm_24000",
+            chunk_length_schedule=[50, 90, 160, 250],
+        )
+
     # Pré-connecte la room avec un connect_timeout étendu pour éviter les retries v0/v1 de 5s.
     # livekit-agents utilise rtc.RoomOptions() sans connect_timeout (défaut Rust ~5s),
     # ce qui cause des timeouts systématiques sur le v0 path. On se connecte nous-mêmes d'abord.
@@ -319,15 +341,8 @@ async def entrypoint(ctx: object) -> None:
         ),
         # LLM — routé selon API_BACKEND (fallback Gemini 2.5 Flash)
         llm=_build_voice_llm(_env),
-        # TTS — ElevenLabs : chunk_length_schedule courts → 1er chunk audio plus rapide.
-        # streaming_latency est deprecated, on le retire.
-        tts=elevenlabs.TTS(
-            model=_tts_model,
-            voice_id=_voice_id,
-            api_key=_env.get("ELEVENLABS_API_KEY", os.getenv("ELEVENLABS_API_KEY", "")),
-            encoding="pcm_24000",
-            chunk_length_schedule=[50, 90, 160, 250],
-        ),
+        # TTS — sélectionné plus haut selon TTS_PROVIDER (Gemini ou ElevenLabs).
+        tts=_tts,
         # Désactive l'adaptive interruption (agent-gateway.livekit.cloud) — local dev only
         turn_handling={"interruption": {"mode": "vad"}},
     )

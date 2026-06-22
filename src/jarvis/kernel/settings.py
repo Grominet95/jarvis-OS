@@ -251,11 +251,26 @@ class Settings(BaseSettings):
     )
     tts_provider: str = Field(
         default="piper",
-        description="Moteur TTS : 'piper' (local) ou 'elevenlabs'.",
+        description="Moteur TTS : 'piper' (local), 'elevenlabs' ou 'gemini'.",
     )
     piper_model_path: str = Field(
         default="models/piper/fr_FR-upmc-medium.onnx",
         description="Chemin vers le modèle Piper ONNX.",
+    )
+    # ── Gemini TTS (Google) ───────────────────────────────────
+    # Auth via GOOGLE_API_KEY (clé Gemini API, ai.google.dev) — même clé que le
+    # plugin livekit-plugins-google côté pipeline vocal.
+    google_api_key: SecretStr = Field(
+        default=SecretStr(""),
+        description="Clé API Google/Gemini (GOOGLE_API_KEY) — utilisée par le TTS Gemini.",
+    )
+    gemini_tts_model: str = Field(
+        default="gemini-2.5-flash-preview-tts",
+        description="Modèle Gemini TTS (flash-preview-tts ou pro-preview-tts).",
+    )
+    gemini_tts_voice: str = Field(
+        default="Kore",
+        description="Voix Gemini TTS (ex. Kore, Puck, Charon, Aoede…). 30 voix dispo.",
     )
     elevenlabs_api_key: SecretStr = Field(default=SecretStr(""), description="Clé API ElevenLabs.")
     elevenlabs_voice_id: str = Field(default="", description="ID de la voix ElevenLabs.")

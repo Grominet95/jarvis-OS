@@ -38,6 +38,8 @@ class TTSEngine:
             return b""
         if settings.tts_provider == "elevenlabs":
             return await self._synthesize_elevenlabs(text)
+        if settings.tts_provider in ("gemini", "google"):
+            return await self._synthesize_gemini(text)
         return await self._synthesize_piper(text)
 
     async def _synthesize_elevenlabs(self, text: str) -> bytes:
@@ -95,6 +97,56 @@ class TTSEngine:
         logger.warning("Falling back to Piper TTS")
         return await self._synthesize_piper(text)
 
+    async def _synthesize_gemini(self, text: str) -> bytes:
+        """Gemini TTS (Google) — voix naturelle, auth GOOGLE_API_KEY.
+
+        L'API Gemini renvoie du PCM brut 16-bit mono 24kHz ; on l'emballe en WAV
+        pour que le navigateur puisse le décoder (decodeAudioData exige un
+        conteneur). Fallback Piper si pas de clé ou en cas d'erreur.
+        """
+        api_key = settings.google_api_key.get_secret_value()
+        if not api_key:
+            logger.warning("Gemini TTS: GOOGLE_API_KEY absente — fallback Piper")
+            return await self._synthesize_piper(text)
+        try:
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(api_key=api_key)
+            config = types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=types.SpeechConfig(
+                    voice_config=types.VoiceConfig(
+                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                            voice_name=settings.gemini_tts_voice
+                        )
+                    )
+                ),
+            )
+            resp = await client.aio.models.generate_content(
+                model=settings.gemini_tts_model, contents=text, config=config
+            )
+            pcm = _extract_gemini_pcm(resp)
+            if not pcm:
+                logger.error("Gemini TTS: aucun audio renvoyé — fallback Piper")
+                return await self._synthesize_piper(text)
+            if self._tracker is not None:
+                self._tracker.track(
+                    UsageEntry(
+                        timestamp=datetime.now().isoformat(),
+                        provider="gemini",
+                        model=settings.gemini_tts_model,
+                        characters=len(text),
+                        cost_usd=0.0,
+                        context="conversation",
+                    )
+                )
+            logger.debug(f"Gemini TTS done — {len(text)} chars, {len(pcm)} pcm bytes")
+            return _pcm_to_wav(pcm, sample_rate=24000)
+        except Exception as e:
+            logger.error("Gemini TTS failed", error=str(e))
+            return await self._synthesize_piper(text)
+
     async def _synthesize_piper(self, text: str) -> bytes:
         """Piper local — fallback ou provider principal."""
         logger.debug("Piper TTS request", chars=len(text))
@@ -125,6 +177,32 @@ class TTSEngine:
         """Préchauffer le moteur TTS au démarrage."""
         await self.synthesize("Initialisation.")
         logger.info("TTS warmup done", provider=settings.tts_provider)
+
+
+def _extract_gemini_pcm(resp: object) -> bytes:
+    """Concatène les chunks audio inline (PCM) d'une réponse Gemini generate_content."""
+    out = bytearray()
+    for cand in getattr(resp, "candidates", None) or []:
+        content = getattr(cand, "content", None)
+        for part in getattr(content, "parts", None) or []:
+            inline = getattr(part, "inline_data", None)
+            data = getattr(inline, "data", None) if inline else None
+            mime = str(getattr(inline, "mime_type", "")) if inline else ""
+            if data and mime.startswith("audio/"):
+                out.extend(data)
+    return bytes(out)
+
+
+def _pcm_to_wav(pcm: bytes, sample_rate: int = 24000) -> bytes:
+    """Emballe du PCM 16-bit mono en conteneur WAV (décodable par le navigateur)."""
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)  # 16-bit
+        wf.setframerate(sample_rate)
+        wf.writeframes(pcm)
+    buf.seek(0)
+    return buf.read()
 
 
 tts_engine = TTSEngine()
