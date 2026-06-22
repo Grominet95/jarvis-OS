@@ -38,6 +38,8 @@ _pending: dict[str, dict] = {}
 
 def _redirect_uri(request: Request, service: str) -> str:
     base = str(request.base_url).rstrip("/")
+    if not base.startswith("https://") and "127.0.0.1" not in base and "localhost" not in base:
+        base = base.replace("http://", "https://", 1)
     return f"{base}/api/google/callback/{service}"
 
 
