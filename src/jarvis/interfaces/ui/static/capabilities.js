@@ -22,8 +22,14 @@
 
   /* ─── Config des connecteurs ─── */
   const CONNECTOR_CONFIG = {
-    "Gmail":              { kind: "oauth", url: "/api/google/auth/gmail" },
-    "Google Calendar":    { kind: "oauth", url: "/api/google/auth/calendar" },
+    "Gmail":              { kind: "oauth_key", url: "/api/google/auth/gmail", keys: [
+      { key: "GOOGLE_CLIENT_ID",     label: "Client ID",     secret: false, hint: "console.cloud.google.com · OAuth client type « Web » · Redirect URIs : http://127.0.0.1:8000/api/google/callback/gmail + .../calendar" },
+      { key: "GOOGLE_CLIENT_SECRET", label: "Client Secret", secret: true },
+    ]},
+    "Google Calendar":    { kind: "oauth_key", url: "/api/google/auth/calendar", keys: [
+      { key: "GOOGLE_CLIENT_ID",     label: "Client ID",     secret: false, hint: "Mêmes identifiants que Gmail (partagés) · OAuth client type « Web »" },
+      { key: "GOOGLE_CLIENT_SECRET", label: "Client Secret", secret: true },
+    ]},
     "Spotify":            { kind: "oauth_key", url: "/api/spotify/auth", keys: [
       { key: "SPOTIFY_CLIENT_ID",     label: "Client ID",     secret: false, hint: "developer.spotify.com/dashboard · Redirect URI : http://127.0.0.1:8000/api/spotify/callback" },
       { key: "SPOTIFY_CLIENT_SECRET", label: "Client Secret", secret: true },
