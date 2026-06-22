@@ -116,16 +116,25 @@ Python système et LiveKit **ne sont pas requis** : le script de build les intè
 
 **Tu as reçu une release ou une archive avec `bundle/`** : aucun téléchargement à l'installation.
 
+Le plus simple : **double-clique sur `setup.bat`**, puis sur `run.bat`. Ou en ligne de commande :
+
 ```powershell
 # 1. Décompresser l'archive, puis ouvrir le dossier du projet
 cd jarvis-OS
 
 # 2. Configuration web (navigateur, sans prompt terminal)
-.\jarvis.ps1 setup
+.\jarvis.bat setup
 
 # 3. Démarrage
-.\jarvis.ps1 run
+.\jarvis.bat run
 ```
+
+> **Pourquoi `.bat` et pas `.ps1` ?** Windows bloque par défaut l'exécution des scripts
+> PowerShell téléchargés (`l'exécution de scripts est désactivée sur ce système`). Les
+> lanceurs `.bat` contournent ça proprement (ils appellent `jarvis.ps1` en
+> `-ExecutionPolicy Bypass`). Si tu préfères les `.ps1` directement, autorise-les une
+> fois : `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` puis
+> `Get-ChildItem -Recurse *.ps1 | Unblock-File`.
 
 L'assistant web configure l'identité, les clés API, les modules optionnels et la photo de référence. Une fois terminé, l'interface admin est sur `http://127.0.0.1:<PORT>/admin` (`PORT` dans `.env`, souvent `8000`).
 
