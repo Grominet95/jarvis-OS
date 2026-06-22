@@ -123,12 +123,26 @@ class TTSEngine:
                     )
                 ),
             )
-            resp = await client.aio.models.generate_content(
-                model=settings.gemini_tts_model, contents=text, config=config
+            # Sans consigne explicite, le modèle TTS « génère du texte » au lieu de
+            # parler sur les phrases courtes/ambiguës (erreur 400 ou réponse sans
+            # audio). On force le mode TTS via une instruction (comme le plugin
+            # livekit-plugins-google), et comme le modèle preview reste non
+            # déterministe, on retente une fois avant de tomber sur Piper.
+            prompt = (
+                "Lis ce texte à voix haute, naturellement, sans rien ajouter, "
+                f'omettre ni répondre :\n"{text}"'
             )
-            pcm = _extract_gemini_pcm(resp)
+            pcm = b""
+            for attempt in range(2):
+                resp = await client.aio.models.generate_content(
+                    model=settings.gemini_tts_model, contents=prompt, config=config
+                )
+                pcm = _extract_gemini_pcm(resp)
+                if pcm:
+                    break
+                logger.warning("Gemini TTS: pas d'audio (tentative {}/2)", attempt + 1)
             if not pcm:
-                logger.error("Gemini TTS: aucun audio renvoyé — fallback Piper")
+                logger.error("Gemini TTS: aucun audio après retry — fallback Piper")
                 return await self._synthesize_piper(text)
             if self._tracker is not None:
                 self._tracker.track(
