@@ -190,6 +190,17 @@ class Settings(BaseSettings):
         default="config/google_credentials.json",
         description="Chemin vers le fichier credentials OAuth2 Google.",
     )
+    google_client_id: str = Field(
+        default="",
+        description=(
+            "Client ID OAuth2 Google (app type 'Web'). Si renseigné avec le secret, "
+            "le fichier google_credentials.json est régénéré automatiquement à partir "
+            "de ces deux valeurs — pas besoin de déposer le fichier à la main."
+        ),
+    )
+    google_client_secret: SecretStr = Field(
+        default=SecretStr(""), description="Client Secret OAuth2 Google (app type 'Web')."
+    )
     google_token_path: str = Field(
         default="config/google_token.json",
         description="Chemin vers le token OAuth2 Google (généré automatiquement).",
