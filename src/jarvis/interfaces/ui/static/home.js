@@ -259,13 +259,13 @@
     try {
       let fn = "";
       try {
-        const s = await fetch("/api/wakeup/status").then((r) => r.json());
+        const s = await fetch("/api/wakeup/status", { headers: window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {} }).then((r) => r.json());
         fn = (s && s.user_firstname) || "";
       } catch { /* repli sans prénom */ }
       const greeting = fn ? `Systèmes en ligne. Bonjour ${fn}.` : "Systèmes en ligne.";
       const resp = await fetch("/api/voice/speak", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {}) },
         body: JSON.stringify({ text: greeting }),
       });
       const data = await resp.json();
