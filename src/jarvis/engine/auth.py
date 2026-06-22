@@ -31,6 +31,7 @@ _EXEMPT_EXACT: frozenset[str] = frozenset({
 _EXEMPT_PREFIXES: Sequence[str] = (
     "/api/channels/",  # webhooks — vérification de signature propre
     "/api/google/",  # OAuth Google — redirect navigateur, header impossible
+    "/api/spotify/",  # OAuth Spotify — redirect navigateur, header impossible
 )
 
 
