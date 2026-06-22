@@ -1,6 +1,6 @@
 [project]
 name = "jarvis-os"
-version = "0.2.0"
+version = "0.3.2"
 description = "Jarvis — assistant personnel intelligent vocal temps réel"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
