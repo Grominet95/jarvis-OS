@@ -157,7 +157,6 @@
       const vc = window._voiceClient;
       if (!vc) return;
       if (next) {
-        await playGreeting();
         try {
           await vc._start();
         } catch (err) {
@@ -238,48 +237,6 @@
       vc._btn = document.getElementById("hc-mic");
     }
   }, { once: true });
-
-  // ── Greeting vocal (comme l'ancien repo) ──────────────────────────
-  async function playGreeting() {
-    try {
-      let fn = "";
-      try {
-        const s = await fetch("/api/wakeup/status", { headers: window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {} }).then((r) => r.json());
-        fn = (s && s.user_firstname) || "";
-      } catch { /* repli sans prénom */ }
-      const greeting = fn ? `Systèmes en ligne. Bonjour ${fn}.` : "Systèmes en ligne.";
-      const resp = await fetch("/api/voice/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {}) },
-        body: JSON.stringify({ text: greeting }),
-      });
-      const data = await resp.json();
-      if (!data.audio_b64) return;
-
-      // Décoder le base64 → ArrayBuffer → AudioContext
-      const binary = atob(data.audio_b64);
-      const bytes  = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-      const audioCtx = new AudioContext();
-      const buffer   = await audioCtx.decodeAudioData(bytes.buffer);
-      const source   = audioCtx.createBufferSource();
-      source.buffer  = buffer;
-      source.connect(audioCtx.destination);
-
-      setOrbState("speaking");
-
-      await new Promise((resolve) => {
-        source.onended = resolve;
-        source.start();
-      });
-      audioCtx.close();
-    } catch (err) {
-      console.warn("[Greeting] Erreur :", err);
-    } finally {
-      setOrbState("listening");
-    }
-  }
 
   // ── Caméra (MediaPipe) ─────────────────────────────────────────────
   let _camStream = null;
