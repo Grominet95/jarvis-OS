@@ -198,29 +198,44 @@ function _detect(now) {
   let hands = [];           // landmarks par main
   let gesture = null;       // geste discret de la 1re main
   let handLandmarks = null; // 1re main (pincement / poing)
+  let fistCount = 0;        // nb de poings fermés détectés (0..2)
   try {
     const gr = _gestureRec.recognizeForVideo(video, now);
     hands = gr.landmarks || [];
     hands.forEach(h => _drawHand(ctx, h, cw, ch));
     handLandmarks = hands[0] || null;
-    const g = gr.gestures?.[0]?.[0];
-    if (g && g.categoryName !== 'None' && g.score >= 0.60) gesture = g.categoryName;
+    // Geste discret par main (null si None ou score insuffisant). Avec
+    // numHands:2, gr.gestures[i] correspond à gr.landmarks[i].
+    const handGestures = (gr.gestures || []).map(gg => {
+      const top = gg?.[0];
+      return (top && top.categoryName !== 'None' && top.score >= 0.60) ? top.categoryName : null;
+    });
+    gesture   = handGestures[0] || null;       // 1re main (inchangé pour la suite)
+    fistCount = handGestures.filter(g => g === 'Closed_Fist').length;
   } catch (_) {}
 
   _handlePresence(faceDetected, now);
 
   // ── Exclusion mutuelle : UN SEUL détecteur actif par frame ──────
-  // Priorité : 2 mains (zoom) > poing (pan) > pincement (volume) > discrets.
-  if (hands.length >= 2) {
+  // Priorité : 2 POINGS (zoom) > 1 poing (pan) > 1 main ouverte (pincement/
+  // discrets) > rien.
+  if (hands.length >= 2 && fistCount >= 2) {
+    // ZOOM — uniquement deux poings fermés
     _resetPinchAndDiscrete(); _fistRef = null;
     _handleTwoHandZoom(hands[0], hands[1], now);
-  } else if (gesture === 'Closed_Fist' && handLandmarks) {
+  } else if (hands.length === 1 && gesture === 'Closed_Fist' && handLandmarks) {
+    // PAN — un seul poing
     _twoHandRefDist = null; _resetPinchAndDiscrete();
     _handleFistPan(handLandmarks, now);
-  } else {
+  } else if (hands.length === 1) {
+    // Une main ouverte — gestes discrets + pincement (volume)
     _twoHandRefDist = null; _fistRef = null;
     _handleGesture(gesture, now);
     _handlePinch(handLandmarks, now);
+  } else {
+    // 0 main, ou 2 mains qui ne sont PAS deux poings → ne rien déclencher
+    _twoHandRefDist = null; _fistRef = null;
+    _resetPinchAndDiscrete();
   }
 
   _drawYoloObjects(ctx, cw, ch, now);
@@ -394,7 +409,7 @@ function _handleTwoHandZoom(h0, h1, now) {
 
   if (_twoHandRefDist === null) {
     _twoHandRefDist = d;
-    _showGesture('ZOOM ✋✋', false);
+    _showGesture('ZOOM ✊✊', false);
     return;
   }
   if (now - _twoHandLastSent < _TWO_HAND_COOL_MS) return;
