@@ -35,7 +35,6 @@ Site → test :
    6. NotionTasksTool.execute()        capabilities/tools/notion.py:27
    7. _basic_auth()                    capabilities/tools/spotify_auth.py:47
    8. TTSEngine._synthesize_elevenlabs providers/audio/tts.py:50
-   9. DeepgramReceiver._connect()      providers/audio/deepgram_receiver.py:74
   10. deezer_callback()                interfaces/api/deezer.py:68
   11. engine/auth.py compare_digest    engine/auth.py:61
   12. get_config()                     interfaces/api/globe.py:212-214
@@ -276,42 +275,6 @@ def test_elevenlabs_tts_header(secret_sentinels: dict[str, str]) -> None:
     _assert_str_and_eq(
         xi, secret_sentinels["elevenlabs_api_key"], "TTSEngine._synthesize_elevenlabs"
     )
-
-
-# ── 9. DeepgramReceiver._connect — providers/audio/deepgram_receiver.py:74 ──
-
-
-def test_deepgram_stt_header(secret_sentinels: dict[str, str]) -> None:
-    """`headers['Authorization']` envoyé à Deepgram doit être str `Token <brut>`."""
-    from jarvis.providers.audio import deepgram_receiver as mod
-
-    captured: dict[str, Any] = {}
-
-    class FakeWS:
-        pass
-
-    class FakeSession:
-        async def ws_connect(self, url: str, headers: Any = None, **kw: Any) -> FakeWS:
-            captured["headers"] = headers
-            return FakeWS()
-
-        async def close(self) -> None:
-            return None
-
-    class FakeAioHTTP:
-        ClientSession = lambda *a, **kw: FakeSession()  # noqa: E731
-
-    with patch.object(mod, "aiohttp", FakeAioHTTP()):
-        receiver = mod.DeepgramReceiver()
-        # Bypass le start des tasks récepteur/sender (on ne veut pas de loop)
-        with patch.object(
-            mod.asyncio, "create_task", lambda coro, name=None: coro.close() or MagicMock()
-        ):
-            asyncio.run(receiver._connect())
-
-    auth = captured["headers"]["Authorization"]
-    expected = f"Token {secret_sentinels['deepgram_api_key']}"
-    _assert_str_and_eq(auth, expected, "DeepgramReceiver._connect")
 
 
 # ── 10. deezer_callback — interfaces/api/deezer.py:68 ────────────────────────

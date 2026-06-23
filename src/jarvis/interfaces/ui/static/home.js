@@ -8,8 +8,8 @@
   J.mountAtmosphere();
   J.mountRooms({ mode: "home", pages: [], activePage: null, onNav: () => {} });
 
-  // ── Stubs pour voice.js (tourne aussi dans cette page) ───────────
-  // voice.js cherche addMsg / checkForMindmap en global
+  // ── Stubs pour le client vocal LiveKit (voice_livekit.js) ───────────
+  // voice_livekit.js cherche addMsg / checkForMindmap en global
   window.addMsg = function (role, text = "", streaming = false) {
     if (streaming) {
       // Retourne une div temporaire que le VoiceClient remplit de chunks

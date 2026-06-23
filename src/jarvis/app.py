@@ -51,7 +51,6 @@ from jarvis.interfaces.api.music import router as music_router
 from jarvis.interfaces.api.projects import router as projects_router
 from jarvis.interfaces.api.routines import router as routines_router
 from jarvis.interfaces.api.spotify import router as spotify_router
-from jarvis.interfaces.api.voice_ws import router as voice_router
 from jarvis.interfaces.api.websocket import router as ws_router
 from jarvis.interfaces.api.widgets import router as widgets_router
 from jarvis.interfaces.channels.setup import setup_channels
@@ -276,7 +275,6 @@ app.router.dependencies.append(Depends(verify_api_token))
 
 app.include_router(http_router)
 app.include_router(ws_router)
-app.include_router(voice_router)
 app.include_router(admin_ui_router)
 app.include_router(admin_router)
 app.include_router(projects_router)

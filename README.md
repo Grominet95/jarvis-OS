@@ -226,7 +226,7 @@ Tout est configuré via l'assistant web (`.\jarvis.ps1 setup` ou `./jarvis eclos
 | `mistral` | `MISTRAL_API_KEY` | Function calling supporté. |
 | `local` (`LLM_PROVIDER=local`) | aucune | Ollama local. |
 
-Le backend choisi pilote le chat texte, le vocal in-house (`/ws/voice`) et les tâches background (mémoire, consolidation, auto-dream) ; aucune dépendance Anthropic n'est forcée si `API_BACKEND` n'est pas `anthropic`.
+Le backend choisi pilote le chat texte et les tâches background (mémoire, consolidation, auto-dream) ; aucune dépendance Anthropic n'est forcée si `API_BACKEND` n'est pas `anthropic`. La voix est gérée par le pipeline LiveKit temps réel (ci-dessous).
 
 **Pipeline vocal LiveKit temps réel :** c'est un process séparé (`jarvis.interfaces.voice.agent`) qui utilise les plugins LLM de LiveKit. Il suit `API_BACKEND` (OpenAI / Anthropic / Mistral). Si le backend n'est pas géré côté LiveKit, il bascule sur Gemini (`GOOGLE_API_KEY` requis). Surcharge possible via `VOICE_LLM_MODEL`.
 
