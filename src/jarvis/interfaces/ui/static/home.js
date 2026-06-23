@@ -8,32 +8,15 @@
   J.mountAtmosphere();
   J.mountRooms({ mode: "home", pages: [], activePage: null, onNav: () => {} });
 
-  // ── Stubs pour le client vocal LiveKit (voice_livekit.js) ───────────
-  // voice_livekit.js cherche addMsg / checkForMindmap en global
+  // ── Pont voix → widget chat (voice_livekit.js) ──────────────────────
+  // voice_livekit.js pousse les transcriptions (toi) et les réponses agent via
+  // addMsg / checkForMindmap globaux. On délègue au MÊME renderer que le chat
+  // texte (appendChatMsg, défini plus bas — hoisté) pour que la conversation
+  // vocale s'affiche dans le widget, qu'il soit ouvert ou non. Les rôles voix
+  // ('vous'/'jarvis') sont normalisés vers user/assistant.
   window.addMsg = function (role, text = "", streaming = false) {
-    if (streaming) {
-      // Retourne une div temporaire que le VoiceClient remplit de chunks
-      const div = document.createElement("div");
-      div.className = "hcw-msg";
-      div.dataset.streaming = "1";
-      const roleEl = document.createElement("span");
-      roleEl.className = "hcw-msg-role " + (role === "jarvis" ? "assistant" : "");
-      roleEl.textContent = role === "jarvis" ? "JARVIS" : "VOUS";
-      const textEl = document.createElement("span");
-      textEl.className = "hcw-msg-text";
-      div.appendChild(roleEl);
-      div.appendChild(textEl);
-      // Si le widget chat est ouvert, on append
-      const msgsEl = document.getElementById("hcw-chat-msgs");
-      if (msgsEl && _ctrlState.chat) {
-        msgsEl.appendChild(div);
-        msgsEl.scrollTop = msgsEl.scrollHeight;
-      }
-      return textEl; // voice.js écrit dans .textContent de ce noeud
-    }
-    // Non-streaming : on recharge le widget si ouvert
-    if (_ctrlState.chat) setTimeout(loadChatWidget, 800);
-    return null;
+    const normalized = role === "jarvis" || role === "assistant" ? "assistant" : "user";
+    return appendChatMsg(normalized, text, streaming);
   };
   window.checkForMindmap = function () {};
 
