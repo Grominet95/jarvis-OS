@@ -111,6 +111,27 @@ const _PINCH_DIST    = 0.09;  // distance normalisée pouce-index
 const _PINCH_STEP    = 0.035; // déplacement Y par palier
 const _PINCH_COOL_MS = 280;   // ms entre deux envois volume
 
+// ── Zoom à deux mains (manipulation spatiale — pas de fallback global) ─────────
+let _twoHandRefDist  = null;  // distance de référence (glissante) entre les 2 mains
+let _twoHandLastSent = 0;
+const _TWO_HAND_STEP    = 0.04; // variation min de distance avant d'émettre
+const _TWO_HAND_SCALE   = 300;  // distance normalisée → delta de zoom
+const _TWO_HAND_COOL_MS = 80;   // ms entre deux émissions
+
+// ── Navigation au poing fermé (pan — pas de fallback global) ───────────────────
+let _fistRef      = null;   // position de référence (glissante) du poignet
+let _fistLastSent = 0;
+const _FIST_PAN_SCALE = 600; // déplacement normalisé → dx/dy de pan
+const _FIST_STEP      = 1.0;  // déplacement min (unités scaled) avant d'émettre
+const _FIST_COOL_MS   = 50;   // ms entre deux émissions
+
+// Réinitialise les détecteurs de bas niveau quand un niveau supérieur prend la
+// main (exclusion mutuelle stricte — un seul actif par frame).
+function _resetPinchAndDiscrete() {
+  _pinchActive = false;
+  _lastGestureSeen = null; _lastGestureSince = 0;
+}
+
 // ── Helpers DOM ───────────────────────────────────────────────────────────────
 const _$ = id => document.getElementById(id);
 
@@ -173,20 +194,35 @@ function _detect(now) {
     }
   } catch (_) {}
 
-  // ── Main + geste ────────────────────────────────────────────────
-  let gesture = null;
-  let handLandmarks = null;
+  // ── Mains + gestes (0..2 mains) ─────────────────────────────────
+  let hands = [];           // landmarks par main
+  let gesture = null;       // geste discret de la 1re main
+  let handLandmarks = null; // 1re main (pincement / poing)
   try {
     const gr = _gestureRec.recognizeForVideo(video, now);
-    handLandmarks = gr.landmarks[0] || null;
-    if (handLandmarks) _drawHand(ctx, handLandmarks, cw, ch);
+    hands = gr.landmarks || [];
+    hands.forEach(h => _drawHand(ctx, h, cw, ch));
+    handLandmarks = hands[0] || null;
     const g = gr.gestures?.[0]?.[0];
     if (g && g.categoryName !== 'None' && g.score >= 0.60) gesture = g.categoryName;
   } catch (_) {}
 
   _handlePresence(faceDetected, now);
-  _handleGesture(gesture, now);
-  _handlePinch(handLandmarks, now);
+
+  // ── Exclusion mutuelle : UN SEUL détecteur actif par frame ──────
+  // Priorité : 2 mains (zoom) > poing (pan) > pincement (volume) > discrets.
+  if (hands.length >= 2) {
+    _resetPinchAndDiscrete(); _fistRef = null;
+    _handleTwoHandZoom(hands[0], hands[1], now);
+  } else if (gesture === 'Closed_Fist' && handLandmarks) {
+    _twoHandRefDist = null; _resetPinchAndDiscrete();
+    _handleFistPan(handLandmarks, now);
+  } else {
+    _twoHandRefDist = null; _fistRef = null;
+    _handleGesture(gesture, now);
+    _handlePinch(handLandmarks, now);
+  }
+
   _drawYoloObjects(ctx, cw, ch, now);
 
   // Dot de présence dans le header
@@ -347,6 +383,61 @@ function _handlePinch(landmarks, now) {
   }
 }
 
+// ── Zoom à deux mains ───────────────────────────────────────────────────────
+// Mesure l'écart entre les poignets des deux mains. S'écarter = zoom in (delta>0),
+// se rapprocher = zoom out (delta<0). Référence glissante. Aucun fallback global :
+// inerte hors d'une vue qui binde two_hand_zoom.
+function _handleTwoHandZoom(h0, h1, now) {
+  const p0 = h0?.[0], p1 = h1?.[0]; // poignets
+  if (!p0 || !p1) { _twoHandRefDist = null; return; }
+  const d = Math.hypot(p0.x - p1.x, p0.y - p1.y);
+
+  if (_twoHandRefDist === null) {
+    _twoHandRefDist = d;
+    _showGesture('ZOOM ✋✋', false);
+    return;
+  }
+  if (now - _twoHandLastSent < _TWO_HAND_COOL_MS) return;
+
+  const diff = d - _twoHandRefDist;
+  if (Math.abs(diff) >= _TWO_HAND_STEP) {
+    const delta = diff * _TWO_HAND_SCALE; // + = mains qui s'écartent = zoom in
+    _twoHandRefDist  = d;
+    _twoHandLastSent = now;
+    _showGesture(delta > 0 ? '⊕ ZOOM' : '⊖ ZOOM', false);
+    Jarvis.gestures?.route({
+      source: 'mediapipe', type: 'two_hand', name: 'two_hand_zoom',
+      phase: 'continuous', delta, ts: now,
+    });
+  }
+}
+
+// ── Navigation au poing fermé ────────────────────────────────────────────────
+// Suit le déplacement du poignet poing fermé → pan (dx/dy). Référence glissante.
+// Aucun fallback global : inerte hors d'une vue qui binde fist_pan.
+function _handleFistPan(landmarks, now) {
+  const p = landmarks?.[0]; // poignet
+  if (!p) { _fistRef = null; return; }
+
+  if (_fistRef === null) {
+    _fistRef = { x: p.x, y: p.y };
+    _showGesture('POING ✊', false);
+    return;
+  }
+  if (now - _fistLastSent < _FIST_COOL_MS) return;
+
+  const dx = (p.x - _fistRef.x) * _FIST_PAN_SCALE;
+  const dy = (p.y - _fistRef.y) * _FIST_PAN_SCALE;
+  if (Math.abs(dx) >= _FIST_STEP || Math.abs(dy) >= _FIST_STEP) {
+    _fistRef      = { x: p.x, y: p.y };
+    _fistLastSent = now;
+    Jarvis.gestures?.route({
+      source: 'mediapipe', type: 'fist', name: 'fist_pan',
+      phase: 'continuous', dx, dy, axis: 'xy', ts: now,
+    });
+  }
+}
+
 function _sendEvent(payload) {
   const sid = window._jarvisSessionId?.();
   window._jarvisWsSend?.({ type: 'vision_event', session_id: sid, ...payload });
@@ -376,7 +467,7 @@ async function mpInit() {
           delegate: 'GPU',
         },
         runningMode: 'VIDEO',
-        numHands: 1,
+        numHands: 2,
         minHandDetectionConfidence: 0.5,
         minHandPresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
@@ -421,6 +512,7 @@ function mpStop() {
   _facePresent = false; _presenceSince = 0;
   _lastGestureSeen = null; _lastGestureSince = 0;
   _pinchActive = false; _pinchRefY = 0;
+  _twoHandRefDist = null; _fistRef = null;
   _setStatus('', null);
   console.log('[MediaPipe] Arrêté');
 }

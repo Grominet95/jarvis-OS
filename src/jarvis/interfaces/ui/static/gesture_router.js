@@ -33,7 +33,8 @@
       case 'view':
         if (!viewId || !b.command) return false;
         Views.dispatch(viewId, b.command, {
-          delta: ev.delta, axis: ev.axis, confidence: ev.confidence, phase: ev.phase,
+          delta: ev.delta, dx: ev.dx, dy: ev.dy,
+          axis: ev.axis, confidence: ev.confidence, phase: ev.phase,
         });
         return true;
       case 'hide':
