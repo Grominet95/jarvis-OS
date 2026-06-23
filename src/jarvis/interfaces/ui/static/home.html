@@ -219,7 +219,9 @@
   document.head.appendChild(css);
 }());
 </script>
-<script src="/voice.js"></script>
+<!-- Voix : pipeline temps réel LiveKit (remplace l'ancien voice.js in-house). -->
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+<script src="/voice_livekit.js"></script>
 <script src="/mediapipe_vision.js"></script>
 <script src="/home.js"></script>
 <script>

@@ -83,6 +83,8 @@
     if (lbl) lbl.textContent = meta.label;
     if (_orb) _orb.setState(state);
   }
+  // Exposé pour les scripts externes (ex. voice_livekit.js pilote l'orbe via ça).
+  window.__jarvisSetOrbState = setOrbState;
 
   function initOrb() {
     if (typeof THREE === "undefined" || typeof JarvisOrb === "undefined") {

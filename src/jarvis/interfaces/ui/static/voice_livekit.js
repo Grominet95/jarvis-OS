@@ -181,6 +181,11 @@ class JarvisLiveKitClient {
 
   _setSphereState(state) {
     if (typeof sphereState !== "undefined") sphereState = state;
+    // Pont vers l'orbe de la home (home.js expose __jarvisSetOrbState).
+    // États LiveKit en MAJ (LISTENING/SPEAKING/THINKING/IDLE) -> minuscules.
+    if (typeof window.__jarvisSetOrbState === "function") {
+      window.__jarvisSetOrbState(String(state).toLowerCase());
+    }
   }
 
   // ── État bouton micro ─────────────────────────────────────────────────────
