@@ -14,7 +14,7 @@ from loguru import logger
 
 from jarvis.engine.background.notifications import ProactiveQueue
 from jarvis.engine.background.worker import BackgroundTask, BackgroundWorker
-from jarvis.engine.gateway import _FALLBACK, Gateway
+from jarvis.engine.gateway import Gateway, _fallback
 from jarvis.engine.router import RouteEnum
 from jarvis.kernel.settings import settings
 from jarvis.providers.audio.chunker import StreamChunker
@@ -193,8 +193,8 @@ async def voice_ws(websocket: WebSocket) -> None:
                     raise
                 except Exception as e:
                     logger.error("Voice stream error", error=str(e))
-                    full = _FALLBACK
-                    await websocket.send_json({"type": "chunk", "content": _FALLBACK})
+                    full = _fallback()
+                    await websocket.send_json({"type": "chunk", "content": _fallback()})
                     await websocket.send_json({"type": "done"})
 
             session.add_message("assistant", full)

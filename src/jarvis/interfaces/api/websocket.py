@@ -14,7 +14,7 @@ from loguru import logger
 from jarvis.capabilities.tools.spotify import SpotifyTool
 from jarvis.engine.background.notifications import NotificationQueue, ProactiveQueue
 from jarvis.engine.background.worker import BackgroundTask, BackgroundWorker
-from jarvis.engine.gateway import _FALLBACK, Gateway
+from jarvis.engine.gateway import Gateway, _fallback
 from jarvis.engine.router import RouteEnum
 from jarvis.interfaces.api.logs import _log_buffer
 from jarvis.providers.memory.auto_dream import AutoDream
@@ -169,8 +169,8 @@ async def _handle_vision_event(
                     await websocket.send_json({"type": "chunk", "content": chunk})
             except Exception as e:
                 logger.error("Vision gesture stream error", error=str(e))
-                full = _FALLBACK
-                await websocket.send_json({"type": "chunk", "content": _FALLBACK})
+                full = _fallback()
+                await websocket.send_json({"type": "chunk", "content": _fallback()})
         session.add_message("assistant", full)
         await websocket.send_json({"type": "done"})
 
@@ -274,8 +274,8 @@ async def websocket_chat(websocket: WebSocket) -> None:
                         await websocket.send_json({"type": "chunk", "content": chunk})
                 except Exception as e:
                     logger.error("Stream error", error=str(e))
-                    full = _FALLBACK
-                    await websocket.send_json({"type": "chunk", "content": _FALLBACK})
+                    full = _fallback()
+                    await websocket.send_json({"type": "chunk", "content": _fallback()})
 
             session.add_message("assistant", full)
 
