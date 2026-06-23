@@ -23,6 +23,7 @@ from livekit.agents import (
     AgentSession,
     WorkerOptions,
     cli,
+    tts,
 )
 from livekit.agents import (
     llm as lk_llm,
@@ -243,6 +244,56 @@ def _build_voice_stt(env: dict) -> object:
     )
 
 
+def _build_voice_elevenlabs(env: dict) -> object:
+    """TTS ElevenLabs — repli fiable (quota large, faible latence avec flash)."""
+    quebec = env.get("QUEBEC_MODE", "false").strip().lower() in ("true", "1", "yes")
+    voice_id = env.get("QUEBEC_VOICE_ID") if quebec else env.get("ELEVENLABS_VOICE_ID", "")
+    model = "eleven_multilingual_v2" if quebec else env.get("ELEVENLABS_MODEL", "eleven_turbo_v2_5")
+    return elevenlabs.TTS(
+        model=model,
+        voice_id=voice_id,
+        api_key=env.get("ELEVENLABS_API_KEY", os.getenv("ELEVENLABS_API_KEY", "")),
+        encoding="pcm_24000",
+        chunk_length_schedule=[50, 90, 160, 250],
+    )
+
+
+def _build_voice_tts(env: dict) -> object:
+    """TTS du pipeline LiveKit, sélectionné via TTS_PROVIDER.
+
+    'gemini'     → voix Google naturelle, MAIS le free tier est très limité
+                   (10 req/min) → enveloppé dans un FallbackAdapter vers
+                   ElevenLabs : dès que Gemini renvoie 429 (quota), LiveKit
+                   bascule sur ElevenLabs sans couper la conversation.
+    'elevenlabs' → ElevenLabs seul (défaut).
+    'piper'      → pas de plugin LiveKit temps réel → repli ElevenLabs.
+    """
+    provider = env.get("TTS_PROVIDER", "elevenlabs").strip().lower()
+    has_eleven = bool(env.get("ELEVENLABS_API_KEY", os.getenv("ELEVENLABS_API_KEY", "")))
+
+    if provider == "gemini":
+        gemini = gemini_tts.TTS(
+            model=env.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
+            voice_name=env.get("GEMINI_TTS_VOICE", "Kore"),
+            api_key=env.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY", "")),
+        )
+        if has_eleven:
+            logger.info(
+                "TTS pipeline = Gemini (%s / %s) + repli ElevenLabs sur quota 429",
+                env.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
+                env.get("GEMINI_TTS_VOICE", "Kore"),
+            )
+            return tts.FallbackAdapter([gemini, _build_voice_elevenlabs(env)])
+        logger.warning(
+            "TTS pipeline = Gemini SANS repli (ELEVENLABS_API_KEY absente) — "
+            "coupure audio probable dès que le quota Gemini (10/min) est atteint."
+        )
+        return gemini
+
+    logger.info("TTS pipeline = ElevenLabs")
+    return _build_voice_elevenlabs(env)
+
+
 def _build_voice_llm(env: dict) -> object:
     """Construit le LLM du pipeline vocal LiveKit selon API_BACKEND.
 
@@ -309,34 +360,8 @@ async def entrypoint(ctx: object) -> None:
 
     _env = dotenv_values(PROJECT_ROOT / ".env")
 
-    _quebec = _env.get("QUEBEC_MODE", "false").strip().lower() in ("true", "1", "yes")
-    _voice_id = _env.get("QUEBEC_VOICE_ID") if _quebec else _env.get("ELEVENLABS_VOICE_ID", "")
-    _tts_model = (
-        "eleven_multilingual_v2" if _quebec else _env.get("ELEVENLABS_MODEL", "eleven_turbo_v2_5")
-    )
-
-    logger.info("TTS config — quebec=%s model=%s voice=%s", _quebec, _tts_model, _voice_id)
-
-    # TTS sélectionnable via TTS_PROVIDER : 'gemini' (voix Google naturelle) ou
-    # 'elevenlabs' (défaut). 'piper' n'a pas de plugin LiveKit → repli ElevenLabs.
-    _tts_provider = _env.get("TTS_PROVIDER", "elevenlabs").strip().lower()
-    if _tts_provider == "gemini":
-        _tts = gemini_tts.TTS(
-            model=_env.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
-            voice_name=_env.get("GEMINI_TTS_VOICE", "Kore"),
-            api_key=_env.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY", "")),
-        )
-        logger.info("TTS pipeline = Gemini (%s / %s)",
-                    _env.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
-                    _env.get("GEMINI_TTS_VOICE", "Kore"))
-    else:
-        _tts = elevenlabs.TTS(
-            model=_tts_model,
-            voice_id=_voice_id,
-            api_key=_env.get("ELEVENLABS_API_KEY", os.getenv("ELEVENLABS_API_KEY", "")),
-            encoding="pcm_24000",
-            chunk_length_schedule=[50, 90, 160, 250],
-        )
+    # TTS sélectionné via TTS_PROVIDER (Gemini + repli ElevenLabs, ou ElevenLabs seul).
+    _tts = _build_voice_tts(_env)
 
     # Pré-connecte la room avec un connect_timeout étendu pour éviter les retries v0/v1 de 5s.
     # livekit-agents utilise rtc.RoomOptions() sans connect_timeout (défaut Rust ~5s),
