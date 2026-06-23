@@ -10,8 +10,15 @@ case "${1:-}" in
   eclosion) bash setup.sh ;;
   api)      uv run python -m jarvis.app ;;
   voice)    uv run python -m jarvis.interfaces.voice.agent dev ;;
-  livekit)  livekit-server --dev --node-ip 127.0.0.1 --keys "devkey: devsecretdevsecretdevsecretdevsecret" ;;
+  livekit)
+    bash scripts/ensure_livekit.sh
+    livekit-server --dev --node-ip 127.0.0.1 --keys "devkey: devsecretdevsecretdevsecretdevsecret" ;;
   run|start)
+    # Auto-provision : installe livekit-server s'il manque (no-op s'il est déjà là).
+    bash scripts/ensure_livekit.sh || {
+      printf "\n  \033[91m●\033[0m  LiveKit indisponible — voir les instructions ci-dessus.\n\n"
+      exit 1
+    }
     exec /usr/bin/env bash --noprofile --norc -c '
       # ── Styles ────────────────────────────────────────────────────
       R="\033[0m"; B="\033[1m"
@@ -204,6 +211,16 @@ def check_deepgram():
         return ("ok", "Nova-2") if s == 200 else ("error", f"HTTP {s}")
     except: return ("error", "Inaccessible")
 
+def check_livekit():
+    import shutil
+    if not shutil.which("livekit-server"):
+        return ("warning", "binaire absent · 'jarvis run' l'installe auto")
+    try:
+        http_get("http://localhost:7880/")
+        return ("ok", "installe · serveur en ligne")
+    except:
+        return ("ok", "installe · serveur eteint")
+
 def check_mapbox():
     t = e("MAPBOX_TOKEN")
     return ("ok", "Token present") if t else ("warning", "MAPBOX_TOKEN manquante")
@@ -237,6 +254,7 @@ CHECKS = [
     ("anthropic",  "Anthropic",       check_anthropic),
     ("elevenlabs", "ElevenLabs",      check_elevenlabs),
     ("deepgram",   "Deepgram",        check_deepgram),
+    ("livekit",    "LiveKit",         check_livekit),
     ("mapbox",     "Mapbox",          check_mapbox),
     ("docker",     "Docker",          check_docker),
     ("memory",     "Memoire",         check_memory),
