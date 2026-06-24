@@ -66,3 +66,4 @@ tools/arduino-cli/*
 !tools/arduino-cli/.gitkeep
 
 keypad/firmware/Object File1/
+src/jarvis/interfaces/ui/static/*.bak-*
