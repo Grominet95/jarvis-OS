@@ -25,6 +25,7 @@ GET     /api/analytics/jarvis
 GET     /api/analytics/summary
 GET     /api/analytics/youtube
 GET     /api/approvals/config
+GET     /api/briefing/preset/{preset_id}
 GET     /api/budget/remaining
 GET     /api/budget/status
 GET     /api/command-center/snapshot
@@ -123,6 +124,7 @@ POST    /api/analytics/add/{widget_id}
 POST    /api/analytics/refresh
 POST    /api/analytics/reorder
 POST    /api/approvals/{action_id}/resolve
+POST    /api/briefing/open-url
 POST    /api/curator/patches/{patch_index}/apply
 POST    /api/curator/scan
 POST    /api/deezer/next
@@ -182,6 +184,7 @@ POST    /api/voice/speak
 POST    /api/webhooks/face_recognition
 POST    /api/webhooks/object_detected
 POST    /internal/broadcast
+POST    /internal/memory_tool
 PUT     /admin/api/memory/index
 PUT     /admin/api/memory/prefs
 PUT     /admin/api/memory/topics/{filename}

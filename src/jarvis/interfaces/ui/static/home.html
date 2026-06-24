@@ -186,6 +186,7 @@
 <script src="/three.min.js"></script>
 <script src="/_shared.js"></script>
 <script src="/mission_control.js"></script>
+<script src="/briefing.js"></script>
 <script src="/gesture_router.js"></script>
 <script src="/config/sphereStyle.js"></script>
 <script src="/orb.js"></script>
@@ -278,6 +279,12 @@
     // rendu, donc pas de moment où on voit le fond noir.
     document.body.appendChild(root);
 
+    // Préchauffe le briefing PENDANT le wakeup (résout le preset + pré-synthétise
+    // l'audio en parallèle) → enchaînement immédiat à l'entrée ONLINE, sans
+    // attendre la synthèse phrase par phrase.
+    try { window.prepareBriefing && window.prepareBriefing(window._briefingPreset || 'morning'); }
+    catch (e) { console.warn('[wake] prepare briefing', e); }
+
     seq = window.createWakeSequence(root, {
       userName:     _userName,
       // Scan facial cinématique toujours actif quand la séquence de veille tourne.
@@ -320,6 +327,10 @@
         if (r.parentNode) r.parentNode.removeChild(r);
       }, 400);
     }
+
+    // Briefing automatique post-wakeup (no-op si BRIEFING_ENABLED=false côté backend).
+    try { window.runBriefing && window.runBriefing(window._briefingPreset || 'morning'); }
+    catch (e) { console.warn('[wake] briefing', e); }
   }
 
   function onWakeFailure() {

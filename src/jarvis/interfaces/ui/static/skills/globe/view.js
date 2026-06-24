@@ -16,6 +16,8 @@
   let container = null;
   let toastTimer = null;
   let autoRotateOn = false;
+  let mapReady = false;      // true une fois map.on('load') passé
+  let pendingCmds = [];      // commandes reçues avant que la carte soit prête
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -113,6 +115,82 @@
     return container;
   }
 
+  // ── Command execution ──────────────────────────────────────────────────────
+  // Exécution réelle d'une commande (carte supposée prête). Le routage / la mise
+  // en file est gérée par la méthode command() ci-dessous.
+
+  function runCommand(cmd, params = {}) {
+    switch (cmd) {
+      case 'fly_to': {
+        if (!map) return;
+        stopAutoRotation();
+        const lat = params.lat ?? null;
+        const lon = params.lon ?? null;
+        const zoom = params.zoom ?? 4;
+        const label = params.location_name || params.location || '';
+
+        if (lat !== null && lon !== null) {
+          map.flyTo({ center: [lon, lat], zoom, duration: 2500, essential: true });
+        } else if (typeof params.location === 'string') {
+          // location can be "lat,lon" fallback
+          const parts = params.location.split(',').map(Number);
+          if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            map.flyTo({ center: [parts[1], parts[0]], zoom, duration: 2500, essential: true });
+          }
+        }
+        if (label) showToast(label);
+        break;
+      }
+
+      case 'zoom_in': {
+        if (!map) return;
+        map.flyTo({ zoom: map.getZoom() + 3, duration: 800, essential: true });
+        break;
+      }
+
+      case 'zoom_out': {
+        if (!map) return;
+        map.flyTo({ zoom: Math.max(0, map.getZoom() - 3), duration: 800, essential: true });
+        break;
+      }
+
+      case 'globe_view': {
+        if (!map) return;
+        stopAutoRotation();
+        map.flyTo({ center: [10, 20], zoom: 1.5, duration: 2000, essential: true });
+        map.once('moveend', startAutoRotation);
+        break;
+      }
+
+      case 'zoom_by': {
+        if (!map) return;
+        stopAutoRotation();
+        const delta = Number(params.delta || 0);          // ± (alimenté par two_hand_zoom)
+        const next = Math.max(0, Math.min(22, map.getZoom() + delta * 0.04));
+        map.easeTo({ zoom: next, duration: 0, essential: true });   // instantané (était 90 ms)
+        break;
+      }
+
+      case 'pan_by': {
+        if (!map) return;
+        stopAutoRotation();
+        const SENS = 2.5;                            // gain de navigation — ↑ = plus sensible
+        const dx =  Number(params.dx || 0) * SENS;
+        const dy = -Number(params.dy || 0) * SENS;   // ⟵ corrige l'inversion verticale
+        map.panBy([dx, dy], { duration: 0 });        // pan INSTANTANÉ : 1:1, précis (fini le lag 90 ms)
+        break;
+      }
+
+      case 'toggle_rotation': {
+        if (!map) return;
+        autoRotateOn ? stopAutoRotation() : startAutoRotation();
+        break;
+      }
+
+      // Unknown commands are silently ignored
+    }
+  }
+
   // ── View registration ─────────────────────────────────────────────────────
 
   Jarvis.views.register(VIEW_ID, {
@@ -126,10 +204,12 @@
     // Bindings gestuels lus par le routeur jarvis-OS quand la vue a le focus.
     // Clé = geste standard (vocabulaire jarvis-OS), valeur = commande ou action.
     gestures: {
-      pinch_y:    'zoom_by',          // continu — delta transmis dans params
-      Open_Palm:  'toggle_rotation',  // discret
-      Victory:    'globe_view',       // discret — réutilise la commande existante
-      Thumb_Down: { type: 'hide' },   // discret — ferme la vue
+      two_hand_zoom: 'zoom_by',          // continu — delta (mains qui s'écartent/rapprochent)
+      fist_pan:      'pan_by',           // continu — dx, dy (poing déplacé)
+      Open_Palm:     'toggle_rotation',  // discret
+      Victory:       'globe_view',       // discret — réutilise la commande existante
+      Thumb_Down:    { type: 'hide' },   // discret — ferme la vue
+      // pinch_y volontairement non bindé ici → retombe sur le volume global (jarvis-OS)
     },
 
     async show(params = {}) {
@@ -175,6 +255,13 @@
             'star-intensity': 0.8,
           });
           startAutoRotation();
+
+          // Carte prête : vider la file des commandes reçues pendant le chargement
+          // (ex. « montre Paris » au tout premier affichage à froid).
+          mapReady = true;
+          const queued = pendingCmds;
+          pendingCmds = [];
+          queued.forEach(({ cmd, params }) => runCommand(cmd, params));
         });
 
         // Stop rotation while user interacts
@@ -192,71 +279,24 @@
       if (!container) return;
       container.style.opacity = '0';
       stopAutoRotation();
+      // Jeter les commandes encore en file (cas d'un masquage pendant un chargement
+      // à froid interrompu). On NE remet PAS mapReady à false : la carte n'est pas
+      // détruite ici (show() la réutilise sans relancer 'load'), donc la repasser à
+      // false bloquerait définitivement les commandes au prochain affichage.
+      pendingCmds = [];
       setTimeout(() => {
         if (container) container.style.display = 'none';
       }, 360);
     },
 
     command(cmd, params = {}) {
-      switch (cmd) {
-        case 'fly_to': {
-          if (!map) return;
-          stopAutoRotation();
-          const lat = params.lat ?? null;
-          const lon = params.lon ?? null;
-          const zoom = params.zoom ?? 4;
-          const label = params.location_name || params.location || '';
-
-          if (lat !== null && lon !== null) {
-            map.flyTo({ center: [lon, lat], zoom, duration: 2500, essential: true });
-          } else if (typeof params.location === 'string') {
-            // location can be "lat,lon" fallback
-            const parts = params.location.split(',').map(Number);
-            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-              map.flyTo({ center: [parts[1], parts[0]], zoom, duration: 2500, essential: true });
-            }
-          }
-          if (label) showToast(label);
-          break;
-        }
-
-        case 'zoom_in': {
-          if (!map) return;
-          map.flyTo({ zoom: map.getZoom() + 3, duration: 800, essential: true });
-          break;
-        }
-
-        case 'zoom_out': {
-          if (!map) return;
-          map.flyTo({ zoom: Math.max(0, map.getZoom() - 3), duration: 800, essential: true });
-          break;
-        }
-
-        case 'globe_view': {
-          if (!map) return;
-          stopAutoRotation();
-          map.flyTo({ center: [10, 20], zoom: 1.5, duration: 2000, essential: true });
-          map.once('moveend', startAutoRotation);
-          break;
-        }
-
-        case 'zoom_by': {
-          if (!map) return;
-          stopAutoRotation();
-          const delta = Number(params.delta || 0);          // ±10 typiquement
-          const next = Math.max(0, Math.min(22, map.getZoom() + delta * 0.04));
-          map.easeTo({ zoom: next, duration: 90, essential: true });
-          break;
-        }
-
-        case 'toggle_rotation': {
-          if (!map) return;
-          autoRotateOn ? stopAutoRotation() : startAutoRotation();
-          break;
-        }
-
-        // Unknown commands are silently ignored
+      // Carte pas encore prête → mettre en file (sauf globe_view, applicable même
+      // pendant le chargement). Vidée par le handler map.on('load').
+      if (!mapReady && cmd !== 'globe_view') {
+        pendingCmds.push({ cmd, params });
+        return;
       }
+      runCommand(cmd, params);
     },
   });
 })();

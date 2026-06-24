@@ -38,6 +38,7 @@ from jarvis.engine.auth import verify_api_token  # ── [AUTH] ──
 from jarvis.engine.background.routines import ROUTINES_ENABLED, Routine, RoutineStore
 from jarvis.interfaces.api.admin import _ui_router as admin_ui_router
 from jarvis.interfaces.api.admin import router as admin_router
+from jarvis.interfaces.api.briefing import router as briefing_router
 from jarvis.interfaces.api.budget import router as budget_router
 from jarvis.interfaces.api.deezer import router as deezer_router
 from jarvis.interfaces.api.globe import router as globe_router
@@ -284,6 +285,7 @@ app.include_router(deezer_router)
 app.include_router(local_music_router)
 app.include_router(music_router)
 app.include_router(globe_router)
+app.include_router(briefing_router)
 app.include_router(macropad_router)
 app.include_router(macropad_ui_router)
 app.include_router(google_oauth_router)

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import io
+import os
 import wave
 from datetime import datetime
 from pathlib import Path
@@ -62,13 +63,14 @@ class TTSEngine:
             "voice_settings": {
                 # stability + : voix plus posée, moins de variations
                 # similarity_boost + : reste proche de la voix de référence
-                # speed - : un peu plus lente (pour eleven_multilingual_v2)
+                # speed : débit de parole, réglable via ELEVENLABS_SPEED (0.7–1.2,
+                #         1.0 = normal). Défaut 1.0 (était 0.88 = volontairement lent).
                 # use_speaker_boost : présence renforcée
                 "stability": 0.72,
                 "similarity_boost": 0.88,
                 "style": 0.0,
                 "use_speaker_boost": True,
-                "speed": 0.88,
+                "speed": float(os.getenv("ELEVENLABS_SPEED", "1.0")),
             },
             "optimize_streaming_latency": 3,
         }
