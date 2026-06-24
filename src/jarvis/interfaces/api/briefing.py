@@ -24,7 +24,11 @@ from jarvis.providers.youtube import get_youtube_snapshot
 
 router = APIRouter()
 
-BRIEFING_ENABLED = os.getenv("BRIEFING_ENABLED", "false").lower() == "true"
+
+def _briefing_enabled() -> bool:
+    # Lu à l'exécution, PAS au niveau module : briefing.py est importé par app.py
+    # avant son load_dotenv(), donc un flag figé à l'import serait toujours false.
+    return os.getenv("BRIEFING_ENABLED", "false").lower() == "true"
 
 
 # ── Action desktop : ouvrir une fenêtre Safari positionnée ───────────────────
@@ -180,5 +184,6 @@ async def briefing_open_url(body: OpenUrlBody) -> dict:
 async def briefing_preset(preset_id: str, request: Request) -> dict:
     # Si désactivé : on NE construit pas (évite les appels YouTube/Notion). Le
     # runner frontend no-op sur enabled=false.
-    segments = await build_preset(preset_id, request) if BRIEFING_ENABLED else []
-    return {"id": preset_id, "enabled": BRIEFING_ENABLED, "segments": segments}
+    enabled = _briefing_enabled()
+    segments = await build_preset(preset_id, request) if enabled else []
+    return {"id": preset_id, "enabled": enabled, "segments": segments}
