@@ -19,7 +19,6 @@ from fastapi import APIRouter, Request
 from loguru import logger
 from pydantic import BaseModel
 
-from jarvis.kernel.settings import settings
 from jarvis.providers.youtube import get_youtube_snapshot
 
 router = APIRouter()
@@ -134,11 +133,17 @@ async def _build_morning(request: Request) -> list[dict]:
         if channel_id
         else "https://studio.youtube.com"
     )
+    # Notion : URL explicite, sinon repli sur NOTION_PAGE_ID (déjà configuré) ->
+    # la fenêtre Notion s'ouvre même sans régler NOTION_TASKS_URL.
     notion_url = os.getenv("NOTION_TASKS_URL", "")
-    name = settings.display_name
+    if not notion_url:
+        page_id = os.getenv("NOTION_PAGE_ID", "").replace("-", "")
+        if page_id:
+            notion_url = f"https://www.notion.so/{page_id}"
 
+    # Pas de "bonjour" ici : le wakeup l'a déjà dit.
     segments: list[dict] = [
-        {"type": "say", "text": f"Bonjour {name}. Voici ton récapitulatif du matin."},
+        {"type": "say", "text": "Voici ton récapitulatif du matin."},
         {"type": "open_url", "url": studio_url, "bounds": [40, 60, 920, 980]},
     ]
     yt_line = _youtube_line(yt)

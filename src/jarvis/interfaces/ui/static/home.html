@@ -277,6 +277,12 @@
     // rendu, donc pas de moment où on voit le fond noir.
     document.body.appendChild(root);
 
+    // Préchauffe le briefing PENDANT le wakeup (résout le preset + pré-synthétise
+    // l'audio en parallèle) → enchaînement immédiat à l'entrée ONLINE, sans
+    // attendre la synthèse phrase par phrase.
+    try { window.prepareBriefing && window.prepareBriefing(window._briefingPreset || 'morning'); }
+    catch (e) { console.warn('[wake] prepare briefing', e); }
+
     seq = window.createWakeSequence(root, {
       userName:     _userName,
       // Scan facial cinématique toujours actif quand la séquence de veille tourne.
