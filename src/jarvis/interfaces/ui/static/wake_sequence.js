@@ -963,12 +963,11 @@
                         visionBundle: opts.visionBundle,
                     }, function (recognized) {
                         faceHandle = null;
-                        if (recognized === false) {
-                            if (typeof opts.onFailure === 'function') {
-                                try { opts.onFailure(); } catch (e) {}
-                            }
-                            return;
-                        }
+                        // Face phase never blocks access (CDC C4). An unrecognized face
+                        // -- or a backend error (no cv2/model, timeout, face not enrolled)
+                        // -- already showed the manual override verdict. We proceed to the
+                        // dashboard regardless: otherwise the user stays trapped on the
+                        // standby screen with the mic unreachable.
                         if (state === STATES.FACE) setState(STATES.CONVERGE);
                     });
                     break;

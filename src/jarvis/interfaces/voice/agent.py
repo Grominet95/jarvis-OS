@@ -346,9 +346,24 @@ def _build_voice_stt(env: dict) -> object:
     except Exception as e:
         logger.warning("STT '%s' indisponible (%s) -> repli Deepgram", provider, e)
 
+    dg_key = env.get("DEEPGRAM_API_KEY", os.getenv("DEEPGRAM_API_KEY", "")).strip()
+    # A missing/corrupted key fails STT silently at runtime: the mic captures audio
+    # but Jarvis never receives a transcript (mic active, no answer to voice). Surface
+    # it loudly instead so the user can fix .env instead of chasing a ghost.
+    if not dg_key or any(c.isspace() for c in dg_key) or len(dg_key) < 20:
+        logger.error(
+            "DEEPGRAM_API_KEY manquante ou invalide -> la reconnaissance vocale (STT) "
+            "ne fonctionnera pas : le micro capte mais Jarvis ne comprend rien. "
+            "Corrige DEEPGRAM_API_KEY dans .env (cle brute, sans espace ni guillemet) "
+            "ou bascule STT_PROVIDER=openai avec une OPENAI_API_KEY valide."
+        )
     logger.info("STT pipeline = Deepgram (nova-2)")
     return deepgram.STT(
-        model="nova-2", language="fr", smart_format=True, interim_results=True
+        model="nova-2",
+        language="fr",
+        smart_format=True,
+        interim_results=True,
+        api_key=dg_key,
     )
 
 
