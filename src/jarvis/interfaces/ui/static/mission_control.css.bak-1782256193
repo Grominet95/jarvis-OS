@@ -1,0 +1,312 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   mission_control.css — Jarvis UI v2
+   À ajouter à _shared.css (à la fin, après les règles .mission-*)
+   ou charger comme feuille séparée après _shared.css.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ─────────────────────────────────────────────────────────── */
+
+.jmc-overlay {
+  position: fixed; inset: 0; z-index: 9200;
+  background: rgba(6, 8, 13, 0.82);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  animation: jmc-fade-in 0.18s cubic-bezier(0.32,0.72,0,1) both;
+}
+.jmc-overlay.is-hidden { display: none; }
+
+@keyframes jmc-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Panneau central ─────────────────────────────────────────────────── */
+
+.jmc-panel {
+  width: min(820px, 92vw);
+  max-height: 86vh;
+  background: var(--bg-1);
+  border: 0.5px solid var(--line-2);
+  border-radius: var(--r-4);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 0 0 0.5px var(--line-1) inset;
+  animation: jmc-panel-in 0.22s cubic-bezier(0.32,0.72,0,1) both;
+}
+
+@keyframes jmc-panel-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+
+.jmc-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 24px 0;
+  flex-shrink: 0;
+}
+.jmc-header-title {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--fg-2); flex: 1;
+}
+.jmc-header-hint {
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--fg-4);
+}
+.jmc-hkbd {
+  display: inline-flex; gap: 2px; align-items: center;
+  border: 0.5px solid var(--line-2); border-radius: 3px;
+  padding: 1px 5px; font-size: 9px; color: var(--fg-3);
+}
+.jmc-hdot { opacity: 0.45; }
+.jmc-close {
+  background: none; border: 0.5px solid var(--line-2); border-radius: var(--r-2);
+  color: var(--fg-3); font-size: 16px; line-height: 1;
+  padding: 3px 9px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.jmc-close:hover { color: var(--fg-0); border-color: var(--line-3); }
+
+/* ── Barre d'onglets ─────────────────────────────────────────────────── */
+
+.jmc-tabs {
+  display: flex; gap: 0;
+  padding: 16px 24px 0;
+  border-bottom: 0.5px solid var(--line-1);
+  flex-shrink: 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+.jmc-tabs::-webkit-scrollbar { display: none; }
+
+.jmc-tab-btn {
+  background: none; border: none; border-bottom: 1.5px solid transparent;
+  color: var(--fg-3); font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 8px 16px 10px; cursor: pointer; white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -0.5px;
+}
+.jmc-tab-btn:hover { color: var(--fg-1); }
+.jmc-tab-btn.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Corps des onglets ───────────────────────────────────────────────── */
+
+.jmc-tab-body {
+  flex: 1; overflow: hidden; min-height: 0;
+  position: relative;
+}
+.jmc-tab-pane {
+  display: none;
+  height: 100%; overflow-y: auto; scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+.jmc-tab-pane.is-active { display: flex; flex-direction: column; }
+
+/* ── Pane Room ───────────────────────────────────────────────────────── */
+
+.jmc-room-pane {
+  padding: 36px 40px 32px;
+  gap: 24px;
+  position: relative;
+}
+.jmc-room-pane::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, var(--room-glow, transparent), transparent 70%);
+  opacity: 0.35;
+}
+
+.jmc-room-top { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+
+.jmc-room-eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: 0.20em; text-transform: uppercase; color: var(--fg-4);
+}
+.jmc-room-chapter { color: var(--accent); }
+.jmc-room-count   { color: var(--fg-4); }
+
+.jmc-room-title {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(36px, 5vw, 52px); letter-spacing: -0.04em; line-height: 1;
+  color: var(--fg-0);
+}
+.jmc-room-sub {
+  font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-3);
+}
+
+.jmc-room-pages {
+  display: flex; flex-wrap: wrap; gap: 8px 16px;
+  border-top: 0.5px solid var(--line-1); padding-top: 18px;
+}
+.jmc-room-page {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  font-family: var(--mono); font-size: 9.5px; color: var(--fg-3);
+  letter-spacing: 0.06em;
+}
+.jmc-pg-num { color: var(--fg-4); font-size: 8.5px; }
+.jmc-pg-lbl { color: var(--fg-2); }
+
+.jmc-room-foot {
+  display: flex; justify-content: flex-end;
+  padding-top: 8px; margin-top: auto;
+}
+.jmc-open-btn {
+  background: none; border: 0.5px solid var(--line-2);
+  border-radius: var(--r-2); color: var(--fg-2);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.10em;
+  padding: 8px 20px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.jmc-open-btn:hover {
+  color: var(--fg-0); border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ── Pane Interface ──────────────────────────────────────────────────── */
+
+.jmc-iface-pane {
+  padding: 28px 40px 32px;
+  gap: 0;
+}
+
+.jmc-iface-section {
+  display: flex; flex-direction: column; gap: 14px;
+  padding-bottom: 24px; margin-bottom: 24px;
+  border-bottom: 0.5px solid var(--line-1);
+}
+.jmc-iface-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+.jmc-iface-section-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-4);
+  margin-bottom: 4px;
+}
+
+.jmc-iface-row {
+  display: flex; align-items: center; gap: 16px;
+  min-height: 32px;
+}
+.jmc-iface-row--toggle {
+  align-items: flex-start; flex-direction: column; gap: 8px;
+}
+
+.jmc-iface-label {
+  font-family: var(--sans); font-size: 12px; color: var(--fg-2);
+  min-width: 130px; flex-shrink: 0;
+}
+.jmc-iface-sublabel {
+  font-family: var(--mono); font-size: 9.5px; color: var(--fg-4);
+  letter-spacing: 0.04em;
+}
+.jmc-iface-toggle-group {
+  display: flex; align-items: center; gap: 12px;
+}
+
+/* Color picker */
+.jmc-color-wrap {
+  display: flex; align-items: center; gap: 10px;
+}
+.jmc-color-input {
+  width: 36px; height: 28px; border: 0.5px solid var(--line-2);
+  border-radius: var(--r-2); cursor: pointer; padding: 2px;
+  background: var(--bg-2);
+}
+.jmc-color-hex {
+  font-family: var(--mono); font-size: 11px; color: var(--fg-2);
+  letter-spacing: 0.06em;
+}
+
+/* Range slider */
+.jmc-range-wrap {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+}
+.jmc-range-input {
+  flex: 1; height: 3px; accent-color: var(--accent);
+  cursor: pointer;
+}
+.jmc-range-val {
+  font-family: var(--mono); font-size: 10px; color: var(--fg-3);
+  min-width: 36px; text-align: right;
+}
+
+/* Boutons actions */
+.jmc-iface-btn {
+  background: none; border: 0.5px solid var(--line-2);
+  border-radius: var(--r-2); color: var(--fg-2);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  padding: 8px 16px; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 6px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.jmc-iface-btn:hover {
+  color: var(--fg-0); border-color: var(--line-3);
+  background: var(--bg-3);
+}
+.jmc-iface-btn--danger:hover { border-color: var(--red); color: var(--red); }
+
+.jmc-iface-actions {
+  gap: 10px; flex-wrap: wrap;
+}
+.jmc-file-input { display: none; }
+
+/* Toggle switch */
+.jmc-toggle {
+  background: none; border: none; padding: 0;
+  cursor: pointer; flex-shrink: 0;
+}
+.jmc-toggle-track {
+  display: flex; align-items: center;
+  width: 36px; height: 20px; border-radius: 10px;
+  background: var(--bg-3); border: 0.5px solid var(--line-2);
+  padding: 2px; transition: background 0.2s, border-color 0.2s;
+  position: relative;
+}
+.jmc-toggle.is-on .jmc-toggle-track {
+  background: var(--accent-soft); border-color: var(--accent-line);
+}
+.jmc-toggle-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--fg-3);
+  transition: transform 0.2s cubic-bezier(0.32,0.72,0,1), background 0.2s;
+  flex-shrink: 0;
+}
+.jmc-toggle.is-on .jmc-toggle-thumb {
+  transform: translateX(16px); background: var(--accent);
+}
+
+/* ── Pane Logs ───────────────────────────────────────────────────────── */
+
+.jmc-logs-pane {
+  padding: 20px 24px 0;
+  gap: 12px;
+}
+.jmc-logs-frame {
+  flex: 1; width: 100%; border: none;
+  border-top: 0.5px solid var(--line-1);
+}
+
+/* ── Bouton Home flottant ────────────────────────────────────────────── */
+
+.jmc-home-btn {
+  position: fixed; bottom: 24px; left: 24px; z-index: 9000;
+  background: var(--bg-2); border: 0.5px solid var(--line-2);
+  border-radius: var(--r-2); color: var(--fg-3);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0.55;
+  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+}
+.jmc-home-btn:hover {
+  opacity: 1; border-color: var(--accent); color: var(--accent);
+}
+
+/* Masqué sur la home (body[data-mode="home"]) */
+body[data-mode="home"] .jmc-home-btn { display: none; }

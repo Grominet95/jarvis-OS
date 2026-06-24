@@ -528,5 +528,16 @@
 
   loadAll();
 </script>
+<style>
+.jmc-home-btn-standalone{position:fixed;bottom:24px;left:24px;z-index:9000;
+background:rgba(15,20,31,0.9);border:0.5px solid rgba(220,232,255,0.10);
+border-radius:8px;color:rgba(220,232,255,0.5);width:36px;height:36px;
+display:flex;align-items:center;justify-content:center;
+text-decoration:none;opacity:.55;transition:opacity .15s,border-color .15s,color .15s;}
+.jmc-home-btn-standalone:hover{opacity:1;border-color:#4A9EFF;color:#4A9EFF;}
+</style>
+<a href="/" class="jmc-home-btn-standalone" title="Retour Home">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>
+</a>
 </body>
 </html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jarvis · Mission Control</title>
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Syne:wght@500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/_shared.css" />
+<link rel="stylesheet" href="/mission_control.css" />
+<link rel="stylesheet" href="/mc.css" />
+</head>
+<body data-mode="mc">
+
+<!-- Topbar sticky -->
+<header class="mc-topbar" id="mc-topbar">
+  <div class="mc-topbar-inner">
+
+    <!-- Logo / retour home -->
+    <a href="/" class="mc-brand" title="Retour Home">
+      <svg width="36" height="36" viewBox="-36 -36 72 72" xmlns="http://www.w3.org/2000/svg" class="mc-arc-reactor" aria-hidden="true">
+        <style>
+          @keyframes jmc-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes jmc-spinrev { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+          @keyframes jmc-pulse { 0%,100%{opacity:0.5}50%{opacity:1} }
+          .jmc-r1 { transform-origin:0 0; animation: jmc-spin 8s linear infinite; }
+          .jmc-r2 { transform-origin:0 0; animation: jmc-spinrev 12s linear infinite; }
+          .jmc-p  { animation: jmc-pulse 2.4s ease-in-out infinite; }
+        </style>
+        <circle cx="0" cy="0" r="32" fill="none" stroke="rgba(74,158,255,0.12)" stroke-width="1"/>
+        <circle cx="0" cy="0" r="22" fill="none" stroke="rgba(74,158,255,0.10)" stroke-width="8"/>
+        <g class="jmc-r1">
+          <path d="M0,-28 A28,28 0 0,1 24.2,-14" fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"/>
+          <path d="M24.2,14 A28,28 0 0,1 0,28"  fill="none" stroke="#4A9EFF" stroke-width="2" stroke-linecap="round"/>
+          <path d="M-24.2,-14 A28,28 0 0,1 -24.2,14" fill="none" stroke="#4A9EFF" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+        </g>
+        <g class="jmc-r2">
+          <path d="M0,-18 A18,18 0 0,1 18,0"  fill="none" stroke="#4A9EFF" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+          <path d="M0,18 A18,18 0 0,1 -18,0"  fill="none" stroke="#4A9EFF" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+        </g>
+        <circle cx="0" cy="0" r="6" fill="rgba(74,158,255,0.2)" stroke="#4A9EFF" stroke-width="1" class="jmc-p"/>
+        <circle cx="0" cy="0" r="2.5" fill="#4A9EFF"/>
+      </svg>
+      <span>JARVIS</span>
+    </a>
+
+    <!-- Onglets -->
+    <nav class="mc-nav" id="mc-nav">
+      <button class="mc-nav-btn" data-tab="workspace"     onclick="MCPage.show('workspace')">Workspace</button>
+      <button class="mc-nav-btn" data-tab="capacites"     onclick="MCPage.show('capacites')">Capacités</button>
+      <button class="mc-nav-btn" data-tab="configuration" onclick="MCPage.show('configuration')">Configuration</button>
+      <button class="mc-nav-btn" data-tab="interface"     onclick="MCPage.show('interface')">Interface</button>
+    </nav>
+
+    <!-- Indicateur logs (mode avancé) -->
+    <div class="mc-topbar-end" id="mc-topbar-end"></div>
+
+  </div>
+</header>
+
+<!-- Zone de contenu -->
+<main class="mc-main" id="mc-main">
+
+  <!-- Iframe pour les pages existantes -->
+  <iframe class="mc-iframe" id="mc-iframe" src="about:blank" frameborder="0" allowfullscreen allowtransparency="true"></iframe>
+
+  <!-- Panneau Interface (pas d'iframe) -->
+  <div class="mc-panel-interface" id="mc-panel-interface" style="display:none"></div>
+
+</main>
+
+<script src="/_shared.js"></script>
+<script src="/mc.js"></script>
+</body>
+</html>

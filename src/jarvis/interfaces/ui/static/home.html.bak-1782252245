@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jarvis</title>
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Syne:wght@500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/_shared.css" />
+<link rel="stylesheet" href="/mission_control.css" />
+<link rel="stylesheet" href="/home.css" />
+<!-- globe.css chargé dynamiquement si le skill globe-view est installé -->
+</head>
+<body data-mode="home">
+
+<iframe id="page-frame" class="page-frame" src="about:blank" frameborder="0" allowfullscreen></iframe>
+
+<div class="home-shell" id="home-shell">
+  <!-- Top bar -->
+  <div class="home-top">
+    <div class="home-controls" id="home-controls">
+
+      <span id="status-dot" style="display:none"></span>
+      <span id="status-label" style="display:none"></span>
+
+      <div class="hc-pill">
+
+        <button class="hc-btn" id="hc-mic" data-key="mic" title="Microphone">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="8" y1="22" x2="16" y2="22"/>
+          </svg>
+        </button>
+        <button class="hc-btn" id="hc-screen" data-key="screen" title="Capture d'&#233;cran">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </button>
+        <button class="hc-btn" id="hc-cam" data-key="cam" title="Cam&#233;ra">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3L14.5 4z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+        </button>
+        <button class="hc-btn" id="hc-files" data-key="files" title="Acc&#232;s fichiers">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+        </button>
+
+        <div class="hc-sep"></div>
+
+        <button class="hc-btn" id="hc-music" data-key="music" title="Musique">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+        </button>
+        <button class="hc-btn" id="hc-chat" data-key="chat" title="Chat">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </button>
+
+      </div>
+
+    </div>
+    <div class="home-signature">
+      <div class="brand">JARVIS</div>
+      <div class="clock-row">
+        <div class="clock" id="home-clock">00:00</div>
+      </div>
+      <div class="date" id="home-date"></div>
+    </div>
+  </div>
+
+  <!-- Three.js canvas -->
+  <div class="home-orb-wrap">
+    <canvas id="orb-canvas"></canvas>
+  </div>
+
+  <!-- Overlay camera (MediaPipe vision) -->
+  <div class="cam-overlay" id="cam-overlay">
+    <div class="cam-inner" id="cam-drag-handle">
+      <div class="cam-topbar">
+        <span class="cam-label">VISION</span>
+        <span id="mp-status" class="mp-status"></span>
+        <span id="mp-gesture-label" class="mp-gesture-label"></span>
+      </div>
+      <div class="cam-feed">
+        <video id="cam-video" autoplay muted playsinline></video>
+        <canvas id="cam-canvas"></canvas>
+      </div>
+    </div>
+    <div class="hcw-resize-handle" id="cam-resize-handle"></div>
+  </div>
+
+  <!-- Widget : Musique -->
+  <div class="hc-widget hc-widget--music" id="hc-widget-music">
+    <div class="hcw-hd">
+      <span class="hcw-eyebrow">En &#233;coute</span>
+      <span class="hcw-meta" id="hcw-music-source">&#8212;</span>
+    </div>
+    <div class="hcw-body">
+      <div class="hcw-music-top">
+        <img class="hcw-album-art" id="hcw-album-art" alt=""/>
+        <div class="hcw-music-info">
+          <div class="hcw-track-name" id="hcw-music-track">Aucune lecture</div>
+          <div class="hcw-track-artist" id="hcw-music-artist">&#8212;</div>
+        </div>
+      </div>
+      <div class="hcw-progress-wrap">
+        <div class="hcw-progress-fill" id="hcw-progress-fill"></div>
+      </div>
+      <div class="hcw-controls">
+        <button class="hcw-ctl" id="hcw-prev" title="Pr&#233;c&#233;dent">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="2" y1="1.5" x2="2" y2="10.5"/>
+            <path d="M10 1.5L4 6L10 10.5V1.5Z"/>
+          </svg>
+        </button>
+        <button class="hcw-ctl hcw-play" id="hcw-play" title="Lecture / Pause">
+          <svg width="14" height="14" viewBox="0 0 14 14" id="hcw-play-icon">
+            <path fill="currentColor" d="M3 2l9 5-9 5V2z"/>
+          </svg>
+        </button>
+        <button class="hcw-ctl" id="hcw-next" title="Suivant">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="10" y1="1.5" x2="10" y2="10.5"/>
+            <path d="M2 1.5L8 6L2 10.5V1.5Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="hcw-resize-handle" id="music-resize-handle"></div>
+  </div>
+
+  <!-- Widget : Chat -->
+  <div class="hc-widget hc-widget--chat" id="hc-widget-chat">
+    <div class="hcw-hd">
+      <span class="hcw-eyebrow">Conversation</span>
+      <div class="hcw-hd-right">
+        <span class="hcw-meta" id="hcw-chat-count">&#8212;</span>
+        <button class="hcw-new-session" id="hcw-new-session" title="Nouvelle session">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="hcw-body hcw-messages" id="hcw-chat-msgs">
+      <div class="hcw-empty">Aucun message</div>
+    </div>
+    <div class="hcw-input-row" id="hcw-input-row">
+      <input class="hcw-input" id="hcw-input" type="text" placeholder="&#201;crire &#224; Jarvis&#8230;" autocomplete="off" />
+      <button class="hcw-send" id="hcw-send" title="Envoyer">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 7H2M7 2l5 5-5 5"/>
+        </svg>
+      </button>
+    </div>
+    <div class="hcw-resize-handle" id="chat-resize-handle"></div>
+  </div>
+
+  <!-- Canal passif (dernier message Jarvis) -->
+  <div class="home-channel" id="home-channel" style="display:none">
+    <div class="msg" id="channel-msg"></div>
+    <div class="meta">
+      <span id="channel-time"></span>
+      <a id="channel-cta" href="/dashboard">OUVRIR &#8594;</a>
+    </div>
+  </div>
+</div>
+
+<!-- View layer — vues plein-écran enregistrées via Jarvis.views -->
+<div id="globe-container"></div>
+
+<script src="/three.min.js"></script>
+<script src="/_shared.js"></script>
+<script src="/mission_control.js"></script>
+<script src="/gesture_router.js"></script>
+<script src="/config/sphereStyle.js"></script>
+<script src="/orb.js"></script>
+<script src="/wake_sequence.js"></script>
+<script>
+// ── Cold boot — étape 1 : flag AVANT home.js + masque la shell ─────────
+// Comportement par défaut : sleep screen, clap double pour wake.
+// ?wake=0 → skip tout (dashboard direct, pour dev)
+// ?wake=1 → bypass sleep, wake immédiat (pour dev sans micro)
+(function () {
+  const params = new URLSearchParams(location.search);
+  const mode   = params.get('wake');
+  if (mode === '0') return;             // skip total (dev)
+  // WAKEUP_ENABLED=false → accès direct au dashboard, aucune séquence de veille.
+  // Sans ce garde-fou, sur une install sans micro (VPS/headless) l'écran
+  // « double clap pour réveiller » bloque tout accès (le seul déclencheur est
+  // le clap, désactivé). ?wake=1 force quand même la séquence (dev).
+  if (mode !== '1' && window.JARVIS_WAKEUP_ENABLED === false) return;
+  window.__jarvisWakeActive = true;
+  window.__jarvisWakeForceImmediate = (mode === '1');
+  // Cache TOUT le chrome dashboard sauf l'orbe (le wake utilise #orb-canvas).
+  // Cible les éléments un-à-un pour ne pas masquer .home-orb-wrap qui est
+  // dans #home-shell. Inclut les éléments appendChild'és sur document.body
+  // par _shared.js (Mission Control, watermark, rooms nav, etc.).
+  const css = document.createElement('style');
+  css.id = 'wake-shell-hider';
+  css.textContent = ''
+    + '.home-top, .cam-overlay, .hc-widget, .home-channel,'
+    + ' .rooms-mc, .rooms-pages, .mode-watermark, .scene-card,'
+    + ' .mission-overlay, .cmdk-root, .notif-stack, .inspect-hint,'
+    + ' .mode-glow, #globe-container, #page-frame {'
+    + ' opacity: 0 !important; pointer-events: none !important;'
+    + ' transition: opacity 0.4s cubic-bezier(0.32,0.72,0,1); }';
+  document.head.appendChild(css);
+}());
+</script>
+<!-- Voix : pipeline temps réel LiveKit (remplace l'ancien voice.js in-house). -->
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+<script src="/voice_livekit.js"></script>
+<script src="/mediapipe_vision.js"></script>
+<script src="/home.js"></script>
+<script>
+// ── Cold boot — étape 2 : sleep screen → clap → wake_sequence ─────────
+// Cycle complet :
+//   1. À l'arrivée : sleep screen (z-index 9500, sleep visible)
+//   2. CustomEvent 'jarvis-wake' (clap backend OU window.triggerWake() dev)
+//      → fade out sleep, mount wake_sequence
+//   3a. wake_sequence onComplete : inject orb dashboard, fade in shell
+//   3b. wake_sequence onFailure (FACE refusée) : destroy wake, re-mount sleep
+(function () {
+  if (!window.__jarvisWakeActive) return;
+  if (typeof window.createWakeSequence !== 'function' ||
+      typeof window.createSleepScreen  !== 'function') return;
+
+  let sleep = null;
+  let seq   = null;
+  // Prénom configuré (USER_FIRSTNAME) — récupéré tôt, fire-and-forget, pour que
+  // mountWake() reste synchrone (le crossfade sleep/wake ne tolère aucun délai).
+  // Repli sur '' (le wake n'affiche alors aucun nom).
+  let _userName = '';
+  fetch('/api/wakeup/status', { headers: window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {} })
+    .then(function (r) { return r.json(); })
+    .then(function (s) { _userName = (s && s.user_firstname) || ''; })
+    .catch(function () {});
+
+  function mountSleep() {
+    const sleepRoot = document.createElement('div');
+    sleepRoot.id = 'wake-sleep-root';
+    document.body.appendChild(sleepRoot);
+    sleep = window.createSleepScreen(sleepRoot, { onWake: enterWake });
+  }
+
+  function enterWake() {
+    if (!sleep) return;
+    const oldSleep = sleep;
+    sleep = null;
+    // Fade out sleep + mount wake en parallèle (crossfade)
+    // Sleep fade 200ms (court) — le wake est mounté INSTANTANÉMENT en-dessous,
+    // donc dès que le sleep s'efface, le wake est déjà entièrement rendu.
+    // Pas de zone de transparence pendant laquelle on verrait juste le bg sombre.
+    oldSleep.fadeOut(200, function () { oldSleep.destroy(); });
+    mountWake();
+  }
+
+  function mountWake() {
+    const root = document.createElement('div');
+    root.id = 'wake-cold-boot-root';
+    // Mount INSTANT (pas de fade-in) : le sleep par-dessus gère le crossfade.
+    // Comme ça il n'y a jamais un moment où ni sleep ni wake n'est entièrement
+    // rendu, donc pas de moment où on voit le fond noir.
+    document.body.appendChild(root);
+
+    seq = window.createWakeSequence(root, {
+      userName:     _userName,
+      // Scan facial cinématique toujours actif quand la séquence de veille tourne.
+      // FACE_RECOGNITION_ENABLED ne gate PAS l'affichage : le backend auto-valide
+      // (recognized:true) si la reconnaissance est off, et l'absence de caméra est
+      // gérée à l'exécution (dérogation). Le no-veille se règle via WAKEUP_ENABLED.
+      requireFace:  true,
+      targetCanvas: document.getElementById('orb-canvas'),
+      onComplete:   onWakeComplete,
+      onFailure:    onWakeFailure,
+    });
+
+    if (!seq) onWakeFailure();
+  }
+
+  function onWakeComplete() {
+    window.__jarvisWakeActive = false;
+    if (typeof window.__jarvisInjectOrb === 'function' && seq && seq.getOrb) {
+      window.__jarvisInjectOrb(seq.getOrb());
+    }
+    // Shell + chrome via transition opacité 0→1 (mêmes cibles que le masquage)
+    const hider = document.getElementById('wake-shell-hider');
+    if (hider) {
+      hider.textContent = ''
+        + '.home-top, .cam-overlay, .hc-widget, .home-channel,'
+        + ' .rooms-mc, .rooms-pages, .mode-watermark, .scene-card,'
+        + ' .mission-overlay, .cmdk-root, .notif-stack, .inspect-hint,'
+        + ' #globe-container, #page-frame {'
+        + ' opacity: 1; transition: opacity 0.4s cubic-bezier(0.32,0.72,0,1); }';
+      setTimeout(function () { if (hider.parentNode) hider.parentNode.removeChild(hider); }, 450);
+    }
+    // Fade out overlay wake (UI uniquement, l'orbe reste sur #orb-canvas)
+    const r = document.getElementById('wake-cold-boot-root');
+    if (r) {
+      r.style.transition = 'opacity 0.35s cubic-bezier(0.32,0.72,0,1)';
+      r.style.opacity = '0';
+      setTimeout(function () {
+        try { seq.destroy(); } catch (e) {}
+        seq = null;
+        if (r.parentNode) r.parentNode.removeChild(r);
+      }, 400);
+    }
+  }
+
+  function onWakeFailure() {
+    // BLOCAGE accès. Détruit wake (et l'orbe partagé pour libérer canvas),
+    // re-monte le sleep screen.
+    const orbRef = seq && seq.getOrb ? seq.getOrb() : null;
+    const r = document.getElementById('wake-cold-boot-root');
+    if (r) {
+      r.style.transition = 'opacity 0.35s cubic-bezier(0.32,0.72,0,1)';
+      r.style.opacity = '0';
+      setTimeout(function () {
+        try { if (seq) seq.destroy(); } catch (e) {}
+        try { if (orbRef && orbRef.destroy) orbRef.destroy(); } catch (e) {}
+        seq = null;
+        if (r.parentNode) r.parentNode.removeChild(r);
+        mountSleep();
+      }, 400);
+    } else {
+      try { if (seq) seq.destroy(); } catch (e) {}
+      seq = null;
+      mountSleep();
+    }
+  }
+
+  // Lancement
+  if (window.__jarvisWakeForceImmediate) {
+    mountWake();   // ?wake=1 : bypass sleep
+  } else {
+    mountSleep(); // défaut : attente clap
+  }
+})();
+</script>
+<script>
+window.loadViewSkills = async function () {
+  try {
+    const r = await fetch('/api/skills/view-scripts', { headers: window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {} });
+    if (!r.ok) return;
+    const { styles = [], scripts = [] } = await r.json();
+
+    // Retire les anciens assets de vues (data-view-skill="1")
+    document.querySelectorAll('[data-view-skill]').forEach(el => el.remove());
+
+    styles.forEach(href => {
+      const l = document.createElement('link');
+      l.rel = 'stylesheet'; l.href = href;
+      l.dataset.viewSkill = '1';
+      document.head.appendChild(l);
+    });
+    for (const src of scripts) {
+      await new Promise((ok, err) => {
+        const s = document.createElement('script');
+        s.src = src; s.onload = ok; s.onerror = err;
+        s.dataset.viewSkill = '1';
+        document.body.appendChild(s);
+      });
+    }
+  } catch (e) { console.warn('[Jarvis] view skills load error:', e); }
+};
+window.loadViewSkills();
+</script>
+</body>
+</html>

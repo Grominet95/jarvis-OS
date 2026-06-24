@@ -1,0 +1,298 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Jarvis Wake Up — styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Sleep indicator ─────────────────────────────────────────────────────── */
+
+#sleep-indicator {
+  display: none;
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+#sleep-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(74, 158, 255, 0.4);
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+#sleep-indicator-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(220, 232, 255, 0.15);
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%       { opacity: 0.8; transform: scale(1.3); }
+}
+
+/* ── Scan overlay ────────────────────────────────────────────────────────── */
+
+#scan-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+}
+
+/* Dark backdrop — fills the screen around the video window */
+#scan-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 8, 13, 0.94);
+}
+
+/* Webcam feed — moderate centered window, radial mask fades edges into dark bg */
+#scan-webcam-feed {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(640px, 54vw);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transform: translate(-50%, -50%) scaleX(-1);
+  filter: brightness(0.78) contrast(1.1) saturate(0.5) hue-rotate(200deg);
+  -webkit-mask-image: radial-gradient(ellipse 78% 80% at center,
+    black 38%, rgba(0,0,0,0.6) 65%, transparent 100%);
+  mask-image: radial-gradient(ellipse 78% 80% at center,
+    black 38%, rgba(0,0,0,0.6) 65%, transparent 100%);
+}
+
+/* Landmarks canvas — same position/size as video, dots above feed */
+#scan-landmarks-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(640px, 54vw);
+  aspect-ratio: 4 / 3;
+  transform: translate(-50%, -50%) scaleX(-1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* HUD layer — on top of everything */
+#scan-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+#scan-header {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+#scan-status-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #4A9EFF;
+  animation: blink-text 1s ease-in-out infinite;
+}
+
+#scan-system-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(220, 232, 255, 0.2);
+}
+
+@keyframes blink-text {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Corner brackets — frame the video window ────────────────────────────── */
+/* Positioned to match the visible video area (≈54vw × 4:3 centered) */
+
+.scan-corner {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+}
+
+.scan-corner-tl {
+  top: calc(50% - min(320px, 27vw) - 4px);
+  left: calc(50% - min(320px, 27vw) - 4px);
+  border-top: 2px solid rgba(74, 158, 255, 0.85);
+  border-left: 2px solid rgba(74, 158, 255, 0.85);
+}
+
+.scan-corner-tr {
+  top: calc(50% - min(320px, 27vw) - 4px);
+  right: calc(50% - min(320px, 27vw) - 4px);
+  border-top: 2px solid rgba(74, 158, 255, 0.85);
+  border-right: 2px solid rgba(74, 158, 255, 0.85);
+}
+
+.scan-corner-bl {
+  bottom: calc(50% - min(320px, 27vw) - 4px);
+  left: calc(50% - min(320px, 27vw) - 4px);
+  border-bottom: 2px solid rgba(74, 158, 255, 0.85);
+  border-left: 2px solid rgba(74, 158, 255, 0.85);
+}
+
+.scan-corner-br {
+  bottom: calc(50% - min(320px, 27vw) - 4px);
+  right: calc(50% - min(320px, 27vw) - 4px);
+  border-bottom: 2px solid rgba(74, 158, 255, 0.85);
+  border-right: 2px solid rgba(74, 158, 255, 0.85);
+}
+
+/* ── Scan line — spans the visible video width ───────────────────────────── */
+
+#scan-line {
+  position: absolute;
+  left: calc(50% - min(320px, 27vw));
+  right: calc(50% - min(320px, 27vw));
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(74, 158, 255, 0.3) 15%,
+    rgba(74, 158, 255, 0.9) 50%,
+    rgba(74, 158, 255, 0.3) 85%,
+    transparent 100%
+  );
+  box-shadow: 0 0 18px rgba(74, 158, 255, 0.55), 0 0 4px #fff;
+  animation: scan-move 1.8s ease-in-out infinite;
+}
+
+@keyframes scan-move {
+  0%   { top: calc(50% - min(238px, 20vw)); opacity: 0; }
+  5%   { opacity: 1; }
+  45%  { top: calc(50% + min(238px, 20vw)); opacity: 0.8; }
+  50%  { top: calc(50% + min(238px, 20vw)); opacity: 0; }
+  51%  { top: calc(50% - min(238px, 20vw)); opacity: 0; }
+  55%  { opacity: 1; }
+  95%  { top: calc(50% + min(238px, 20vw)); opacity: 0.8; }
+  100% { top: calc(50% + min(238px, 20vw)); opacity: 0; }
+}
+
+/* ── Floating data labels ────────────────────────────────────────────────── */
+
+.scan-datapoint {
+  position: absolute;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: rgba(74, 158, 255, 0.45);
+  white-space: nowrap;
+  animation: float-data 3s ease-in-out infinite;
+}
+
+@keyframes float-data {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50%       { opacity: 0.75; transform: translateY(-4px); }
+}
+
+/* ── Progress bar — bottom center ───────────────────────────────────────── */
+
+#scan-progress-container {
+  position: absolute;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, 40vw);
+  height: 2px;
+  background: rgba(74, 158, 255, 0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+#scan-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #2D7DD2, #4A9EFF);
+  border-radius: 99px;
+  box-shadow: 0 0 8px rgba(74, 158, 255, 0.5);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+#scan-footer {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+#scan-percentage {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #4A9EFF;
+  min-width: 44px;
+}
+
+#scan-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(220, 232, 255, 0.35);
+}
+
+/* ── Result overlay ──────────────────────────────────────────────────────── */
+
+#scan-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 3;
+  background: rgba(6, 8, 13, 0.65);
+  backdrop-filter: blur(10px);
+}
+
+#scan-result-icon {
+  font-size: 64px;
+  line-height: 1;
+}
+
+#scan-result-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+#scan-result-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: 0.1em;
+}
+
+#scan-result.success #scan-result-icon  { color: #36D399; }
+#scan-result.success #scan-result-text  { color: #36D399; }
+#scan-result.success #scan-result-name  { color: #36D399; }
+#scan-result.denied  #scan-result-icon  { color: #ef4444; }
+#scan-result.denied  #scan-result-text  { color: #ef4444; }
+#scan-result.denied  #scan-result-name  { color: #ef4444; }

@@ -1,0 +1,216 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   mc.css — page Mission Control (/mc)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Reset page ──────────────────────────────────────────────────────── */
+
+body[data-mode="mc"] {
+  margin: 0; padding: 0;
+  background: var(--bg-0);
+  height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* ── Topbar sticky ───────────────────────────────────────────────────── */
+
+.mc-topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg-0);
+  border-bottom: 0.5px solid var(--line-1);
+  flex-shrink: 0;
+}
+
+.mc-topbar-inner {
+  display: flex; align-items: center; justify-content: center; gap: 0;
+  height: 52px; padding: 0 24px;
+  position: relative;
+}
+
+/* Logo / retour home */
+.mc-brand {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--fg-0); text-decoration: none;
+  font-family: var(--mono); font-size: 1rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  position: absolute; left: 24px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.mc-brand:hover { color: var(--accent); }
+
+/* Nav onglets */
+.mc-nav {
+  display: flex; align-items: stretch;
+  height: 100%;
+}
+
+.mc-nav-btn {
+  background: none; border: none; border-bottom: 1.5px solid transparent;
+  color: var(--fg-3); font-family: var(--mono); font-size: 0.6562rem;
+  letter-spacing: 0.10em; text-transform: uppercase; font-size: 1rem;
+  padding: 0 20px; cursor: pointer; white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -0.5px; /* aligne sur le border-bottom du topbar */
+}
+.mc-nav-btn:hover { color: var(--fg-1); }
+.mc-nav-btn.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Fin de topbar (logs badge, etc.) */
+.mc-topbar-end {
+  display: flex; align-items: center; gap: 8px;
+  position: absolute; right: 24px;
+}
+
+.mc-logs-btn {
+  background: none; border: 0.5px solid var(--line-2);
+  border-radius: var(--r-2); color: var(--fg-3);
+  font-family: var(--mono); font-size: 0.5938rem;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  padding: 5px 12px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.mc-logs-btn:hover { color: var(--fg-0); border-color: var(--line-3); }
+.mc-logs-btn.is-active { color: var(--accent); border-color: var(--accent-line); }
+
+/* ── Zone principale ─────────────────────────────────────────────────── */
+
+.mc-main {
+  flex: 1; overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+
+/* Iframe pleine hauteur */
+.mc-iframe {
+  width: 100%; height: 100%;
+  border: none; display: block;
+  background: transparent;
+}
+.mc-iframe.is-hidden { display: none; }
+
+/* Panneau Interface */
+.mc-panel-interface {
+  flex: 1; overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+  padding: 40px 24px;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.mc-panel-interface > * {
+  width: 100%; max-width: 600px;
+}
+
+/* ── Panneau Interface : styles internes ─────────────────────────────── */
+
+.mci-section {
+  display: flex; flex-direction: column; gap: 16px;
+  padding-bottom: 32px; margin-bottom: 32px;
+  border-bottom: 0.5px solid var(--line-1);
+  max-width: 560px;
+}
+.mci-section:last-child { border-bottom: none; }
+
+.mci-section-label {
+  font-family: var(--mono); font-size: 0.5625rem;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--fg-4); margin-bottom: 4px;
+}
+
+.mci-row {
+  display: flex; align-items: center; gap: 16px;
+  min-height: 34px;
+}
+.mci-row--toggle {
+  flex-direction: column; align-items: flex-start; gap: 10px;
+}
+
+.mci-label {
+  font-family: var(--sans); font-size: 0.7812rem; color: var(--fg-2);
+  min-width: 140px; flex-shrink: 0;
+}
+.mci-sublabel {
+  font-family: var(--mono); font-size: 0.5938rem; color: var(--fg-4);
+  letter-spacing: 0.04em;
+}
+.mci-toggle-group {
+  display: flex; align-items: center; gap: 12px;
+}
+
+/* Color picker */
+.mci-color-wrap {
+  display: flex; align-items: center; gap: 10px;
+}
+.mci-color-input {
+  width: 36px; height: 28px;
+  border: 0.5px solid var(--line-2); border-radius: var(--r-2);
+  cursor: pointer; padding: 2px; background: var(--bg-2);
+}
+.mci-color-hex {
+  font-family: var(--mono); font-size: 0.6875rem; color: var(--fg-2);
+  letter-spacing: 0.06em;
+}
+
+/* Range slider */
+.mci-range-wrap {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+}
+.mci-range-input {
+  flex: 1; height: 3px; accent-color: var(--accent); cursor: pointer;
+}
+.mci-range-val {
+  font-family: var(--mono); font-size: 0.625rem; color: var(--fg-3);
+  min-width: 40px; text-align: right;
+}
+
+/* Boutons */
+.mci-btn {
+  background: none; border: 0.5px solid var(--line-2);
+  border-radius: var(--r-2); color: var(--fg-2);
+  font-family: var(--mono); font-size: 0.625rem; letter-spacing: 0.08em;
+  padding: 8px 18px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.mci-btn:hover { color: var(--fg-0); border-color: var(--line-3); background: var(--bg-3); }
+.mci-btn--danger:hover { border-color: var(--red); color: var(--red); }
+
+.mci-actions { gap: 10px; flex-wrap: wrap; }
+.mci-file-input { display: none; }
+
+/* Toggle switch */
+.mci-toggle {
+  background: none; border: none; padding: 0; cursor: pointer; flex-shrink: 0;
+}
+.mci-toggle-track {
+  display: flex; align-items: center;
+  width: 36px; height: 20px; border-radius: 10px;
+  background: var(--bg-3); border: 0.5px solid var(--line-2);
+  padding: 2px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.mci-toggle.is-on .mci-toggle-track {
+  background: var(--accent-soft); border-color: var(--accent-line);
+}
+.mci-toggle-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--fg-3);
+  transition: transform 0.2s cubic-bezier(0.32,0.72,0,1), background 0.2s;
+  flex-shrink: 0;
+}
+.mci-toggle.is-on .mci-toggle-thumb {
+  transform: translateX(16px); background: var(--accent);
+}
+
+/* ── État vide (aucun onglet actif) ──────────────────────────────────── */
+
+.mc-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  color: var(--fg-4);
+  font-family: var(--mono); font-size: 0.625rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}

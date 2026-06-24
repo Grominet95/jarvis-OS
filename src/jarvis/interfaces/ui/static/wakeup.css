@@ -21,16 +21,16 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(74, 158, 255, 0.4);
+  background: rgba(var(--c-accent), 0.4);
   animation: pulse-slow 3s ease-in-out infinite;
 }
 
 #sleep-indicator-label {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 0.5625rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(220, 232, 255, 0.15);
+  color: rgba(var(--c-fg), 0.15);
 }
 
 @keyframes pulse-slow {
@@ -105,7 +105,7 @@
 
 #scan-status-text {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: #4A9EFF;
@@ -114,9 +114,9 @@
 
 #scan-system-text {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 0.5625rem;
   letter-spacing: 0.15em;
-  color: rgba(220, 232, 255, 0.2);
+  color: rgba(var(--c-fg), 0.2);
 }
 
 @keyframes blink-text {
@@ -136,29 +136,29 @@
 .scan-corner-tl {
   top: calc(50% - min(320px, 27vw) - 4px);
   left: calc(50% - min(320px, 27vw) - 4px);
-  border-top: 2px solid rgba(74, 158, 255, 0.85);
-  border-left: 2px solid rgba(74, 158, 255, 0.85);
+  border-top: 2px solid rgba(var(--c-accent), 0.85);
+  border-left: 2px solid rgba(var(--c-accent), 0.85);
 }
 
 .scan-corner-tr {
   top: calc(50% - min(320px, 27vw) - 4px);
   right: calc(50% - min(320px, 27vw) - 4px);
-  border-top: 2px solid rgba(74, 158, 255, 0.85);
-  border-right: 2px solid rgba(74, 158, 255, 0.85);
+  border-top: 2px solid rgba(var(--c-accent), 0.85);
+  border-right: 2px solid rgba(var(--c-accent), 0.85);
 }
 
 .scan-corner-bl {
   bottom: calc(50% - min(320px, 27vw) - 4px);
   left: calc(50% - min(320px, 27vw) - 4px);
-  border-bottom: 2px solid rgba(74, 158, 255, 0.85);
-  border-left: 2px solid rgba(74, 158, 255, 0.85);
+  border-bottom: 2px solid rgba(var(--c-accent), 0.85);
+  border-left: 2px solid rgba(var(--c-accent), 0.85);
 }
 
 .scan-corner-br {
   bottom: calc(50% - min(320px, 27vw) - 4px);
   right: calc(50% - min(320px, 27vw) - 4px);
-  border-bottom: 2px solid rgba(74, 158, 255, 0.85);
-  border-right: 2px solid rgba(74, 158, 255, 0.85);
+  border-bottom: 2px solid rgba(var(--c-accent), 0.85);
+  border-right: 2px solid rgba(var(--c-accent), 0.85);
 }
 
 /* ── Scan line — spans the visible video width ───────────────────────────── */
@@ -170,12 +170,12 @@
   height: 2px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(74, 158, 255, 0.3) 15%,
-    rgba(74, 158, 255, 0.9) 50%,
-    rgba(74, 158, 255, 0.3) 85%,
+    rgba(var(--c-accent), 0.3) 15%,
+    rgba(var(--c-accent), 0.9) 50%,
+    rgba(var(--c-accent), 0.3) 85%,
     transparent 100%
   );
-  box-shadow: 0 0 18px rgba(74, 158, 255, 0.55), 0 0 4px #fff;
+  box-shadow: 0 0 18px rgba(var(--c-accent), 0.55), 0 0 4px #fff;
   animation: scan-move 1.8s ease-in-out infinite;
 }
 
@@ -195,9 +195,9 @@
 .scan-datapoint {
   position: absolute;
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
+  font-size: 0.5rem;
   letter-spacing: 0.12em;
-  color: rgba(74, 158, 255, 0.45);
+  color: rgba(var(--c-accent), 0.45);
   white-space: nowrap;
   animation: float-data 3s ease-in-out infinite;
 }
@@ -216,7 +216,7 @@
   transform: translateX(-50%);
   width: min(480px, 40vw);
   height: 2px;
-  background: rgba(74, 158, 255, 0.1);
+  background: rgba(var(--c-accent), 0.1);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -226,7 +226,7 @@
   width: 0%;
   background: linear-gradient(90deg, #2D7DD2, #4A9EFF);
   border-radius: 99px;
-  box-shadow: 0 0 8px rgba(74, 158, 255, 0.5);
+  box-shadow: 0 0 8px rgba(var(--c-accent), 0.5);
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
@@ -244,16 +244,16 @@
 #scan-percentage {
   font-family: 'Syne', sans-serif;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 1.125rem;
   color: #4A9EFF;
   min-width: 44px;
 }
 
 #scan-label {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 0.5625rem;
   letter-spacing: 0.15em;
-  color: rgba(220, 232, 255, 0.35);
+  color: rgba(var(--c-fg), 0.35);
 }
 
 /* ── Result overlay ──────────────────────────────────────────────────────── */
@@ -272,13 +272,13 @@
 }
 
 #scan-result-icon {
-  font-size: 64px;
+  font-size: 4rem;
   line-height: 1;
 }
 
 #scan-result-text {
   font-family: 'DM Mono', monospace;
-  font-size: 14px;
+  font-size: 0.875rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
@@ -286,7 +286,7 @@
 #scan-result-name {
   font-family: 'Syne', sans-serif;
   font-weight: 700;
-  font-size: 26px;
+  font-size: 1.625rem;
   letter-spacing: 0.1em;
 }
 

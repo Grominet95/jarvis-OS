@@ -19,6 +19,10 @@
 
 (function () {
   "use strict";
+  /* Détection iframe — appliqué avant tout rendu */
+  if (window.self !== window.top) {
+    document.documentElement.classList.add('in-iframe');
+  }
 
   const Jarvis = (window.Jarvis = window.Jarvis || {});
 
@@ -351,7 +355,26 @@
   let mcRoot = null;
   let mcOpen = false;
 
+  /* ── Mission Control v2 — délégué à mission_control.js ──────────────
+     Les stubs ci-dessous sont surchargés par mission_control.js au boot.
+     Conserver pour ne pas casser les pages qui chargent _shared.js seul.   */
+
+  Jarvis.openMissionControl = function () {
+    window.location.href = '/mc';
+  };
+  Jarvis.closeMissionControl = function () {};
+
+  /* ROOMS reste déclaré ici car utilisé par la palette ⌘K. */
   const ROOMS = [
+    { mode: "home",      label: "Home",          sub: "Ambient · À l'écoute",             href: "/",             chapter: "—",   pages: [] },
+    { mode: "workspace", label: "Workspace",      sub: "Ce que tu pilotes en ce moment",   href: "/dashboard",    chapter: "I",   pages: ["Aperçu","Initiatives","Missions","Tâches","Analytics"] },
+    { mode: "capacites", label: "Capacités", sub: "Ce que Jarvis sait faire pour toi",href: "/capabilities", chapter: "II",  pages: ["Intégrations","Skills","Routines","Ambiances","Store","Écosystème"] },
+    { mode: "config",    label: "Configuration",  sub: "Tes préférences et ton coffre",    href: "/settings",     chapter: "III", pages: ["Préférences","Modèles & API","Audio & voix","Conso","Système","À propos"] },
+  ];
+
+  /* ── DEAD CODE ci-dessous — conservé pour référence, non exécuté ─────
+  function ensureMissionControl_LEGACY() {
+
     { mode: "home",      label: "Home",          sub: "Ambient · À l'écoute",                  href: "/",             chapter: "—",   pages: [] },
     { mode: "workspace", label: "Workspace",      sub: "Ce que tu pilotes en ce moment",         href: "/dashboard",    chapter: "I",   pages: ["Aperçu","Initiatives","Missions","Tâches","Analytics"] },
     { mode: "capacites", label: "Capacités",      sub: "Ce que Jarvis sait faire pour toi",      href: "/capabilities", chapter: "II",  pages: ["Intégrations","Skills","Routines","Ambiances","Store","Écosystème"] },
@@ -416,6 +439,8 @@
     mcOpen = false;
     mcRoot.classList.add("is-hidden");
   };
+  */ // fin DEAD CODE
+
 
   /* ───────── Legacy sidebar (still used on pages without rooms nav) ─────────
      opts: sections, activeId, onNav, footer

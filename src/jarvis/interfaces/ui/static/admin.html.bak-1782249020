@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jarvis — Admin</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #06080D;
+      --blue:     #2D7DD2;
+      --b1:       #4A9EFF;
+      --b2:       rgba(74,158,255,0.55);
+      --b3:       rgba(74,158,255,0.18);
+      --b4:       rgba(74,158,255,0.08);
+      --text:     #DCE8FF;
+      --dim:      rgba(170,195,230,0.55);
+      --muted:    rgba(100,130,175,0.40);
+      --green:    #36D399;
+      --red:      #F87171;
+      --panel:    rgba(5,8,22,0.78);
+      --glass:    rgba(8,13,32,0.72);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      overflow: hidden;
+    }
+
+    /* grid */
+    body {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      grid-template-columns: 240px 1fr 292px;
+      grid-template-areas: "hd hd hd" "sb main rt";
+    }
+
+    /* subtle noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 160px;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--b3); border-radius: 99px; }
+    * { scrollbar-width: thin; scrollbar-color: var(--b3) transparent; }
+
+    /* ═══ HEADER ════════════════════════════════════════════════ */
+    header {
+      grid-area: hd;
+      position: relative; z-index: 10;
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px;
+      background: rgba(4,6,16,0.90);
+      border-bottom: 1px solid var(--b3);
+      backdrop-filter: blur(24px);
+    }
+
+    .brand {
+      font: 800 15px/1 'Syne', sans-serif;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 0 28px rgba(74,158,255,0.45);
+    }
+    .brand em {
+      font-style: normal;
+      color: var(--b1);
+    }
+
+    .hd-rule { flex: 0 0 1px; height: 20px; background: var(--b3); }
+
+    header a {
+      font: 500 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none;
+      transition: color .15s;
+    }
+    header a:hover { color: var(--b1); }
+
+    .pill-badge {
+      font: 500 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.08em;
+      color: var(--b1);
+      background: var(--b4);
+      border: 1px solid var(--b3);
+      border-radius: 99px;
+      padding: 4px 12px;
+    }
+
+    /* ═══ SIDEBAR ════════════════════════════════════════════════ */
+    #sidebar {
+      grid-area: sb;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--panel);
+      border-right: 1px solid var(--b3);
+      backdrop-filter: blur(20px);
+    }
+
+    .col-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 18px 14px;
+      flex-shrink: 0;
+    }
+    .col-label {
+      font: 700 11px/1 'Syne', sans-serif;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--b1);
+    }
+    .col-rule {
+      height: 1px; background: var(--b3); margin: 0 18px 10px; flex-shrink: 0;
+    }
+
+    #session-list { flex: 1; overflow-y: auto; padding: 6px 10px 10px; display: flex; flex-direction: column; gap: 4px; }
+
+    .session-item {
+      padding: 11px 14px 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, box-shadow .15s;
+      background: transparent;
+    }
+    .session-item:hover {
+      background: var(--b4);
+      border-color: var(--b3);
+    }
+    .session-item.active {
+      background: rgba(45,125,210,0.10);
+      border-color: rgba(74,158,255,0.32);
+      box-shadow: 0 0 0 1px rgba(74,158,255,0.08) inset, 0 4px 20px rgba(74,158,255,0.06);
+    }
+    .s-date {
+      font: 600 12px/1 'DM Sans', sans-serif;
+      color: var(--text);
+    }
+    .s-id {
+      font: 400 10px/1 'DM Mono', monospace;
+      color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 4px;
+    }
+    .s-count {
+      display: inline-flex; align-items: center; gap: 5px;
+      font: 400 10px/1 'DM Mono', monospace;
+      color: var(--b2);
+      margin-top: 5px;
+    }
+    .s-count::before {
+      content: '';
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--b1); opacity: .5; flex-shrink: 0;
+    }
+
+    /* ═══ MAIN ═══════════════════════════════════════════════════ */
+    #main {
+      grid-area: main;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: rgba(3,5,14,0.55);
+    }
+
+    /* tabs */
+    .tabs {
+      flex-shrink: 0;
+      display: flex; align-items: center;
+      padding: 12px 20px 0;
+      gap: 4px;
+      border-bottom: 1px solid var(--b3);
+      background: rgba(4,6,18,0.60);
+    }
+    .tab-btn {
+      padding: 8px 18px 10px;
+      background: none; border: none; outline: none;
+      border-radius: 10px 10px 0 0;
+      font: 600 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.20em; text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .tab-btn:hover:not(.active) { color: var(--dim); background: var(--b4); }
+    .tab-btn.active {
+      color: var(--b1);
+      border-bottom-color: var(--b1);
+      background: rgba(74,158,255,0.05);
+    }
+
+    .tab-content { display: none; flex: 1; overflow: hidden; min-height: 0; }
+    .tab-content.active { display: flex; flex-direction: column; }
+
+    /* placeholder */
+    #session-placeholder {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+    }
+    .placeholder-icon {
+      font-size: 32px; opacity: .15;
+    }
+    #session-placeholder p {
+      font: 500 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.24em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* session view */
+    #session-view {
+      flex: 1; overflow-y: auto;
+      padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    .msg-row { display: flex; flex-direction: column; gap: 5px; }
+    .msg-meta {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 4px;
+    }
+    .msg-role-tag {
+      font: 500 9px/1 'DM Mono', monospace;
+      letter-spacing: 0.20em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .msg-time {
+      font: 400 9px/1 'DM Mono', monospace;
+      color: var(--muted); opacity: .7;
+    }
+    .msg-content {
+      background: var(--glass);
+      border: 1px solid rgba(74,158,255,0.09);
+      border-radius: 14px;
+      padding: 12px 16px;
+      white-space: pre-wrap; word-break: break-word;
+      font: 400 12.5px/1.65 'DM Sans', sans-serif;
+      color: var(--text);
+    }
+    .msg-row.user .msg-role-tag { color: var(--b2); }
+    .msg-row.user .msg-content {
+      background: rgba(45,125,210,0.07);
+      border-color: rgba(74,158,255,0.20);
+    }
+
+    /* ── Memory tab ─────────────────────────────────────────── */
+    #memory-tab { overflow-y: auto; flex-direction: column; padding: 20px 24px; gap: 24px; min-height: 0; }
+
+    .mem-block { display: flex; flex-direction: column; gap: 10px; }
+
+    .mem-block-hd {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .mem-block-label {
+      font: 700 10px/1 'Syne', sans-serif;
+      letter-spacing: 0.26em; text-transform: uppercase;
+      color: var(--b1);
+    }
+    .mem-block-rule { flex: 1; height: 1px; background: var(--b3); }
+
+    textarea.mem-editor {
+      width: 100%;
+      background: var(--glass);
+      border: 1px solid var(--b3);
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: var(--text);
+      font: 400 12px/1.65 'DM Mono', monospace;
+      resize: vertical; min-height: 100px;
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+      box-sizing: border-box;
+    }
+    textarea.mem-editor:focus {
+      border-color: rgba(74,158,255,0.42);
+      box-shadow: 0 0 0 3px rgba(74,158,255,0.06);
+    }
+
+    .btn-row { display: flex; gap: 8px; }
+
+    .btn {
+      font: 600 9px/1 'DM Mono', monospace;
+      letter-spacing: 0.20em; text-transform: uppercase;
+      border: 1px solid var(--b3);
+      border-radius: 99px;
+      padding: 7px 18px;
+      background: var(--b4);
+      color: var(--dim);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn:hover { border-color: var(--b1); color: var(--b1); background: rgba(74,158,255,0.10); }
+    .btn.primary {
+      background: rgba(45,125,210,0.16);
+      border-color: rgba(74,158,255,0.36);
+      color: var(--b1);
+    }
+    .btn.primary:hover {
+      background: rgba(45,125,210,0.28);
+      border-color: var(--b1);
+      color: #fff;
+      box-shadow: 0 0 18px rgba(74,158,255,0.14);
+    }
+
+    .topic-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background .12s, border-color .12s;
+    }
+    .topic-row:hover { background: var(--b4); border-color: var(--b3); }
+    .topic-name { flex: 1; font: 500 12px/1 'DM Sans', sans-serif; color: var(--text); }
+    .topic-meta { font: 400 10px/1 'DM Mono', monospace; color: var(--muted); }
+
+    .topic-editor-wrap {
+      display: none;
+      padding: 0 14px 12px;
+      flex-direction: column; gap: 8px;
+    }
+    .topic-editor-wrap.open { display: flex; }
+
+    /* buttons */
+    .btn-sm { font: 600 9px/1 'DM Mono', monospace; letter-spacing: 0.18em; text-transform: uppercase; border: 1px solid var(--b3); border-radius: 99px; padding: 6px 16px; background: var(--b4); color: var(--dim); cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-sm:hover { border-color: var(--b1); color: var(--b1); background: rgba(74,158,255,0.10); }
+    .btn-save { background: rgba(45,125,210,0.16); border-color: rgba(74,158,255,0.36); color: var(--b1); }
+    .btn-save:hover { background: rgba(45,125,210,0.28); border-color: var(--b1); color: #fff; }
+
+    .btn-icon {
+      width: 28px; height: 28px;
+      padding: 0; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px; letter-spacing: 0;
+    }
+    .btn-del {
+      border-color: rgba(255,80,80,0.20);
+      color: rgba(255,100,100,0.50);
+      background: transparent;
+    }
+    .btn-del:hover {
+      border-color: rgba(255,80,80,0.55);
+      color: rgba(255,100,100,1);
+      background: rgba(255,60,60,0.08);
+    }
+
+    .topic-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+    /* ── Tasks tab ──────────────────────────────────────────── */
+    #tasks-tab { overflow-y: auto; flex-direction: column; padding: 20px 24px; gap: 24px; }
+
+    .mem-section { display: flex; flex-direction: column; gap: 12px; }
+    .mem-section h3 {
+      display: flex; align-items: center; gap: 10px;
+      font: 700 10px/1 'Syne', sans-serif;
+      letter-spacing: 0.26em; text-transform: uppercase;
+      color: var(--b1);
+    }
+    .mem-section h3::after { content: ''; flex: 1; height: 1px; background: var(--b3); }
+
+    .job-card {
+      background: var(--glass);
+      border: 1px solid var(--b3);
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .job-name { font: 600 13px/1 'DM Sans', sans-serif; color: var(--text); }
+    .job-meta { font: 400 11px/1.4 'DM Sans', sans-serif; color: var(--dim); }
+    .job-next { font: 400 10px/1 'DM Mono', monospace; color: var(--green); margin-top: 2px; }
+
+    .history-row {
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 4px 12px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background .12s, border-color .12s;
+    }
+    .history-row:hover { background: var(--b4); border-color: var(--b3); }
+    .history-instr { font: 500 12px/1 'DM Sans', sans-serif; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-time  { font: 400 10px/1 'DM Mono', monospace; color: var(--muted); text-align: right; }
+    .history-result { grid-column: 1/-1; font: 400 11px/1.5 'DM Sans', sans-serif; color: var(--dim); white-space: pre-wrap; }
+    .history-err   { color: var(--red); }
+    .notif-empty   { font: 400 10px/1 'DM Mono', monospace; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); text-align: center; padding: 28px 0; }
+
+    /* ═══ RIGHT PANEL ════════════════════════════════════════════ */
+    #right {
+      grid-area: rt;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--panel);
+      border-left: 1px solid var(--b3);
+      backdrop-filter: blur(20px);
+    }
+
+    #notif-list {
+      flex: 1; overflow-y: auto;
+      padding: 10px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+
+    .notif-card {
+      background: var(--glass);
+      border: 1px solid rgba(74,158,255,0.09);
+      border-radius: 12px;
+      padding: 11px 14px;
+    }
+    .notif-card p { font: 400 12px/1.5 'DM Sans', sans-serif; color: var(--text); }
+    .notif-time { font: 400 9px/1 'DM Mono', monospace; color: var(--muted); margin-top: 5px; }
+
+    .refresh-btn {
+      background: none; border: none;
+      color: var(--muted); font-size: 15px;
+      cursor: pointer; padding: 2px 4px; line-height: 1;
+      transition: color .15s, transform .2s;
+    }
+    .refresh-btn:hover { color: var(--b1); transform: rotate(60deg); }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="brand">Jarvis <em>Admin</em></span>
+  <div class="hd-rule"></div>
+  <a href="/">← Chat</a>
+  <span class="pill-badge" id="session-count">0 sessions</span>
+  <span class="pill-badge" id="topic-count">0 topics</span>
+</header>
+
+<nav id="sidebar">
+  <div class="col-hd">
+    <span class="col-label">Sessions</span>
+  </div>
+  <div class="col-rule"></div>
+  <div id="session-list"></div>
+</nav>
+
+<main id="main">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="sessions-tab">Session</button>
+    <button class="tab-btn" data-tab="memory-tab">Mémoire</button>
+    <button class="tab-btn" data-tab="tasks-tab">Tâches</button>
+  </div>
+
+  <div class="tab-content active" id="sessions-tab">
+    <div id="session-placeholder">
+      <div class="placeholder-icon">◈</div>
+      <p>Sélectionne une session</p>
+    </div>
+    <div id="session-view" style="display:none"></div>
+  </div>
+
+  <div class="tab-content" id="memory-tab">
+    <div class="mem-block">
+      <div class="mem-block-hd">
+        <span class="mem-block-label">Memory.md</span>
+        <div class="mem-block-rule"></div>
+      </div>
+      <textarea class="mem-editor" id="index-editor" rows="7"></textarea>
+      <div><button class="btn-sm btn-save" id="save-index">Sauvegarder</button></div>
+    </div>
+    <div class="mem-block">
+      <div class="mem-block-hd">
+        <span class="mem-block-label">Préférences</span>
+        <div class="mem-block-rule"></div>
+      </div>
+      <textarea class="mem-editor" id="prefs-editor" rows="5"></textarea>
+      <div><button class="btn-sm btn-save" id="save-prefs">Sauvegarder</button></div>
+    </div>
+    <div class="mem-block">
+      <div class="mem-block-hd">
+        <span class="mem-block-label">Fichiers thématiques</span>
+        <div class="mem-block-rule"></div>
+      </div>
+      <div id="topic-list"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tasks-tab">
+    <div style="padding:20px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:20px;">
+      <div class="mem-section">
+        <h3>Jobs planifiés</h3>
+        <div id="scheduler-list"></div>
+      </div>
+      <div class="mem-section">
+        <h3>Historique background</h3>
+        <div id="history-list"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<aside id="right">
+  <div class="col-hd">
+    <span class="col-label">Notifications</span>
+    <button class="refresh-btn" id="refresh-notifs" title="Rafraîchir">↻</button>
+  </div>
+  <div class="col-rule"></div>
+  <div id="notif-list"></div>
+</aside>
+
+<script>
+  const API = '/admin/api';
+
+  async function api(path, opts = {}) {
+    const res = await fetch(API + path, opts);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleString('fr-FR', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit' }); }
+    catch { return iso; }
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'tasks-tab') loadTasks();
+    });
+  });
+
+  let currentSessionId = null;
+
+  async function loadSessions() {
+    const sessions = await api('/sessions');
+    document.getElementById('session-count').textContent = sessions.length + ' sessions';
+    const list = document.getElementById('session-list');
+    list.innerHTML = '';
+    sessions.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'session-item';
+      div.dataset.id = s.session_id;
+      div.innerHTML = `
+        <div class="s-date">${s.date}</div>
+        <div class="s-id">${s.session_id.slice(0, 16)}…</div>
+        <div class="s-count">${s.message_count} messages</div>
+      `;
+      div.addEventListener('click', () => openSession(s.session_id, div));
+      list.appendChild(div);
+    });
+  }
+
+  async function openSession(sessionId, el) {
+    currentSessionId = sessionId;
+    document.querySelectorAll('.session-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector('[data-tab="sessions-tab"]').classList.add('active');
+    document.getElementById('sessions-tab').classList.add('active');
+
+    const messages = await api(`/sessions/${sessionId}`);
+    const placeholder = document.getElementById('session-placeholder');
+    const view = document.getElementById('session-view');
+    placeholder.style.display = 'none';
+    view.style.display = 'flex';
+    view.innerHTML = '';
+    messages.forEach(m => {
+      const row = document.createElement('div');
+      row.className = `msg-row ${m.role}`;
+      row.innerHTML = `
+        <div class="msg-meta">
+          <span class="msg-role-tag">${m.role}</span>
+          <span class="msg-time">${fmtTime(m.ts)}</span>
+        </div>
+        <div class="msg-content">${escHtml(m.content)}</div>
+      `;
+      view.appendChild(row);
+    });
+    view.scrollTop = view.scrollHeight;
+  }
+
+  async function loadMemory() {
+    const data = await api('/memory');
+    document.getElementById('topic-count').textContent = data.topics.length + ' topics';
+    document.getElementById('index-editor').value = data.index;
+    document.getElementById('prefs-editor').value = data.user_prefs;
+
+    const list = document.getElementById('topic-list');
+    list.innerHTML = '';
+    data.topics.forEach(t => {
+      const wrap = document.createElement('div');
+      wrap.dataset.topic = t.name;
+      wrap.innerHTML = `
+        <div class="topic-row">
+          <span class="topic-name">${escHtml(t.name)}</span>
+          <span class="topic-meta">${escHtml(t.mtime)} · ${t.size}o</span>
+          <div class="topic-actions">
+            <button class="btn-sm topic-edit-btn" data-name="${escHtml(t.name)}">Éditer</button>
+            <button class="btn-sm btn-icon btn-del topic-del-btn" data-name="${escHtml(t.name)}" title="Supprimer">✕</button>
+          </div>
+        </div>
+        <div class="topic-editor-wrap" id="editor-${cssId(t.name)}">
+          <textarea class="mem-editor topic-ta" rows="12" data-name="${escHtml(t.name)}"></textarea>
+          <div class="btn-row">
+            <button class="btn-sm btn-save topic-save-btn" data-name="${escHtml(t.name)}">Sauvegarder</button>
+            <button class="btn-sm topic-close-btn" data-name="${escHtml(t.name)}">Fermer</button>
+          </div>
+        </div>
+      `;
+      list.appendChild(wrap);
+
+      const editBtn = wrap.querySelector('.topic-edit-btn');
+      const closeBtn = wrap.querySelector('.topic-close-btn');
+      const delBtn = wrap.querySelector('.topic-del-btn');
+      const saveBtn = wrap.querySelector('.topic-save-btn');
+      const editorWrap = wrap.querySelector('.topic-editor-wrap');
+      const ta = wrap.querySelector('.topic-ta');
+
+      editBtn.addEventListener('click', async () => {
+        if (editorWrap.classList.contains('open')) {
+          editorWrap.classList.remove('open');
+          editBtn.textContent = 'Éditer';
+          return;
+        }
+        editBtn.textContent = '…';
+        editBtn.disabled = true;
+        try {
+          const { content } = await api('/memory/topics/' + encodeURIComponent(t.name));
+          ta.value = content;
+          editorWrap.classList.add('open');
+          editBtn.textContent = 'Éditer';
+          setTimeout(() => editorWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+        } catch (e) {
+          editBtn.textContent = 'Erreur';
+          setTimeout(() => { editBtn.textContent = 'Éditer'; editBtn.disabled = false; }, 2000);
+          return;
+        }
+        editBtn.disabled = false;
+      });
+
+      closeBtn.addEventListener('click', () => {
+        editorWrap.classList.remove('open');
+        editBtn.textContent = 'Éditer';
+      });
+
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.textContent = '…';
+        saveBtn.disabled = true;
+        try {
+          await api('/memory/topics/' + encodeURIComponent(t.name), {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: ta.value }),
+          });
+          saveBtn.textContent = '✓ Sauvegardé';
+        } catch {
+          saveBtn.textContent = '✗ Erreur';
+        }
+        setTimeout(() => { saveBtn.textContent = 'Sauvegarder'; saveBtn.disabled = false; }, 2000);
+      });
+
+      delBtn.addEventListener('click', async () => {
+        if (!confirm(`Supprimer "${t.name}" définitivement ?`)) return;
+        delBtn.disabled = true;
+        try {
+          await api('/memory/topics/' + encodeURIComponent(t.name), { method: 'DELETE' });
+          wrap.remove();
+          const topicCount = document.getElementById('topic-count');
+          const current = parseInt(topicCount.textContent) || 0;
+          topicCount.textContent = Math.max(0, current - 1) + ' topics';
+        } catch {
+          delBtn.disabled = false;
+          alert('Erreur lors de la suppression.');
+        }
+      });
+    });
+  }
+
+  async function saveWithFeedback(btn, fn) {
+    const orig = btn.textContent;
+    btn.textContent = '…'; btn.disabled = true;
+    try { await fn(); btn.textContent = '✓ Sauvegardé'; }
+    catch { btn.textContent = '✗ Erreur'; }
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+  }
+
+  document.getElementById('save-index').addEventListener('click', function() {
+    saveWithFeedback(this, () => api('/memory/index', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: document.getElementById('index-editor').value }),
+    }));
+  });
+
+  document.getElementById('save-prefs').addEventListener('click', function() {
+    saveWithFeedback(this, () => api('/memory/prefs', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: document.getElementById('prefs-editor').value }),
+    }));
+  });
+
+  async function loadTasks() {
+    const data = await api('/tasks');
+    const sched = document.getElementById('scheduler-list');
+    sched.innerHTML = '';
+    (data.scheduler || []).forEach(job => {
+      const card = document.createElement('div');
+      card.className = 'job-card';
+      card.innerHTML = `
+        <div class="job-name">${job.name}</div>
+        <div class="job-meta">${job.description} · ${job.interval}</div>
+        ${job.next_run ? `<div class="job-next">Prochain : ${fmtTime(job.next_run)}</div>` : ''}
+      `;
+      sched.appendChild(card);
+    });
+
+    const hist = document.getElementById('history-list');
+    hist.innerHTML = '';
+    if (!data.history || !data.history.length) {
+      hist.innerHTML = '<div class="notif-empty">Aucune tâche exécutée.</div>'; return;
+    }
+    data.history.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'history-row';
+      row.innerHTML = `
+        <div class="history-instr">${escHtml(r.instruction)}</div>
+        <div class="history-time">${fmtTime(r.started_at)}</div>
+        <div class="history-result ${r.error ? 'history-err' : ''}">${escHtml(r.error || r.result || '—')}</div>
+      `;
+      hist.appendChild(row);
+    });
+  }
+
+  async function loadNotifications() {
+    const data = await api('/notifications');
+    const list = document.getElementById('notif-list');
+    list.innerHTML = '';
+    if (!data.pending || !data.pending.length) {
+      list.innerHTML = '<div class="notif-empty">Aucune notification.</div>'; return;
+    }
+    data.pending.forEach(n => {
+      const card = document.createElement('div');
+      card.className = 'notif-card';
+      card.innerHTML = `<p>${escHtml(n.content)}</p><div class="notif-time">${fmtTime(n.created_at)}</div>`;
+      list.appendChild(card);
+    });
+  }
+
+  document.getElementById('refresh-notifs').addEventListener('click', loadNotifications);
+
+  function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function cssId(s) { return s.replace(/[^a-z0-9]/gi,'_'); }
+
+  Promise.all([loadSessions(), loadMemory(), loadNotifications()]);
+  setInterval(loadNotifications, 30_000);
+</script>
+</body>
+</html>

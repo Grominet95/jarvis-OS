@@ -1,0 +1,435 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Setup wizard — aligné sur le design system JARVIS (_shared.css)
+   Header + footer fixes, seule la carte défile (le body est overflow:hidden).
+   ───────────────────────────────────────────────────────────────────── */
+
+.setup-shell {
+  position: relative;
+  z-index: 3;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 26px 28px 22px;
+}
+
+/* ───────── Header / brand ───────── */
+.setup-header { margin-bottom: 16px; }
+
+.setup-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  color: var(--fg-0);
+}
+.setup-brand::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 9px var(--green);
+}
+
+.setup-sub {
+  margin-top: 8px;
+  color: var(--fg-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ───────── Step indicator ───────── */
+.setup-steps {
+  display: flex;
+  gap: 7px;
+  margin-top: 16px;
+}
+.setup-step-dot {
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--line-2);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+.setup-step-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 10px -1px var(--accent);
+}
+.setup-step-dot.done { background: var(--green); }
+
+/* ───────── Card (seule zone scrollable) ───────── */
+.setup-main {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--c-fg), 0.08) transparent;
+}
+.setup-main::-webkit-scrollbar { width: 6px; }
+.setup-main::-webkit-scrollbar-thumb { background: rgba(var(--c-fg), 0.08); border-radius: 3px; }
+
+.setup-card {
+  background: var(--bg-1);
+  border: 1px solid var(--line-1);
+  border-radius: 16px;
+  padding: 22px 26px;
+  position: relative;
+  animation: setupIn 0.4s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+@keyframes setupIn {
+  from { opacity: 0; transform: translateY(10px); filter: blur(5px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+
+/* ───────── Card header (eyebrow + title + lead) ───────── */
+.setup-hd {
+  position: relative;
+  margin-bottom: 18px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line-1);
+}
+.setup-hd::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 34px;
+  height: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+.setup-hd-eyebrow {
+  margin-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.setup-hd-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 23px;
+  letter-spacing: -0.025em;
+  color: var(--fg-0);
+}
+
+.setup-lead {
+  color: var(--fg-2);
+  margin: 10px 0 0;
+  line-height: 1.55;
+  font-size: 13px;
+}
+
+/* ───────── Fields ───────── */
+.setup-field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 13px;
+}
+.setup-field label {
+  color: var(--fg-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.setup-field input,
+.setup-field select {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  color: var(--fg-0);
+  padding: 9px 12px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.setup-field input::placeholder { color: var(--fg-4); }
+.setup-field input:focus,
+.setup-field select:focus {
+  outline: none;
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.setup-field input[type="file"] {
+  padding: 8px 12px;
+  color: var(--fg-2);
+  font-size: 12.5px;
+}
+
+/* ───────── Dropdown custom (remplace <select> natif) ───────── */
+.setup-select { position: relative; }
+.setup-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  color: var(--fg-0);
+  padding: 9px 12px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.setup-select-btn:hover { border-color: var(--line-3); }
+.setup-select.open .setup-select-btn {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.setup-select-chev {
+  color: var(--fg-3);
+  font-size: 11px;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.setup-select.open .setup-select-chev { transform: rotate(180deg); color: var(--accent); }
+.setup-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: none;
+  padding: 5px;
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+}
+.setup-select.open .setup-select-menu {
+  display: block;
+  animation: setupMenu 0.14s ease both;
+}
+@keyframes setupMenu {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.setup-select-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 7px;
+  color: var(--fg-1);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.setup-select-opt:hover { background: var(--accent-soft); color: var(--fg-0); }
+.setup-select-opt.is-sel { color: var(--accent); }
+.setup-select-opt.is-sel::after { content: "✓"; font-size: 11px; }
+
+/* ───────── Sélecteur de fichier custom ───────── */
+.setup-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.setup-file-btn {
+  appearance: none;
+  cursor: pointer;
+  flex: none;
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  color: var(--fg-1);
+  padding: 9px 16px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.setup-file-btn:hover {
+  border-color: var(--accent-line);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.setup-file-name {
+  color: var(--fg-3);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Champ en lecture seule (ex : Voice ID, non modifiable à l'onboarding) */
+.setup-readonly {
+  padding: 9px 12px;
+  border: 1px dashed var(--line-2);
+  border-radius: 8px;
+  background: rgba(6, 8, 13, 0.4);
+  color: var(--fg-2);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  word-break: break-all;
+}
+
+/* ───────── Checkbox rows ───────── */
+.setup-check {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-1);
+  border-radius: 10px;
+  background: var(--bg-2);
+  color: var(--fg-1);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.setup-check:hover { border-color: var(--line-3); }
+.setup-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ───────── Prereq status rows ───────── */
+.setup-status-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 4px;
+}
+.setup-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--line-1);
+  border-radius: 9px;
+  background: var(--bg-2);
+  font-size: 13px;
+  color: var(--fg-1);
+}
+.setup-status-row span:last-child {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.setup-status-ok { color: var(--green); }
+.setup-status-warn { color: var(--gold); }
+.setup-status-err { color: var(--red); }
+
+.setup-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ───────── Footer buttons ───────── */
+.setup-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+.setup-footer .m-btn {
+  appearance: none;
+  cursor: pointer;
+  min-width: 132px;
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #001127;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 13px;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.setup-footer .m-btn:hover { filter: brightness(1.08); }
+.setup-footer .m-btn:active { transform: translateY(1px); }
+.setup-footer .m-btn:disabled { opacity: 0.5; cursor: default; }
+.setup-footer .m-btn--ghost {
+  background: transparent;
+  color: var(--fg-2);
+  border: 1px solid var(--line-2);
+  font-weight: 500;
+}
+.setup-footer .m-btn--ghost:hover {
+  background: var(--bg-2);
+  color: var(--fg-0);
+  filter: none;
+}
+
+/* ───────── Finish screen ───────── */
+.setup-done {
+  text-align: center;
+  padding: 10px 0 4px;
+}
+.setup-done-badge {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-soft);
+  border: 1px solid rgba(var(--c-green), 0.4);
+  color: var(--green);
+  font-size: 26px;
+  box-shadow: 0 0 30px -6px var(--green);
+}
+.setup-done h2 {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 25px;
+  letter-spacing: -0.02em;
+  color: var(--fg-0);
+}
+.setup-done p {
+  color: var(--fg-2);
+  margin: 0 0 16px;
+  line-height: 1.55;
+  font-size: 13px;
+}
+.setup-done-url {
+  display: inline-block;
+  margin: 4px 0 16px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease;
+}
+.setup-done-url:hover { box-shadow: 0 0 20px -4px var(--accent); }
+.setup-done-cmd {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--fg-3);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  .setup-grid-2 { grid-template-columns: 1fr; }
+  .setup-shell { padding: 20px 16px 16px; }
+  .setup-card { padding: 20px 18px; }
+}

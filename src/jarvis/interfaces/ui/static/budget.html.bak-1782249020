@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jarvis — Budget</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:    #06080D;
+      --b1:    #4A9EFF;
+      --b2:    rgba(74,158,255,0.55);
+      --b3:    rgba(74,158,255,0.18);
+      --b4:    rgba(74,158,255,0.08);
+      --text:  #DCE8FF;
+      --dim:   rgba(170,195,230,0.55);
+      --muted: rgba(100,130,175,0.40);
+      --green: #36D399;
+      --amber: #FBBF24;
+      --red:   #F87171;
+      --panel: rgba(5,8,22,0.78);
+      --glass: rgba(8,13,32,0.72);
+    }
+
+    html, body {
+      width: 100%; min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 160px;
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--b3); border-radius: 99px; }
+    * { scrollbar-width: thin; scrollbar-color: var(--b3) transparent; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 28px;
+      height: 56px;
+      background: rgba(4,6,16,0.92);
+      border-bottom: 1px solid var(--b3);
+      backdrop-filter: blur(24px);
+    }
+
+    .brand {
+      font: 800 14px/1 'Syne', sans-serif;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 0 28px rgba(74,158,255,0.45);
+    }
+    .brand em { font-style: normal; color: var(--b1); }
+
+    .hd-rule { flex: 0 0 1px; height: 20px; background: var(--b3); }
+
+    header a {
+      font: 500 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none;
+      transition: color .15s;
+    }
+    header a:hover { color: var(--b1); }
+
+    header a.active { color: var(--b1); }
+
+    .hd-spacer { flex: 1; }
+
+    .hd-refresh {
+      display: flex; align-items: center; gap: 6px;
+      font: 500 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--muted);
+      background: var(--b4);
+      border: 1px solid var(--b3);
+      border-radius: 99px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .hd-refresh:hover { color: var(--b1); border-color: var(--b2); }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 860px; margin: 0 auto;
+      padding: 36px 28px 60px;
+      display: flex; flex-direction: column; gap: 28px;
+    }
+
+    /* ── Section header ─────────────────────────────────────── */
+    .sec-hd {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .sec-label {
+      font: 700 10px/1 'Syne', sans-serif;
+      letter-spacing: 0.26em; text-transform: uppercase;
+      color: var(--b1);
+      flex-shrink: 0;
+    }
+    .sec-rule { flex: 1; height: 1px; background: var(--b3); }
+
+    /* ── Card ───────────────────────────────────────────────── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--b3);
+      border-radius: 16px;
+      padding: 20px 24px;
+      backdrop-filter: blur(16px);
+    }
+
+    .card-title {
+      font: 600 11px/1 'DM Mono', monospace;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 14px;
+    }
+
+    /* ── Stats row ──────────────────────────────────────────── */
+    .stats-row {
+      display: flex; gap: 24px; flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .stat { display: flex; flex-direction: column; gap: 4px; }
+    .stat-val {
+      font: 500 22px/1 'DM Mono', monospace;
+      color: var(--text);
+    }
+    .stat-lbl {
+      font: 400 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Progress bar ───────────────────────────────────────── */
+    .prog-wrap {
+      position: relative;
+      height: 6px;
+      background: var(--b4);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .prog-fill {
+      position: absolute; top: 0; left: 0; height: 100%;
+      border-radius: 99px;
+      transition: width .4s ease;
+      background: var(--b1);
+    }
+    .prog-fill.warning { background: var(--amber); }
+    .prog-fill.hard_stop { background: var(--red); }
+
+    .prog-labels {
+      display: flex; justify-content: space-between;
+      font: 400 10px/1 'DM Mono', monospace;
+      color: var(--muted);
+    }
+
+    /* ── Status badge ───────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font: 500 10px/1 'DM Mono', monospace;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 99px;
+      border: 1px solid;
+    }
+    .badge::before {
+      content: '';
+      width: 5px; height: 5px; border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    .badge.ok    { color: var(--green); border-color: rgba(54,211,153,0.28); background: rgba(54,211,153,0.06); }
+    .badge.warning { color: var(--amber); border-color: rgba(251,191,36,0.28); background: rgba(251,191,36,0.06); }
+    .badge.hard_stop { color: var(--red); border-color: rgba(248,113,113,0.28); background: rgba(248,113,113,0.06); }
+
+    /* ── Projects grid ──────────────────────────────────────── */
+    .proj-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .proj-card {
+      background: var(--glass);
+      border: 1px solid var(--b3);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .proj-name {
+      font: 500 11px/1 'DM Mono', monospace;
+      color: var(--text);
+      margin-bottom: 10px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ── Disabled / empty state ─────────────────────────────── */
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px;
+      padding: 80px 0;
+    }
+    .empty-icon {
+      font-size: 36px; opacity: .12;
+    }
+    .empty-title {
+      font: 700 11px/1 'Syne', sans-serif;
+      letter-spacing: 0.26em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .empty-sub {
+      font: 400 11px/1.6 'DM Sans', sans-serif;
+      color: var(--muted);
+      text-align: center; max-width: 280px;
+    }
+
+    /* ── Timestamp ──────────────────────────────────────────── */
+    .ts {
+      font: 400 10px/1 'DM Mono', monospace;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="brand">JARVIS <em>OS</em></span>
+  <span class="hd-rule"></span>
+  <a href="/admin.html">Admin</a>
+  <a href="/settings.html">Réglages</a>
+  <a href="/budget.html" class="active">Budget</a>
+  <a href="/routines.html">Routines</a>
+  <span class="hd-spacer"></span>
+  <button class="hd-refresh" onclick="load()">↺ Actualiser</button>
+</header>
+
+<main id="main">
+  <div class="empty-state">
+    <div class="empty-icon">⧗</div>
+    <div class="empty-title">Chargement…</div>
+  </div>
+</main>
+
+<script>
+  async function load() {
+    const main = document.getElementById('main');
+    try {
+      const res = await fetch('/api/budget/status');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      render(main, data);
+    } catch (err) {
+      main.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">⚠</div>
+          <div class="empty-title">Erreur de chargement</div>
+          <div class="empty-sub">${err.message}</div>
+        </div>`;
+    }
+  }
+
+  function fmt(usd) {
+    if (usd == null) return '—';
+    if (usd === null) return '—';
+    return `$${Number(usd).toFixed(4)}`;
+  }
+
+  function pct(spent, limit) {
+    if (!limit || limit <= 0) return 0;
+    return Math.min(100, (spent / limit) * 100);
+  }
+
+  function statusLabel(s) {
+    if (s === 'ok') return 'OK';
+    if (s === 'warning') return 'Alerte';
+    if (s === 'hard_stop') return 'Bloqué';
+    return s || '—';
+  }
+
+  function progBar(spent, limit, status) {
+    const p = pct(spent, limit);
+    return `
+      <div class="prog-wrap">
+        <div class="prog-fill ${status || 'ok'}" style="width:${p}%"></div>
+      </div>
+      <div class="prog-labels">
+        <span>${fmt(spent)} dépensé</span>
+        <span>${p.toFixed(1)}%</span>
+        <span>/ ${fmt(limit)}</span>
+      </div>`;
+  }
+
+  function render(main, data) {
+    if (!data.enabled) {
+      main.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💰</div>
+          <div class="empty-title">Budget désactivé</div>
+          <div class="empty-sub">
+            Activez <code>BUDGET_ENABLED=true</code> dans votre .env pour
+            activer le suivi de coûts.
+          </div>
+        </div>`;
+      return;
+    }
+
+    const g = data.global || {};
+    const projects = data.projects || {};
+    const projKeys = Object.keys(projects);
+
+    const ts = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    let html = `
+      <div>
+        <div class="sec-hd">
+          <span class="sec-label">Budget mensuel global</span>
+          <span class="sec-rule"></span>
+          <span class="ts">Mis à jour ${ts}</span>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div class="card-title">Consommation du mois</div>
+            <span class="badge ${g.status || 'ok'}">${statusLabel(g.status)}</span>
+          </div>
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-val">${fmt(g.spent_usd)}</div>
+              <div class="stat-lbl">Dépensé</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">${fmt(g.remaining_usd)}</div>
+              <div class="stat-lbl">Restant</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">${fmt(g.limit_usd)}</div>
+              <div class="stat-lbl">Plafond</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">${(g.utilization_pct ?? 0).toFixed(1)} %</div>
+              <div class="stat-lbl">Utilisation</div>
+            </div>
+          </div>
+          ${progBar(g.spent_usd, g.limit_usd, g.status)}
+        </div>
+      </div>`;
+
+    if (projKeys.length > 0) {
+      html += `
+        <div>
+          <div class="sec-hd">
+            <span class="sec-label">Par projet</span>
+            <span class="sec-rule"></span>
+            <span class="ts">${projKeys.length} projet${projKeys.length > 1 ? 's' : ''}</span>
+          </div>
+          <div class="proj-grid">`;
+
+      for (const pid of projKeys) {
+        const p = projects[pid];
+        html += `
+            <div class="proj-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div class="proj-name" title="${pid}">${pid}</div>
+                <span class="badge ${p.status || 'ok'}" style="font-size:9px;padding:3px 8px;">${statusLabel(p.status)}</span>
+              </div>
+              ${progBar(p.spent_usd, p.limit_usd, p.status)}
+            </div>`;
+      }
+
+      html += `
+          </div>
+        </div>`;
+    } else {
+      html += `
+        <div class="card" style="text-align:center;padding:32px 24px;">
+          <div class="empty-title" style="margin-bottom:8px;">Aucun projet actif</div>
+          <div class="empty-sub">Les dépenses par mission apparaîtront ici lors de l'exécution d'un projet agent.</div>
+        </div>`;
+    }
+
+    main.innerHTML = html;
+  }
+
+  load();
+</script>
+</body>
+</html>

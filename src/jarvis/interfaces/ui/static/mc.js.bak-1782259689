@@ -1,0 +1,338 @@
+/**
+ * mc.js — logique de la page Mission Control (/mc)
+ *
+ * Gère :
+ *  - Navigation par onglets (iframe pour workspace/capacites/config/logs,
+ *    panneau natif pour interface)
+ *  - Panneau Interface : thème CSS vars, export/import, reset, mode avancé
+ *  - Lecture/écriture localStorage pour le thème et le mode avancé
+ *  - Application du thème sauvegardé au boot (avant rendu)
+ */
+
+(function () {
+  'use strict';
+
+  /* ── Config ──────────────────────────────────────────────────────────── */
+
+  const TABS = [
+    { id: 'workspace',     label: 'Workspace',     href: '/dashboard'    },
+    { id: 'capacites',     label: 'Capacités',     href: '/capabilities' },
+    { id: 'configuration', label: 'Configuration', href: '/settings'     },
+    { id: 'interface',     label: 'Interface',     href: null            },
+    { id: 'logs',          label: 'Logs',          href: '/admin'        },
+  ];
+
+  const THEME_VARS = [
+    { key: '--bg-0',             label: 'Fond principal',  type: 'color', default: '#06080D' },
+    { key: '--accent',           label: 'Accent',          type: 'color', default: '#4A9EFF' },
+    { key: '--fg-0',             label: 'Texte principal', type: 'color', default: '#DCE8FF' },
+    { key: '--grain-opacity',    label: 'Grain',           type: 'range', default: 0.035, min: 0,   max: 0.12, step: 0.005 },
+    { key: '--vignette-opacity', label: 'Vignette',        type: 'range', default: 0.55,  min: 0,   max: 1,    step: 0.05  },
+  ];
+
+  const BASE_FONT_DEFAULT = 14;
+  const LS_THEME_KEY      = 'jarvis_theme_v1';
+  const LS_ADVANCED_KEY   = 'jarvis_advanced_mode';
+
+  /* ── Helpers DOM ─────────────────────────────────────────────────────── */
+
+  function h(tag, attrs, children) {
+    const el = document.createElement(tag);
+    if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+      if      (k === 'class')   el.className = v;
+      else if (k === 'text')    el.textContent = v;
+      else if (k === 'onclick') el.addEventListener('click', v);
+      else                      el.setAttribute(k, v);
+    });
+    (children || []).forEach(c => c && el.appendChild(c));
+    return el;
+  }
+
+  /* ── Thème ───────────────────────────────────────────────────────────── */
+
+  function loadTheme() {
+    try { return JSON.parse(localStorage.getItem(LS_THEME_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+
+  function saveTheme(t) { localStorage.setItem(LS_THEME_KEY, JSON.stringify(t)); }
+
+  function applyTheme(patch) {
+    const root = document.documentElement;
+    THEME_VARS.forEach(v => {
+      if (patch[v.key] !== undefined) root.style.setProperty(v.key, patch[v.key]);
+    });
+    if (patch['--base-font-size']) {
+      root.style.setProperty('font-size', patch['--base-font-size'] + 'px');
+    }
+    /* Dériver accent-soft / accent-line depuis --accent */
+    const acc = patch['--accent'] || root.style.getPropertyValue('--accent');
+    if (acc && acc.startsWith('#') && acc.length === 7) {
+      const r = parseInt(acc.slice(1,3),16);
+      const g = parseInt(acc.slice(3,5),16);
+      const b = parseInt(acc.slice(5,7),16);
+      root.style.setProperty('--accent-soft', `rgba(${r},${g},${b},0.14)`);
+      root.style.setProperty('--accent-line', `rgba(${r},${g},${b},0.32)`);
+    }
+    /* Dériver fg-1..fg-4 depuis --fg-0 */
+    const fg = patch['--fg-0'] || root.style.getPropertyValue('--fg-0');
+    if (fg && fg.startsWith('#') && fg.length === 7) {
+      const r = parseInt(fg.slice(1,3),16);
+      const g = parseInt(fg.slice(3,5),16);
+      const b = parseInt(fg.slice(5,7),16);
+      root.style.setProperty('--fg-1', `rgba(${r},${g},${b},0.78)`);
+      root.style.setProperty('--fg-2', `rgba(${r},${g},${b},0.55)`);
+      root.style.setProperty('--fg-3', `rgba(${r},${g},${b},0.36)`);
+      root.style.setProperty('--fg-4', `rgba(${r},${g},${b},0.20)`);
+    }
+  }
+
+  /* Appliquer le thème sauvegardé immédiatement */
+  applyTheme(loadTheme());
+
+  /* ── Mode avancé ─────────────────────────────────────────────────────── */
+
+  function isAdvanced() { return localStorage.getItem(LS_ADVANCED_KEY) === '1'; }
+  function setAdvanced(v) { localStorage.setItem(LS_ADVANCED_KEY, v ? '1' : '0'); }
+
+  /* ── Navigation onglets ──────────────────────────────────────────────── */
+
+  let _activeTab = null;
+
+  const iframe = document.getElementById('mc-iframe');
+  const ifacePanel = document.getElementById('mc-panel-interface');
+
+  window.MCPage = {
+    show: function(tabId) {
+      /* Si logs et pas mode avancé, ignorer */
+      if (tabId === 'logs' && !isAdvanced()) return;
+
+      _activeTab = tabId;
+
+      /* Mettre à jour les boutons nav */
+      document.querySelectorAll('.mc-nav-btn').forEach(b => {
+        b.classList.toggle('is-active', b.dataset.tab === tabId);
+      });
+
+      const tab = TABS.find(t => t.id === tabId);
+      if (!tab) return;
+
+      if (tab.href) {
+        /* Charger dans l'iframe */
+        ifacePanel.style.display = 'none';
+        iframe.classList.remove('is-hidden');
+        if (iframe.dataset.src !== tab.href) {
+          iframe.src = tab.href;
+          iframe.dataset.src = tab.href;
+        }
+      } else {
+        /* Panneau Interface natif */
+        iframe.classList.add('is-hidden');
+        ifacePanel.style.display = 'flex';
+        if (!ifacePanel.dataset.built) {
+          buildInterfacePanel(ifacePanel);
+          ifacePanel.dataset.built = '1';
+        }
+      }
+    },
+  };
+
+  /* ── Bouton Logs en mode avancé ──────────────────────────────────────── */
+
+  function refreshLogsBtn() {
+    const end = document.getElementById('mc-topbar-end');
+    if (!end) return;
+    end.innerHTML = '';
+    if (isAdvanced()) {
+      const btn = h('button', {
+        class: 'mc-logs-btn' + (_activeTab === 'logs' ? ' is-active' : ''),
+        text:  'Logs',
+        onclick: () => MCPage.show('logs'),
+      });
+      end.appendChild(btn);
+    }
+  }
+
+  /* ── Panneau Interface ───────────────────────────────────────────────── */
+
+  function buildInterfacePanel(root) {
+    const theme   = loadTheme();
+    const pending = {};
+
+    function section(label) {
+      const s = h('div', { class: 'mci-section' });
+      s.appendChild(h('div', { class: 'mci-section-label', text: label }));
+      return s;
+    }
+
+    /* ── Apparence ── */
+    const secApp = section('APPARENCE');
+
+    THEME_VARS.forEach(v => {
+      const row = h('div', { class: 'mci-row' });
+      row.appendChild(h('label', { class: 'mci-label', text: v.label }));
+      const cur = theme[v.key] !== undefined ? theme[v.key] : v.default;
+
+      if (v.type === 'color') {
+        const wrap = h('div', { class: 'mci-color-wrap' });
+        const inp  = h('input', { type: 'color', class: 'mci-color-input', value: cur });
+        const hex  = h('span',  { class: 'mci-color-hex', text: cur });
+        inp.addEventListener('input', () => {
+          hex.textContent = inp.value;
+          pending[v.key]  = inp.value;
+          const merged = Object.assign({}, loadTheme(), pending);
+          saveTheme(merged);
+          applyTheme(merged);
+        });
+        wrap.appendChild(inp); wrap.appendChild(hex);
+        row.appendChild(wrap);
+      } else {
+        const wrap = h('div', { class: 'mci-range-wrap' });
+        const inp  = h('input', { type: 'range', class: 'mci-range-input',
+          min: String(v.min), max: String(v.max), step: String(v.step), value: String(cur) });
+        const val  = h('span', { class: 'mci-range-val', text: String(cur) });
+        inp.addEventListener('input', () => {
+          val.textContent = inp.value;
+          pending[v.key]  = inp.value;
+          const merged = Object.assign({}, loadTheme(), pending);
+          saveTheme(merged);
+          applyTheme(merged);
+        });
+        wrap.appendChild(inp); wrap.appendChild(val);
+        row.appendChild(wrap);
+      }
+      secApp.appendChild(row);
+    });
+
+    /* Taille texte */
+    const fontRow  = h('div', { class: 'mci-row' });
+    const curFont  = theme['--base-font-size'] || BASE_FONT_DEFAULT;
+    fontRow.appendChild(h('label', { class: 'mci-label', text: 'Taille texte' }));
+    const fontWrap = h('div', { class: 'mci-range-wrap' });
+    const fontInp  = h('input', { type: 'range', class: 'mci-range-input',
+      min: '11', max: '18', step: '1', value: String(curFont) });
+    const fontVal  = h('span', { class: 'mci-range-val', text: curFont + 'px' });
+    fontInp.addEventListener('input', () => {
+      fontVal.textContent = fontInp.value + 'px';
+      pending['--base-font-size'] = Number(fontInp.value);
+      const merged = Object.assign({}, loadTheme(), pending);
+      saveTheme(merged);
+      applyTheme(merged);
+    });
+    fontWrap.appendChild(fontInp); fontWrap.appendChild(fontVal);
+    fontRow.appendChild(fontWrap);
+    secApp.appendChild(fontRow);
+    root.appendChild(secApp);
+
+    /* ── Mode avancé ── */
+    const secAdv = section('MODE AVANCÉ');
+    const advRow = h('div', { class: 'mci-row mci-row--toggle' });
+    const advGrp = h('div', { class: 'mci-toggle-group' });
+    advGrp.appendChild(h('span', { class: 'mci-sublabel', text: 'Expose les logs Jarvis dans la topbar' }));
+
+    const toggle = h('button', {
+      class: 'mci-toggle' + (isAdvanced() ? ' is-on' : ''),
+      'aria-pressed': isAdvanced() ? 'true' : 'false',
+    });
+    const track = h('span', { class: 'mci-toggle-track' });
+    track.appendChild(h('span', { class: 'mci-toggle-thumb' }));
+    toggle.appendChild(track);
+    toggle.addEventListener('click', () => {
+      const next = !isAdvanced();
+      setAdvanced(next);
+      toggle.classList.toggle('is-on', next);
+      toggle.setAttribute('aria-pressed', next ? 'true' : 'false');
+      refreshLogsBtn();
+    });
+
+    advGrp.appendChild(toggle);
+    advRow.appendChild(h('span', { class: 'mci-label', text: 'Mode avancé' }));
+    advRow.appendChild(advGrp);
+    secAdv.appendChild(advRow);
+    root.appendChild(secAdv);
+
+    /* ── Thème export / import / reset ── */
+    const secTheme = section('THÈME');
+    const actRow   = h('div', { class: 'mci-row mci-actions' });
+
+    const exportBtn = h('button', { class: 'mci-btn', text: '↓ Exporter', onclick: () => {
+      const blob = new Blob([JSON.stringify(loadTheme(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'jarvis-theme.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }});
+
+    const fileInput = h('input', { type: 'file', class: 'mci-file-input', accept: '.json' });
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          saveTheme(imported);
+          applyTheme(imported);
+          /* Reconstruire le panneau pour refléter les nouvelles valeurs */
+          root.innerHTML = '';
+          root.removeAttribute('data-built');
+          buildInterfacePanel(root);
+          root.dataset.built = '1';
+        } catch (err) {
+          console.error('[MC] Import thème invalide', err);
+        }
+      };
+      reader.readAsText(file);
+    });
+    const importBtn = h('button', { class: 'mci-btn', text: '↑ Importer', onclick: () => fileInput.click() });
+
+    const resetBtn = h('button', { class: 'mci-btn mci-btn--danger', text: 'Réinitialiser', onclick: () => {
+      localStorage.removeItem(LS_THEME_KEY);
+      const r = document.documentElement;
+      THEME_VARS.forEach(v => r.style.removeProperty(v.key));
+      ['--accent-soft','--accent-line','--fg-1','--fg-2','--fg-3','--fg-4','font-size'].forEach(p => r.style.removeProperty(p));
+      root.innerHTML = '';
+      root.removeAttribute('data-built');
+      buildInterfacePanel(root);
+      root.dataset.built = '1';
+    }});
+
+    actRow.appendChild(exportBtn);
+    actRow.appendChild(importBtn);
+    actRow.appendChild(resetBtn);
+    actRow.appendChild(fileInput);
+    secTheme.appendChild(actRow);
+    root.appendChild(secTheme);
+  }
+
+  /* ── Init ────────────────────────────────────────────────────────────── */
+
+  document.addEventListener('DOMContentLoaded', function () {
+    /* Effet atmosphère (aurora, vignette, grain) */
+    if (window.Jarvis && typeof Jarvis.mountAtmosphere === 'function') {
+      Jarvis.mountAtmosphere();
+    }
+    /* Bouton Logs si mode avancé actif */
+    refreshLogsBtn();
+
+    /* Ouvrir l'onglet depuis l'URL hash ou workspace par défaut */
+    const hash = window.location.hash.replace('#', '');
+    const valid = TABS.map(t => t.id);
+    const initial = valid.includes(hash) ? hash : 'workspace';
+    MCPage.show(initial);
+
+    /* Mettre à jour le hash à la nav */
+    const origShow = MCPage.show;
+    MCPage.show = function(tabId) {
+      origShow(tabId);
+      history.replaceState(null, '', '#' + tabId);
+    };
+  });
+
+  /* ── Raccourci : Escape → retour Home ───────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') window.location.href = '/';
+  });
+
+})();

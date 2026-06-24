@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Syne:wght@500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/_shared.css" />
+<link rel="stylesheet" href="/mission_control.css" />
 <link rel="stylesheet" href="/home.css" />
 <!-- globe.css chargé dynamiquement si le skill globe-view est installé -->
 </head>
@@ -27,7 +28,7 @@
       <div class="hc-pill">
 
         <button class="hc-btn" id="hc-mic" data-key="mic" title="Microphone">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
             <line x1="12" y1="19" x2="12" y2="22"/>
@@ -35,20 +36,20 @@
           </svg>
         </button>
         <button class="hc-btn" id="hc-screen" data-key="screen" title="Capture d'&#233;cran">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="3" width="20" height="14" rx="2"/>
             <path d="M8 21h8"/>
             <line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
         </button>
         <button class="hc-btn" id="hc-cam" data-key="cam" title="Cam&#233;ra">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3L14.5 4z"/>
             <circle cx="12" cy="13" r="3"/>
           </svg>
         </button>
         <button class="hc-btn" id="hc-files" data-key="files" title="Acc&#232;s fichiers">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
           </svg>
         </button>
@@ -56,14 +57,14 @@
         <div class="hc-sep"></div>
 
         <button class="hc-btn" id="hc-music" data-key="music" title="Musique">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 18V5l12-2v13"/>
             <circle cx="6" cy="18" r="3"/>
             <circle cx="18" cy="16" r="3"/>
           </svg>
         </button>
         <button class="hc-btn" id="hc-chat" data-key="chat" title="Chat">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
         </button>
@@ -174,7 +175,7 @@
     <div class="msg" id="channel-msg"></div>
     <div class="meta">
       <span id="channel-time"></span>
-      <a id="channel-cta" href="/dashboard">OUVRIR &#8594;</a>
+      <a id="channel-cta" href="/mc#workspace">OUVRIR &#8594;</a>
     </div>
   </div>
 </div>
@@ -184,6 +185,7 @@
 
 <script src="/three.min.js"></script>
 <script src="/_shared.js"></script>
+<script src="/mission_control.js"></script>
 <script src="/gesture_router.js"></script>
 <script src="/config/sphereStyle.js"></script>
 <script src="/orb.js"></script>

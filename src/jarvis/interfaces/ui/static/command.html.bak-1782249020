@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command Center — JARVIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #06080D;
+      --blue:        #2D7DD2;
+      --blue-bright: #4A9EFF;
+      --gold:        #B8963E;
+      --text:        #DCE8FF;
+      --dim:         rgba(200, 218, 255, 0.55);
+      --text-dim:    rgba(74, 158, 255, 0.38);
+      --green:       #36D399;
+      --red:         #FF4444;
+      --orange:      #FFB547;
+      --purple:      #9B59B6;
+      --border:      rgba(74, 158, 255, 0.08);
+      --sep:         rgba(74, 158, 255, 0.05);
+    }
+
+    html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; overflow: hidden; }
+
+    /* film grain */
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.022;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 160px;
+    }
+
+    /* ══ SHELL ═══════════════════════════════════════════════════ */
+    #app { position: relative; z-index: 1; height: 100vh; display: flex; flex-direction: column; }
+
+    /* ══ TOPBAR ══════════════════════════════════════════════════ */
+    #topbar {
+      height: 48px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,8,13,0.95);
+      backdrop-filter: blur(14px);
+    }
+
+    .back-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border: 1px solid var(--border); border-radius: 5px;
+      background: transparent; cursor: pointer; color: var(--text-dim);
+      font: 500 10px/1 'DM Mono', monospace; letter-spacing: 0.08em;
+      transition: color 150ms, border-color 150ms;
+    }
+    .back-btn:hover { color: var(--text); border-color: rgba(74,158,255,0.22); }
+
+    .topbar-title {
+      font: 700 13px/1 'Space Grotesk', sans-serif;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(200,218,255,0.65);
+    }
+
+    .topbar-spacer { flex: 1; }
+
+    #last-analyzed {
+      font: 400 10px/1 'DM Mono', monospace;
+      color: var(--text-dim); letter-spacing: 0.05em;
+    }
+
+    .analyze-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border: 1px solid var(--border); border-radius: 5px;
+      background: transparent; cursor: pointer; color: var(--text-dim);
+      font: 500 10px/1 'DM Mono', monospace; letter-spacing: 0.08em;
+      transition: color 150ms, border-color 150ms;
+    }
+    .analyze-btn:hover { color: var(--text); border-color: rgba(74,158,255,0.25); }
+    .analyze-btn.spinning .ai { animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ══ MAIN ════════════════════════════════════════════════════ */
+    #main-area { flex: 1; min-height: 0; display: flex; }
+
+    /* ══ SIDEBAR ═════════════════════════════════════════════════ */
+    #sidebar {
+      width: 200px; flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sb-section { padding: 14px 16px 8px; }
+
+    .sb-label {
+      font: 500 8.5px/1 'DM Mono', monospace; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 10px;
+    }
+
+    .cat-list { display: flex; flex-direction: column; gap: 1px; }
+
+    .cat-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; border-radius: 4px; cursor: pointer;
+      transition: background 150ms;
+    }
+    .cat-item:hover { background: rgba(74,158,255,0.05); }
+    .cat-item.active { background: rgba(74,158,255,0.08); }
+
+    .cat-active-pip {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--blue-bright); opacity: 0; flex-shrink: 0;
+    }
+    .cat-item.active .cat-active-pip { opacity: 1; }
+
+    .cat-ico { font-size: 11px; width: 16px; text-align: center; flex-shrink: 0; }
+
+    .cat-name {
+      flex: 1; font: 500 10px/1 'DM Mono', monospace; letter-spacing: 0.08em;
+      color: var(--text-dim); transition: color 150ms;
+    }
+    .cat-item:hover .cat-name, .cat-item.active .cat-name { color: var(--text); }
+
+    .cat-count {
+      font: 400 10px/1 'DM Mono', monospace;
+      color: var(--blue-bright); min-width: 16px; text-align: right;
+    }
+
+    .sb-sep { height: 1px; background: var(--sep); margin: 5px 16px; }
+
+    .sb-bottom {
+      margin-top: auto; border-top: 1px solid var(--sep);
+      padding: 10px 16px 14px;
+    }
+
+    .src-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 3px 8px;
+      font: 400 9px/1 'DM Mono', monospace; letter-spacing: 0.06em;
+      color: var(--text-dim);
+    }
+    .src-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .src-dot.error { background: var(--red); }
+
+    /* ══ INITIATIVE LIST ══════════════════════════════════════════ */
+    #main-list {
+      flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden;
+      scrollbar-width: thin; scrollbar-color: rgba(74,158,255,0.10) transparent;
+    }
+    #main-list::-webkit-scrollbar { width: 2px; }
+    #main-list::-webkit-scrollbar-thumb { background: rgba(74,158,255,0.14); border-radius: 2px; }
+
+    .group-sep {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px 6px; flex-shrink: 0;
+    }
+    .group-sep-label {
+      font: 500 8.5px/1 'DM Mono', monospace; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-dim); white-space: nowrap;
+    }
+    .group-sep-line { flex: 1; height: 1px; background: var(--sep); }
+
+    /* Row */
+    .init-row { border-bottom: 1px solid var(--sep); }
+
+    .init-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 20px; min-height: 48px; cursor: pointer;
+      transition: background 120ms;
+    }
+    .init-header:hover { background: rgba(74,158,255,0.025); }
+
+    .p-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .p-dot.high   { background: var(--red); }
+    .p-dot.medium { background: var(--orange); }
+    .p-dot.low    { background: var(--text-dim); }
+
+    .init-cat {
+      font: 500 9px/1 'DM Mono', monospace; letter-spacing: 0.12em;
+      width: 60px; flex-shrink: 0;
+      color: var(--text-dim);
+    }
+
+    .init-title {
+      flex: 1; min-width: 0;
+      font: 500 12.5px/1.3 'DM Sans', sans-serif; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .status-badge {
+      font: 500 8px/1 'DM Mono', monospace; letter-spacing: 0.10em;
+      padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
+    }
+    .status-badge.done     { background: rgba(54,211,153,0.10); color: var(--green); }
+    .status-badge.failed   { background: rgba(255,68,68,0.10); color: var(--red); }
+    .status-badge.dismissed{ background: rgba(74,158,255,0.06); color: var(--text-dim); }
+    .status-badge.in_progress { background: rgba(255,181,71,0.10); color: var(--orange); }
+    .status-badge.awaiting_confirm { background: rgba(155,89,182,0.12); color: var(--purple); }
+
+    .expand-arr {
+      font: 400 14px/1 'DM Mono', monospace; color: var(--text-dim);
+      flex-shrink: 0; transition: transform 200ms, color 150ms;
+    }
+    .init-row.expanded .expand-arr { transform: rotate(90deg); color: var(--blue-bright); }
+
+    /* Dimmed when filter active */
+    .init-row.dimmed .init-title,
+    .init-row.dimmed .init-cat,
+    .init-row.dimmed .p-dot,
+    .init-row.dimmed .p-badge { opacity: 0.22; }
+
+    /* Detail */
+    .init-detail { overflow: hidden; height: 0; opacity: 0; }
+
+    .init-inner { padding: 2px 20px 16px 36px; }
+
+    .d-section { margin-bottom: 12px; }
+    .d-label {
+      font: 500 8px/1 'DM Mono', monospace; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 5px;
+    }
+    .d-body { font: 400 12.5px/1.62 'DM Sans', sans-serif; color: var(--dim); }
+    .d-body.action { color: var(--text); font-weight: 500; }
+
+    /* Draft */
+    .draft-toggle {
+      display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
+      font: 500 9px/1 'DM Mono', monospace; letter-spacing: 0.08em; color: var(--blue-bright);
+      cursor: pointer; background: none; border: none; padding: 0;
+      transition: opacity 150ms;
+    }
+    .draft-toggle:hover { opacity: 0.7; }
+    .draft-toggle .arr { display: inline-block; transition: transform 150ms; }
+    .draft-toggle.open .arr { transform: rotate(90deg); }
+
+    .draft-block {
+      display: none; margin-top: 8px; padding: 10px 12px;
+      background: rgba(74,158,255,0.04); border: 1px solid rgba(74,158,255,0.10); border-radius: 6px;
+      font: 400 11px/1.65 'DM Mono', monospace; color: rgba(200,218,255,0.68);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .draft-block.open { display: block; }
+
+    .edit-draft-btn {
+      display: none; margin-top: 5px; align-items: center; gap: 4px;
+      font: 500 9px/1 'DM Mono', monospace; letter-spacing: 0.08em; color: var(--text-dim);
+      cursor: pointer; background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px;
+      transition: color 150ms, border-color 150ms;
+    }
+    .edit-draft-btn:hover { color: var(--text); border-color: rgba(74,158,255,0.20); }
+
+    .draft-ta {
+      display: none; width: 100%; margin-top: 8px; padding: 10px 12px;
+      background: rgba(74,158,255,0.04); border: 1px solid rgba(74,158,255,0.15); border-radius: 6px;
+      font: 400 11px/1.65 'DM Mono', monospace; color: rgba(200,218,255,0.85);
+      resize: vertical; min-height: 90px; outline: none;
+      transition: border-color 150ms;
+    }
+    .draft-ta.open { display: block; }
+    .draft-ta:focus { border-color: rgba(74,158,255,0.30); }
+
+    /* Rectify */
+    .rectify-zone {
+      display: none; margin-top: 10px; padding: 10px 12px;
+      background: rgba(251,191,36,0.03); border: 1px solid rgba(251,191,36,0.12); border-radius: 6px;
+    }
+    .rectify-zone.open { display: block; }
+
+    .rectify-prompt {
+      font: 500 9px/1 'DM Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(251,191,36,0.45); margin-bottom: 7px;
+    }
+
+    .rectify-input {
+      width: 100%; padding: 8px 10px;
+      background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px;
+      color: var(--text); font: 400 12px/1.5 'DM Mono', monospace;
+      resize: none; min-height: 56px; outline: none; transition: border-color 150ms;
+    }
+    .rectify-input:focus { border-color: rgba(251,191,36,0.25); }
+
+    .rectify-footer {
+      display: flex; justify-content: flex-end; gap: 6px; margin-top: 7px;
+    }
+
+    /* Result banner */
+    .result-banner {
+      display: none; margin-top: 10px; padding: 8px 12px;
+      border-radius: 6px; font: 400 11px/1.5 'DM Mono', monospace;
+    }
+    .result-banner.show { display: block; }
+    .result-banner.ok  { background: rgba(54,211,153,0.06); border: 1px solid rgba(54,211,153,0.18); color: var(--green); }
+    .result-banner.err { background: rgba(255,68,68,0.06); border: 1px solid rgba(255,68,68,0.18); color: var(--red); }
+    .result-banner.warn{ background: rgba(155,89,182,0.06); border: 1px solid rgba(155,89,182,0.18); color: var(--purple); }
+
+    /* Row action buttons */
+    .row-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+
+    .rbtn {
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: 5px;
+      background: transparent; cursor: pointer;
+      font: 500 9.5px/1 'DM Mono', monospace; letter-spacing: 0.06em;
+      transition: color 150ms, border-color 150ms, background 150ms;
+    }
+    .rbtn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+    .rbtn-sm { padding: 4px 9px; font-size: 9px; }
+
+    .rbtn-ignore  { color: rgba(255,68,68,0.5); }
+    .rbtn-ignore:hover { color: var(--red); border-color: rgba(255,68,68,0.30); background: rgba(255,68,68,0.04); }
+
+    .rbtn-rectify { color: rgba(251,191,36,0.5); }
+    .rbtn-rectify:hover, .rbtn-rectify.active { color: #FBBF24; border-color: rgba(251,191,36,0.28); background: rgba(251,191,36,0.04); }
+
+    .rbtn-validate { color: rgba(54,211,153,0.6); }
+    .rbtn-validate:hover { color: var(--green); border-color: rgba(54,211,153,0.32); background: rgba(54,211,153,0.04); }
+
+    .rbtn-run { color: rgba(74,158,255,0.7); }
+    .rbtn-run:hover { color: var(--blue-bright); border-color: rgba(74,158,255,0.35); background: rgba(74,158,255,0.05); }
+
+    .rbtn-confirm { color: rgba(155,89,182,0.7); }
+    .rbtn-confirm:hover { color: var(--purple); border-color: rgba(155,89,182,0.35); background: rgba(155,89,182,0.05); }
+
+    .rbtn-cancel { color: var(--text-dim); }
+    .rbtn-cancel:hover { color: var(--text); border-color: rgba(74,158,255,0.20); }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 10px; height: 10px;
+      border: 1.5px solid rgba(54,211,153,0.22); border-top-color: var(--green);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+
+    /* Empty */
+    #empty-state {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; padding: 80px 20px;
+      font: 400 11px/1 'DM Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    #empty-state.show { display: flex; }
+    #empty-state .e-ico { font-size: 22px; opacity: 0.25; margin-bottom: 4px; }
+
+    /* ══ HISTORY SECTION ═════════════════════════════════════════ */
+    #history-section { padding: 0 0 20px; }
+
+    .history-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 20px; border-bottom: 1px solid var(--sep);
+      opacity: 0.55;
+    }
+    .history-row:hover { opacity: 0.78; }
+
+    .h-title {
+      flex: 1; min-width: 0;
+      font: 400 12px/1 'DM Sans', sans-serif; color: var(--dim);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .h-cat {
+      font: 500 8px/1 'DM Mono', monospace; letter-spacing: 0.10em;
+      color: var(--text-dim); width: 56px; flex-shrink: 0;
+    }
+    .h-date {
+      font: 400 9px/1 'DM Mono', monospace;
+      color: var(--text-dim); flex-shrink: 0;
+    }
+
+    /* ══ FOOTER ══════════════════════════════════════════════════ */
+    #footer {
+      height: 44px; flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 14px;
+      background: rgba(6,8,13,0.94);
+    }
+
+    .footer-section { display: flex; align-items: center; gap: 7px; }
+    .footer-lbl {
+      font: 500 8px/1 'DM Mono', monospace; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-dim); white-space: nowrap;
+    }
+    #footer-agenda {
+      font: 400 10px/1 'DM Mono', monospace; color: rgba(200,218,255,0.38);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;
+    }
+
+    .footer-stats {
+      margin-left: auto; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+      font: 400 10px/1 'DM Mono', monospace; color: rgba(200,218,255,0.30);
+    }
+    .f-stat { white-space: nowrap; }
+
+    /* ══ OVERLAY ══════════════════════════════════════════════════ */
+    #transition-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none; opacity: 1; background: #000;
+    }
+  </style>
+</head>
+<body>
+
+<div id="transition-overlay"></div>
+
+<div id="app">
+
+  <!-- ── TOPBAR ──────────────────────────────────────────────── -->
+  <div id="topbar">
+    <button class="back-btn" onclick="transitionTo('/')">
+      <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 2L4 6l4 4"/></svg>
+      retour
+    </button>
+    <div class="topbar-title">Command Center</div>
+    <div class="topbar-spacer"></div>
+    <span id="last-analyzed"></span>
+    <button class="analyze-btn" id="analyze-btn" onclick="runNow()">
+      <svg class="ai" width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M14 8A6 6 0 1 1 8 2"/><path d="M12 2l2 2-2 2" stroke-linecap="round"/>
+      </svg>
+      analyser
+    </button>
+  </div>
+
+  <!-- ── MAIN ───────────────────────────────────────────────── -->
+  <div id="main-area">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sb-section">
+        <div class="sb-label">Catégories</div>
+        <div class="cat-list">
+          <div class="cat-item active" data-cat="all" onclick="setFilter('all')">
+            <div class="cat-active-pip"></div>
+            <span class="cat-ico">●</span>
+            <span class="cat-name">Tous</span>
+            <span class="cat-count" id="cnt-all">—</span>
+          </div>
+          <div class="sb-sep" style="margin:4px 0"></div>
+          <div class="cat-item" data-cat="email" onclick="setFilter('email')">
+            <div class="cat-active-pip"></div>
+            <span class="cat-ico">📧</span>
+            <span class="cat-name">Emails</span>
+            <span class="cat-count" id="cnt-email">—</span>
+          </div>
+          <div class="cat-item" data-cat="agenda" onclick="setFilter('agenda')">
+            <div class="cat-active-pip"></div>
+            <span class="cat-ico">📅</span>
+            <span class="cat-name">Agenda</span>
+            <span class="cat-count" id="cnt-agenda">—</span>
+          </div>
+          <div class="cat-item" data-cat="taches" onclick="setFilter('taches')">
+            <div class="cat-active-pip"></div>
+            <span class="cat-ico">✓</span>
+            <span class="cat-name">Tâches</span>
+            <span class="cat-count" id="cnt-taches">—</span>
+          </div>
+          <div class="cat-item" data-cat="missions" onclick="setFilter('missions')">
+            <div class="cat-active-pip"></div>
+            <span class="cat-ico">⚙</span>
+            <span class="cat-name">Missions</span>
+            <span class="cat-count" id="cnt-missions">—</span>
+          </div>
+          <div class="cat-item" data-cat="insights" onclick="setFilter('insights')">
+            <div class="cat-active-pip"></div>
+            <span class="cat-ico">💡</span>
+            <span class="cat-name">Insights</span>
+            <span class="cat-count" id="cnt-insights">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-bottom">
+        <div class="sb-label" style="margin-bottom:8px">Sources</div>
+        <div class="src-item"><div class="src-dot" id="src-gmail"></div>Gmail</div>
+        <div class="src-item"><div class="src-dot" id="src-calendar"></div>Calendar</div>
+        <div class="src-item"><div class="src-dot" id="src-notion"></div>Notion</div>
+        <div class="src-item"><div class="src-dot" id="src-jarvis"></div>Jarvis</div>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div id="main-list">
+      <div id="empty-state">
+        <div class="e-ico">✓</div>
+        <div>Aucune initiative en attente</div>
+      </div>
+      <div id="history-section"></div>
+    </div>
+
+  </div>
+
+  <!-- ── FOOTER ──────────────────────────────────────────────── -->
+  <div id="footer">
+    <div class="footer-section">
+      <span class="footer-lbl">Agenda 48h</span>
+      <span id="footer-agenda">—</span>
+    </div>
+    <div class="footer-stats">
+      <span class="f-stat" id="fstat-emails">📧 —</span>
+      <span class="f-stat" id="fstat-tasks">✓ —</span>
+      <span class="f-stat" id="fstat-missions">⚙ —</span>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<script>
+// ── Config ────────────────────────────────────────────────────
+
+const TYPE_CAT = {
+  draft_response: 'email',
+  reminder:       'agenda',
+  suggestion:     'taches',
+  alert:          'insights',
+  auto_task:      'missions',
+  info:           'insights',
+};
+
+const TYPE_LABEL = {
+  draft_response: 'EMAIL',
+  reminder:       'AGENDA',
+  suggestion:     'TÂCHES',
+  alert:          'ALERTE',
+  auto_task:      'MISSION',
+  info:           'INFO',
+};
+
+// Libellé du bouton d'action principal par type
+const TYPE_RUN_LABEL = {
+  draft_response: '✉ Préparer brouillon',
+  auto_task:      '⚙ Lancer la mission',
+  reminder:       '✓ Marquer traité',
+  suggestion:     '✓ Marquer traité',
+  alert:          '✓ Traité',
+  info:           '✓ Traité',
+};
+
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
+
+const GROUP_LABELS = {
+  high:   'Haute priorité',
+  medium: 'Moyenne priorité',
+  low:    'Informations',
+};
+
+const HISTORY_STATUS_DONE = new Set(['done', 'approved', 'rejected', 'dismissed', 'failed']);
+
+// ── State ─────────────────────────────────────────────────────
+
+let initiatives = [];   // pending uniquement
+let historyItems = [];  // done/dismissed/rejected
+let activeFilter = 'all';
+let expandedId   = null;
+
+// ── Utils ─────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function getCat(init) { return TYPE_CAT[init.type] || 'insights'; }
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = Math.round((now - d) / 60000);
+  if (diff < 60) return `${diff}min`;
+  if (diff < 1440) return `${Math.round(diff/60)}h`;
+  return `${Math.round(diff/1440)}j`;
+}
+
+// ── Render ────────────────────────────────────────────────────
+
+function renderList() {
+  const container = document.getElementById('main-list');
+  const empty     = document.getElementById('empty-state');
+
+  container.querySelectorAll('.init-row, .group-sep').forEach(el => el.remove());
+
+  if (!initiatives.length) { empty.classList.add('show'); updateCounts(); renderHistory(); return; }
+  empty.classList.remove('show');
+
+  const sorted = [...initiatives].sort((a,b) =>
+    (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9)
+  );
+
+  const groups = { high: [], medium: [], low: [] };
+  sorted.forEach(i => {
+    const p = i.priority || 'low';
+    (groups[p] || groups.low).push(i);
+  });
+
+  const filterCat = activeFilter === 'all' ? null : activeFilter;
+  const histEl    = document.getElementById('history-section');
+
+  ['high','medium','low'].forEach(prio => {
+    const grp = groups[prio];
+    if (!grp.length) return;
+
+    const sep = document.createElement('div');
+    sep.className = 'group-sep';
+    sep.innerHTML = `<span class="group-sep-label">${GROUP_LABELS[prio]}</span><div class="group-sep-line"></div>`;
+    container.insertBefore(sep, histEl);
+
+    grp.forEach(init => container.insertBefore(buildRow(init, filterCat), histEl));
+  });
+
+  renderHistory();
+  updateCounts();
+}
+
+function buildRow(init, filterCat) {
+  const cat    = getCat(init);
+  const label  = TYPE_LABEL[init.type] || init.type.toUpperCase();
+  const dimmed = filterCat && cat !== filterCat;
+
+  const row = document.createElement('div');
+  row.className = `init-row${dimmed ? ' dimmed' : ''}`;
+  row.id        = `row-${init.id}`;
+  row.dataset.cat = cat;
+
+  const hasDraft    = Boolean(init.draft_content);
+  const runLabel    = TYPE_RUN_LABEL[init.type] || '▶ Lancer';
+  const isAwaiting  = init.status === 'awaiting_confirm';
+
+  row.innerHTML = `
+    <div class="init-header" onclick="toggleRow('${init.id}')">
+      <div class="p-dot ${init.priority}"></div>
+      <div class="init-cat">${esc(label)}</div>
+      <div class="init-title">${esc(init.title)}</div>
+      ${isAwaiting ? '<span class="status-badge awaiting_confirm">CONFIRM. REQUISE</span>' : ''}
+      <div class="expand-arr">›</div>
+    </div>
+    <div class="init-detail" id="detail-${init.id}">
+      <div class="init-inner">
+
+        ${init.context ? `
+        <div class="d-section">
+          <div class="d-label">Contexte</div>
+          <div class="d-body">${esc(init.context)}</div>
+        </div>` : ''}
+
+        ${init.reasoning ? `
+        <div class="d-section">
+          <div class="d-label">Raisonnement Jarvis</div>
+          <div class="d-body">${esc(init.reasoning)}</div>
+        </div>` : ''}
+
+        <div class="d-section">
+          <div class="d-label">Action proposée</div>
+          <div class="d-body action">${esc(init.action)}</div>
+          ${hasDraft ? `
+            <button class="draft-toggle" id="dtog-${init.id}" onclick="toggleDraft('${init.id}')">
+              <span class="arr">›</span>&nbsp;Voir brouillon
+            </button>
+            <pre class="draft-block" id="dblock-${init.id}">${esc(init.draft_content)}</pre>
+            <button class="edit-draft-btn" id="dedit-${init.id}" onclick="editDraft('${init.id}')">✎ Modifier</button>
+            <textarea class="draft-ta" id="dta-${init.id}">${esc(init.draft_content)}</textarea>
+          ` : ''}
+        </div>
+
+        <div class="result-banner" id="rbanner-${init.id}"></div>
+
+        <div class="rectify-zone" id="rzone-${init.id}">
+          <div class="rectify-prompt">Qu'est-ce qui cloche ?</div>
+          <textarea class="rectify-input" id="rinput-${init.id}" placeholder="Décris ce que tu veux changer…" rows="2"></textarea>
+          <div class="rectify-footer">
+            <button class="rbtn rbtn-sm rbtn-cancel" onclick="closeRectify('${init.id}')">Annuler</button>
+            <button class="rbtn rbtn-sm rbtn-validate" id="rsend-${init.id}" onclick="submitRectify('${init.id}')">Regénérer →</button>
+          </div>
+        </div>
+
+        <div class="row-actions" id="actions-${init.id}">
+          ${_buildActionBtns(init)}
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  return row;
+}
+
+function _buildActionBtns(init) {
+  const id = init.id;
+  const isAwaiting = init.status === 'awaiting_confirm';
+
+  const dismissBtn  = `<button class="rbtn rbtn-ignore"  onclick="doDismiss('${id}')">✗ Ignorer</button>`;
+  const rectifyBtn  = `<button class="rbtn rbtn-rectify" id="rrect-${id}" onclick="toggleRectify('${id}')">⟳ Rectifier</button>`;
+
+  if (isAwaiting) {
+    // Étape 2 : brouillon prêt, attente confirmation envoi
+    return `
+      ${dismissBtn}
+      <button class="rbtn rbtn-confirm" id="rconfirm-${id}" onclick="doConfirm('${id}')">📤 Confirmer l'envoi</button>
+    `;
+  }
+
+  const runLabel = TYPE_RUN_LABEL[init.type] || '▶ Lancer';
+  return `
+    ${dismissBtn}
+    ${['pending', 'draft_response', 'auto_task', 'reminder', 'suggestion', 'alert', 'info'].includes(init.status || 'pending') ? rectifyBtn : ''}
+    <button class="rbtn rbtn-run" id="rrun-${id}" onclick="doRun('${id}')">${runLabel}</button>
+  `;
+}
+
+// ── History ───────────────────────────────────────────────────
+
+function renderHistory() {
+  const section = document.getElementById('history-section');
+  section.innerHTML = '';
+
+  if (!historyItems.length) return;
+
+  const sep = document.createElement('div');
+  sep.className = 'group-sep';
+  sep.innerHTML = `<span class="group-sep-label">Historique récent</span><div class="group-sep-line"></div>`;
+  section.appendChild(sep);
+
+  const filterCat = activeFilter === 'all' ? null : activeFilter;
+  const shown = filterCat
+    ? historyItems.filter(i => getCat(i) === filterCat)
+    : historyItems;
+
+  shown.slice(0, 20).forEach(init => {
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    const label = TYPE_LABEL[init.type] || init.type.toUpperCase();
+    const statusCls = init.status || 'done';
+    row.innerHTML = `
+      <div class="p-dot ${init.priority || 'low'}"></div>
+      <div class="h-cat">${esc(label)}</div>
+      <div class="h-title">${esc(init.title)}</div>
+      <span class="status-badge ${statusCls}">${esc(init.status || 'done').toUpperCase()}</span>
+      <div class="h-date">${fmtDate(init.created_at)}</div>
+    `;
+    section.appendChild(row);
+  });
+}
+
+// ── Filter ────────────────────────────────────────────────────
+
+function setFilter(cat) {
+  activeFilter = (activeFilter === cat) ? 'all' : cat;
+
+  document.querySelectorAll('.cat-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.cat === activeFilter);
+  });
+
+  const filterCat = activeFilter === 'all' ? null : activeFilter;
+  document.querySelectorAll('.init-row').forEach(row => {
+    row.classList.toggle('dimmed', Boolean(filterCat) && row.dataset.cat !== filterCat);
+  });
+
+  renderHistory();
+}
+
+// ── Counts ────────────────────────────────────────────────────
+
+function updateCounts() {
+  const c = { all: 0, email: 0, agenda: 0, taches: 0, missions: 0, insights: 0 };
+  initiatives.forEach(i => { const cat = getCat(i); c.all++; if (c[cat] !== undefined) c[cat]++; });
+
+  Object.entries(c).forEach(([k,v]) => {
+    const el = document.getElementById(`cnt-${k}`);
+    if (el) el.textContent = v || '—';
+  });
+
+  document.getElementById('fstat-emails').textContent   = `📧 ${c.email} email${c.email !== 1 ? 's' : ''}`;
+  document.getElementById('fstat-missions').textContent = `⚙ ${c.missions} mission${c.missions !== 1 ? 's' : ''}`;
+}
+
+// ── Expand / collapse ─────────────────────────────────────────
+
+function toggleRow(id) {
+  const detail = document.getElementById(`detail-${id}`);
+  const row    = document.getElementById(`row-${id}`);
+  if (!detail || !row) return;
+
+  if (expandedId === id) {
+    gsap.to(detail, { duration: 0.18, height: 0, opacity: 0, ease: 'power2.in' });
+    row.classList.remove('expanded');
+    expandedId = null;
+  } else {
+    if (expandedId) {
+      const pd = document.getElementById(`detail-${expandedId}`);
+      const pr = document.getElementById(`row-${expandedId}`);
+      if (pd) gsap.to(pd, { duration: 0.14, height: 0, opacity: 0, ease: 'power2.in' });
+      if (pr) pr.classList.remove('expanded');
+    }
+
+    expandedId = id;
+    row.classList.add('expanded');
+
+    gsap.fromTo(detail,
+      { height: 0, opacity: 0 },
+      { duration: 0.25, height: 'auto', opacity: 1, ease: 'power2.out' }
+    );
+
+    setTimeout(() => row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150);
+  }
+}
+
+function _remeasure(id) {
+  if (expandedId !== id) return;
+  const detail = document.getElementById(`detail-${id}`);
+  if (!detail) return;
+  gsap.killTweensOf(detail, 'height');
+  gsap.to(detail, { duration: 0.12, height: 'auto', ease: 'none' });
+}
+
+// ── Draft ─────────────────────────────────────────────────────
+
+function toggleDraft(id) {
+  const tog   = document.getElementById(`dtog-${id}`);
+  const block = document.getElementById(`dblock-${id}`);
+  const edit  = document.getElementById(`dedit-${id}`);
+  if (!block) return;
+  const open = block.classList.toggle('open');
+  tog?.classList.toggle('open', open);
+  if (edit) edit.style.display = open ? 'inline-flex' : 'none';
+  setTimeout(() => _remeasure(id), 20);
+}
+
+function editDraft(id) {
+  const block = document.getElementById(`dblock-${id}`);
+  const ta    = document.getElementById(`dta-${id}`);
+  if (!block || !ta) return;
+  block.style.display = 'none';
+  ta.classList.add('open');
+  ta.focus();
+  setTimeout(() => _remeasure(id), 20);
+}
+
+// ── Rectify ───────────────────────────────────────────────────
+
+function toggleRectify(id) {
+  const zone = document.getElementById(`rzone-${id}`);
+  const btn  = document.getElementById(`rrect-${id}`);
+  if (!zone) return;
+  const open = zone.classList.toggle('open');
+  btn?.classList.toggle('active', open);
+  if (open) document.getElementById(`rinput-${id}`)?.focus();
+  setTimeout(() => _remeasure(id), 20);
+}
+
+function closeRectify(id) {
+  document.getElementById(`rzone-${id}`)?.classList.remove('open');
+  document.getElementById(`rrect-${id}`)?.classList.remove('active');
+  setTimeout(() => _remeasure(id), 20);
+}
+
+async function submitRectify(id) {
+  const input   = document.getElementById(`rinput-${id}`);
+  const sendBtn = document.getElementById(`rsend-${id}`);
+  const correction = input?.value?.trim();
+  if (!correction) return;
+
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const r = await fetch(`/api/initiatives/${id}/rectify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correction }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const updated = await r.json();
+
+    const idx = initiatives.findIndex(i => i.id === id);
+    if (idx >= 0) Object.assign(initiatives[idx], updated);
+
+    const row = document.getElementById(`row-${id}`);
+    if (row) {
+      gsap.to(row, {
+        duration: 0.18, opacity: 0, x: 8, ease: 'power2.in',
+        onComplete: () => {
+          expandedId = null;
+          renderList();
+          setTimeout(() => toggleRow(id), 60);
+        }
+      });
+    }
+  } catch {
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Erreur — réessayer';
+  }
+}
+
+// ── Actions ───────────────────────────────────────────────────
+
+function _removeRow(id, dir) {
+  const row = document.getElementById(`row-${id}`);
+  if (!row) return;
+  if (expandedId === id) expandedId = null;
+
+  gsap.to(row, {
+    duration: 0.2, x: dir === 'left' ? -28 : 28, opacity: 0, ease: 'power2.in',
+    onComplete: () => {
+      row.remove();
+      initiatives = initiatives.filter(i => i.id !== id);
+      updateCounts();
+      if (!initiatives.length) document.getElementById('empty-state').classList.add('show');
+    }
+  });
+}
+
+function _showBanner(id, cls, msg) {
+  const el = document.getElementById(`rbanner-${id}`);
+  if (!el) return;
+  el.className = `result-banner show ${cls}`;
+  el.textContent = msg;
+  setTimeout(() => _remeasure(id), 20);
+}
+
+function doDismiss(id) {
+  fetch(`/api/proactive/initiatives/${id}/dismiss`, { method: 'POST' }).catch(() => {});
+  _removeRow(id, 'left');
+}
+
+// Bouton principal : run step 1
+async function doRun(id) {
+  const btn = document.getElementById(`rrun-${id}`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+
+  try {
+    const r = await fetch(`/api/proactive/initiatives/${id}/run`, { method: 'POST' });
+    const data = await r.json();
+
+    if (data.status === 'draft_ready') {
+      // Mettre à jour l'initiative locale
+      const idx = initiatives.findIndex(i => i.id === id);
+      if (idx >= 0) {
+        initiatives[idx].status = 'awaiting_confirm';
+        initiatives[idx].draft_content = data.draft;
+      }
+      // Remplacer les boutons
+      const actionsEl = document.getElementById(`actions-${id}`);
+      if (actionsEl) {
+        actionsEl.innerHTML = `
+          <button class="rbtn rbtn-ignore" onclick="doDismiss('${id}')">✗ Ignorer</button>
+          <button class="rbtn rbtn-confirm" id="rconfirm-${id}" onclick="doConfirm('${id}')">📤 Confirmer l'envoi</button>
+        `;
+      }
+      // Afficher le brouillon
+      const dblock = document.getElementById(`dblock-${id}`);
+      if (dblock) { dblock.textContent = data.draft; dblock.classList.add('open'); }
+      const dtog = document.getElementById(`dtog-${id}`);
+      if (dtog) dtog.classList.add('open');
+      const dedit = document.getElementById(`dedit-${id}`);
+      if (dedit) dedit.style.display = 'inline-flex';
+      const dta = document.getElementById(`dta-${id}`);
+      if (dta) dta.value = data.draft;
+      // Badge sur le header
+      const header = document.querySelector(`#row-${id} .init-header`);
+      const existing = header?.querySelector('.status-badge');
+      if (header && !existing) {
+        const badge = document.createElement('span');
+        badge.className = 'status-badge awaiting_confirm';
+        badge.textContent = 'CONFIRM. REQUISE';
+        header.insertBefore(badge, header.querySelector('.expand-arr'));
+      }
+      _showBanner(id, 'warn', 'Brouillon prêt — relisez puis confirmez l\'envoi.');
+      setTimeout(() => _remeasure(id), 40);
+
+    } else if (data.status === 'mission_launched') {
+      _showBanner(id, 'ok', `Mission lancée — projet ${data.project_id || ''} (${data.steps || 0} étapes)`);
+      setTimeout(() => _removeRow(id, 'right'), 2200);
+
+    } else if (data.status === 'handled') {
+      _removeRow(id, 'right');
+
+    } else if (data.status === 'budget_exceeded') {
+      _showBanner(id, 'err', 'Budget insuffisant pour lancer cette mission.');
+      if (btn) { btn.disabled = false; btn.textContent = '⚙ Lancer la mission'; }
+
+    } else if (data.error) {
+      _showBanner(id, 'err', `Erreur : ${data.error}`);
+      if (btn) { btn.disabled = false; btn.textContent = TYPE_RUN_LABEL[initiatives.find(i=>i.id===id)?.type] || '▶ Lancer'; }
+
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = TYPE_RUN_LABEL[initiatives.find(i=>i.id===id)?.type] || '▶ Lancer'; }
+    }
+  } catch (e) {
+    _showBanner(id, 'err', 'Erreur réseau');
+    if (btn) { btn.disabled = false; btn.textContent = TYPE_RUN_LABEL[initiatives.find(i=>i.id===id)?.type] || '▶ Lancer'; }
+  }
+}
+
+// Bouton confirmation envoi mail (step 2)
+async function doConfirm(id) {
+  const btn = document.getElementById(`rconfirm-${id}`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+
+  // Récupérer le brouillon potentiellement modifié
+  const ta = document.getElementById(`dta-${id}`);
+  const draft_content = ta?.classList.contains('open') ? ta.value : null;
+
+  try {
+    const r = await fetch(`/api/proactive/initiatives/${id}/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draft_content }),
+    });
+    const data = await r.json();
+
+    if (data.status === 'sent') {
+      _showBanner(id, 'ok', `Mail envoyé (id: ${data.message_id || 'ok'})`);
+      setTimeout(() => _removeRow(id, 'right'), 2200);
+    } else if (data.status === 'draft_only') {
+      _showBanner(id, 'warn', `Outil d'envoi indisponible — copiez le brouillon ci-dessus.`);
+      if (btn) { btn.disabled = false; btn.textContent = '📤 Confirmer l\'envoi'; }
+    } else if (data.status === 'blocked') {
+      _showBanner(id, 'err', `Envoi bloqué (approbation désactivée).`);
+      if (btn) { btn.disabled = false; btn.textContent = '📤 Confirmer l\'envoi'; }
+    } else if (data.error) {
+      _showBanner(id, 'err', `Erreur : ${data.error}`);
+      if (btn) { btn.disabled = false; btn.textContent = '📤 Confirmer l\'envoi'; }
+    }
+  } catch {
+    _showBanner(id, 'err', 'Erreur réseau');
+    if (btn) { btn.disabled = false; btn.textContent = '📤 Confirmer l\'envoi'; }
+  }
+}
+
+// Conserver la compat avec l'ancien endpoint approve (non utilisé dans la nouvelle UI)
+function doIgnore(id) { doDismiss(id); }
+
+// ── Run now ───────────────────────────────────────────────────
+
+let _analyzeTimer = null;
+
+async function runNow() {
+  const btn = document.getElementById('analyze-btn');
+  if (btn.disabled) return;
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  document.getElementById('last-analyzed').textContent = 'analyse en cours…';
+
+  try { await fetch('/api/proactive/run', { method: 'POST' }); } catch {}
+
+  _analyzeTimer = setTimeout(() => _analysisDone(), 5 * 60 * 1000);
+}
+
+function _analysisDone() {
+  if (_analyzeTimer) { clearTimeout(_analyzeTimer); _analyzeTimer = null; }
+  const btn = document.getElementById('analyze-btn');
+  btn.classList.remove('spinning');
+  btn.disabled = false;
+  document.getElementById('last-analyzed').textContent = "analysé à l'instant";
+  loadInitiatives();
+}
+
+// ── Timestamp ─────────────────────────────────────────────────
+
+async function fetchStatus() {
+  try {
+    const r = await fetch('/api/proactive/status');
+    const d = await r.json();
+    const el = document.getElementById('last-analyzed');
+    if (d.last_run) {
+      const diff = Math.round((Date.now() - new Date(d.last_run).getTime()) / 60000);
+      el.textContent = diff < 1 ? "analysé à l'instant"
+        : diff < 60 ? `analysé il y a ${diff}min`
+        : `analysé il y a ${Math.round(diff/60)}h`;
+    }
+  } catch {}
+}
+
+// ── Footer ────────────────────────────────────────────────────
+
+async function loadFooter() {
+  try {
+    const r = await fetch('/api/events');
+    const d = await r.json();
+    const evts = d.events || [];
+    document.getElementById('footer-agenda').textContent =
+      evts.length ? evts.slice(0,2).map(e => `${e.time} ${e.name}`).join(' · ') : 'aucun événement';
+  } catch { document.getElementById('footer-agenda').textContent = '—'; }
+
+  try {
+    const r = await fetch('/api/tasks');
+    const d = await r.json();
+    const n = (d.tasks || []).filter(t => !t.done).length;
+    document.getElementById('fstat-tasks').textContent = `✓ ${n} tâche${n !== 1 ? 's' : ''}`;
+  } catch {}
+}
+
+// ── Load ──────────────────────────────────────────────────────
+
+async function loadInitiatives() {
+  try {
+    // Charge tout sur 7 jours pour avoir l'historique
+    const r = await fetch('/api/proactive/initiatives?days=7');
+    const all = await r.json();
+
+    initiatives  = all.filter(i => !HISTORY_STATUS_DONE.has(i.status));
+    historyItems = all.filter(i => HISTORY_STATUS_DONE.has(i.status))
+                      .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    renderList();
+  } catch {
+    document.getElementById('empty-state').classList.add('show');
+  }
+}
+
+// ── WebSocket ─────────────────────────────────────────────────
+
+let _reloadTimer = null;
+function _scheduleReload() {
+  clearTimeout(_reloadTimer);
+  _reloadTimer = setTimeout(loadInitiatives, 300);
+}
+
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onmessage = e => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'proactive_update') {
+        _analysisDone();
+      } else if (msg.type === 'initiatives_restored') {
+        // Rechargement groupé après un restart — un seul fetch debounced
+        _scheduleReload();
+      }
+      // initiative_pending individuel : ignoré (le cycle complet envoie proactive_update en fin)
+    } catch {}
+  };
+  ws.onclose = () => setTimeout(connectWS, 3000);
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+
+loadInitiatives();
+fetchStatus();
+loadFooter();
+connectWS();
+</script>
+
+<!-- GSAP page transitions -->
+<script>
+(function () {
+  const ov  = document.getElementById('transition-overlay');
+  const ui  = '#app';
+  const dir = sessionStorage.getItem('tx-dir') || 'forward';
+  const xIn = dir === 'forward' ? 40 : -40;
+  sessionStorage.removeItem('tx-dir');
+
+  window.addEventListener('load', () => {
+    gsap.timeline()
+      .to(ov, { duration: 0.2, opacity: 0, ease: 'power2.out' })
+      .from(ui, { duration: 0.38, x: xIn, opacity: 0, filter: 'blur(6px)', ease: 'power2.out', clearProps: 'all' }, '<0.05');
+  });
+
+  window.transitionTo = function (href, direction) {
+    direction = direction || 'back';
+    sessionStorage.setItem('tx-dir', direction);
+    const xOut = direction === 'forward' ? -40 : 40;
+    gsap.set(ov, { pointerEvents: 'all' });
+    gsap.timeline({ onComplete: () => { window.location.href = href; } })
+      .to(ui,  { duration: 0.28, x: xOut, opacity: 0, filter: 'blur(6px)', ease: 'power2.in' })
+      .to(ov,  { duration: 0.22, opacity: 1, ease: 'power2.in' }, '<');
+  };
+})();
+</script>
+
+</body>
+</html>

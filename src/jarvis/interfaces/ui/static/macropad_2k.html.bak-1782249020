@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jarvis · Macropad 2 touches Le Labo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/_shared.css" />
+<link rel="stylesheet" href="/macropad_2k.css" />
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar"></aside>
+  <main class="main">
+    <header id="topbar"></header>
+    <div id="page-root" class="kp-root"></div>
+  </main>
+</div>
+<script src="/_shared.js"></script>
+<script src="/macropad_2k.js"></script>
+</body>
+</html>

@@ -25,28 +25,28 @@ body.globe-mode #globe-container {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(74, 158, 255, 0.08);
-  border: 1px solid rgba(74, 158, 255, 0.22);
+  background: rgba(var(--c-accent), 0.08);
+  border: 1px solid rgba(var(--c-accent), 0.22);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 200ms, border-color 200ms, transform 200ms, box-shadow 200ms;
-  color: rgba(74, 158, 255, 0.6);
+  color: rgba(var(--c-accent), 0.6);
 }
 
 #globe-toggle:hover {
-  background: rgba(74, 158, 255, 0.18);
-  border-color: rgba(74, 158, 255, 0.7);
+  background: rgba(var(--c-accent), 0.18);
+  border-color: rgba(var(--c-accent), 0.7);
   transform: scale(1.1);
   color: #4A9EFF;
 }
 
 #globe-toggle.active {
-  background: rgba(74, 158, 255, 0.20);
-  border-color: rgba(74, 158, 255, 0.8);
+  background: rgba(var(--c-accent), 0.20);
+  border-color: rgba(var(--c-accent), 0.8);
   color: #4A9EFF;
-  box-shadow: 0 0 12px rgba(74, 158, 255, 0.25);
+  box-shadow: 0 0 12px rgba(var(--c-accent), 0.25);
 }
 
 
@@ -84,7 +84,7 @@ body.globe-mode #globe-data-panel {
 /* ── Globe data panel — header ──────────────────────────────────── */
 .gdp-header {
   padding: 14px 18px 10px;
-  border-bottom: 1px solid rgba(74, 158, 255, 0.08);
+  border-bottom: 1px solid rgba(var(--c-accent), 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -93,10 +93,10 @@ body.globe-mode #globe-data-panel {
 
 .gdp-title {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 0.5625rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(74, 158, 255, 0.55);
+  color: rgba(var(--c-accent), 0.55);
 }
 
 .gdp-live {
@@ -104,16 +104,16 @@ body.globe-mode #globe-data-panel {
   align-items: center;
   gap: 5px;
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
+  font-size: 0.5rem;
   letter-spacing: 0.10em;
-  color: rgba(74, 158, 255, 0.40);
+  color: rgba(var(--c-accent), 0.40);
 }
 
 .gdp-live .pulse-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: rgba(74, 158, 255, 0.55);
+  background: rgba(var(--c-accent), 0.55);
   animation: gdp-pulse 2s ease-in-out infinite;
 }
 
@@ -133,7 +133,7 @@ body.globe-mode #globe-data-panel {
 
 /* ── Globe data panel — sections ────────────────────────────────── */
 .gdp-section {
-  border-bottom: 1px solid rgba(74, 158, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--c-accent), 0.06);
   flex-shrink: 0;
 }
 
@@ -154,16 +154,16 @@ body.globe-mode #globe-data-panel {
 .gdp-section-label {
   flex: 1;
   font-family: 'DM Mono', monospace;
-  font-size: 8.5px;
+  font-size: 0.5312rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(74, 158, 255, 0.45);
+  color: rgba(var(--c-accent), 0.45);
 }
 
 .gdp-section-count {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: rgba(74, 158, 255, 0.35);
+  font-size: 0.5625rem;
+  color: rgba(var(--c-accent), 0.35);
   min-width: 18px;
   text-align: right;
 }
@@ -172,8 +172,8 @@ body.globe-mode #globe-data-panel {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(74, 158, 255, 0.35);
-  font-size: 9px;
+  color: rgba(var(--c-accent), 0.35);
+  font-size: 0.5625rem;
   padding: 0 0 0 4px;
   line-height: 1;
   transition: color 150ms ease;
@@ -181,7 +181,7 @@ body.globe-mode #globe-data-panel {
 }
 
 .gdp-section-toggle.active {
-  color: rgba(74, 158, 255, 0.8);
+  color: rgba(var(--c-accent), 0.8);
 }
 
 .gdp-section-toggle:hover {
@@ -202,7 +202,7 @@ body.globe-mode #globe-data-panel {
   align-items: center;
   gap: 8px;
   padding: 5px 0;
-  border-bottom: 1px solid rgba(74, 158, 255, 0.04);
+  border-bottom: 1px solid rgba(var(--c-accent), 0.04);
   cursor: pointer;
   transition: opacity 120ms ease;
 }
@@ -216,7 +216,7 @@ body.globe-mode #globe-data-panel {
 }
 
 .gdp-item-icon {
-  font-size: 11px;
+  font-size: 0.6875rem;
   opacity: 0.7;
   flex-shrink: 0;
   width: 14px;
@@ -230,7 +230,7 @@ body.globe-mode #globe-data-panel {
 
 .gdp-item-name {
   font-family: 'DM Mono', monospace;
-  font-size: 9.5px;
+  font-size: 0.5938rem;
   color: rgba(200, 218, 255, 0.70);
   white-space: nowrap;
   overflow: hidden;
@@ -239,8 +239,8 @@ body.globe-mode #globe-data-panel {
 
 .gdp-item-sub {
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  color: rgba(74, 158, 255, 0.38);
+  font-size: 0.5rem;
+  color: rgba(var(--c-accent), 0.38);
   margin-top: 1px;
   white-space: nowrap;
   overflow: hidden;
@@ -249,15 +249,15 @@ body.globe-mode #globe-data-panel {
 
 .gdp-item-badge {
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  color: rgba(74, 158, 255, 0.45);
+  font-size: 0.5rem;
+  color: rgba(var(--c-accent), 0.45);
   flex-shrink: 0;
 }
 
 .gdp-empty {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: rgba(74, 158, 255, 0.25);
+  font-size: 0.5625rem;
+  color: rgba(var(--c-accent), 0.25);
   padding: 4px 0 6px;
   text-align: center;
   letter-spacing: 0.08em;
@@ -273,12 +273,12 @@ body.globe-mode #globe-data-panel {
 
 .gdp-search-input {
   flex: 1;
-  background: rgba(74, 158, 255, 0.05);
-  border: 1px solid rgba(74, 158, 255, 0.15);
+  background: rgba(var(--c-accent), 0.05);
+  border: 1px solid rgba(var(--c-accent), 0.15);
   border-radius: 5px;
   padding: 5px 9px;
   font-family: 'DM Mono', monospace;
-  font-size: 9.5px;
+  font-size: 0.5938rem;
   letter-spacing: 0.06em;
   color: rgba(200, 218, 255, 0.80);
   outline: none;
@@ -287,21 +287,21 @@ body.globe-mode #globe-data-panel {
 }
 
 .gdp-search-input::placeholder {
-  color: rgba(74, 158, 255, 0.28);
+  color: rgba(var(--c-accent), 0.28);
   text-transform: none;
 }
 
 .gdp-search-input:focus {
-  border-color: rgba(74, 158, 255, 0.45);
-  background: rgba(74, 158, 255, 0.09);
+  border-color: rgba(var(--c-accent), 0.45);
+  background: rgba(var(--c-accent), 0.09);
 }
 
 .gdp-search-clear {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(74, 158, 255, 0.30);
-  font-size: 9px;
+  color: rgba(var(--c-accent), 0.30);
+  font-size: 0.5625rem;
   padding: 0;
   line-height: 1;
   transition: color 150ms ease;
@@ -309,7 +309,7 @@ body.globe-mode #globe-data-panel {
 }
 
 .gdp-search-clear:hover {
-  color: rgba(74, 158, 255, 0.75);
+  color: rgba(var(--c-accent), 0.75);
 }
 
 /* ── Toggle switch ───────────────────────────────────────────────── */
@@ -327,8 +327,8 @@ body.globe-mode #globe-data-panel {
 .gdp-switch-track {
   width: 30px;
   height: 16px;
-  background: rgba(74, 158, 255, 0.10);
-  border: 1px solid rgba(74, 158, 255, 0.22);
+  background: rgba(var(--c-accent), 0.10);
+  border: 1px solid rgba(var(--c-accent), 0.22);
   border-radius: 8px;
   position: relative;
   transition: background 200ms ease, border-color 200ms ease;
@@ -340,15 +340,15 @@ body.globe-mode #globe-data-panel {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: rgba(74, 158, 255, 0.35);
+  background: rgba(var(--c-accent), 0.35);
   top: 2px;
   left: 2px;
   transition: transform 200ms ease, background 200ms ease;
 }
 
 .gdp-switch input:checked+.gdp-switch-track {
-  background: rgba(74, 158, 255, 0.22);
-  border-color: rgba(74, 158, 255, 0.60);
+  background: rgba(var(--c-accent), 0.22);
+  border-color: rgba(var(--c-accent), 0.60);
 }
 
 .gdp-switch input:checked+.gdp-switch-track::after {
@@ -366,18 +366,18 @@ body.globe-mode #globe-data-panel {
 
 .gdp-switch-label {
   font-family: 'DM Mono', monospace;
-  font-size: 8.5px;
+  font-size: 0.5312rem;
   letter-spacing: 0.10em;
   text-transform: uppercase;
-  color: rgba(74, 158, 255, 0.38);
+  color: rgba(var(--c-accent), 0.38);
 }
 
 /* ── Vessel status line ──────────────────────────────────────────── */
 .gdp-vessel-status {
   font-family: 'DM Mono', monospace;
-  font-size: 8.5px;
+  font-size: 0.5312rem;
   letter-spacing: 0.08em;
-  color: rgba(184, 150, 62, 0.50);
+  color: rgba(var(--c-gold), 0.50);
   padding: 0 18px 10px;
 }
 
@@ -390,8 +390,8 @@ body.globe-mode #globe-data-panel {
 }
 
 .gdp-weather-cell {
-  background: rgba(74, 158, 255, 0.04);
-  border: 1px solid rgba(74, 158, 255, 0.08);
+  background: rgba(var(--c-accent), 0.04);
+  border: 1px solid rgba(var(--c-accent), 0.08);
   border-radius: 6px;
   padding: 8px 10px;
   cursor: pointer;
@@ -399,30 +399,30 @@ body.globe-mode #globe-data-panel {
 }
 
 .gdp-weather-cell:hover {
-  border-color: rgba(74, 158, 255, 0.20);
-  background: rgba(74, 158, 255, 0.08);
+  border-color: rgba(var(--c-accent), 0.20);
+  background: rgba(var(--c-accent), 0.08);
 }
 
 .gdp-weather-city {
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
+  font-size: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.10em;
-  color: rgba(74, 158, 255, 0.40);
+  color: rgba(var(--c-accent), 0.40);
   margin-bottom: 4px;
 }
 
 .gdp-weather-temp {
   font-family: 'DM Mono', monospace;
-  font-size: 16px;
+  font-size: 1rem;
   color: rgba(200, 218, 255, 0.80);
   line-height: 1;
 }
 
 .gdp-weather-desc {
   font-family: 'DM Mono', monospace;
-  font-size: 7.5px;
-  color: rgba(74, 158, 255, 0.35);
+  font-size: 0.4688rem;
+  color: rgba(var(--c-accent), 0.35);
   margin-top: 3px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -439,14 +439,14 @@ body.globe-mode #globe-data-panel {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(74, 158, 255, 0.08);
-  border: 1px solid rgba(74, 158, 255, 0.22);
+  background: rgba(var(--c-accent), 0.08);
+  border: 1px solid rgba(var(--c-accent), 0.22);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 200ms, border-color 200ms, transform 200ms, box-shadow 200ms;
-  color: rgba(74, 158, 255, 0.6);
+  color: rgba(var(--c-accent), 0.6);
   padding: 0;
   margin: 0;
   outline: none;
@@ -456,8 +456,8 @@ body.globe-mode #globe-data-panel {
 #intel-toggle:hover,
 #dashboard-nav-btn:hover,
 #settings-nav-btn:hover {
-  background: rgba(74, 158, 255, 0.18);
-  border-color: rgba(74, 158, 255, 0.7);
+  background: rgba(var(--c-accent), 0.18);
+  border-color: rgba(var(--c-accent), 0.7);
   transform: scale(1.1);
   color: #4A9EFF;
 }
@@ -466,10 +466,10 @@ body.globe-mode #globe-data-panel {
 #intel-toggle.active,
 #dashboard-nav-btn.active,
 #settings-nav-btn.active {
-  background: rgba(74, 158, 255, 0.20);
-  border-color: rgba(74, 158, 255, 0.8);
+  background: rgba(var(--c-accent), 0.20);
+  border-color: rgba(var(--c-accent), 0.8);
   color: #4A9EFF;
-  box-shadow: 0 0 12px rgba(74, 158, 255, 0.25);
+  box-shadow: 0 0 12px rgba(var(--c-accent), 0.25);
 }
 
 /* Positions — 5 boutons centrés, gap 8px (total 212px) */
@@ -558,23 +558,23 @@ body.intel-mode #intel-overlay {
 
 .intel-fallback-title {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 0.75rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(74, 158, 255, 0.9);
+  color: rgba(var(--c-accent), 0.9);
   margin-bottom: 10px;
 }
 
 .intel-fallback-sub {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: rgba(200, 218, 255, 0.55);
   margin: 0 0 28px;
 }
 
 .intel-fallback-steps {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: rgba(200, 218, 255, 0.75);
   line-height: 1.9;
 }
@@ -582,7 +582,7 @@ body.intel-mode #intel-overlay {
 .intel-fallback-steps p {
   margin: 0 0 6px;
   color: rgba(200, 218, 255, 0.5);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -597,12 +597,12 @@ body.intel-mode #intel-overlay {
 }
 
 .intel-fallback-steps code {
-  background: rgba(74, 158, 255, 0.08);
-  border: 1px solid rgba(74, 158, 255, 0.22);
+  background: rgba(var(--c-accent), 0.08);
+  border: 1px solid rgba(var(--c-accent), 0.22);
   border-radius: 3px;
   padding: 2px 7px;
-  font-size: 10px;
-  color: rgba(74, 158, 255, 0.95);
+  font-size: 0.625rem;
+  color: rgba(var(--c-accent), 0.95);
   display: inline-block;
   margin-top: 3px;
 }
@@ -660,11 +660,11 @@ body.globe-mode .cam-overlay {
   background: rgba(6, 8, 13, 0.90);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(74, 158, 255, 0.25);
+  border: 1px solid rgba(var(--c-accent), 0.25);
   border-radius: 6px;
   padding: 7px 10px;
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.05em;
   color: rgba(200, 218, 255, 0.85);
   line-height: 1.55;
