@@ -55,6 +55,16 @@
 
   applyTheme(loadTheme());
 
+  /* Injecter la couleur accent pour l'orbe (lu par sphereStyle.js) */
+  (function () {
+    try {
+      const t = JSON.parse(localStorage.getItem('jarvis_theme_v1') || '{}');
+      if (t['--accent'] && /^#[0-9a-fA-F]{6}$/.test(t['--accent'])) {
+        window.JARVIS_ACCENT_COLOR = t['--accent'];
+      }
+    } catch (e) {}
+  })();
+
   /* ── Rediriger openMissionControl vers /mc ───────────────────────────── */
 
   if (window.Jarvis) {

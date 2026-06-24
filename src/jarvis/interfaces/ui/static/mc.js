@@ -19,7 +19,7 @@
     { id: 'capacites',     label: 'Capacités',     href: '/capabilities' },
     { id: 'configuration', label: 'Configuration', href: '/settings'     },
     { id: 'interface',     label: 'Interface',     href: null            },
-    { id: 'logs',          label: 'Logs',          href: '/admin'        },
+    /* logs désactivé temporairement */
   ];
 
   const THEME_VARS = [
@@ -124,6 +124,35 @@
         if (iframe.dataset.src !== tab.href) {
           iframe.src = tab.href;
           iframe.dataset.src = tab.href;
+          /* Injecter le thème dans l'iframe après chargement */
+          iframe.onload = function () {
+            try {
+              const doc = iframe.contentDocument;
+              if (!doc) return;
+              const existing = doc.getElementById('jarvis-theme-inject');
+              if (existing) existing.remove();
+              const t = loadTheme();
+              const bg   = t['--bg-0']   || '#06080D';
+              const acc  = t['--accent'] || '#4A9EFF';
+              const fg   = t['--fg-0']   || '#DCE8FF';
+              const r = parseInt(acc.slice(1,3),16);
+              const g = parseInt(acc.slice(3,5),16);
+              const b = parseInt(acc.slice(5,7),16);
+              const style = doc.createElement('style');
+              style.id = 'jarvis-theme-inject';
+              style.textContent = ':root {'
+                + '--bg:' + bg + ';'
+                + '--b1:' + acc + ';'
+                + '--b2:rgba(' + r + ',' + g + ',' + b + ',0.55);'
+                + '--b3:rgba(' + r + ',' + g + ',' + b + ',0.18);'
+                + '--b4:rgba(' + r + ',' + g + ',' + b + ',0.08);'
+                + '--panel:' + bg + ';'
+                + '--glass:' + bg + ';'
+                + '--text:' + fg + ';'
+                + '}';
+              doc.head.appendChild(style);
+            } catch(e) {}
+          };
         }
       } else {
         /* Panneau Interface natif */
@@ -139,19 +168,7 @@
 
   /* ── Bouton Logs en mode avancé ──────────────────────────────────────── */
 
-  function refreshLogsBtn() {
-    const end = document.getElementById('mc-topbar-end');
-    if (!end) return;
-    end.innerHTML = '';
-    if (isAdvanced()) {
-      const btn = h('button', {
-        class: 'mc-logs-btn' + (_activeTab === 'logs' ? ' is-active' : ''),
-        text:  'Logs',
-        onclick: () => MCPage.show('logs'),
-      });
-      end.appendChild(btn);
-    }
-  }
+  function refreshLogsBtn() { /* logs désactivé temporairement */ }
 
   /* ── Panneau Interface ───────────────────────────────────────────────── */
 
@@ -175,16 +192,35 @@
 
       if (v.type === 'color') {
         const wrap = h('div', { class: 'mci-color-wrap' });
-        const inp  = h('input', { type: 'color', class: 'mci-color-input', value: cur });
-        const hex  = h('span',  { class: 'mci-color-hex', text: cur });
-        inp.addEventListener('input', () => {
-          hex.textContent = inp.value;
-          pending[v.key]  = inp.value;
-          const merged = Object.assign({}, loadTheme(), pending);
-          saveTheme(merged);
-          applyTheme(merged);
+        const swatch = h('div', { class: 'mci-color-swatch' });
+        swatch.style.cssText = 'width:28px;height:28px;border-radius:6px;background:'+cur+';border:1.5px solid var(--line-3);cursor:pointer;flex-shrink:0;box-shadow:0 0 0 1px var(--line-1);';
+        const hexLabel = h('span', { class: 'mci-color-hex', text: cur });
+
+        let picker = null;
+        const pickerWrap = h('div');
+        pickerWrap.style.cssText = 'grid-column:1/-1; position:relative;';
+
+        swatch.addEventListener('click', () => {
+          if (!picker) {
+            picker = new JarvisColorPicker({
+              value: pending[v.key] || cur,
+              onChange: (hex) => {
+                swatch.style.background = hex;
+                hexLabel.textContent = hex;
+                pending[v.key] = hex;
+                const merged = Object.assign({}, loadTheme(), pending);
+                saveTheme(merged);
+                applyTheme(merged);
+              }
+            });
+            pickerWrap.appendChild(picker.el);
+            row.parentNode.insertBefore(pickerWrap, row.nextSibling);
+          }
+          picker.toggle();
         });
-        wrap.appendChild(inp); wrap.appendChild(hex);
+
+        wrap.appendChild(swatch);
+        wrap.appendChild(hexLabel);
         row.appendChild(wrap);
       } else {
         const wrap = h('div', { class: 'mci-range-wrap' });
@@ -249,7 +285,7 @@
     advRow.appendChild(h('span', { class: 'mci-label', text: 'Mode avancé' }));
     advRow.appendChild(advGrp);
     secAdv.appendChild(advRow);
-    root.appendChild(secAdv);
+    /* root.appendChild(secAdv); — mode avancé masqué temporairement */
 
     /* ── Thème export / import / reset ── */
     const secTheme = section('THÈME');

@@ -126,6 +126,20 @@ async def capabilities_ui() -> Response:
     )
 
 
+@router.get("/mc", include_in_schema=False)
+async def mc_ui() -> Response:
+    return _ui_html_response(
+        Path("src/jarvis/interfaces/ui/static/mc.html"),
+        [
+            ("/_shared.css",         "src/jarvis/interfaces/ui/static/_shared.css"),
+            ("/mission_control.css", "src/jarvis/interfaces/ui/static/mission_control.css"),
+            ("/mc.css",              "src/jarvis/interfaces/ui/static/mc.css"),
+            ("/_shared.js",          "src/jarvis/interfaces/ui/static/_shared.js"),
+            ("/mission_control.js",  "src/jarvis/interfaces/ui/static/mission_control.js"),
+            ("/mc.js",               "src/jarvis/interfaces/ui/static/mc.js"),
+            ("/jarvis-color-picker.js", "src/jarvis/interfaces/ui/static/jarvis-color-picker.js"),
+        ],
+    )
 @router.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
     """Point de contrôle — vérifie que le serveur est up."""

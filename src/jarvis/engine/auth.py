@@ -27,6 +27,7 @@ _EXEMPT_EXACT: frozenset[str] = frozenset({
     "/capabilities",
     "/admin",
     "/macropad",
+    "/mc",
     # OAuth Spotify : seuls le lancement (lien <a href>) et le callback (redirect
     # navigateur) ne peuvent pas porter de header Bearer. On exempte UNIQUEMENT
     # ces 2 routes — surtout PAS tout /api/spotify/ (qui contient /token, /play,
