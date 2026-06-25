@@ -158,6 +158,32 @@ FIX : copie « .env.example » en « .env » et remplis au minimum la clé de to
             '    DEEPGRAM_API_KEY=$env:DEEPGRAM_API_KEY = "ab12..."',
         ]
         _warn("Configuration .env suspecte", "\n".join(lines))
+
+    # Clé LLM du backend choisi : présente et pas un placeholder ? Sinon Jarvis
+    # démarre mais ne peut PAS répondre — le cas « ça marche pas » le plus déroutant.
+    env: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, _, v = line.partition("=")
+            env[k.strip()] = v.strip()
+    backend = (env.get("API_BACKEND") or "anthropic").lower()
+    key_name = {
+        "anthropic": "ANTHROPIC_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "mistral": "MISTRAL_API_KEY",
+    }.get(backend)
+    if key_name:
+        val = env.get(key_name, "")
+        if not val or "..." in val or len(val) < 20:
+            _warn(
+                "Clé LLM manquante ou non remplie",
+                f"""
+API_BACKEND={backend} mais {key_name} est vide ou encore à sa valeur d'exemple.
+CONSÉQUENCE : Jarvis va démarrer, mais ne pourra PAS répondre (ni chat, ni voix).
+FIX : mets ta vraie clé {key_name} dans .env (la clé brute, sans guillemets).
+""",
+            )
     return True
 
 

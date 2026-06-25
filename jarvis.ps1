@@ -162,7 +162,16 @@ function Invoke-JarvisRun {
     if (Wait-HttpOk -Url "http://127.0.0.1:7880/" -TimeoutSeconds 40) {
         Write-Host "  LiveKit  ws://localhost:7880" -ForegroundColor Green
     } else {
-        Write-Host "  LiveKit  timeout - voir $lkLog" -ForegroundColor Red
+        Write-Host "  LiveKit  le serveur LiveKit n'a pas demarre" -ForegroundColor Red
+        if (Test-Path $lkLog) {
+            Write-Host ""
+            Write-Host "  --- dernieres lignes de $lkLog ---" -ForegroundColor DarkGray
+            Get-Content $lkLog -Tail 15 -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "  $_" -ForegroundColor DarkGray
+            }
+            Write-Host "  Causes frequentes : port 7880 occupe, ou livekit-server absent." -ForegroundColor DarkGray
+            Write-Host ""
+        }
         foreach ($p in $procs) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
         exit 1
     }
@@ -217,7 +226,14 @@ function Invoke-JarvisRun {
     if (Wait-LogMatch -LogPath $voiceLog -Pattern "Jarvis vocal prêt" -TimeoutSeconds 90) {
         Write-Host "  Vocal    pret" -ForegroundColor Green
     } else {
-        Write-Host "  Vocal    prechauffement long - voir $voiceLog" -ForegroundColor Yellow
+        Write-Host "  Vocal    prechauffement long ou echec" -ForegroundColor Yellow
+        if (Test-Path $voiceLog) {
+            Write-Host "  --- dernieres lignes de $voiceLog ---" -ForegroundColor DarkGray
+            Get-Content $voiceLog -Tail 10 -ErrorAction SilentlyContinue | ForEach-Object {
+                Write-Host "  $_" -ForegroundColor DarkGray
+            }
+            Write-Host ""
+        }
     }
 
     Write-Host ""

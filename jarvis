@@ -109,7 +109,10 @@ case "${1:-}" in
       if _wait_http "http://127.0.0.1:7880/" 40; then
         printf "$CLEAR_LINE"; _row_ok "LiveKit" "ws://localhost:7880"
       else
-        printf "$CLEAR_LINE"; _row_err "LiveKit" "timeout — voir $LK_LOG"
+        printf "$CLEAR_LINE"; _row_err "LiveKit" "le serveur LiveKit n a pas demarre"
+        printf "  ${DG}--- dernieres lignes de %s ---${R}\n" "$LK_LOG"
+        tail -n 15 "$LK_LOG" 2>/dev/null | sed "s/^/  /"
+        printf "  ${DG}Causes frequentes : port 7880 occupe, ou livekit-server absent (jarvis livekit).${R}\n\n"
         exit 1
       fi
 
@@ -142,7 +145,10 @@ case "${1:-}" in
       if _wait_grep "$VOICE_LOG" "Jarvis vocal prêt" 90; then
         printf "$CLEAR_LINE"; _row_ok "Vocal" "prêt"
       else
-        printf "$CLEAR_LINE"; _row_err "Vocal" "préchauffement long — voir $VOICE_LOG"
+        printf "$CLEAR_LINE"; _row_err "Vocal" "préchauffement long ou échec"
+        printf "  ${DG}--- dernieres lignes de %s ---${R}\n" "$VOICE_LOG"
+        tail -n 10 "$VOICE_LOG" 2>/dev/null | sed "s/^/  /"
+        printf "\n"
       fi
 
       _banner
