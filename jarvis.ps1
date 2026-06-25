@@ -167,6 +167,15 @@ function Invoke-JarvisRun {
         exit 1
     }
 
+    # Preflight : verifie l'environnement (deps natives, .env, port) et explique
+    # clairement tout probleme AVANT de tenter de lancer l'API (evite le timeout opaque).
+    $python = Get-JarvisPython
+    if ($python) { & $python -m jarvis.kernel.preflight } else { uv run python -m jarvis.kernel.preflight }
+    if ($LASTEXITCODE -ne 0) {
+        foreach ($p in $procs) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+        exit 1
+    }
+
     Write-Host "  API      demarrage..." -ForegroundColor Yellow
     $python = Get-JarvisPython
     $apiCmd = if ($python) { "`"$python`" -m jarvis.app" } else { "uv run python -m jarvis.app" }
