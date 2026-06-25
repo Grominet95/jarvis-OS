@@ -129,6 +129,12 @@ class ClapDetector:
 
         self._clap_times.append(now)
 
+        # Per-clap trace so users can confirm detection works and tune
+        # CLAP_AMPLITUDE_THRESHOLD: a double clap needs two of these within the window.
+        logger.info(
+            "ClapDetector: clap détecté ({}/2 dans la fenêtre)", len(self._clap_times)
+        )
+
         if len(self._clap_times) >= 2:
             if now - self._last_trigger >= self.COOLDOWN:
                 self._last_trigger = now
