@@ -265,13 +265,17 @@
       electronSpawnRate = lerp(electronSpawnRate,  targetElectronRate, LK);
       currentGlow       = lerp(currentGlow,        targetGlow,       LK);
 
-      // Hue lerp per state
+      // Hue lerp per state — dérivé de l'accent du thème (BASE_HEX), éclairci
+      // pour thinking/speaking. Suit donc la couleur choisie dans Apparence.
+      const _white = new THREE.Color(0xffffff);
       if (state === "thinking") {
-        mat.color.lerp(new THREE.Color(0x80BFFF), 0.015);   // bleu glacé, même famille
-        lineMat.color.lerp(new THREE.Color(0x80BFFF), 0.015);
+        const c = new THREE.Color(S.COLOR.BASE_HEX).lerp(_white, 0.35);  // éclairci (glacé)
+        mat.color.lerp(c, 0.015);
+        lineMat.color.lerp(c, 0.015);
       } else if (state === "speaking") {
-        mat.color.lerp(new THREE.Color(0x66AAFF), 0.015);   // légèrement chaud
-        lineMat.color.lerp(new THREE.Color(0x66AAFF), 0.015);
+        const c = new THREE.Color(S.COLOR.BASE_HEX).lerp(_white, 0.18);  // légèrement éclairci
+        mat.color.lerp(c, 0.015);
+        lineMat.color.lerp(c, 0.015);
       } else {
         mat.color.lerp(new THREE.Color(S.COLOR.BASE_HEX), 0.015);     // accent exact
         lineMat.color.lerp(new THREE.Color(S.COLOR.BASE_HEX), 0.015);

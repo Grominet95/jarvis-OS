@@ -60,13 +60,27 @@
     };
 
     // ── Couleur ───────────────────────────────────────────────────────────
-    // Signature visuelle mono-couleur. La chauffe pendant CONVERGE/IGNITE
-    // est dérivée de cette base et y RETOURNE strictement à l'entrée ONLINE.
+    // Dérivée du THÈME courant (Configuration › Apparence) : l'orbe suit la
+    // couleur d'accent choisie. Lue à l'exécution (getters) → recoloration live
+    // au changement de thème. Fallback bleu signature si le thème n'est pas chargé.
+    function _accent255() {
+        try {
+            const J = window.Jarvis;
+            if (J && J.THEMES && J.currentTheme) {
+                const t = J.THEMES[J.currentTheme()];
+                if (t && t.rgb) return t.rgb.split(',').map(function (s) { return parseInt(s, 10); });
+            }
+        } catch (e) { /* fallback */ }
+        return [74, 158, 255];
+    }
     const COLOR = {
-        BASE_HEX: 0x4A9EFF,
-        BASE_HEX_STRING: '#4A9EFF',
-        BASE_RGB_255: [74, 158, 255],
-        BASE_VEC3: [0x4A / 255, 0x9E / 255, 0xFF / 255], // ≈ [0.2902, 0.6196, 1.0000]
+        get BASE_RGB_255() { return _accent255(); },
+        get BASE_HEX() { const c = _accent255(); return (c[0] << 16) | (c[1] << 8) | c[2]; },
+        get BASE_HEX_STRING() {
+            const c = _accent255();
+            return '#' + c.map(function (v) { return ('0' + (v & 255).toString(16)).slice(-2); }).join('');
+        },
+        get BASE_VEC3() { const c = _accent255(); return [c[0] / 255, c[1] / 255, c[2] / 255]; },
         HEAT_WHITE_VEC3: [1.0, 1.0, 1.0],
         HEAT_MIX_MAX: 0.70,              // mix(base, white, heat · 0.70) — heat ∈ [0,1]
     };
