@@ -17,6 +17,7 @@ from loguru import logger
 
 from jarvis.engine.proactive.collectors.calendar import CalendarCollector
 from jarvis.engine.proactive.collectors.email import EmailCollector
+from jarvis.engine.proactive.collectors.home_assistant import HomeAssistantCollector
 from jarvis.engine.proactive.collectors.jarvis import JarvisCollector
 from jarvis.engine.proactive.collectors.news import NewsCollector
 from jarvis.engine.proactive.collectors.tasks import TaskCollector
@@ -79,6 +80,7 @@ class ContextBuilder:
             NewsCollector(),
             JarvisCollector(),
             WeatherCollector(),
+            HomeAssistantCollector(),  # ← NOUVEAU : Intégration Home Assistant proactive
         ]
 
     async def build(self) -> WorldState:
