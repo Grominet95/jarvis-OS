@@ -24,7 +24,7 @@ dependencies = [
     # HTTP client (async only)
     "httpx>=0.28.0",
     # Logging
-    "loguru>=0.7.2",
+    "loguru>=0.7.3",
     # Tools
     "pyyaml>=6.0.0",
     "beautifulsoup4>=4.12.0",
