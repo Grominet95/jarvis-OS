@@ -12,6 +12,7 @@ from loguru import logger
 from jarvis.engine.proactive.collectors.base import CollectorBase
 from jarvis.engine.proactive.schemas import ContextItem, ItemType, Priority
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.settings import settings
 
 
 class HomeAssistantCollector(CollectorBase):
@@ -19,21 +20,18 @@ class HomeAssistantCollector(CollectorBase):
 
     name = "home_assistant"
 
-    def __init__(self) -> None:
-        import os
-        self.base_url = os.getenv("HA_URL", "http://homeassistant.local:8123").rstrip("/")
-        self.token = os.getenv("HA_TOKEN", "")
-
     async def _collect(self) -> list[ContextItem]:
-        if is_offline_mode() or not self.token:
+        token = settings.home_assistant_token.get_secret_value()
+        if is_offline_mode() or not token:
             return []
 
-        headers = {"Authorization": f"Bearer {self.token}"}
+        base_url = settings.home_assistant_url.rstrip("/")
+        headers = {"Authorization": f"Bearer {token}"}
 
         critical_entities: list[ContextItem] = []
         try:
             async with httpx.AsyncClient(timeout=8.0, headers=headers) as client:
-                r = await client.get(f"{self.base_url}/api/states")
+                r = await client.get(f"{base_url}/api/states")
                 if r.status_code != 200:
                     return []
                 states = r.json()
@@ -44,7 +42,8 @@ class HomeAssistantCollector(CollectorBase):
                 current_state = state.get("state", "")
                 friendly = state.get("attributes", {}).get("friendly_name", entity_id)
 
-                if domain == "alarm_control_panel" and current_state in ("triggered", "arming", "pending"):
+                alarm_states = ("triggered", "arming", "pending")
+                if domain == "alarm_control_panel" and current_state in alarm_states:
                     critical_entities.append(
                         ContextItem(
                             type=ItemType.NEWS,

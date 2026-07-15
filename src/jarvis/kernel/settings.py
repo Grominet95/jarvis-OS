@@ -365,6 +365,16 @@ class Settings(BaseSettings):
     proactive_lon: float = Field(default=4.85, description="Longitude pour la météo proactive.")
     proactive_city: str = Field(default="Lyon", description="Nom de ville pour la météo proactive.")
 
+    # ── Home Assistant ────────────────────────────────────────
+    home_assistant_url: str = Field(
+        default="http://homeassistant.local:8123",
+        description="URL de l'instance Home Assistant (collecte proactive).",
+    )
+    home_assistant_token: SecretStr = Field(
+        default=SecretStr(""),
+        description="Token d'accès longue durée Home Assistant.",
+    )
+
     # ── Docker V2 ────────────────────────────────────────────
     docker_enabled: bool = Field(
         default=False,

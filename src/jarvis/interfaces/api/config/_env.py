@@ -99,6 +99,8 @@ _SETTINGS_FIELD_MAP: dict[str, str] = {
     "API_BACKEND": "api_backend",
     "OLLAMA_MODEL": "ollama_model",
     "OLLAMA_BASE_URL": "ollama_base_url",
+    "HOME_ASSISTANT_URL": "home_assistant_url",
+    "HOME_ASSISTANT_TOKEN": "home_assistant_token",
 }
 
 
