@@ -6,8 +6,6 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
-Remove-Item "$env:TEMP\jarvis" -Recurse -Force -ErrorAction SilentlyContinue
-
 $BundleReleaseVersion = "v0.3.2"
 $BundleReleaseUrl = "https://github.com/Grominet95/jarvis-OS/releases/download/$BundleReleaseVersion/jarvis-offline-windows-$BundleReleaseVersion.zip"
 
@@ -26,8 +24,11 @@ function Test-JarvisOneDrivePath {
         $env:OneDriveConsumer
     ) | Where-Object { $_ -and $_.Trim() -ne "" }
     foreach ($base in $bases) {
-        $normalized = [System.IO.Path]::GetFullPath($base.TrimEnd('\'))
-        if ($root.StartsWith($normalized, [StringComparison]::OrdinalIgnoreCase)) {
+        $normalized = [System.IO.Path]::GetFullPath($base.TrimEnd('\')).TrimEnd('\')
+        # Comparer sur une frontiere de separateur, sinon "C:\OneDriveBackup"
+        # matcherait la base "C:\OneDrive" et bloquerait une install locale saine.
+        if ($root.Equals($normalized, [StringComparison]::OrdinalIgnoreCase) -or
+            $root.StartsWith($normalized + '\', [StringComparison]::OrdinalIgnoreCase)) {
             return $true
         }
     }

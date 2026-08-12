@@ -147,7 +147,7 @@ L'assistant web configure l'identité, les clés API, les modules optionnels et 
 | `.\jarvis.ps1 api` | Serveur FastAPI seul |
 | `.\jarvis.ps1 doctor` | Diagnostic rapide |
 
-Au démarrage, `jarvis.ps1` purge `%TEMP%\jarvis` (logs des runs précédents, souvent verrouillés) avant toute autre opération.
+Les logs des runs sont dans `%TEMP%\jarvis` (`livekit.log`, `api.log`, `voice.log`). `.\jarvis.ps1 run` tue les process résiduels puis réinitialise ces trois fichiers à chaque démarrage.
 
 ### Parcours B : Construire le bundle (développeur)
 
