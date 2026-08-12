@@ -114,15 +114,17 @@ Python système et LiveKit **ne sont pas requis** : le script de build les intè
 
 ### Parcours A : Utilisateur final (Windows)
 
-**Tu as reçu une release ou une archive avec `bundle/`** : aucun téléchargement à l'installation.
+**Clone Git ou archive sans `bundle/`** : le lanceur télécharge automatiquement le bundle offline (~700 Mo) au premier `setup` ou `run`. **Release avec `bundle/` déjà inclus** : aucun téléchargement supplémentaire.
+
+> **OneDrive interdit.** Ne place pas `jarvis-OS` dans OneDrive (Documents synchronisés, etc.) : OneDrive casse les liens symboliques du venv Python embarqué. Installe-le dans un dossier local, par exemple `C:\jarvis-OS` ou `C:\Users\<toi>\jarvis-OS`. Le lanceur refuse de démarrer depuis OneDrive.
 
 Le plus simple : **double-clique sur `setup.bat`**, puis sur `run.bat`. Ou en ligne de commande :
 
 ```powershell
-# 1. Décompresser l'archive, puis ouvrir le dossier du projet
-cd jarvis-OS
+# 1. Cloner ou décompresser, puis ouvrir le dossier (hors OneDrive)
+cd C:\jarvis-OS
 
-# 2. Configuration web (navigateur, sans prompt terminal)
+# 2. Configuration web (navigateur ; télécharge le bundle si absent)
 .\jarvis.bat setup
 
 # 3. Démarrage
@@ -145,7 +147,7 @@ L'assistant web configure l'identité, les clés API, les modules optionnels et 
 | `.\jarvis.ps1 api` | Serveur FastAPI seul |
 | `.\jarvis.ps1 doctor` | Diagnostic rapide |
 
-> **Sans `bundle/`** : ce parcours ne fonctionne pas. Passe au parcours B ou télécharge une release offline.
+Au démarrage, `jarvis.ps1` purge `%TEMP%\jarvis` (logs des runs précédents, souvent verrouillés) avant toute autre opération.
 
 ### Parcours B : Construire le bundle (développeur)
 

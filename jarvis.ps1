@@ -6,12 +6,96 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
+Remove-Item "$env:TEMP\jarvis" -Recurse -Force -ErrorAction SilentlyContinue
+
+$BundleReleaseVersion = "v0.3.2"
+$BundleReleaseUrl = "https://github.com/Grominet95/jarvis-OS/releases/download/$BundleReleaseVersion/jarvis-offline-windows-$BundleReleaseVersion.zip"
+
 # Force UTF-8 for every child Python process. When stdout/stderr are redirected to
 # a log file (run command), Python otherwise falls back to the legacy ANSI code page
 # (cp1252) with strict error handling, so any non-cp1252 char in a log line (e.g. the
 # arrow glyph) raises UnicodeEncodeError, kills the process and leaves an empty log.
 $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
+
+function Test-JarvisOneDrivePath {
+    $root = [System.IO.Path]::GetFullPath($PSScriptRoot)
+    $bases = @(
+        $env:OneDrive,
+        $env:OneDriveCommercial,
+        $env:OneDriveConsumer
+    ) | Where-Object { $_ -and $_.Trim() -ne "" }
+    foreach ($base in $bases) {
+        $normalized = [System.IO.Path]::GetFullPath($base.TrimEnd('\'))
+        if ($root.StartsWith($normalized, [StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+    return ($root -match '\\OneDrive\\' -or $root -match '\\OneDrive - ')
+}
+
+function Assert-JarvisNotOnOneDrive {
+    if (-not (Test-JarvisOneDrivePath)) { return }
+    Write-Host ""
+    Write-Host "  Jarvis ne peut pas tourner depuis OneDrive." -ForegroundColor Red
+    Write-Host "  OneDrive casse les liens symboliques du bundle Python (.venv)." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  Deplace le dossier jarvis-OS vers un emplacement local, par exemple :" -ForegroundColor White
+    Write-Host "    C:\jarvis-OS" -ForegroundColor Cyan
+    Write-Host "    C:\Users\$env:USERNAME\jarvis-OS" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Copie ou deplace le dossier toi-meme, puis relance setup.bat ou run.bat." -ForegroundColor White
+    Write-Host ""
+    exit 1
+}
+
+function Test-BundlePresent {
+    $manifest = Join-Path $PSScriptRoot "bundle\manifest.json"
+    $venvPy = Join-Path $PSScriptRoot "bundle\.venv\Scripts\python.exe"
+    return (Test-Path $manifest) -and (Test-Path $venvPy)
+}
+
+function Test-DevVenvPresent {
+    return Test-Path (Join-Path $PSScriptRoot ".venv\Scripts\python.exe")
+}
+
+function Ensure-Bundle {
+    if (Test-BundlePresent) { return }
+    if (Test-DevVenvPresent) { return }
+    Write-Host ""
+    Write-Host "  Bundle offline introuvable, telechargement..." -ForegroundColor Yellow
+    Write-Host "  $BundleReleaseUrl" -ForegroundColor DarkGray
+    Write-Host ""
+    $staging = Join-Path $env:TEMP "jarvis-bundle-download"
+    Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $staging -Force | Out-Null
+    $zipPath = Join-Path $staging "jarvis-offline.zip"
+    try {
+        Invoke-WebRequest -Uri $BundleReleaseUrl -OutFile $zipPath -UseBasicParsing
+        $extractDir = Join-Path $staging "extract"
+        Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+        $bundleSrc = Get-ChildItem -Path $extractDir -Recurse -Directory -Filter "bundle" |
+            Where-Object { Test-Path (Join-Path $_.FullName "manifest.json") } |
+            Select-Object -First 1
+        if (-not $bundleSrc) {
+            Write-Host "  Archive invalide : dossier bundle/ introuvable." -ForegroundColor Red
+            exit 1
+        }
+        $bundleDest = Join-Path $PSScriptRoot "bundle"
+        if (Test-Path $bundleDest) {
+            Remove-Item $bundleDest -Recurse -Force
+        }
+        Copy-Item $bundleSrc.FullName $bundleDest -Recurse -Force
+        Write-Host "  Bundle installe dans $bundleDest" -ForegroundColor Green
+        Write-Host ""
+    } catch {
+        Write-Host "  Echec du telechargement : $_" -ForegroundColor Red
+        Write-Host "  Telecharge manuellement la release offline depuis GitHub." -ForegroundColor White
+        exit 1
+    } finally {
+        Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
 
 function Repair-BundleVenv {
     $rehome = Join-Path $PSScriptRoot "scripts\release\rehome_bundle.ps1"
@@ -263,7 +347,12 @@ function Invoke-JarvisRun {
     }
 }
 
-Repair-BundleVenv
+Assert-JarvisNotOnOneDrive
+
+if ($Command.Trim() -ne "") {
+    Ensure-Bundle
+    Repair-BundleVenv
+}
 
 switch ($Command.ToLowerInvariant()) {
     { $_ -in @("eclosion", "setup") } {
