@@ -120,8 +120,10 @@ async def voice_generate(body: VoiceGenerateRequest, request: Request) -> Stream
         except Exception as e:
             from loguru import logger as _log
 
+            from jarvis.engine.llm_errors import friendly_llm_error
+
             _log.error("Voice generate stream error", error=str(e))
-            full = "Désolé, j'ai eu un souci."
+            full = friendly_llm_error(e)
             yield full
 
         session.add_message("assistant", full)
