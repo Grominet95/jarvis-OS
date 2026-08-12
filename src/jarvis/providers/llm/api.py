@@ -211,13 +211,23 @@ class AnthropicProvider(LLMProvider):
 
     async def _stream(self, kwargs: dict) -> AsyncIterator[str]:
         for attempt in range(_MAX_ANTHROPIC_RETRIES):
+            emitted = False
             try:
                 async with self._client.messages.stream(**kwargs) as stream:
                     async for chunk in stream.text_stream:
+                        emitted = True
                         yield chunk
                 return
             except anthropic.APIError as e:
-                if not _is_retryable_anthropic(e) or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                # Un chunk deja `yield` est parti chez l'appelant : on ne peut pas
+                # le reprendre. Rejouer la requete reemettrait le debut de la
+                # reponse par-dessus, et l'utilisateur lirait le texte en double.
+                # On ne retente donc que si rien n'a encore ete emis.
+                if (
+                    emitted
+                    or not _is_retryable_anthropic(e)
+                    or attempt + 1 >= _MAX_ANTHROPIC_RETRIES
+                ):
                     raise
                 await asyncio.sleep(min(2**attempt, 8))
 
@@ -253,12 +263,14 @@ class AnthropicProvider(LLMProvider):
         _meta: dict[int, tuple[str, str]] = {}
 
         for attempt in range(_MAX_ANTHROPIC_RETRIES):
+            emitted = False
             try:
                 async with self._client.messages.stream(**kwargs) as s:
                     async for event in s:
                         if event.type == "content_block_delta":
                             delta = event.delta
                             if delta.type == "text_delta":
+                                emitted = True
                                 yield delta.text
                             elif delta.type == "input_json_delta" and delta.partial_json:
                                 _input[event.index] = (
@@ -284,7 +296,14 @@ class AnthropicProvider(LLMProvider):
                                 capture.stop_reason = sr
                 return
             except anthropic.APIError as e:
-                if not _is_retryable_anthropic(e) or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                # Idem _stream : les accumulateurs d'outils se vident proprement,
+                # mais le texte deja `yield` est irrecuperable. Pas de retry une
+                # fois le premier token parti.
+                if (
+                    emitted
+                    or not _is_retryable_anthropic(e)
+                    or attempt + 1 >= _MAX_ANTHROPIC_RETRIES
+                ):
                     raise
                 _input.clear()
                 _meta.clear()
