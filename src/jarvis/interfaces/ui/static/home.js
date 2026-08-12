@@ -397,7 +397,7 @@
 
     window.onSpotifyWebPlaybackSDKReady = () => {
       _spotifyPlayer = new Spotify.Player({
-        name: "JARVIS",
+        name: window.JARVIS_ASSISTANT_NAME || "JARVIS",
         getOAuthToken: async (cb) => {
           try {
             const res = await fetch("/api/spotify/token", { headers: J.authHeaders ? J.authHeaders() : {} });
@@ -506,7 +506,7 @@
         wrap.className = "hcw-msg";
         const role = document.createElement("span");
         role.className = "hcw-msg-role " + (m.role === "assistant" ? "assistant" : "");
-        role.textContent = m.role === "assistant" ? "JARVIS" : "VOUS";
+        role.textContent = m.role === "assistant" ? (window.JARVIS_ASSISTANT_NAME || "JARVIS") : "VOUS";
         const body = document.createElement("span");
         body.className = "hcw-msg-text";
         body.textContent = text.length > 220 ? text.slice(0, 217) + "…" : text;
@@ -533,7 +533,7 @@
     wrap.className = "hcw-msg";
     const roleEl = document.createElement("span");
     roleEl.className = "hcw-msg-role" + (role === "assistant" ? " assistant" : "");
-    roleEl.textContent = role === "assistant" ? "JARVIS" : "VOUS";
+    roleEl.textContent = role === "assistant" ? (window.JARVIS_ASSISTANT_NAME || "JARVIS") : "VOUS";
     const bodyEl = document.createElement("span");
     bodyEl.className = "hcw-msg-text";
     bodyEl.textContent = text;

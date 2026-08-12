@@ -37,12 +37,17 @@ class ConsolidationAgent:
         topic_store: TopicStore,
         memory_ingest: MemoryIngest | None = None,
         user_firstname: str = "Barth",
+        assistant_name: str = "Jarvis",
     ) -> None:
         self._llm = llm
         self._memory_index = memory_index
         self._topic_store = topic_store
         self._name = user_firstname
+        self._assistant_name = assistant_name
         self._prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
+        # Remplace "Jarvis" par le nom de l'assistant configuré
+        if assistant_name != "Jarvis":
+            self._prompt_template = self._prompt_template.replace("Jarvis", assistant_name)
         # PHASE 3 — Q3=a : ingestion en parallèle dans le Kernel SQLite.
         # Doublon temporaire ; topics/*.md restent écrits comme avant.
         self._ingest = memory_ingest

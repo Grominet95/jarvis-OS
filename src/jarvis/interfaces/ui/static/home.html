@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Jarvis</title>
+<title id="page-title"></title>
+<script>document.getElementById('page-title').textContent = window.JARVIS_ASSISTANT_NAME || 'Jarvis';</script>
 <link rel="icon" type="image/png" href="/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -72,7 +73,7 @@
 
     </div>
     <div class="home-signature">
-      <div class="brand">JARVIS</div>
+      <div class="brand"></div>
       <div class="clock-row">
         <div class="clock" id="home-clock">00:00</div>
       </div>
@@ -159,7 +160,7 @@
       <div class="hcw-empty">Aucun message</div>
     </div>
     <div class="hcw-input-row" id="hcw-input-row">
-      <input class="hcw-input" id="hcw-input" type="text" placeholder="&#201;crire &#224; Jarvis&#8230;" autocomplete="off" />
+      <input class="hcw-input" id="hcw-input" type="text" placeholder="" autocomplete="off" />
       <button class="hcw-send" id="hcw-send" title="Envoyer">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 7H2M7 2l5 5-5 5"/>
@@ -398,6 +399,19 @@ window.loadViewSkills = async function () {
   } catch (e) { console.warn('[Jarvis] view skills load error:', e); }
 };
 window.loadViewSkills();
+
+// Mise à jour du placeholder et du brand avec le nom de l'assistant
+(function() {
+  var assistantName = window.JARVIS_ASSISTANT_NAME || 'Jarvis';
+  var hcwInput = document.getElementById('hcw-input');
+  if (hcwInput) {
+    hcwInput.placeholder = 'Écrire à ' + assistantName + '…';
+  }
+  var brandEl = document.querySelector('.home-signature .brand');
+  if (brandEl) {
+    brandEl.textContent = assistantName.toUpperCase();
+  }
+})();
 </script>
 </body>
 </html>

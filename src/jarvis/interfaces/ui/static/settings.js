@@ -994,7 +994,7 @@
     // ── Header : nom + badge ──────────────────────────────────
     const hdr = el("div", { class: "about2-hdr" });
     const nameWrap = el("div", { class: "about2-name-wrap" });
-    nameWrap.appendChild(el("div", { class: "about2-name", text: "Jarvis" }));
+    nameWrap.appendChild(el("div", { class: "about2-name", text: window.JARVIS_ASSISTANT_NAME || "Jarvis" }));
     const sub = el("div", { class: "about2-sub-row" });
     sub.appendChild(el("span", { class: "about2-badge", text: "v4.0" }));
     sub.appendChild(el("span", { class: "about2-tagline", text: "Assistant personnel intelligent · vocal · proactif" }));

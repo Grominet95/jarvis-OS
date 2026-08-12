@@ -1343,7 +1343,7 @@
             } else {
               msgs.forEach(m => {
                 const bubble = el("div", { class: "sess-bubble sess-bubble--" + (m.role === "user" ? "user" : "assistant") });
-                const label  = el("div", { class: "sess-bubble-role", text: m.role === "user" ? "Toi" : "Jarvis" });
+                const label  = el("div", { class: "sess-bubble-role", text: m.role === "user" ? "Toi" : (window.JARVIS_ASSISTANT_NAME || "Jarvis") });
                 const body   = el("div", { class: "sess-bubble-body", text: m.content || "" });
                 bubble.appendChild(label);
                 bubble.appendChild(body);

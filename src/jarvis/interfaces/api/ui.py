@@ -30,6 +30,7 @@ def inject_client_config(html: str) -> str:
         f"window.JARVIS_API_TOKEN={json.dumps(token)};"
         f"window.JARVIS_API_BASE={json.dumps(api_base)};"
         f"window.JARVIS_WAKEUP_ENABLED={json.dumps(bool(settings.wakeup_enabled))};"
+        f"window.JARVIS_ASSISTANT_NAME={json.dumps(settings.assistant_name)};"
         "</script>"
     )
     marker = "</head>"

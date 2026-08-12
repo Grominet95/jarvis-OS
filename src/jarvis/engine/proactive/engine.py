@@ -216,7 +216,7 @@ class ProactiveEngine:
 
         elif initiative.execution_mode == ExecutionMode.NOTIFY:
             # Injecter comme notification texte dans la prochaine conversation
-            msg = f"[Jarvis proactif] {initiative.title} — {initiative.action}"
+            msg = f"[{settings.assistant_name} proactif] {initiative.title} — {initiative.action}"
             self._notifications.add(msg)
             logger.info(f"ProactiveEngine NOTIFY: {initiative.title}")
 

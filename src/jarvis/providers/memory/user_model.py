@@ -16,6 +16,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.settings import settings
 from jarvis.providers.llm.base import LLMProvider
 
 _MAX_MODEL_WORDS = 300
@@ -57,7 +58,7 @@ class UserModel:
             f"Modèle utilisateur actuel :\n{current or '(vide)'}\n\n"
             f"Nouvel échange :\n"
             f"User: {user_message[:500]}\n"
-            f"Jarvis: {assistant_message[:500]}\n\n"
+            f"{settings.assistant_name}: {assistant_message[:500]}\n\n"
             f"Mets à jour le modèle utilisateur en intégrant les nouvelles observations. "
             f"Note préférences, patterns, contradictions (dialectique : si une observation "
             f"contredit le modèle actuel, note la tension). "

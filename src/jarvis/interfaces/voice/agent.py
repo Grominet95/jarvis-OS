@@ -69,7 +69,7 @@ def _voice_system_base(name: str, profile: str = "") -> str:
     """Prompt vocal de base, personnalisé au prénom + bio (omise si vide)."""
     bio_line = f"- Tu connais {name} : {profile.strip()}.\n" if profile.strip() else ""
     return (
-        f"\nTu es Jarvis, l'assistant IA personnel de {name}.\n\n"
+        f"\nTu es {settings.assistant_name}, l'assistant IA personnel de {name}.\n\n"
         "Règles absolues pour la voix :\n"
         "- Réponses COURTES. Maximum 2-3 phrases sauf si l'utilisateur demande explicitement plus.\n"
         "- Pas de listes à puces, pas de markdown, pas d'astérisques.\n"

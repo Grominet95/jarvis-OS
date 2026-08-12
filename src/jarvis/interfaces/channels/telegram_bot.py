@@ -231,7 +231,7 @@ class TelegramChannel(ChannelAdapter):
         if not self._is_owner(update):
             return
         await update.message.reply_text(
-            "🤖 *Jarvis connecté.*\n\n"
+            "🤖 *{settings.assistant_name} connecté.*\n\n"
             "Envoie-moi n'importe quel message ou utilise les commandes :\n"
             "/status — état du système\n"
             "/initiatives — tes initiatives en attente\n"
@@ -259,9 +259,9 @@ class TelegramChannel(ChannelAdapter):
                     "✅" if info["status"] == "ok" else "⚠️" if info["status"] == "warning" else "❌"
                 )
                 lines.append(f"{emoji} *{name}* — {info['detail']}")
-            text = "🖥 *Jarvis Doctor*\n\n" + "\n".join(lines)
+            text = "🖥 *{settings.assistant_name} Doctor*\n\n" + "\n".join(lines)
         except Exception as e:  # noqa: BLE001
-            text = f"❌ Impossible de joindre Jarvis : {e}"
+            text = f"❌ Impossible de joindre {settings.assistant_name} : {e}"
         await update.message.reply_text(text, parse_mode="Markdown")
 
     async def _cmd_initiatives(
@@ -300,11 +300,11 @@ class TelegramChannel(ChannelAdapter):
         if not self._is_owner(update):
             return
         text = (
-            "🤖 *Jarvis — Commandes Telegram*\n\n"
+            f"🤖 *{settings.assistant_name} — Commandes Telegram*\n\n"
             "*/status* — état de tous les composants\n"
             "*/initiatives* — liste des initiatives en attente\n"
             "*/help* — cette aide\n\n"
-            "*Message libre* — parle à Jarvis normalement :\n"
+            "*Message libre* — parle à {settings.assistant_name} normalement :\n"
             '• _"Quelle est la météo à Lyon ?"\n'
             '• "Lance le preset travail"\n'
             '• "Mets du Booba sur Spotify"\n'

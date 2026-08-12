@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Command Center — JARVIS</title>
+  <title id="page-title"></title>
+  <script>document.getElementById('page-title').textContent = (window.JARVIS_ASSISTANT_NAME || 'Jarvis') + ' — Command Center';</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -474,7 +475,7 @@
         <div class="src-item"><div class="src-dot" id="src-gmail"></div>Gmail</div>
         <div class="src-item"><div class="src-dot" id="src-calendar"></div>Calendar</div>
         <div class="src-item"><div class="src-dot" id="src-notion"></div>Notion</div>
-        <div class="src-item"><div class="src-dot" id="src-jarvis"></div>Jarvis</div>
+        <div class="src-item"><div class="src-dot" id="src-jarvis"></div><span id="src-jarvis-name">Jarvis</span></div>
       </div>
     </div>
 
@@ -645,7 +646,7 @@ function buildRow(init, filterCat) {
 
         ${init.reasoning ? `
         <div class="d-section">
-          <div class="d-label">Raisonnement Jarvis</div>
+          <div class="d-label" id="reasoning-label">Raisonnement Jarvis</div>
           <div class="d-body">${esc(init.reasoning)}</div>
         </div>` : ''}
 
@@ -1165,6 +1166,15 @@ connectWS();
       .to(ui,  { duration: 0.28, x: xOut, opacity: 0, filter: 'blur(6px)', ease: 'power2.in' })
       .to(ov,  { duration: 0.22, opacity: 1, ease: 'power2.in' }, '<');
   };
+
+  // Mise à jour du nom de l'assistant
+  (function() {
+    var assistantName = window.JARVIS_ASSISTANT_NAME || 'Jarvis';
+    var srcName = document.getElementById('src-jarvis-name');
+    if (srcName) srcName.textContent = assistantName;
+    var reasoningLabel = document.getElementById('reasoning-label');
+    if (reasoningLabel) reasoningLabel.textContent = 'Raisonnement ' + assistantName;
+  })();
 })();
 </script>
 

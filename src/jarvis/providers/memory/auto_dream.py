@@ -25,9 +25,9 @@ def _default_prefs(name: str) -> str:
     return f"# Préférences {name}\n\nAucune préférence enregistrée.\n"
 
 
-def _micro_system(name: str) -> str:
+def _micro_system(name: str, assistant_name: str = "Jarvis") -> str:
     return (
-        "Tu es un agent de mémorisation pour Jarvis. "
+        f"Tu es un agent de mémorisation pour {assistant_name}. "
         f"Analyse l'échange et mets à jour les préférences de {name} uniquement si tu détectes "
         "une nouvelle préférence explicite (note que, retiens que, j'aime, je préfère…) ou "
         "un signal implicite fort. Retourne uniquement le markdown mis à jour, sans explication. "
@@ -35,9 +35,9 @@ def _micro_system(name: str) -> str:
     )
 
 
-def _deep_system(name: str) -> str:
+def _deep_system(name: str, assistant_name: str = "Jarvis") -> str:
     return (
-        "Tu es un agent de mémorisation pour Jarvis. "
+        f"Tu es un agent de mémorisation pour {assistant_name}. "
         f"Analyse les sessions fournies et synthétise les apprentissages durables sur {name} "
         "(préférences, habitudes, contexte). "
         "Retourne uniquement le markdown mis à jour des préférences."
@@ -55,13 +55,15 @@ class AutoDream:
         memory_ingest: MemoryIngest | None = None,
         mirror: MemoryMirror | None = None,
         user_firstname: str = "Barth",
+        assistant_name: str = "Jarvis",
     ) -> None:
         self._llm = llm
         self._prefs_path = prefs_path
         self._sessions_dir = sessions_dir
         self._name = user_firstname
-        self._micro_system = _micro_system(user_firstname)
-        self._deep_system = _deep_system(user_firstname)
+        self._assistant_name = assistant_name
+        self._micro_system = _micro_system(user_firstname, assistant_name)
+        self._deep_system = _deep_system(user_firstname, assistant_name)
         self._ensure_prefs()
         self._mirror = mirror
         # MOUVEMENT 2 (option D, Generative Agents) : l'ingestion Kernel est
@@ -213,7 +215,7 @@ class AutoDream:
             content = obj.get("content", "")
             if not isinstance(content, str) or not content.strip():
                 continue
-            speaker = name if role == "user" else "Jarvis"
+            speaker = name if role == "user" else self._assistant_name
             parts.append(f"{speaker} : {content.strip()}")
         text = "\n".join(parts)
         # Tronque au tail si la session est très longue : on garde le contexte

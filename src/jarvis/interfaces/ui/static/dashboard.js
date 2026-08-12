@@ -53,7 +53,7 @@
         title:    i.title,
         type:     i.type || "Action",
         priority: pMap[String(i.priority||"").toLowerCase()] || "low",
-        source:   i.context ? i.context.slice(0,40) : "Jarvis",
+        source:   i.context ? i.context.slice(0,40) : (window.JARVIS_ASSISTANT_NAME || "Jarvis"),
         due:      i.created_at ? J.fmt.relTime(i.created_at) : "—",
         /* PHASE 6 §10.1 propagation */
         autonomy_level:      i.autonomy_level,
@@ -224,7 +224,7 @@
     const wrap = el("div");
     wrap.appendChild(ghostSec(
       "En attente",
-      inits.length + " initiatives · proactif Jarvis",
+      inits.length + " initiatives · proactif " + (window.JARVIS_ASSISTANT_NAME || "Jarvis"),
       null,
       list
     ));
@@ -463,7 +463,7 @@
     const badge = el("div", { class: "mp-status-badge run", text: (raw.type || i.type || "").toUpperCase().replace("_", " ") });
     const info = el("div");
     info.appendChild(el("div", { class: "mp-title", text: i.title }));
-    info.appendChild(el("div", { class: "mp-sub", text: i.source || "Jarvis proactif · " + (i.due || "") }));
+    info.appendChild(el("div", { class: "mp-sub", text: i.source || ((window.JARVIS_ASSISTANT_NAME || "Jarvis") + " proactif · " + (i.due || "")) }));
     left.appendChild(badge); left.appendChild(info);
     hdr.appendChild(left); hdr.appendChild(closeBtn);
     panel.appendChild(hdr);
@@ -556,7 +556,7 @@
     inner.appendChild(titleRow);
     const meta = el("div", { class: "row-stripe-meta" });
     meta.appendChild(el("span", { class: "badge badge--solid", text: i.type || "Action" }));
-    meta.appendChild(el("span", { text: i.source || "Jarvis" }));
+    meta.appendChild(el("span", { text: i.source || (window.JARVIS_ASSISTANT_NAME || "Jarvis") }));
     meta.appendChild(el("span", { style: { opacity: ".4" }, text: "·" }));
     meta.appendChild(el("span", { text: i.due || "—" }));
     inner.appendChild(meta);

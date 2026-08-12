@@ -236,7 +236,7 @@
 
   /* ───────── Mode system ───────── */
   const MODE_META = {
-    home:       { chapter: "—",  num: "00", label: "JARVIS",        watermark: "" },
+    home:       { chapter: "—",  num: "00", label: window.JARVIS_ASSISTANT_NAME || "JARVIS",        watermark: "" },
     workspace:  { chapter: "I",  num: "01", label: "PILOTAGE",      watermark: "Pilotage" },
     capacites:  { chapter: "II", num: "02", label: "ATELIER",       watermark: "Atelier" },
     config:     { chapter: "III",num: "03", label: "RÉGLAGES",      watermark: "Réglages" },
@@ -388,7 +388,7 @@
   const ROOMS = [
     { mode: "home",      label: "Home",          sub: "Ambient · À l'écoute",                  href: "/",             chapter: "—",   pages: [] },
     { mode: "workspace", label: "Workspace",      sub: "Ce que tu pilotes en ce moment",         href: "/dashboard",    chapter: "I",   pages: ["Aperçu","Initiatives","Missions","Tâches","Analytics"] },
-    { mode: "capacites", label: "Capacités",      sub: "Ce que Jarvis sait faire pour toi",      href: "/capabilities", chapter: "II",  pages: ["Intégrations","Skills","Routines","Ambiances","Store","Écosystème"] },
+    { mode: "capacites", label: "Capacités",      sub: "Ce que " + (window.JARVIS_ASSISTANT_NAME || "Jarvis") + " sait faire pour toi",      href: "/capabilities", chapter: "II",  pages: ["Intégrations","Skills","Routines","Ambiances","Store","Écosystème"] },
     { mode: "config",    label: "Configuration",  sub: "Tes préférences et ton coffre",           href: "/settings",     chapter: "III", pages: ["Préférences","Modèles & API","Audio & voix","Conso","Système","À propos"] },
   ];
 
@@ -463,7 +463,7 @@
     root.appendChild(el("div", { class: "sb-brand" }, [
       brandMark(),
       el("div", { class: "sb-brand-text" }, [
-        el("span", { class: "sb-brand-name", text: "Jarvis" }),
+        el("span", { class: "sb-brand-name", text: window.JARVIS_ASSISTANT_NAME || "Jarvis" }),
         el("span", { class: "sb-brand-status", text: "Online · v4.2" }),
       ]),
     ]));
