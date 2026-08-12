@@ -169,8 +169,8 @@ async def _handle_vision_event(
                     await websocket.send_json({"type": "chunk", "content": chunk})
             except Exception as e:
                 logger.error("Vision gesture stream error", error=str(e))
-                full = _fallback()
-                await websocket.send_json({"type": "chunk", "content": _fallback()})
+                full = _fallback(e)
+                await websocket.send_json({"type": "chunk", "content": full})
         session.add_message("assistant", full)
         await websocket.send_json({"type": "done"})
 
@@ -274,8 +274,8 @@ async def websocket_chat(websocket: WebSocket) -> None:
                         await websocket.send_json({"type": "chunk", "content": chunk})
                 except Exception as e:
                     logger.error("Stream error", error=str(e))
-                    full = _fallback()
-                    await websocket.send_json({"type": "chunk", "content": _fallback()})
+                    full = _fallback(e)
+                    await websocket.send_json({"type": "chunk", "content": full})
 
             session.add_message("assistant", full)
 

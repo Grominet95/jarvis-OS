@@ -23,6 +23,8 @@ from jarvis.kernel.settings import settings
 from jarvis.providers.llm.base import LLMProvider
 
 _MAX_TOOL_ITERATIONS = 20
+_MAX_ANTHROPIC_RETRIES = 3
+_ANTHROPIC_RETRY_STATUS = {429, 500, 502, 503, 529}
 
 # CYCLE 1 (CDC §C.1.3) — bouclé : aucun import depuis `jarvis.engine.*`.
 # Le tracker est reçu par constructeur (DI), typé via le Protocol
@@ -104,6 +106,33 @@ def _messages_to_openai(messages: list[dict]) -> list[dict]:
     return result
 
 
+def _anthropic_extract_text(content: object) -> str:
+    parts: list[str] = []
+    for block in content:  # type: ignore[union-attr]
+        text = getattr(block, "text", None)
+        if text:
+            parts.append(text)
+    return "".join(parts)
+
+
+async def _anthropic_retry(coro_factory: Callable[[], Awaitable[Any]]) -> Any:
+    for attempt in range(_MAX_ANTHROPIC_RETRIES):
+        try:
+            return await coro_factory()
+        except anthropic.APIConnectionError:
+            if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                raise
+            await asyncio.sleep(min(2**attempt, 8))
+        except anthropic.RateLimitError:
+            if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                raise
+            await asyncio.sleep(min(2**attempt, 8))
+        except anthropic.APIStatusError as e:
+            if e.status_code not in _ANTHROPIC_RETRY_STATUS or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                raise
+            await asyncio.sleep(min(2**attempt, 8))
+
+
 # ── Providers ─────────────────────────────────────────────────────────────────
 
 
@@ -151,8 +180,8 @@ class AnthropicProvider(LLMProvider):
         if stream:
             return self._stream(kwargs)
 
-        response = await self._client.messages.create(**kwargs)
-        text = response.content[0].text
+        response = await _anthropic_retry(lambda: self._client.messages.create(**kwargs))
+        text = _anthropic_extract_text(response.content)
         logger.debug("Anthropic complete", model=self._model, tokens=response.usage.output_tokens)
         cost = calculate_cost(
             "anthropic",
@@ -175,9 +204,24 @@ class AnthropicProvider(LLMProvider):
         return text
 
     async def _stream(self, kwargs: dict) -> AsyncIterator[str]:
-        async with self._client.messages.stream(**kwargs) as stream:
-            async for chunk in stream.text_stream:
-                yield chunk
+        for attempt in range(_MAX_ANTHROPIC_RETRIES):
+            try:
+                async with self._client.messages.stream(**kwargs) as stream:
+                    async for chunk in stream.text_stream:
+                        yield chunk
+                return
+            except anthropic.APIConnectionError:
+                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                    raise
+                await asyncio.sleep(min(2**attempt, 8))
+            except anthropic.RateLimitError:
+                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                    raise
+                await asyncio.sleep(min(2**attempt, 8))
+            except anthropic.APIStatusError as e:
+                if e.status_code not in _ANTHROPIC_RETRY_STATUS or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                    raise
+                await asyncio.sleep(min(2**attempt, 8))
 
     def stream_with_capture(
         self,
@@ -207,35 +251,59 @@ class AnthropicProvider(LLMProvider):
         capture.calls est peuplé dès content_block_stop pour chaque outil, ce qui permet
         à _pipe() de démarrer la task outil aussitôt que le stream texte est épuisé.
         """
-        _input: dict[int, str] = {}  # index → partial_json accumulé
-        _meta: dict[int, tuple[str, str]] = {}  # index → (tool_id, tool_name)
+        _input: dict[int, str] = {}
+        _meta: dict[int, tuple[str, str]] = {}
 
-        async with self._client.messages.stream(**kwargs) as s:
-            async for event in s:
-                if event.type == "content_block_delta":
-                    delta = event.delta
-                    if delta.type == "text_delta":
-                        yield delta.text
-                    elif delta.type == "input_json_delta" and delta.partial_json:
-                        _input[event.index] = _input.get(event.index, "") + delta.partial_json
-                elif event.type == "content_block_start":
-                    cb = event.content_block
-                    if cb.type == "tool_use":
-                        _meta[event.index] = (cb.id, cb.name)
-                        _input[event.index] = ""
-                elif event.type == "content_block_stop":
-                    if event.index in _meta:
-                        tool_id, tool_name = _meta[event.index]
-                        raw = _input.get(event.index, "{}")
-                        try:
-                            tool_input = _json.loads(raw)
-                        except _json.JSONDecodeError:
-                            tool_input = {}
-                        capture.calls.append((tool_id, tool_name, tool_input))
-                elif event.type == "message_delta":
-                    sr = getattr(event.delta, "stop_reason", None)
-                    if sr:
-                        capture.stop_reason = sr
+        for attempt in range(_MAX_ANTHROPIC_RETRIES):
+            try:
+                async with self._client.messages.stream(**kwargs) as s:
+                    async for event in s:
+                        if event.type == "content_block_delta":
+                            delta = event.delta
+                            if delta.type == "text_delta":
+                                yield delta.text
+                            elif delta.type == "input_json_delta" and delta.partial_json:
+                                _input[event.index] = _input.get(event.index, "") + delta.partial_json
+                        elif event.type == "content_block_start":
+                            cb = event.content_block
+                            if cb.type == "tool_use":
+                                _meta[event.index] = (cb.id, cb.name)
+                                _input[event.index] = ""
+                        elif event.type == "content_block_stop":
+                            if event.index in _meta:
+                                tool_id, tool_name = _meta[event.index]
+                                raw = _input.get(event.index, "{}")
+                                try:
+                                    tool_input = _json.loads(raw)
+                                except _json.JSONDecodeError:
+                                    tool_input = {}
+                                capture.calls.append((tool_id, tool_name, tool_input))
+                        elif event.type == "message_delta":
+                            sr = getattr(event.delta, "stop_reason", None)
+                            if sr:
+                                capture.stop_reason = sr
+                return
+            except anthropic.APIConnectionError:
+                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                    raise
+                _input.clear()
+                _meta.clear()
+                capture.calls.clear()
+                await asyncio.sleep(min(2**attempt, 8))
+            except anthropic.RateLimitError:
+                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                    raise
+                _input.clear()
+                _meta.clear()
+                capture.calls.clear()
+                await asyncio.sleep(min(2**attempt, 8))
+            except anthropic.APIStatusError as e:
+                if e.status_code not in _ANTHROPIC_RETRY_STATUS or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+                    raise
+                _input.clear()
+                _meta.clear()
+                capture.calls.clear()
+                await asyncio.sleep(min(2**attempt, 8))
 
     async def tool_loop(
         self,
@@ -249,12 +317,14 @@ class AnthropicProvider(LLMProvider):
         current = list(messages)
 
         for iteration in range(_MAX_TOOL_ITERATIONS):
-            response = await self._client.messages.create(
-                model=self._model,
-                max_tokens=4096,
-                system=system,
-                messages=current,
-                tools=tools,
+            response = await _anthropic_retry(
+                lambda: self._client.messages.create(
+                    model=self._model,
+                    max_tokens=4096,
+                    system=system,
+                    messages=current,
+                    tools=tools,
+                )
             )
             cost = calculate_cost(
                 "anthropic",
