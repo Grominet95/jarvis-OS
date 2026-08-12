@@ -16,7 +16,6 @@ from jarvis.engine.llm_errors import friendly_llm_error
 from jarvis.engine.router import RouteEnum, SpeedRouter
 from jarvis.engine.session import Session, SessionManager
 from jarvis.kernel.contracts import CrossSessionRecall
-from jarvis.kernel.settings import settings
 
 
 def _fallback(exc: BaseException | None = None) -> str:

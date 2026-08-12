@@ -10,7 +10,7 @@ import os
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime
-from typing import Any
+from typing import Any, TypeVar
 
 import anthropic
 from google.genai import types as _t
@@ -25,6 +25,19 @@ from jarvis.providers.llm.base import LLMProvider
 _MAX_TOOL_ITERATIONS = 20
 _MAX_ANTHROPIC_RETRIES = 3
 _ANTHROPIC_RETRY_STATUS = {429, 500, 502, 503, 529}
+
+_T = TypeVar("_T")
+
+
+def _is_retryable_anthropic(exc: BaseException) -> bool:
+    """Vrai si l'erreur Anthropic est transitoire et vaut une nouvelle tentative.
+
+    Regroupe le triplet (connexion, rate-limit, statut 5xx/429) qui était
+    dupliqué en trois `except` identiques sur les trois sites de retry.
+    """
+    if isinstance(exc, anthropic.APIConnectionError | anthropic.RateLimitError):
+        return True
+    return isinstance(exc, anthropic.APIStatusError) and exc.status_code in _ANTHROPIC_RETRY_STATUS
 
 # CYCLE 1 (CDC §C.1.3) — bouclé : aucun import depuis `jarvis.engine.*`.
 # Le tracker est reçu par constructeur (DI), typé via le Protocol
@@ -115,22 +128,15 @@ def _anthropic_extract_text(content: object) -> str:
     return "".join(parts)
 
 
-async def _anthropic_retry(coro_factory: Callable[[], Awaitable[Any]]) -> Any:
+async def _anthropic_retry(coro_factory: Callable[[], Awaitable[_T]]) -> _T:
     for attempt in range(_MAX_ANTHROPIC_RETRIES):
         try:
             return await coro_factory()
-        except anthropic.APIConnectionError:
-            if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+        except anthropic.APIError as e:
+            if not _is_retryable_anthropic(e) or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
                 raise
             await asyncio.sleep(min(2**attempt, 8))
-        except anthropic.RateLimitError:
-            if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
-                raise
-            await asyncio.sleep(min(2**attempt, 8))
-        except anthropic.APIStatusError as e:
-            if e.status_code not in _ANTHROPIC_RETRY_STATUS or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
-                raise
-            await asyncio.sleep(min(2**attempt, 8))
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 # ── Providers ─────────────────────────────────────────────────────────────────
@@ -210,16 +216,8 @@ class AnthropicProvider(LLMProvider):
                     async for chunk in stream.text_stream:
                         yield chunk
                 return
-            except anthropic.APIConnectionError:
-                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
-                    raise
-                await asyncio.sleep(min(2**attempt, 8))
-            except anthropic.RateLimitError:
-                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
-                    raise
-                await asyncio.sleep(min(2**attempt, 8))
-            except anthropic.APIStatusError as e:
-                if e.status_code not in _ANTHROPIC_RETRY_STATUS or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+            except anthropic.APIError as e:
+                if not _is_retryable_anthropic(e) or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
                     raise
                 await asyncio.sleep(min(2**attempt, 8))
 
@@ -263,7 +261,9 @@ class AnthropicProvider(LLMProvider):
                             if delta.type == "text_delta":
                                 yield delta.text
                             elif delta.type == "input_json_delta" and delta.partial_json:
-                                _input[event.index] = _input.get(event.index, "") + delta.partial_json
+                                _input[event.index] = (
+                                    _input.get(event.index, "") + delta.partial_json
+                                )
                         elif event.type == "content_block_start":
                             cb = event.content_block
                             if cb.type == "tool_use":
@@ -283,22 +283,8 @@ class AnthropicProvider(LLMProvider):
                             if sr:
                                 capture.stop_reason = sr
                 return
-            except anthropic.APIConnectionError:
-                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
-                    raise
-                _input.clear()
-                _meta.clear()
-                capture.calls.clear()
-                await asyncio.sleep(min(2**attempt, 8))
-            except anthropic.RateLimitError:
-                if attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
-                    raise
-                _input.clear()
-                _meta.clear()
-                capture.calls.clear()
-                await asyncio.sleep(min(2**attempt, 8))
-            except anthropic.APIStatusError as e:
-                if e.status_code not in _ANTHROPIC_RETRY_STATUS or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
+            except anthropic.APIError as e:
+                if not _is_retryable_anthropic(e) or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
                     raise
                 _input.clear()
                 _meta.clear()
@@ -317,12 +303,16 @@ class AnthropicProvider(LLMProvider):
         current = list(messages)
 
         for iteration in range(_MAX_TOOL_ITERATIONS):
+            # `msgs=current` : lie la valeur de l'itération courante au moment de
+            # la définition. `current` est rebindé en fin de boucle, et la lambda
+            # est rejouée par _anthropic_retry — sans ce défaut d'argument, ruff
+            # B023 signale la capture tardive.
             response = await _anthropic_retry(
-                lambda: self._client.messages.create(
+                lambda msgs=current: self._client.messages.create(
                     model=self._model,
                     max_tokens=4096,
                     system=system,
-                    messages=current,
+                    messages=msgs,
                     tools=tools,
                 )
             )
