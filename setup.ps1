@@ -5,6 +5,9 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
+. (Join-Path $PSScriptRoot "scripts\onedrive_guard.ps1")
+Invoke-JarvisOneDriveGuard -ProjectRoot $PSScriptRoot -NonInteractive:$Ci -RelaunchCommand "setup"
+
 function Ensure-Command {
     param([string]$Name)
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
