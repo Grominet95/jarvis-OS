@@ -12,16 +12,16 @@ from loguru import logger
 from jarvis.engine.agent import Agent
 from jarvis.engine.background.notifications import NotificationQueue
 from jarvis.engine.background.worker import BackgroundWorker
+from jarvis.engine.llm_errors import friendly_llm_error
 from jarvis.engine.router import RouteEnum, SpeedRouter
 from jarvis.engine.session import Session, SessionManager
 from jarvis.kernel.contracts import CrossSessionRecall
-from jarvis.kernel.settings import settings
 
 
-def _fallback() -> str:
-    """Message de repli quand la gateway échoue. Utilise le prénom configuré."""
-    name = settings.display_name
-    return f"Désolé {name}, j'ai eu un souci, je regarde."
+def _fallback(exc: BaseException | None = None) -> str:
+    if exc is not None:
+        return friendly_llm_error(exc)
+    return friendly_llm_error(RuntimeError("unknown"))
 
 
 class Gateway:
@@ -128,8 +128,13 @@ class Gateway:
                         async for chunk in clean_synth:
                             yield chunk
                     except Exception as e:
-                        logger.error("CF tool error", error=str(e))
+                        logger.opt(exception=True).error(
+                            "CF tool or synthesize error",
+                            error=type(e).__name__,
+                            detail=str(e),
+                        )
                         notifications.add(f"Outil échoué : {e}")
+                        yield friendly_llm_error(e)
 
             return await self._finalize(session, route, _pipe(), stream)
 
@@ -137,7 +142,7 @@ class Gateway:
             logger.opt(exception=True).error(
                 "Gateway error", error=type(e).__name__, detail=str(e), session_id=str(session.id)
             )
-            return session, RouteEnum.INSTANT, _fallback()
+            return session, RouteEnum.INSTANT, _fallback(e)
 
     async def _finalize(
         self,

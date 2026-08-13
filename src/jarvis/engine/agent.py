@@ -24,6 +24,16 @@ from jarvis.kernel.schemas import ToolCapture
 from jarvis.kernel.settings import Settings
 
 _STATIC_PROMPT_PATH = PROMPTS_DIR / "system_static.md"
+_MAX_TOOL_RESULT_CHARS = 12_000
+
+
+def _clip_tool_result(text: str) -> str:
+    if len(text) <= _MAX_TOOL_RESULT_CHARS:
+        return text
+    return (
+        text[:_MAX_TOOL_RESULT_CHARS]
+        + f"\n...[truncated, {len(text)} characters total]"
+    )
 
 
 class Agent:
@@ -286,7 +296,7 @@ class Agent:
 
         # Bloc user avec les tool_result
         tool_result_blocks = [
-            {"type": "tool_result", "tool_use_id": tid, "content": r}
+            {"type": "tool_result", "tool_use_id": tid, "content": _clip_tool_result(r)}
             for (tid, _, _), r in zip(capture.calls, results, strict=True)
         ]
 
