@@ -214,6 +214,14 @@
     const fnCtrl  = el("div", { style: { display:"flex", gap:"8px" } });
     fnCtrl.appendChild(fnInput); fnCtrl.appendChild(fnSave);
     identList.appendChild(settingRow("Prénom", "USER_FIRSTNAME", fnCtrl));
+    
+    const anInput = el("input", { class: "input-mono", style: { width:"220px" }, value: jarvis.assistant_name || "" });
+    const anSave  = el("button", { class: "m-btn", text: "Sauv." });
+    anSave.addEventListener("click", () => saveSetting("ASSISTANT_NAME", anInput.value, anSave));
+    const anCtrl  = el("div", { style: { display:"flex", gap:"8px" } });
+    anCtrl.appendChild(anInput); anCtrl.appendChild(anSave);
+    identList.appendChild(settingRow("Nom de l'assistant", "ASSISTANT_NAME", anCtrl));
+    
     const upInput = el("input", { class: "input-mono", style: { width:"220px" }, value: jarvis.user_profile || "", placeholder: "entrepreneur tech, Lyon…" });
     const upSave  = el("button", { class: "m-btn", text: "Sauv." });
     upSave.addEventListener("click", () => saveSetting("USER_PROFILE", upInput.value, upSave));

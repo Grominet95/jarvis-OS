@@ -123,6 +123,7 @@ async def get_settings_endpoint() -> dict:
         "jarvis": {
             "user_firstname": _ev("USER_FIRSTNAME", "user_firstname"),
             "user_profile": _ev("USER_PROFILE", "user_profile"),
+            "assistant_name": _ev("ASSISTANT_NAME", "assistant_name"),
             "quebec_mode": _ev("QUEBEC_MODE", "quebec_mode"),
             "wakeup_enabled": _ev("WAKEUP_ENABLED", "wakeup_enabled"),
             "clap_detection_enabled": _ev("CLAP_DETECTION_ENABLED", "clap_detection_enabled"),
