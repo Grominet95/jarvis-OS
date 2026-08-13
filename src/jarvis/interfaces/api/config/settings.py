@@ -244,8 +244,18 @@ async def get_voices() -> list[dict]:
                 headers={"xi-api-key": key},
             )
         if r.status_code == 200:
+            from jarvis.providers.audio.elevenlabs_voices import voice_api_available
+
             voices = r.json().get("voices", [])
-            return [{"id": v["voice_id"], "name": v["name"]} for v in voices]
+            return [
+                {
+                    "id": v["voice_id"],
+                    "name": v["name"],
+                    "category": v.get("category", ""),
+                    "api_available": voice_api_available(v.get("category")),
+                }
+                for v in voices
+            ]
     except Exception:
         pass
     return []

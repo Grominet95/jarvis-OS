@@ -537,15 +537,48 @@
       { label: "Whisper model",    sub: "WHISPER_MODEL",     options: ["tiny", "base", "small", "medium", "large"], val: audio.whisper_model },
     ].forEach(f => audioList.appendChild(settingRow(f.label, f.sub, makeSelect(f.options, f.val, f.sub))));
 
+    const micSelect = el("select", { class: "select-mono", style: { minWidth: "260px" } });
+    const micDefault = el("option", { value: "", text: "Par défaut (système)" });
+    micSelect.appendChild(micDefault);
+    const micSave = el("button", { class: "m-btn", text: "Sauv." });
+    micSave.addEventListener("click", () => {
+      if (window.JarvisMic) {
+        JarvisMic.setSelectedDeviceId(micSelect.value);
+        J.notify({ kind: "ok", text: "Micro enregistré pour la session vocale" });
+      }
+    });
+    const micCtrl = el("div", { style: { display: "flex", gap: "8px", alignItems: "center" } });
+    micCtrl.appendChild(micSelect);
+    micCtrl.appendChild(micSave);
+    audioList.appendChild(settingRow("Entrée micro", "navigateur", micCtrl));
+    if (window.JarvisMic) {
+      JarvisMic.listInputDevices().then((devices) => {
+        devices.forEach((d) => {
+          const opt = el("option", { value: d.deviceId, text: d.label });
+          if (d.deviceId === JarvisMic.getSelectedDeviceId()) opt.selected = true;
+          micSelect.appendChild(opt);
+        });
+      }).catch(() => {});
+    }
+
     let voices = [];
     try { voices = await J.api.get("/api/settings/voices"); } catch (_) {}
     if (voices.length) {
       const vSelect = el("select", { class: "select-mono", style: { minWidth: "200px" } });
       voices.forEach(v => {
-        const opt = el("option", { value: v.id, text: v.name });
+        const suffix = v.api_available === false ? " (bibliothèque — plan payant requis)" : "";
+        const opt = el("option", { value: v.id, text: v.name + suffix });
+        if (v.api_available === false) opt.disabled = true;
         if (v.id === audio.elevenlabs_voice_id) opt.selected = true;
         vSelect.appendChild(opt);
       });
+      if (voices.some(v => v.id === audio.elevenlabs_voice_id && v.api_available === false)) {
+        audioList.appendChild(el("div", {
+          class: "m-hint",
+          style: { marginBottom: "12px", color: "var(--amber, #c9a227)" },
+          text: "La voix ElevenLabs actuelle est une voix bibliothèque : elle ne fonctionne pas via l'API sur le plan gratuit. Choisis une voix premade ou passe à un plan payant.",
+        }));
+      }
       const saveBtn = el("button", { class: "m-btn", text: "Sauv." });
       saveBtn.addEventListener("click", () => saveSetting("ELEVENLABS_VOICE_ID", vSelect.value, saveBtn));
       const ctrl = el("div", { style: { display:"flex", gap:"8px", alignItems:"center" } });
