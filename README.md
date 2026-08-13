@@ -75,18 +75,21 @@ suite complète, incl. les ~28 tests `@pytest.mark.integration`.
 
 Deux profils distincts :
 
-### Utilisateur final (Windows, release offline)
+### Utilisateur final (Windows)
 
-Tu télécharges une archive **avec le dossier `bundle/` déjà inclus**. Tu n'as **pas** besoin d'installer Python, uv, cmake, Visual C++ ni LiveKit sur ta machine.
+Tu clones le dépôt (ou tu décompresses une archive) **sans le dossier `bundle/`** : l'assistant web le télécharge pour toi en un clic (~628 Mo). Tu n'as **pas** besoin d'installer Python, uv, cmake, Visual C++ ni LiveKit sur ta machine, ni d'extraire manuellement une archive offline.
 
 | Requis | Notes |
 |---|---|
 | Windows 10/11 | |
 | PowerShell | Pour lancer `jarvis.ps1` |
 | Navigateur web | Configuration sur `http://127.0.0.1:8765/setup` |
+| Connexion internet | Uniquement pour le premier téléchargement du bundle (étape 1 du setup) |
 | Clés API (LLM, etc.) | OpenAI ou Anthropic au minimum, saisies dans l'assistant web |
 
-Le bundle embarque déjà : un Python 3.11 **autonome et relocalisable** (`bundle/python`), un environnement virtuel (`bundle/.venv`), les dépendances Python, les modèles ML (YOLO, Piper), `livekit-server` et `uv.exe`. Au premier `setup`, l'environnement est automatiquement ré-ancré sur la machine cible (aucun chemin absolu de la machine de build n'est requis).
+Le bundle embarque : un Python 3.11 **autonome et relocalisable** (`bundle/python`), un environnement virtuel (`bundle/.venv`), les dépendances Python, les modèles ML (YOLO, Piper), `livekit-server` et `uv.exe`. Au premier `setup`, l'environnement est automatiquement ré-ancré sur la machine cible (aucun chemin absolu de la machine de build n'est requis).
+
+> **Release offline pré-construite** : si ton archive contient déjà `bundle/`, le bouton Télécharger n'apparaît pas — tu passes directement à la configuration.
 
 ### Développeur : construire le bundle
 
@@ -114,7 +117,7 @@ Python système et LiveKit **ne sont pas requis** : le script de build les intè
 
 ### Parcours A : Utilisateur final (Windows)
 
-**Clone Git ou archive sans `bundle/`** : le lanceur télécharge automatiquement le bundle offline (~700 Mo) au premier `setup` ou `run`. **Release avec `bundle/` déjà inclus** : aucun téléchargement supplémentaire.
+**Clone Git ou archive sans `bundle/`** : à l'étape 1 du setup, clique sur **Télécharger** — le wizard récupère `bundle.zip` (~628 Mo), l'extrait dans `bundle/` et vérifie les prérequis. **Aucune extraction manuelle.** **Release avec `bundle/` déjà inclus** : le bouton n'apparaît pas, tu passes directement à la configuration.
 
 > **OneDrive interdit.** Ne place pas `jarvis-OS` dans OneDrive (Documents synchronisés, etc.) : OneDrive casse les liens symboliques du venv Python embarqué. Installe-le dans un dossier local, par exemple `C:\jarvis-OS` ou `C:\Users\<toi>\jarvis-OS`. Le lanceur refuse de démarrer depuis OneDrive.
 
@@ -124,7 +127,7 @@ Le plus simple : **double-clique sur `setup.bat`**, puis sur `run.bat`. Ou en li
 # 1. Cloner ou décompresser, puis ouvrir le dossier (hors OneDrive)
 cd C:\jarvis-OS
 
-# 2. Configuration web (navigateur ; télécharge le bundle si absent)
+# 2. Configuration web (navigateur — étape 1 : Télécharger si bundle/ absent)
 .\jarvis.bat setup
 
 # 3. Démarrage
@@ -142,7 +145,7 @@ L'assistant web configure l'identité, les clés API, les modules optionnels et 
 
 | Commande | Rôle |
 |---|---|
-| `.\jarvis.ps1 setup` | Assistant de configuration (`:8765`) |
+| `.\jarvis.ps1 setup` | Assistant de configuration (`:8765`) — téléchargement bundle intégré |
 | `.\jarvis.ps1 run` | LiveKit + API + pipeline vocal |
 | `.\jarvis.ps1 api` | Serveur FastAPI seul |
 | `.\jarvis.ps1 doctor` | Diagnostic rapide |

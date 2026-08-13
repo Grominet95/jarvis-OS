@@ -333,6 +333,112 @@
 .setup-status-warn { color: var(--gold); }
 .setup-status-err { color: var(--red); }
 
+.setup-status-row--detail {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.setup-status-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+.setup-status-head span:last-child {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.setup-status-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--fg-2);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  padding-left: 2px;
+}
+
+.setup-status-row--bundle {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+.setup-bundle-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.setup-bundle-progress {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.setup-bundle-progress .setup-progress-label {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.setup-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.setup-dl-btn {
+  appearance: none;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.setup-dl-btn:hover:not(:disabled) { filter: brightness(1.1); }
+.setup-dl-btn:disabled { opacity: 0.55; cursor: default; }
+
+.setup-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line-2);
+  overflow: hidden;
+}
+.setup-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width 0.35s ease;
+}
+.setup-progress-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--fg-3);
+  text-transform: uppercase;
+}
+
+.setup-hint {
+  margin: 6px 0 14px 28px;
+  padding-left: 12px;
+  border-left: 2px solid var(--line-2);
+  color: var(--fg-3);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .setup-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;

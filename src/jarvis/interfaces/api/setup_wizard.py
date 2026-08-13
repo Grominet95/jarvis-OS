@@ -11,7 +11,12 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from jarvis.interfaces.api.config._env import write_env_batch
-from jarvis.kernel.bundle import prerequisites_status, stage_models_from_bundle
+from jarvis.kernel.bundle import bundle_available, prerequisites_status, stage_models_from_bundle
+from jarvis.kernel.bundle_download import (
+    bundle_download_info,
+    get_download_status,
+    start_bundle_download,
+)
 from jarvis.kernel.paths import FACES_DIR, PROJECT_ROOT
 from jarvis.kernel.setup_layout import ensure_runtime_layout, is_setup_complete, read_env_file
 
@@ -80,6 +85,7 @@ async def setup_status() -> dict:
         "api_backend": effective_backend,
         "port": int(env.get("PORT", "8000") or "8000"),
         "prerequisites": prerequisites_status(),
+        "bundle_download": bundle_download_info(),
         "layout_created": ensure_runtime_layout(),
         # Valeurs non-secrètes — préremplissage lors d'une reconfiguration.
         "config": {
@@ -111,7 +117,22 @@ async def setup_status() -> dict:
 
 @router.get("/api/setup/prerequisites")
 async def setup_prerequisites() -> dict:
-    return prerequisites_status()
+    status = prerequisites_status()
+    status["bundle_download"] = bundle_download_info()
+    return status
+
+
+@router.post("/api/setup/bundle/download")
+async def setup_bundle_download_start() -> dict:
+    return start_bundle_download()
+
+
+@router.get("/api/setup/bundle/download/status")
+async def setup_bundle_download_status() -> dict:
+    status = get_download_status()
+    status["bundle"] = bundle_available()
+    status["prerequisites"] = prerequisites_status()
+    return status
 
 
 @router.post("/api/setup/bootstrap")
@@ -169,6 +190,14 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
             livekit_api_key = "devkey"
             livekit_api_secret = "devsecretdevsecretdevsecretdevsecret"
 
+    elevenlabs_api_key = _secret(body.elevenlabs_api_key, "ELEVENLABS_API_KEY")
+    elevenlabs_voice_id = body.elevenlabs_voice_id.strip() or existing.get("ELEVENLABS_VOICE_ID", "").strip()
+    if body.tts_provider == "elevenlabs":
+        if not elevenlabs_api_key:
+            raise HTTPException(400, "Cle ElevenLabs requise.")
+        if not elevenlabs_voice_id:
+            raise HTTPException(400, "Voice ID ElevenLabs requis.")
+
     updates = {
         "USER_FIRSTNAME": body.user_firstname.strip(),
         "LLM_PROVIDER": llm_provider,
@@ -186,8 +215,8 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
         "PROACTIVE_LON": body.proactive_lon.strip(),
         "PROACTIVE_CITY": body.proactive_city.strip(),
         "TTS_PROVIDER": body.tts_provider,
-        "ELEVENLABS_API_KEY": _secret(body.elevenlabs_api_key, "ELEVENLABS_API_KEY"),
-        "ELEVENLABS_VOICE_ID": body.elevenlabs_voice_id.strip(),
+        "ELEVENLABS_API_KEY": elevenlabs_api_key,
+        "ELEVENLABS_VOICE_ID": elevenlabs_voice_id,
         "ELEVENLABS_MODEL": body.elevenlabs_model,
         "WHISPER_MODEL": "tiny",
         "LIVEKIT_URL": livekit_url,
