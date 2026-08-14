@@ -23,6 +23,12 @@ def fake_bundle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(bundle, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(bundle, "BUNDLE_DIR", bundle_dir)
     monkeypatch.setattr(bundle, "MANIFEST_PATH", bundle_dir / "manifest.json")
+    monkeypatch.setattr(bundle, "YOLO_PROJECT", tmp_path / "yolov8n.pt")
+    monkeypatch.setattr(
+        bundle,
+        "PIPER_PROJECT",
+        tmp_path / "models" / "piper" / "fr_FR-upmc-medium.onnx",
+    )
     return bundle_dir
 
 
@@ -117,12 +123,33 @@ def test_prerequisites_status_shape(fake_bundle: Path) -> None:
     status = bundle.prerequisites_status()
     assert status["bundle"] is True
     assert status["bundle_version"] == "9"
+    assert status["can_continue"] is True
     assert status["python"] is True
     assert status["yolo_model"] is False
     assert status["piper_model"] is False
     assert status["offline_ready"] is False
     for key in ("platform", "python_path", "livekit_binary", "livekit_path"):
         assert key in status
+    assert "bundle_inspection" in status
+    assert status["bundle_inspection"]["valid"] is True
+    assert "python_detail" in status
+
+
+def test_inspect_bundle_detects_partial(fake_bundle: Path) -> None:
+    (fake_bundle / "manifest.json").write_text("{}", encoding="utf-8")
+    inspection = bundle.inspect_bundle()
+    assert inspection["present"] is True
+    assert inspection["valid"] is False
+    assert any("python" in item for item in inspection["missing"])
+
+
+def test_inspect_bundle_missing_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(bundle, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(bundle, "BUNDLE_DIR", tmp_path / "bundle")
+    monkeypatch.setattr(bundle, "MANIFEST_PATH", tmp_path / "bundle" / "manifest.json")
+    inspection = bundle.inspect_bundle()
+    assert inspection["present"] is False
+    assert inspection["valid"] is False
 
 
 def test_stage_models_noop_without_bundle(fake_bundle: Path) -> None:
