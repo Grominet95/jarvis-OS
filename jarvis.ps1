@@ -373,7 +373,19 @@ function Invoke-JarvisRun {
 }
 
 $guardCommand = if ($Command.Trim() -ne "") { $Command } else { "setup" }
-Invoke-JarvisOneDriveGuard -ProjectRoot $PSScriptRoot -NonInteractive:($env:CI -eq "true") -RelaunchCommand $guardCommand
+# `doctor` et l'aide (commande vide ou inconnue) ne demarrent rien : ils n'ont pas
+# a proposer de deplacer le dossier de l'utilisateur, et sans argument le
+# RelaunchCommand vaut "setup" — taper `.\jarvis.ps1` pour lire l'aide aurait
+# deplace l'install puis lance le wizard. Sur ces commandes, le garde-fou se
+# contente d'expliquer et de sortir.
+$guardReadOnly = $Command.Trim() -eq "" -or
+                 $Command.ToLowerInvariant() -notin @(
+                     "eclosion", "setup", "run", "start", "api", "voice", "livekit"
+                 )
+Invoke-JarvisOneDriveGuard `
+    -ProjectRoot $PSScriptRoot `
+    -NonInteractive:($guardReadOnly -or $env:CI -eq "true") `
+    -RelaunchCommand $guardCommand
 
 # Restart complet uniquement : `run`/`start` relancent toute la pile, `setup` a
 # besoin du port 8765. `api`, `voice` et `livekit` sont documentees comme

@@ -122,8 +122,20 @@ function Move-JarvisInstallToLocal {
         throw "Robocopy failed with exit code $($robocopy.ExitCode)."
     }
 
+    # robocopy /MOVE a deja supprime ce qu'il a copie ; il ne reste normalement que
+    # le dossier racine vide. S'il reste du CONTENU, ce sont precisement les fichiers
+    # que robocopy n'a pas deplaces — les supprimer en silence, c'est les perdre.
     if (Test-Path $source) {
-        Remove-Item -Path $source -Recurse -Force -ErrorAction SilentlyContinue
+        $leftovers = @(Get-ChildItem -Path $source -Force -Recurse -ErrorAction SilentlyContinue)
+        if ($leftovers.Count -eq 0) {
+            Remove-Item -Path $source -Recurse -Force -ErrorAction SilentlyContinue
+        } else {
+            Write-Host ""
+            Write-Host "  $($leftovers.Count) element(s) n'ont pas pu etre deplaces et restent dans :" -ForegroundColor Yellow
+            Write-Host "    $source" -ForegroundColor DarkGray
+            Write-Host "  Verifie ce qu'il reste avant de supprimer ce dossier toi-meme." -ForegroundColor DarkGray
+            Write-Host ""
+        }
     }
 
     return $destination
@@ -180,8 +192,17 @@ function Invoke-JarvisOneDriveGuard {
     Write-Host "  [Q] Quitter" -ForegroundColor White
     Write-Host ""
 
-    $choice = (Read-Host "  Choix [1/2/Q]").Trim().ToLowerInvariant()
-    if ($choice -eq "") { $choice = "1" }
+    # Pas de defaut sur Entree : l'option [1] deplace le dossier et supprime la
+    # source, laquelle est dans OneDrive — la suppression se propage donc au cloud
+    # et aux autres machines synchronisees. Un utilisateur qui tape Entree sans
+    # lire ne doit pas declencher ca ; on redemande jusqu'a un choix explicite.
+    $choice = ""
+    while ($choice -notin @("1", "2", "q", "quit")) {
+        $choice = (Read-Host "  Choix [1/2/Q]").Trim().ToLowerInvariant()
+        if ($choice -eq "") {
+            Write-Host "  Tape 1, 2 ou Q." -ForegroundColor DarkGray
+        }
+    }
     if ($choice -in @("q", "quit")) {
         Write-Host ""
         Write-Host "  Installation annulee." -ForegroundColor DarkGray
