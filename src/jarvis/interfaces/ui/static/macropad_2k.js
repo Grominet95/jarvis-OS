@@ -1486,7 +1486,7 @@
             ],
           },
           {
-            label: "Jarvis",
+            label: window.JARVIS_ASSISTANT_NAME || "Jarvis",
             items: [
               { id: "_dashboard", label: "Dashboard" },
               { id: "_settings",  label: "Système" },

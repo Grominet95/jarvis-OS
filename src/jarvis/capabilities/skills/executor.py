@@ -14,6 +14,7 @@ from loguru import logger
 from jarvis.capabilities.skills.app_checker import check_all_apps
 from jarvis.capabilities.skills.base import PresetSkill, PresetStep
 from jarvis.kernel.notifications import broadcast_audio
+from jarvis.kernel.settings import settings
 
 
 class PresetExecutor:
@@ -195,7 +196,7 @@ class PresetExecutor:
         response = await self._llm.complete(
             messages=[{"role": "user", "content": step.prompt}],
             max_tokens=150,
-            system="Tu es Jarvis. Réponds de façon courte et naturelle, en français.",
+            system=f"Tu es {settings.assistant_name}. Réponds de façon courte et naturelle, en français.",
         )
 
         text = response.content if hasattr(response, "content") else str(response)

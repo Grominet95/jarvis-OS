@@ -101,7 +101,7 @@ _GESTURE_DIRECT_ACTIONS: dict[str, str] = {
 _GESTURE_LLM_COMMANDS: dict[str, str] = {
     "Thumb_Up": "Oui, confirme",
     "Thumb_Down": "Non, annule",
-    "Pointing_Up": "Hey Jarvis",
+    "Pointing_Up": "Hey {settings.assistant_name}",
 }
 
 _PRESENCE_MSGS: dict[bool, str] = {

@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jarvis</title>
+  <title id="page-title">Jarvis</title>
+  <script>document.getElementById('page-title').textContent = window.JARVIS_ASSISTANT_NAME || 'Jarvis';</script>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
@@ -1578,7 +1579,7 @@
   </button>
 
   <!-- Nav buttons — 5 boutons centrés, ordre : Jarvis · Pilotage · Globe · Intel · Système -->
-  <button id="jarvis-toggle" onclick="handleSphereClick()" title="Jarvis">
+  <button id="jarvis-toggle" onclick="handleSphereClick()" title="">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
       <circle cx="12" cy="12" r="9" />
       <circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none" />
@@ -1667,7 +1668,7 @@
             <li>Cloner le dépôt :<br><code>git clone https://github.com/Grominet95/dashboard_monde.git</code></li>
             <li>Installer les dépendances : <code>npm install</code></li>
             <li>Lancer le serveur : <code>npm run dev -- --port 3000</code></li>
-            <li>Revenir ici — Jarvis l'affichera automatiquement</li>
+            <li>Revenir ici — <span id="assistant-name-helper"></span> l'affichera automatiquement</li>
           </ol>
         </div>
       </div>
@@ -1939,7 +1940,7 @@
           <div class="conv-messages" id="chat"></div>
 
           <div class="conv-input-wrap">
-            <input class="conv-input" id="msg-input" placeholder="Parlez à Jarvis…" autocomplete="off">
+            <input class="conv-input" id="msg-input" placeholder="" autocomplete="off">
             <button class="conv-btn send" id="send-btn">›</button>
           </div>
         </div>
@@ -2607,7 +2608,7 @@
       const hd = document.createElement('div'); hd.className = 'conv-msg-hd';
       const from = document.createElement('span');
       from.className = 'conv-from ' + (role === 'jarvis' ? 'jarvis' : 'vous');
-      from.textContent = notif ? '🔔 RAPPEL' : (role === 'jarvis' ? 'JARVIS' : 'VOUS');
+      from.textContent = notif ? '🔔 RAPPEL' : (role === 'jarvis' ? (window.JARVIS_ASSISTANT_NAME || 'JARVIS') : 'VOUS');
       const time = document.createElement('span'); time.className = 'conv-msg-time'; time.textContent = fmtTime();
       hd.append(from, time);
       const body = document.createElement('div'); body.className = 'conv-msg-text' + (stream ? ' streaming' : '');
@@ -3135,7 +3136,7 @@
 
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new Spotify.Player({
-        name: 'JARVIS',
+        name: window.JARVIS_ASSISTANT_NAME || 'JARVIS',
         getOAuthToken: async cb => {
           const r = await fetch('/api/spotify/token');
           const { token } = await r.json();
@@ -3622,6 +3623,28 @@
         document.getElementById("kp-drawer").classList.remove("open");
         document.removeEventListener("keydown", _onEsc);
       };
+    })();
+    // Mise à jour dynamique de tous les éléments avec le nom de l'assistant
+    (function() {
+      var assistantName = window.JARVIS_ASSISTANT_NAME || 'Jarvis';
+      
+      // Title du bouton
+      var jarvisBtn = document.getElementById('jarvis-toggle');
+      if (jarvisBtn) {
+        jarvisBtn.title = assistantName;
+      }
+      
+      // Span dans les instructions
+      var helperSpan = document.getElementById('assistant-name-helper');
+      if (helperSpan) {
+        helperSpan.textContent = assistantName;
+      }
+      
+      // Placeholder de l'input
+      var msgInput = document.getElementById('msg-input');
+      if (msgInput) {
+        msgInput.placeholder = 'Parlez à ' + assistantName + '…';
+      }
     })();
   </script>
 </body>

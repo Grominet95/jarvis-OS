@@ -20,6 +20,7 @@ router = APIRouter()
 
 class SetupCompletePayload(BaseModel):
     user_firstname: str
+    assistant_name: str = "Jarvis"
     # « local » = Ollama (LLM_PROVIDER=local) ; les autres = backends API.
     api_backend: Literal["anthropic", "openai", "mistral", "gemini", "local"] = "anthropic"
     anthropic_api_key: str = ""
@@ -171,6 +172,7 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
 
     updates = {
         "USER_FIRSTNAME": body.user_firstname.strip(),
+        "ASSISTANT_NAME": body.assistant_name.strip(),
         "LLM_PROVIDER": llm_provider,
         "API_BACKEND": api_backend,
         "ANTHROPIC_API_KEY": anthropic_api_key,

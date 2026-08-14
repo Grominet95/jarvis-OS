@@ -31,6 +31,7 @@
 
   const form = {
     user_firstname: "",
+    assistant_name: window.JARVIS_ASSISTANT_NAME || "Jarvis",
     api_backend: "anthropic",
     anthropic_api_key: "",
     openai_api_key: "",
@@ -214,6 +215,7 @@
     const card = el("div", { class: "setup-card" });
     cardHeader(card, "Identité", "Ton prénom est affiché lors du scan biométrique et dans l'interface.");
     card.appendChild(field("Prénom", "user_firstname", { placeholder: "Maxime" }));
+    card.appendChild(field("Nom de l'assistant", "assistant_name", { placeholder: window.JARVIS_ASSISTANT_NAME || "Jarvis" }));
     card.appendChild(field("Ville", "proactive_city", { placeholder: "Lyon" }));
     card.appendChild(
       fileField("Photo de référence (optionnel)", ".jpg,.jpeg", async (file) => {

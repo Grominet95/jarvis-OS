@@ -41,6 +41,7 @@ _SENSITIVE_KEYS = {
 _RESTART_KEYS = {
     "USER_FIRSTNAME",
     "USER_PROFILE",
+    "ASSISTANT_NAME",
     "ANTHROPIC_API_KEY",
     "ELEVENLABS_API_KEY",
     "OPENAI_API_KEY",
@@ -86,6 +87,7 @@ _SETTINGS_FIELD_MAP: dict[str, str] = {
     "CALENDAR_REMINDER_MINUTES": "calendar_reminder_minutes",
     "USER_FIRSTNAME": "user_firstname",
     "USER_PROFILE": "user_profile",
+    "ASSISTANT_NAME": "assistant_name",
     "QUEBEC_MODE": "quebec_mode",
     "WAKEUP_ENABLED": "wakeup_enabled",
     "CLAP_DETECTION_ENABLED": "clap_detection_enabled",

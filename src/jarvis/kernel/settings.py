@@ -480,6 +480,11 @@ class Settings(BaseSettings):
         ),
     )
 
+    assistant_name: str = Field(
+        default="",
+        description="Nom donné à L'assistant (ASSISTANT_NAME dans .env).",
+    )
+
     @property
     def display_name(self) -> str:
         """Prénom à utiliser dans les prompts. Repli sur 'Barth' si non configuré."""

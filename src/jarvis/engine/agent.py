@@ -82,11 +82,15 @@ class Agent:
 
         static_system = _STATIC_PROMPT_PATH.read_text(encoding="utf-8")
         # Le prompt statique est rédigé avec "Barth" comme nom par défaut ; on le
-        # remplace par le prénom configuré (USER_FIRSTNAME) pour que Jarvis appelle
+        # remplace par le prénom configuré (USER_FIRSTNAME) pour que l'assistant appelle
         # réellement l'utilisateur par son nom. Repli sur "Barth" si non configuré.
         firstname = _s.display_name
         if firstname != "Barth":
             static_system = static_system.replace("Barth", firstname)
+        # Remplace "Jarvis" par le nom de l'assistant configuré (ASSISTANT_NAME)
+        assistant_name = _s.assistant_name or "Jarvis"
+        if assistant_name != "Jarvis":
+            static_system = static_system.replace("Jarvis", assistant_name)
         if _s.quebec_mode:
             static_system += (
                 "\n\n## Mode Québécois (ACTIF)\n"
@@ -95,7 +99,7 @@ class Agent:
                 " 'c'est le boutte', 'en masse', 'pantoute', 'tantôt', 'maudit', 'icitte',"
                 " 'chu' (je suis), 'ben' (bien), 'toé', 'moé', 'faque', 't'sé',"
                 " 'un char' (voiture), 'magasiner' (shopping). "
-                "Garde la personnalité Jarvis (direct, efficace, ironie)"
+                f"Garde la personnalité {assistant_name} (direct, efficace, ironie)"
                 " avec la couleur québécoise."
             )
         dynamic_parts: list[str] = ["=== CONTEXTE DYNAMIQUE ==="]

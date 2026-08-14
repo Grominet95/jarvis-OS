@@ -432,7 +432,7 @@ async function showScanResult(result) {
     if (result.recognized) {
         icon.textContent = '✓';
         text.textContent = 'IDENTITÉ CONFIRMÉE';
-        name.textContent = (_userFirstname || result.name || 'JARVIS').toUpperCase();
+        name.textContent = (_userFirstname || result.name || (window.JARVIS_ASSISTANT_NAME || 'JARVIS')).toUpperCase();
         scanResult.className = 'success';
         _flashScreen('#36D399', 0.12);
         playValidationSound();

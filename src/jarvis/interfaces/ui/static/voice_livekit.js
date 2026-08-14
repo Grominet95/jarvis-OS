@@ -57,7 +57,7 @@ class JarvisLiveKitClient {
 
     this._room.on(RoomEvent.Connected, () => {
       this._setState("listening");
-      showVoiceStatus("Jarvis en ligne");
+      showVoiceStatus((window.JARVIS_ASSISTANT_NAME || "Jarvis") + " en ligne");
       setTimeout(() => showVoiceStatus(""), 2000);
     });
 
@@ -108,7 +108,7 @@ class JarvisLiveKitClient {
         const data = JSON.parse(metadata || "{}");
         if (data.state === "thinking") {
           this._setSphereState("THINKING");
-          showVoiceStatus("Jarvis réfléchit...");
+          showVoiceStatus((window.JARVIS_ASSISTANT_NAME || "Jarvis") + " réfléchit...");
         }
       } catch (_) {}
     });
