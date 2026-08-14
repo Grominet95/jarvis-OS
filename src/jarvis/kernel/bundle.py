@@ -325,7 +325,9 @@ def prerequisites_status() -> dict[str, Any]:
     yolo_bundle = _bundle_model_path(manifest, "yolo", "models/yolov8n.pt")
     piper_bundle = _bundle_model_path(manifest, "piper_onnx", "models/piper/fr_FR-upmc-medium.onnx")
     yolo_detail = _asset_status(label="yolo", project_path=YOLO_PROJECT, bundle_path=yolo_bundle)
-    piper_detail = _asset_status(label="piper", project_path=PIPER_PROJECT, bundle_path=piper_bundle)
+    piper_detail = _asset_status(
+        label="piper", project_path=PIPER_PROJECT, bundle_path=piper_bundle
+    )
 
     livekit = resolve_livekit_binary()
     livekit_project = PROJECT_ROOT / "bin" / _platform_bin_name("livekit-server")

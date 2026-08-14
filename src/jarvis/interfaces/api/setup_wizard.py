@@ -192,7 +192,9 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
             livekit_api_secret = "devsecretdevsecretdevsecretdevsecret"
 
     elevenlabs_api_key = _secret(body.elevenlabs_api_key, "ELEVENLABS_API_KEY")
-    elevenlabs_voice_id = body.elevenlabs_voice_id.strip() or existing.get("ELEVENLABS_VOICE_ID", "").strip()
+    elevenlabs_voice_id = (
+        body.elevenlabs_voice_id.strip() or existing.get("ELEVENLABS_VOICE_ID", "").strip()
+    )
     if body.tts_provider == "elevenlabs":
         if not elevenlabs_api_key:
             raise HTTPException(400, "Cle ElevenLabs requise.")

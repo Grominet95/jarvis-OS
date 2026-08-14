@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import tempfile
 import threading
 import time
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import httpx
@@ -28,6 +29,11 @@ BUNDLE_RELEASE_VERSION = "v0.3.2"
 BUNDLE_CDN_ROOT = f"https://techalchemy.fr/jarvis-bundle-windows-{BUNDLE_RELEASE_VERSION}"
 BUNDLE_ZIP_URL = f"{BUNDLE_CDN_ROOT}/bundle.zip"
 BUNDLE_ZIP_BYTES = 657_929_168
+# Empreinte SHA-256 de bundle.zip. Vide = non verifiee, seule la taille l'est —
+# or une taille identique ne prouve rien sur le contenu, et l'archive contient un
+# venv Python et des binaires qui seront EXECUTES. Publier bundle.zip.sha256 a
+# cote de l'archive et coller la valeur ici suffit a activer la verification.
+BUNDLE_ZIP_SHA256 = ""
 
 _lock = threading.Lock()
 _state: dict[str, Any] = {
@@ -73,7 +79,7 @@ def get_download_status() -> dict[str, Any]:
     return status
 
 
-def _set_state(**kwargs: Any) -> None:
+def _set_state(**kwargs: object) -> None:
     with _lock:
         _state.update(kwargs)
 
@@ -102,13 +108,40 @@ def start_bundle_download() -> dict[str, Any]:
 
 
 def _zip_member_dest(name: str) -> str | None:
+    """Chemin relatif sûr d'un membre d'archive, ou None si le membre est à ignorer.
+
+    Rejette tout ce qui sortirait de BUNDLE_DIR. Sans ce filtre, un membre nommé
+    `bundle/../../evil` ou `/etc/cron.d/evil` s'écrirait hors du dossier bundle :
+    `BUNDLE_DIR / rel` avec un `rel` absolu renvoie `rel` tel quel (sémantique
+    pathlib), et un `..` remonte l'arborescence. `zipfile.extractall()` assainit
+    de lui-même, mais on écrit membre par membre pour suivre la progression —
+    donc l'assainissement est à notre charge.
+    """
     normalized = name.replace("\\", "/")
     if not normalized or normalized.endswith("/"):
         return None
     if normalized.startswith("bundle/"):
-        rel = normalized[len("bundle/") :]
-        return rel or None
+        normalized = normalized[len("bundle/") :]
+    if not normalized:
+        return None
+
+    candidate = PurePosixPath(normalized)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        return None
+    # Lettre de lecteur Windows ("C:/…", "C:evil") : absolue une fois sur cible.
+    first = candidate.parts[0] if candidate.parts else ""
+    if len(first) >= 2 and first[1] == ":":
+        return None
     return normalized
+
+
+def _safe_dest(rel: str) -> Path:
+    """Résout `rel` sous BUNDLE_DIR en refusant toute évasion résiduelle (liens…)."""
+    root = BUNDLE_DIR.resolve()
+    dest = (root / rel).resolve()
+    if dest != root and root not in dest.parents:
+        raise RuntimeError(f"Archive member escapes bundle directory: {rel!r}")
+    return dest
 
 
 def _extract_zip_to_bundle(zf: zipfile.ZipFile, phase_started: float) -> None:
@@ -125,7 +158,7 @@ def _extract_zip_to_bundle(zf: zipfile.ZipFile, phase_started: float) -> None:
         rel = _zip_member_dest(member.filename)
         if not rel:
             continue
-        dest = BUNDLE_DIR / rel
+        dest = _safe_dest(rel)
         dest.parent.mkdir(parents=True, exist_ok=True)
         with zf.open(member) as src, dest.open("wb") as out:
             shutil.copyfileobj(src, out)
@@ -143,6 +176,28 @@ def _extract_zip_to_bundle(zf: zipfile.ZipFile, phase_started: float) -> None:
 
     if not (BUNDLE_DIR / "manifest.json").is_file():
         raise RuntimeError("Invalid archive: manifest.json missing after extraction")
+
+
+def _verify_archive(zip_path: Path) -> None:
+    """Contrôle l'archive avant extraction : taille, puis empreinte si publiée."""
+    size = zip_path.stat().st_size
+    if size != BUNDLE_ZIP_BYTES:
+        raise RuntimeError(
+            f"Invalid bundle.zip size: expected {BUNDLE_ZIP_BYTES}, got {size}. "
+            "Téléchargement incomplet, ou archive du CDN désynchronisée de "
+            f"BUNDLE_RELEASE_VERSION ({BUNDLE_RELEASE_VERSION})."
+        )
+    if not BUNDLE_ZIP_SHA256:
+        return
+    digest = hashlib.sha256()
+    with zip_path.open("rb") as fh:
+        for block in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(block)
+    actual = digest.hexdigest()
+    if actual != BUNDLE_ZIP_SHA256.lower():
+        raise RuntimeError(
+            f"bundle.zip SHA-256 mismatch: expected {BUNDLE_ZIP_SHA256.lower()}, got {actual}"
+        )
 
 
 def _rehome_bundle_windows() -> None:
@@ -199,10 +254,7 @@ def _run_download() -> None:
                         message=f"{mb_done:.0f} / {mb_total:.0f} Mo",
                     )
 
-        if zip_path.stat().st_size != BUNDLE_ZIP_BYTES:
-            raise RuntimeError(
-                f"Invalid bundle.zip size: expected {BUNDLE_ZIP_BYTES}, got {zip_path.stat().st_size}"
-            )
+        _verify_archive(zip_path)
 
         extract_started = time.monotonic()
         _set_state(
@@ -215,7 +267,6 @@ def _run_download() -> None:
         with zipfile.ZipFile(zip_path, "r") as zf:
             _extract_zip_to_bundle(zf, extract_started)
 
-        rehome_started = time.monotonic()
         _set_state(
             phase="rehome",
             percent=93,
@@ -225,7 +276,6 @@ def _run_download() -> None:
         )
         _rehome_bundle_windows()
 
-        stage_started = time.monotonic()
         _set_state(
             phase="stage",
             percent=97,
@@ -234,7 +284,6 @@ def _run_download() -> None:
             eta_seconds=5,
         )
         stage_models_from_bundle()
-        _ = stage_started
 
         _set_state(
             running=False,

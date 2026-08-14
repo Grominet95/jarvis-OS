@@ -29,10 +29,21 @@ def test_zip_member_dest_strips_bundle_prefix() -> None:
 
 
 def test_start_bundle_download_when_already_present() -> None:
-    with patch("jarvis.kernel.bundle_download.bundle_available", return_value=True):
+    # sys.platform est teste AVANT bundle_available() : sans ce patch, le test ne
+    # passe que sous Windows et la CI (ubuntu) recoit "windows_only".
+    with (
+        patch("jarvis.kernel.bundle_download.sys.platform", "win32"),
+        patch("jarvis.kernel.bundle_download.bundle_available", return_value=True),
+    ):
         resp = start_bundle_download()
     assert resp["started"] is False
     assert resp["reason"] == "already_present"
+
+
+def test_start_bundle_download_refuse_hors_windows() -> None:
+    with patch("jarvis.kernel.bundle_download.sys.platform", "linux"):
+        resp = start_bundle_download()
+    assert resp == {"started": False, "reason": "windows_only"}
 
 
 def test_get_download_status_idle_by_default() -> None:
@@ -71,8 +82,13 @@ def test_get_download_status_returns_done_once() -> None:
             "eta_seconds": None,
         },
     ):
-        with patch("jarvis.kernel.bundle_download.bundle_available", return_value=True):
-            with patch("jarvis.kernel.bundle_download.prerequisites_status", return_value={"can_continue": True}):
-                st = get_download_status()
+        with (
+            patch("jarvis.kernel.bundle_download.bundle_available", return_value=True),
+            patch(
+                "jarvis.kernel.bundle_download.prerequisites_status",
+                return_value={"can_continue": True},
+            ),
+        ):
+            st = get_download_status()
     assert st["phase"] == "done"
     assert st["prerequisites"]["can_continue"] is True
