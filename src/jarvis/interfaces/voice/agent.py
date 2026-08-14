@@ -32,15 +32,16 @@ from livekit.agents import (
 )
 from livekit.agents.voice.room_io import AudioInputOptions, RoomOptions
 from livekit.plugins import anthropic as lk_anthropic
-from livekit.plugins import deepgram, elevenlabs, openai as lk_openai, silero
+from livekit.plugins import deepgram, elevenlabs, silero
 from livekit.plugins import google as lk_google
+from livekit.plugins import openai as lk_openai
 from livekit.plugins.google.beta import gemini_tts
 
 from jarvis.bootstrap import build
 from jarvis.capabilities.skills.registry import SkillRegistry
 from jarvis.kernel.paths import PROJECT_ROOT  # noqa: E402
-from jarvis.providers.audio.elevenlabs_voices import resolve_voice_id
 from jarvis.kernel.settings import settings
+from jarvis.providers.audio.elevenlabs_voices import resolve_voice_id
 
 load_dotenv(PROJECT_ROOT / ".env")
 

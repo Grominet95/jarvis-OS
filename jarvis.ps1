@@ -224,7 +224,13 @@ function Stop-JarvisRuntime {
         $kill = $false
         if ($_.Name -eq "python.exe") {
             if ($cmd -match "jarvis\.(app|setup_app|interfaces\.voice\.agent|kernel\.preflight)") { $kill = $true }
-            elseif ($cmd -match $rootPattern) { $kill = $true }
+            # Repli : un python du projet lance autrement (main.py, voice_agent.py,
+            # interpreteur du bundle). On exige un point d'entree reconnaissable EN PLUS
+            # du chemin projet — sinon la regle tue n'importe quel python dont la ligne
+            # de commande mentionne le dossier, dont un `pytest` ou un debogueur d'IDE
+            # en cours dans le depot.
+            elseif ($cmd -match $rootPattern -and
+                    $cmd -match "(-m\s+jarvis\b|main\.py|voice_agent\.py|bundle\\\.venv)") { $kill = $true }
         }
         if ($_.Name -eq "cmd.exe" -and $cmd -match "Temp\\jarvis") { $kill = $true }
         if ($kill) {
@@ -400,8 +406,12 @@ function Invoke-JarvisRun {
 
 Assert-JarvisNotOnOneDrive
 
+# Restart complet uniquement : `run`/`start` relancent toute la pile, `setup` a
+# besoin du port 8765. `api`, `voice` et `livekit` sont documentees comme
+# composables (un composant par terminal, cf. l'aide plus bas) — les inclure ici
+# ferait que `.\jarvis.ps1 voice` tue l'API et LiveKit lances juste avant.
 switch ($Command.ToLowerInvariant()) {
-    { $_ -in @("eclosion", "setup", "run", "start", "api", "voice", "livekit") } {
+    { $_ -in @("eclosion", "setup", "run", "start") } {
         Stop-JarvisRuntime
     }
 }
