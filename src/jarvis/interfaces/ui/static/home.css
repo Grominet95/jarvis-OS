@@ -85,6 +85,29 @@
   50%      { background: rgba(74, 158, 255, 0.20); box-shadow: 0 0 10px -2px rgba(74,158,255,0.45); }
 }
 
+#voice-status {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 54px;
+  font: 400 9px/1 "Geist Mono", monospace;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(74, 158, 255, 0.55);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 20;
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#voice-status.visible {
+  opacity: 1;
+}
+
 /* ── Poignees de redimensionnement ── */
 .hcw-resize-handle {
   position: absolute;

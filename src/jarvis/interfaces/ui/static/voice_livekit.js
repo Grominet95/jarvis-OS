@@ -1,6 +1,5 @@
 "use strict";
 
-// ── Label voice-status ────────────────────────────────────────────────────────
 function showVoiceStatus(text, duration = 0) {
   const el = document.getElementById("voice-status");
   if (!el) return;
@@ -13,44 +12,67 @@ function showVoiceStatus(text, duration = 0) {
   }
 }
 
-// ── JarvisLiveKitClient ───────────────────────────────────────────────────────
+function bindMicButton(client) {
+  const homeBtn = document.getElementById("hc-mic");
+  const legacyBtn = document.getElementById("perm-microphone");
+  client._btn = homeBtn || legacyBtn || client._btn;
+}
+
 class JarvisLiveKitClient {
   constructor() {
-    this._room       = null;
-    this._connected  = false;
+    this._room = null;
+    this._connected = false;
     this._isSpeaking = false;
     this._agentBubble = null;
-    this._btn        = document.getElementById("perm-microphone");
+    this._btn = document.getElementById("perm-microphone") || document.getElementById("hc-mic");
+    this._onActiveChange = null;
 
-    // Interface window.jarvis (identique à l'ancien voice.js)
     window.jarvis = {
       get isSpeaking() { return window._voiceClient?._isSpeaking ?? false; },
-      stopAudio: () => {},        // LiveKit gère l'audio nativement
-      setState:  (s) => window._voiceClient?._setSphereState(s),
+      stopAudio: () => {},
+      setState: (s) => window._voiceClient?._setSphereState(s),
       appendJarvisMessage: (text) => window._voiceClient?._appendAgentText(text),
-      appendUserMessage:   (text) => { if (text) addMsg("vous", text); },
+      appendUserMessage: (text) => { if (text) addMsg("vous", text); },
     };
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
-
-  async _start() {
-    // Partager la session texte courante avec l'agent vocal
+  async _fetchToken() {
     const sessionId = typeof window._jarvisSessionId === "function" ? window._jarvisSessionId() : null;
     const tokenUrl = sessionId
       ? `/api/voice/token?session_id=${encodeURIComponent(sessionId)}`
       : "/api/voice/token";
-
-    let tokenData;
-    try {
-      tokenData = await fetch(tokenUrl, { headers: window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {} }).then((r) => r.json());
-    } catch (e) {
-      console.error("[LiveKit] Impossible de récupérer le token:", e);
-      throw e;
+    const headers = window.Jarvis && Jarvis.authHeaders ? Jarvis.authHeaders() : {};
+    const resp = await fetch(tokenUrl, { headers });
+    if (!resp.ok) {
+      let msg = "Mode vocal indisponible — vérifie que LiveKit et l'agent vocal tournent (jarvis.ps1 run).";
+      try {
+        const data = await resp.json();
+        if (typeof data.detail === "string") msg = data.detail;
+      } catch (_) {}
+      throw new Error(msg);
     }
-    const { token, url } = tokenData;
-    console.log("[LiveKit] Token OK, connexion à", url);
+    const data = await resp.json();
+    if (!data.token || !data.url) {
+      throw new Error("Réponse token invalide — LiveKit est-il démarré ?");
+    }
+    return data;
+  }
 
+  _micCaptureOptions() {
+    const deviceId = window.JarvisMic && JarvisMic.getSelectedDeviceId();
+    return deviceId ? { deviceId } : undefined;
+  }
+
+  async _start() {
+    if (this._connected) return;
+    if (typeof LivekitClient === "undefined") {
+      throw new Error("Client LiveKit non chargé — vérifie ta connexion réseau.");
+    }
+
+    bindMicButton(this);
+    showVoiceStatus("Connexion…");
+
+    const { token, url } = await this._fetchToken();
     const { Room, RoomEvent, Track } = LivekitClient;
 
     this._room = new Room({ adaptiveStream: true, reconnectPolicy: { maxRetries: 5 } });
@@ -59,6 +81,7 @@ class JarvisLiveKitClient {
       this._setState("listening");
       showVoiceStatus((window.JARVIS_ASSISTANT_NAME || "Jarvis") + " en ligne");
       setTimeout(() => showVoiceStatus(""), 2000);
+      if (this._onActiveChange) this._onActiveChange(true);
     });
 
     this._room.on(RoomEvent.Disconnected, () => {
@@ -66,15 +89,16 @@ class JarvisLiveKitClient {
       this._isSpeaking = false;
       this._setSphereState("IDLE");
       showVoiceStatus("");
+      if (this._connected && this._onActiveChange) this._onActiveChange(false);
+      this._connected = false;
     });
 
-    // Audio de l'agent → attacher à un <audio> invisible
-    this._room.on(RoomEvent.TrackSubscribed, (track, _pub, _participant) => {
+    this._room.on(RoomEvent.TrackSubscribed, (track) => {
       if (track.kind === Track.Kind.Audio) {
-        const el = track.attach();
-        el.dataset.livekit = "1";
-        el.autoplay = true;
-        document.body.appendChild(el);
+        const audioEl = track.attach();
+        audioEl.dataset.livekit = "1";
+        audioEl.autoplay = true;
+        document.body.appendChild(audioEl);
       }
     });
 
@@ -82,10 +106,9 @@ class JarvisLiveKitClient {
       track.detach().forEach((el) => el.remove());
     });
 
-    // États sphère via activité des speakers
     this._room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
       const agentSpeaking = speakers.some((s) => s.isAgent);
-      const userSpeaking  = speakers.some((s) => !s.isAgent);
+      const userSpeaking = speakers.some((s) => !s.isAgent);
 
       if (userSpeaking) {
         this._setSphereState("LISTENING");
@@ -101,7 +124,6 @@ class JarvisLiveKitClient {
       }
     });
 
-    // État THINKING via metadata de l'agent
     this._room.on(RoomEvent.ParticipantMetadataChanged, (metadata, participant) => {
       if (!participant?.isAgent) return;
       try {
@@ -113,42 +135,40 @@ class JarvisLiveKitClient {
       } catch (_) {}
     });
 
-    // Transcriptions
     this._room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
       for (const seg of segments) {
         if (!seg.final) continue;
         if (participant?.isAgent) {
           this._appendAgentText(seg.text);
-        } else {
-          if (seg.text.trim()) addMsg("vous", seg.text);
+        } else if (seg.text.trim()) {
+          addMsg("vous", seg.text);
         }
       }
     });
 
-    console.log("[LiveKit] Connexion à la room...");
     await this._room.connect(url, token, { audio: false, video: false });
-    console.log("[LiveKit] Room connectée, activation du micro...");
 
-    // Publier le micro local explicitement
     try {
-      await this._room.localParticipant.setMicrophoneEnabled(true);
-      console.log("[LiveKit] Micro activé.");
+      await this._room.localParticipant.setMicrophoneEnabled(true, this._micCaptureOptions());
     } catch (e) {
-      console.error("[LiveKit] Erreur activation micro:", e);
-      // On continue — la room est connectée, Jarvis peut quand même parler
+      await this._room.disconnect();
+      this._room = null;
+      showVoiceStatus("");
+      throw new Error(
+        "Micro inaccessible — autorise le micro dans le navigateur et vérifie le périphérique dans Réglages → Audio & voix.",
+      );
     }
 
     this._connected = true;
   }
 
   _stop() {
-    this._room?.disconnect();
-    this._room      = null;
+    if (this._room) this._room.disconnect();
+    this._room = null;
     this._connected = false;
     this._isSpeaking = false;
     this._agentBubble = null;
 
-    // Supprimer les éléments audio LiveKit
     document.querySelectorAll("audio[data-livekit]").forEach((el) => el.remove());
 
     this._setState("idle");
@@ -157,9 +177,8 @@ class JarvisLiveKitClient {
 
     if (window._perms) window._perms.microphone = false;
     document.getElementById("perm-microphone")?.classList.remove("active");
+    if (this._onActiveChange) this._onActiveChange(false);
   }
-
-  // ── Texte agent (streaming ou bloc) ──────────────────────────────────────
 
   _appendAgentText(text) {
     if (!text?.trim()) return;
@@ -169,7 +188,6 @@ class JarvisLiveKitClient {
     this._agentBubble.textContent += text + " ";
     const chat = document.getElementById("chat");
     if (chat) chat.scrollTop = chat.scrollHeight;
-    // Finaliser la bulle si le texte se termine par une ponctuation de fin
     if (/[.!?]$/.test(text.trim())) {
       this._agentBubble?.classList.remove("streaming");
       if (typeof checkForMindmap === "function") checkForMindmap(this._agentBubble);
@@ -177,30 +195,32 @@ class JarvisLiveKitClient {
     }
   }
 
-  // ── État sphère ───────────────────────────────────────────────────────────
-
   _setSphereState(state) {
     if (typeof sphereState !== "undefined") sphereState = state;
-    // Pont vers l'orbe de la home (home.js expose __jarvisSetOrbState).
-    // États LiveKit en MAJ (LISTENING/SPEAKING/THINKING/IDLE) -> minuscules.
     if (typeof window.__jarvisSetOrbState === "function") {
       window.__jarvisSetOrbState(String(state).toLowerCase());
     }
   }
 
-  // ── État bouton micro ─────────────────────────────────────────────────────
-
   _setState(state) {
+    bindMicButton(this);
     if (!this._btn) return;
     this._btn.dataset.state = state;
     this._btn.classList.toggle("active", state !== "idle" && state !== "error");
   }
 
-  stopAudio() {
-    // LiveKit gère l'interruption nativement via barge-in
-  }
+  stopAudio() {}
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  window._voiceClient = new JarvisLiveKitClient();
-});
+function initVoiceClient() {
+  if (!window._voiceClient) {
+    window._voiceClient = new JarvisLiveKitClient();
+  }
+  bindMicButton(window._voiceClient);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initVoiceClient);
+} else {
+  initVoiceClient();
+}

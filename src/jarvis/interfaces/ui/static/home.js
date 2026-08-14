@@ -149,24 +149,42 @@
     }
   }
 
+  function showVoiceChrome(active) {
+    const dot = document.getElementById("status-dot");
+    const lbl = document.getElementById("status-label");
+    if (dot) dot.style.display = active ? "" : "none";
+    if (lbl) lbl.style.display = active ? "" : "none";
+  }
+
   async function toggleCtrl(key) {
     const next = !_ctrlState[key];
 
     if (key === "mic") {
-      _ctrlState.mic = next;
       const vc = window._voiceClient;
-      if (!vc) return;
+      if (!vc) {
+        J.notify({ kind: "err", text: "Mode vocal non initialisé — recharge la page." });
+        return;
+      }
       if (next) {
+        setCtrl("mic", true);
+        showVoiceChrome(true);
         try {
           await vc._start();
+          setCtrl("chat", true);
+          loadChatWidget();
         } catch (err) {
           console.error("[Mic] Erreur demarrage :", err);
-          _ctrlState.mic = false;
+          vc._stop();
+          setCtrl("mic", false);
+          showVoiceChrome(false);
           setOrbState("offline");
+          J.notify({ kind: "err", text: err.message || "Mode vocal indisponible" });
           setTimeout(() => setOrbState("idle"), 2000);
         }
       } else {
         vc._stop();
+        setCtrl("mic", false);
+        showVoiceChrome(false);
         setOrbState("idle");
       }
       return;
@@ -230,13 +248,18 @@
     if (btn) btn.addEventListener("click", () => toggleCtrl(c.key));
   });
 
-  // Lier le bouton mic au VoiceClient après DOMContentLoaded
-  document.addEventListener("DOMContentLoaded", () => {
+  function wireVoiceClient() {
     const vc = window._voiceClient;
-    if (vc) {
-      vc._btn = document.getElementById("hc-mic");
-    }
-  }, { once: true });
+    if (!vc) return;
+    vc._onActiveChange = (active) => {
+      setCtrl("mic", active);
+      showVoiceChrome(active);
+      if (!active) setOrbState("idle");
+    };
+  }
+
+  wireVoiceClient();
+  document.addEventListener("DOMContentLoaded", wireVoiceClient, { once: true });
 
   // ── Caméra (MediaPipe) ─────────────────────────────────────────────
   let _camStream = null;

@@ -180,6 +180,8 @@
   </div>
 </div>
 
+<div id="voice-status"></div>
+
 <!-- View layer — vues plein-écran enregistrées via Jarvis.views -->
 <div id="globe-container"></div>
 
@@ -230,6 +232,7 @@
 }());
 </script>
 <!-- Voix : pipeline temps réel LiveKit (remplace l'ancien voice.js in-house). -->
+<script src="/mic_devices.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 <script src="/voice_livekit.js"></script>
 <script src="/mediapipe_vision.js"></script>

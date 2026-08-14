@@ -31,13 +31,15 @@ from livekit.agents import (
     llm as lk_llm,
 )
 from livekit.agents.voice.room_io import AudioInputOptions, RoomOptions
-from livekit.plugins import deepgram, elevenlabs, silero
+from livekit.plugins import anthropic as lk_anthropic
+from livekit.plugins import deepgram, elevenlabs, openai as lk_openai, silero
 from livekit.plugins import google as lk_google
 from livekit.plugins.google.beta import gemini_tts
 
 from jarvis.bootstrap import build
 from jarvis.capabilities.skills.registry import SkillRegistry
 from jarvis.kernel.paths import PROJECT_ROOT  # noqa: E402
+from jarvis.providers.audio.elevenlabs_voices import resolve_voice_id
 from jarvis.kernel.settings import settings
 
 load_dotenv(PROJECT_ROOT / ".env")
@@ -330,8 +332,6 @@ def _build_voice_stt(env: dict) -> object:
     provider = env.get("STT_PROVIDER", "deepgram").strip().lower()
     try:
         if provider == "openai":
-            from livekit.plugins import openai as lk_openai
-
             stt = lk_openai.STT(
                 model="gpt-4o-mini-transcribe",
                 language="fr",
@@ -370,12 +370,14 @@ def _build_voice_stt(env: dict) -> object:
 def _build_voice_elevenlabs(env: dict) -> object:
     """TTS ElevenLabs — repli fiable (quota large, faible latence avec flash)."""
     quebec = env.get("QUEBEC_MODE", "false").strip().lower() in ("true", "1", "yes")
-    voice_id = env.get("QUEBEC_VOICE_ID") if quebec else env.get("ELEVENLABS_VOICE_ID", "")
+    api_key = env.get("ELEVENLABS_API_KEY", os.getenv("ELEVENLABS_API_KEY", ""))
+    raw_voice_id = env.get("QUEBEC_VOICE_ID") if quebec else env.get("ELEVENLABS_VOICE_ID", "")
+    voice_id = resolve_voice_id(api_key, raw_voice_id or "")
     model = "eleven_multilingual_v2" if quebec else env.get("ELEVENLABS_MODEL", "eleven_turbo_v2_5")
     return elevenlabs.TTS(
         model=model,
         voice_id=voice_id,
-        api_key=env.get("ELEVENLABS_API_KEY", os.getenv("ELEVENLABS_API_KEY", "")),
+        api_key=api_key,
         encoding="pcm_24000",
         chunk_length_schedule=[50, 90, 160, 250],
     )
@@ -434,15 +436,11 @@ def _build_voice_llm(env: dict) -> object:
 
     try:
         if backend == "openai":
-            from livekit.plugins import openai as lk_openai
-
             model = env.get("VOICE_LLM_MODEL") or env.get("OPENAI_MODEL") or "gpt-4o-mini"
             logger.info("Voice LLM — OpenAI %s", model)
             return lk_openai.LLM(model=model, temperature=0.7)
 
         if backend == "mistral":
-            from livekit.plugins import openai as lk_openai
-
             model = env.get("VOICE_LLM_MODEL") or env.get("MISTRAL_MODEL") or "mistral-large-latest"
             logger.info("Voice LLM — Mistral %s", model)
             return lk_openai.LLM(
@@ -453,8 +451,6 @@ def _build_voice_llm(env: dict) -> object:
             )
 
         if backend == "anthropic":
-            from livekit.plugins import anthropic as lk_anthropic
-
             model = (
                 env.get("VOICE_LLM_MODEL")
                 or env.get("VOICE_ANTHROPIC_MODEL")

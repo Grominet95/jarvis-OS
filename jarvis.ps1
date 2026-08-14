@@ -207,33 +207,83 @@ function Start-BackgroundProcess {
         -PassThru
 }
 
+function Stop-JarvisRuntime {
+    param(
+        [int[]]$ExtraPorts = @()
+    )
+    Stop-Process -Name "livekit-server" -Force -ErrorAction SilentlyContinue
+
+    $apiPort = [int](Get-DotEnvValue -Key "PORT" -Default "8000")
+    $ports = @(7880, 7881, 8765, $apiPort) + $ExtraPorts
+    Stop-PortListeners -Ports ($ports | Select-Object -Unique)
+
+    $rootPattern = [regex]::Escape($PSScriptRoot)
+    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | ForEach-Object {
+        $cmd = $_.CommandLine
+        if (-not $cmd) { return }
+        $kill = $false
+        if ($_.Name -eq "python.exe") {
+            if ($cmd -match "jarvis\.(app|setup_app|interfaces\.voice\.agent|kernel\.preflight)") { $kill = $true }
+            elseif ($cmd -match $rootPattern) { $kill = $true }
+        }
+        if ($_.Name -eq "cmd.exe" -and $cmd -match "Temp\\jarvis") { $kill = $true }
+        if ($kill) {
+            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Clear-JarvisStaleLogDirs {
+    Get-ChildItem -Path $env:TEMP -Directory -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match "^jarvis(\.stale\.|[-_])" } |
+        Where-Object { $_.LastWriteTime -lt (Get-Date).AddHours(-6) } |
+        ForEach-Object { Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+}
+
+function Initialize-JarvisLogDir {
+    Stop-JarvisRuntime
+    Clear-JarvisStaleLogDirs
+    Start-Sleep -Milliseconds 400
+
+    $preferred = Join-Path $env:TEMP "jarvis"
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        try {
+            if (Test-Path $preferred) {
+                Remove-Item $preferred -Recurse -Force -ErrorAction Stop
+            }
+            New-Item -ItemType Directory -Path $preferred -Force | Out-Null
+            return $preferred
+        } catch {
+            try {
+                if (Test-Path $preferred) {
+                    $stale = Join-Path $env:TEMP ("jarvis.stale." + [DateTimeOffset]::UtcNow.ToUnixTimeSeconds())
+                    Move-Item $preferred $stale -Force -ErrorAction Stop
+                }
+                New-Item -ItemType Directory -Path $preferred -Force | Out-Null
+                return $preferred
+            } catch {
+                Stop-JarvisRuntime
+                Start-Sleep -Milliseconds 400
+            }
+        }
+    }
+
+    $fallback = Join-Path $env:TEMP ("jarvis-" + $PID)
+    New-Item -ItemType Directory -Path $fallback -Force | Out-Null
+    return $fallback
+}
+
 function Invoke-JarvisRun {
     $apiPort = [int](Get-DotEnvValue -Key "PORT" -Default "8000")
-    $logDir = Join-Path $env:TEMP "jarvis"
-    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-    $lkLog = Join-Path $logDir "livekit.log"
-    $apiLog = Join-Path $logDir "api.log"
-    $voiceLog = Join-Path $logDir "voice.log"
     Write-Host ""
     Write-Host "  J A R V I S" -ForegroundColor Cyan
     Write-Host "  activation systeme" -ForegroundColor DarkGray
     Write-Host ""
 
-    # Tuer les process residuels AVANT de toucher aux logs : un livekit-server
-    # (ou un python jarvis) encore vivant d'un run precedent garde son .log
-    # ouvert, et "" | Set-Content echouerait avec "le fichier est en cours
-    # d'utilisation par un autre processus".
-    Stop-Process -Name "livekit-server" -Force -ErrorAction SilentlyContinue
-    Get-CimInstance Win32_Process -Filter "Name = 'python.exe'" -ErrorAction SilentlyContinue |
-        Where-Object { $_.CommandLine -match "jarvis\.(app|interfaces\.voice\.agent)" } |
-        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-    Stop-PortListeners -Ports @(7880, 7881, $apiPort)
-    Start-Sleep -Milliseconds 300
-
-    # Logs (re)initialises une fois les locks liberes ; -ErrorAction par securite.
-    foreach ($log in @($lkLog, $apiLog, $voiceLog)) {
-        "" | Set-Content $log -ErrorAction SilentlyContinue
-    }
+    $logDir = Initialize-JarvisLogDir
+    $lkLog = Join-Path $logDir "livekit.log"
+    $apiLog = Join-Path $logDir "api.log"
+    $voiceLog = Join-Path $logDir "voice.log"
 
     $procs = @()
 
@@ -343,12 +393,18 @@ function Invoke-JarvisRun {
         foreach ($p in $procs) {
             Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
         }
-        Stop-Process -Name "livekit-server" -Force -ErrorAction SilentlyContinue
+        Stop-JarvisRuntime
         Write-Host "  Jarvis arrete" -ForegroundColor DarkGray
     }
 }
 
 Assert-JarvisNotOnOneDrive
+
+switch ($Command.ToLowerInvariant()) {
+    { $_ -in @("eclosion", "setup", "run", "start", "api", "voice", "livekit") } {
+        Stop-JarvisRuntime
+    }
+}
 
 if ($Command.Trim() -ne "") {
     Ensure-Bundle
