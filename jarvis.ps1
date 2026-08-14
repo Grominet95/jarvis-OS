@@ -16,39 +16,7 @@ $BundleReleaseUrl = "https://github.com/Grominet95/jarvis-OS/releases/download/$
 $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
 
-function Test-JarvisOneDrivePath {
-    $root = [System.IO.Path]::GetFullPath($PSScriptRoot)
-    $bases = @(
-        $env:OneDrive,
-        $env:OneDriveCommercial,
-        $env:OneDriveConsumer
-    ) | Where-Object { $_ -and $_.Trim() -ne "" }
-    foreach ($base in $bases) {
-        $normalized = [System.IO.Path]::GetFullPath($base.TrimEnd('\')).TrimEnd('\')
-        # Comparer sur une frontiere de separateur, sinon "C:\OneDriveBackup"
-        # matcherait la base "C:\OneDrive" et bloquerait une install locale saine.
-        if ($root.Equals($normalized, [StringComparison]::OrdinalIgnoreCase) -or
-            $root.StartsWith($normalized + '\', [StringComparison]::OrdinalIgnoreCase)) {
-            return $true
-        }
-    }
-    return ($root -match '\\OneDrive\\' -or $root -match '\\OneDrive - ')
-}
-
-function Assert-JarvisNotOnOneDrive {
-    if (-not (Test-JarvisOneDrivePath)) { return }
-    Write-Host ""
-    Write-Host "  Jarvis ne peut pas tourner depuis OneDrive." -ForegroundColor Red
-    Write-Host "  OneDrive casse les liens symboliques du bundle Python (.venv)." -ForegroundColor DarkGray
-    Write-Host ""
-    Write-Host "  Deplace le dossier jarvis-OS vers un emplacement local, par exemple :" -ForegroundColor White
-    Write-Host "    C:\jarvis-OS" -ForegroundColor Cyan
-    Write-Host "    C:\Users\$env:USERNAME\jarvis-OS" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  Copie ou deplace le dossier toi-meme, puis relance setup.bat ou run.bat." -ForegroundColor White
-    Write-Host ""
-    exit 1
-}
+. (Join-Path $PSScriptRoot "scripts\onedrive_guard.ps1")
 
 function Test-BundlePresent {
     $manifest = Join-Path $PSScriptRoot "bundle\manifest.json"
@@ -404,7 +372,8 @@ function Invoke-JarvisRun {
     }
 }
 
-Assert-JarvisNotOnOneDrive
+$guardCommand = if ($Command.Trim() -ne "") { $Command } else { "setup" }
+Invoke-JarvisOneDriveGuard -ProjectRoot $PSScriptRoot -NonInteractive:($env:CI -eq "true") -RelaunchCommand $guardCommand
 
 # Restart complet uniquement : `run`/`start` relancent toute la pile, `setup` a
 # besoin du port 8765. `api`, `voice` et `livekit` sont documentees comme

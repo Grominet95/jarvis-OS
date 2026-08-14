@@ -119,7 +119,7 @@ Python système et LiveKit **ne sont pas requis** : le script de build les intè
 
 **Clone Git ou archive sans `bundle/`** : à l'étape 1 du setup, clique sur **Télécharger** — le wizard récupère `bundle.zip` (~628 Mo), l'extrait dans `bundle/` et vérifie les prérequis. **Aucune extraction manuelle.** **Release avec `bundle/` déjà inclus** : le bouton n'apparaît pas, tu passes directement à la configuration.
 
-> **OneDrive interdit.** Ne place pas `jarvis-OS` dans OneDrive (Documents synchronisés, etc.) : OneDrive casse les liens symboliques du venv Python embarqué. Installe-le dans un dossier local, par exemple `C:\jarvis-OS` ou `C:\Users\<toi>\jarvis-OS`. Le lanceur refuse de démarrer depuis OneDrive.
+> **OneDrive interdit.** Ne place pas `jarvis-OS` dans OneDrive (Documents synchronisés, etc.) : OneDrive casse les liens symboliques du venv Python embarqué. Au premier lancement, Jarvis **bloque l'installation** et propose soit un **déplacement automatique** vers un dossier local (Documents hors sync, ou `%USERPROFILE%\jarvis-OS`), soit des instructions pour déplacer manuellement puis relancer `setup.bat`.
 
 Le plus simple : **double-clique sur `setup.bat`**, puis sur `run.bat`. Ou en ligne de commande :
 
