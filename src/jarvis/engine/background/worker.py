@@ -17,10 +17,14 @@ from jarvis.kernel.events import EventBus, NotificationRequested
 from jarvis.kernel.settings import settings
 
 _BG_SYSTEM = (
-    f"Tu es {settings.assistant_name}. Exécute la tâche demandée avec les outils disponibles. "
+    f"Tu es {settings.display_assistant_name}. "
+    "Exécute la tâche demandée avec les outils disponibles. "
     "Donne un résumé concis et factuel du résultat en français."
 )
-_BG_SYSTEM_NOTOOL = f"Tu es {settings.assistant_name}. Exécute la tâche et confirme en une phrase courte."
+_BG_SYSTEM_NOTOOL = (
+    f"Tu es {settings.display_assistant_name}. "
+    "Exécute la tâche et confirme en une phrase courte."
+)
 
 _HISTORY_MAX = 50
 

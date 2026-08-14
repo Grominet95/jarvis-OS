@@ -263,7 +263,7 @@ def build(
         topic_store=topic_store,
         memory_ingest=None,  # JAMAIS branché — choix d'archi (CDC §3 AutoDream micro).
         user_firstname=settings.display_name,
-        assistant_name=settings.assistant_name or "Jarvis",
+        assistant_name=settings.display_assistant_name,
     )
     _deep_ingest = memory_ingest if settings.ingest_deep_enabled else None
 
@@ -274,7 +274,7 @@ def build(
         memory_ingest=_deep_ingest,
         mirror=memory_mirror,
         user_firstname=settings.display_name,
-        assistant_name=settings.assistant_name or "Jarvis",
+        assistant_name=settings.display_assistant_name,
     )
 
     # ── 5. Capabilities L1 — Skill registry + Tools ─────────────────────────

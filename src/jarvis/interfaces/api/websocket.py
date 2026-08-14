@@ -17,6 +17,7 @@ from jarvis.engine.background.worker import BackgroundTask, BackgroundWorker
 from jarvis.engine.gateway import Gateway, _fallback
 from jarvis.engine.router import RouteEnum
 from jarvis.interfaces.api.logs import _log_buffer
+from jarvis.kernel.settings import settings
 from jarvis.providers.memory.auto_dream import AutoDream
 from jarvis.providers.memory.consolidation import ConsolidationAgent
 from jarvis.providers.vision.objects_queue import get_vision_objects_queue
@@ -101,7 +102,7 @@ _GESTURE_DIRECT_ACTIONS: dict[str, str] = {
 _GESTURE_LLM_COMMANDS: dict[str, str] = {
     "Thumb_Up": "Oui, confirme",
     "Thumb_Down": "Non, annule",
-    "Pointing_Up": "Hey {settings.assistant_name}",
+    "Pointing_Up": f"Hey {settings.display_assistant_name}",
 }
 
 _PRESENCE_MSGS: dict[bool, str] = {

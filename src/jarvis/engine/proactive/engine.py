@@ -24,6 +24,7 @@ from jarvis.engine.proactive.context_builder import ContextBuilder
 from jarvis.engine.proactive.initiative_generator import InitiativeGenerator
 from jarvis.engine.proactive.schemas import ExecutionMode, Initiative, Priority
 from jarvis.engine.proactive.store import InitiativeStore
+from jarvis.kernel.settings import settings
 
 _AUDIT_MAXLEN = 200
 
@@ -216,7 +217,10 @@ class ProactiveEngine:
 
         elif initiative.execution_mode == ExecutionMode.NOTIFY:
             # Injecter comme notification texte dans la prochaine conversation
-            msg = f"[{settings.assistant_name} proactif] {initiative.title} — {initiative.action}"
+            msg = (
+                f"[{settings.display_assistant_name} proactif] "
+                f"{initiative.title} — {initiative.action}"
+            )
             self._notifications.add(msg)
             logger.info(f"ProactiveEngine NOTIFY: {initiative.title}")
 

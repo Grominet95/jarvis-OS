@@ -196,7 +196,10 @@ class PresetExecutor:
         response = await self._llm.complete(
             messages=[{"role": "user", "content": step.prompt}],
             max_tokens=150,
-            system=f"Tu es {settings.assistant_name}. Réponds de façon courte et naturelle, en français.",
+            system=(
+                f"Tu es {settings.display_assistant_name}. "
+                "Réponds de façon courte et naturelle, en français."
+            ),
         )
 
         text = response.content if hasattr(response, "content") else str(response)

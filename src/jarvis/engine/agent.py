@@ -88,7 +88,7 @@ class Agent:
         if firstname != "Barth":
             static_system = static_system.replace("Barth", firstname)
         # Remplace "Jarvis" par le nom de l'assistant configuré (ASSISTANT_NAME)
-        assistant_name = _s.assistant_name or "Jarvis"
+        assistant_name = _s.display_assistant_name
         if assistant_name != "Jarvis":
             static_system = static_system.replace("Jarvis", assistant_name)
         if _s.quebec_mode:

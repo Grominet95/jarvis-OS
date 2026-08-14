@@ -490,6 +490,17 @@ class Settings(BaseSettings):
         """Prénom à utiliser dans les prompts. Repli sur 'Barth' si non configuré."""
         return (self.user_firstname or "").strip() or "Barth"
 
+    @property
+    def display_assistant_name(self) -> str:
+        """Nom de l'assistant dans les prompts. Repli sur 'Jarvis' si non configuré.
+
+        Miroir de `display_name` : le repli est centralisé ici, jamais dupliqué
+        en `settings.assistant_name or "Jarvis"` sur les sites d'appel. Un .env
+        existant n'a pas ASSISTANT_NAME, et lire le champ brut y donnerait la
+        chaîne vide — donc « Tu es . » dans tous les prompts système.
+        """
+        return (self.assistant_name or "").strip() or "Jarvis"
+
     # ── Wake Up sequence ─────────────────────────────────────
     wakeup_enabled: bool = Field(
         default=False,

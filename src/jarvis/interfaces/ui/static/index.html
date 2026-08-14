@@ -4,8 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title id="page-title">Jarvis</title>
-  <script>document.getElementById('page-title').textContent = window.JARVIS_ASSISTANT_NAME || 'Jarvis';</script>
+  <!-- Le titre est reecrit en fin de <body>, avec les autres elements portant le
+       nom de l'assistant : window.JARVIS_ASSISTANT_NAME est injecte juste avant
+       </head> par inject_client_config(), donc indisponible a ce point du parse. -->
+  <title>Jarvis</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
@@ -3627,7 +3629,10 @@
     // Mise à jour dynamique de tous les éléments avec le nom de l'assistant
     (function() {
       var assistantName = window.JARVIS_ASSISTANT_NAME || 'Jarvis';
-      
+
+      // Titre de l'onglet
+      document.title = assistantName;
+
       // Title du bouton
       var jarvisBtn = document.getElementById('jarvis-toggle');
       if (jarvisBtn) {

@@ -15,12 +15,24 @@ from pydantic import SecretStr
 from jarvis.interfaces.api import ui
 
 
-def _fake_settings(enabled: bool, token: str, wakeup_enabled: bool = False) -> SimpleNamespace:
+def _fake_settings(
+    enabled: bool,
+    token: str,
+    wakeup_enabled: bool = False,
+    assistant_name: str = "Jarvis",
+) -> SimpleNamespace:
     return SimpleNamespace(
         api_auth_enabled=enabled,
         api_token=SecretStr(token),
         wakeup_enabled=wakeup_enabled,
+        display_assistant_name=assistant_name,
     )
+
+
+def test_inject_assistant_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Le nom configuré doit arriver jusqu'au client, échappé en JSON."""
+    monkeypatch.setattr(ui, "settings", _fake_settings(False, "", assistant_name="Vendredi"))
+    assert 'window.JARVIS_ASSISTANT_NAME="Vendredi"' in ui.inject_client_config("<head></head>")
 
 
 def test_inject_wakeup_enabled_flag(monkeypatch: pytest.MonkeyPatch) -> None:
