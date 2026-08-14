@@ -87,6 +87,22 @@ def test_health_exempt_even_with_auth_enabled(client: TestClient) -> None:
     assert r.status_code == 200
 
 
+def _configure_ui_settings(mock: object, *, auth_enabled: bool, token: str) -> None:
+    """Renseigne TOUT ce que lit inject_client_config sur le settings mocké.
+
+    Le mock est un MagicMock : un attribut oublié ne vaut pas None mais un
+    MagicMock, que `json.dumps` refuse de sérialiser — d'où un TypeError opaque
+    plutôt qu'une assertion claire. Ces tests étant marqués `integration`, la
+    lane rapide des PR ne les exécute pas : la casse n'apparaît que sur main.
+    Centralisé ici pour que le prochain champ injecté n'ait qu'un seul endroit
+    à mettre à jour.
+    """
+    mock.api_auth_enabled = auth_enabled
+    mock.api_token = SecretStr(token)
+    mock.wakeup_enabled = False
+    mock.display_assistant_name = "Jarvis"
+
+
 @pytest.mark.parametrize(
     "path",
     ["/", "/dashboard", "/settings", "/command", "/capabilities", "/admin"],
@@ -96,10 +112,8 @@ def test_ui_html_exempt_with_auth_enabled(client: TestClient, path: str) -> None
     with patch("jarvis.engine.auth.settings") as mock_auth, patch(
         "jarvis.interfaces.api.ui.settings"
     ) as mock_ui:
-        mock_auth.api_auth_enabled = True
-        mock_auth.api_token = SecretStr("test-secret-token")
-        mock_ui.api_auth_enabled = True
-        mock_ui.api_token = SecretStr("test-secret-token")
+        _configure_ui_settings(mock_auth, auth_enabled=True, token="test-secret-token")
+        _configure_ui_settings(mock_ui, auth_enabled=True, token="test-secret-token")
         r = client.get(path)
     assert r.status_code == 200
     assert "text/html" in r.headers.get("content-type", "")
@@ -110,10 +124,8 @@ def test_ui_html_injects_api_token(client: TestClient) -> None:
     with patch("jarvis.engine.auth.settings") as mock_auth, patch(
         "jarvis.interfaces.api.ui.settings"
     ) as mock_ui:
-        mock_auth.api_auth_enabled = True
-        mock_auth.api_token = SecretStr("test-secret-token")
-        mock_ui.api_auth_enabled = True
-        mock_ui.api_token = SecretStr("test-secret-token")
+        _configure_ui_settings(mock_auth, auth_enabled=True, token="test-secret-token")
+        _configure_ui_settings(mock_ui, auth_enabled=True, token="test-secret-token")
         r = client.get("/")
     assert r.status_code == 200
     assert "window.JARVIS_API_TOKEN" in r.text
@@ -125,10 +137,8 @@ def test_ui_html_no_token_when_auth_disabled(client: TestClient) -> None:
     with patch("jarvis.engine.auth.settings") as mock_auth, patch(
         "jarvis.interfaces.api.ui.settings"
     ) as mock_ui:
-        mock_auth.api_auth_enabled = False
-        mock_auth.api_token = SecretStr("")
-        mock_ui.api_auth_enabled = False
-        mock_ui.api_token = SecretStr("")
+        _configure_ui_settings(mock_auth, auth_enabled=False, token="")
+        _configure_ui_settings(mock_ui, auth_enabled=False, token="")
         r = client.get("/")
     assert r.status_code == 200
     assert 'window.JARVIS_API_TOKEN=""' in r.text
