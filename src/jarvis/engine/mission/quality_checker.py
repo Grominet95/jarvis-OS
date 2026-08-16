@@ -14,6 +14,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 
 class QualityChecker:
     def __init__(self, workspace_path: str) -> None:
@@ -84,6 +86,7 @@ class QualityChecker:
             ast.parse(target.read_text(encoding="utf-8", errors="replace"))
             return {"valid": True, "error": None}
         except SyntaxError as e:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=e)
             return {"valid": False, "error": str(e)}
 
     # ── Full report ───────────────────────────────────────────────────────────

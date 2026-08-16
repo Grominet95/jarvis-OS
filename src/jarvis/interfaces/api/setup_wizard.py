@@ -7,7 +7,7 @@ from __future__ import annotations
 import socket
 from typing import Literal
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, UploadFile
 from pydantic import BaseModel
 
 from jarvis.interfaces.api.config._env import write_env_batch
@@ -17,6 +17,8 @@ from jarvis.kernel.bundle_download import (
     get_download_status,
     start_bundle_download,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.paths import FACES_DIR, PROJECT_ROOT
 from jarvis.kernel.setup_layout import ensure_runtime_layout, is_setup_complete, read_env_file
 
@@ -63,6 +65,7 @@ def _find_available_port(start: int = 8000, attempts: int = 20) -> int:
                 sock.bind(("127.0.0.1", port))
                 return port
             except OSError:
+                collector.error("JRV-API-001", "JRV-API-001")
                 continue
     return start
 
@@ -161,7 +164,7 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
     # renseigner plus tard dans les réglages. Seul le prénom reste requis.
     is_local = body.api_backend == "local"
     if not body.user_firstname.strip():
-        raise HTTPException(400, "Prenom requis.")
+        raise_api_error("JRV-API-004", 400, "Prenom requis.")
 
     llm_provider = "local" if is_local else "api"
     # API_BACKEND reste une valeur API valide même en local (ignorée par le factory).
@@ -179,13 +182,13 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
     if body.voice_enabled:
         deepgram_api_key = _secret(body.deepgram_api_key, "DEEPGRAM_API_KEY")
         if not deepgram_api_key:
-            raise HTTPException(400, "Cle Deepgram requise pour le pipeline vocal.")
+            raise_api_error("JRV-API-004", 400, "Cle Deepgram requise pour le pipeline vocal.")
         if body.livekit_cloud:
             livekit_url = body.livekit_url.strip() or existing.get("LIVEKIT_URL", "")
             livekit_api_key = _secret(body.livekit_api_key, "LIVEKIT_API_KEY")
             livekit_api_secret = _secret(body.livekit_api_secret, "LIVEKIT_API_SECRET")
             if not livekit_url or not livekit_api_key or not livekit_api_secret:
-                raise HTTPException(400, "URL et cles LiveKit Cloud requises.")
+                raise_api_error("JRV-API-004", 400, "URL et cles LiveKit Cloud requises.")
         else:
             livekit_url = "ws://localhost:7880"
             livekit_api_key = "devkey"
@@ -197,9 +200,9 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
     )
     if body.tts_provider == "elevenlabs":
         if not elevenlabs_api_key:
-            raise HTTPException(400, "Cle ElevenLabs requise.")
+            raise_api_error("JRV-API-004", 400, "Cle ElevenLabs requise.")
         if not elevenlabs_voice_id:
-            raise HTTPException(400, "Voice ID ElevenLabs requis.")
+            raise_api_error("JRV-API-004", 400, "Voice ID ElevenLabs requis.")
 
     updates = {
         "USER_FIRSTNAME": body.user_firstname.strip(),
@@ -251,11 +254,11 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
 @router.post("/api/setup/upload-face")
 async def setup_upload_face(file: UploadFile = File(...)) -> dict:  # noqa: B008
     if not file.filename or not file.filename.lower().endswith((".jpg", ".jpeg")):
-        raise HTTPException(400, "Fichier JPG requis.")
+        raise_api_error("JRV-API-004", 400, "Fichier JPG requis.")
     FACES_DIR.mkdir(parents=True, exist_ok=True)
     target = FACES_DIR / "reference.jpg"
     content = await file.read()
     if len(content) < 1024:
-        raise HTTPException(400, "Image trop petite.")
+        raise_api_error("JRV-API-004", 400, "Image trop petite.")
     target.write_bytes(content)
     return {"saved": str(target.relative_to(PROJECT_ROOT)).replace("\\", "/")}

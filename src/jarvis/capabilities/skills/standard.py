@@ -18,6 +18,7 @@ from pathlib import Path
 import yaml
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import SKILLS_INSTALLED_DIR  # noqa: F401, E402
 
 # ── YAML Dumper avec block scalars ────────────────────────────────────────────
@@ -185,6 +186,7 @@ class AgentSkillsAdapter:
         try:
             return yaml.safe_load(m.group(1)) or {}
         except yaml.YAMLError as exc:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
             logger.warning("Frontmatter YAML invalide", error=str(exc))
             return {}
 

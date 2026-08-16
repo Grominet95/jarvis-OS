@@ -9,6 +9,7 @@ from collections.abc import Callable
 import httpx
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 CITY_COORDS: dict[str, tuple[float, float]] = {
     # Villes françaises
@@ -254,5 +255,6 @@ class ShowViewTool(Tool):
                 if results:
                     return float(results[0]["lat"]), float(results[0]["lon"])
         except Exception:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             pass
         return None

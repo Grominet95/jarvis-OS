@@ -15,6 +15,7 @@ from jarvis.engine.mission.project_store import ProjectStore
 from jarvis.engine.mission.schemas import Project, Step, StepStatus
 from jarvis.engine.vocab import AccessLevel
 from jarvis.kernel.contracts import LLMProvider
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 _PLANNING_SYSTEM = """\
 Tu es un chef de projet expert. Analyse la demande utilisateur et décompose-la en étapes
@@ -300,5 +301,6 @@ class ProjectManager:
         try:
             return json.loads(clean)
         except json.JSONDecodeError as e:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=e)
             logger.error("Plan parse failed", error=str(e), raw=raw[:300])
             raise ValueError(f"Impossible de parser le plan LLM : {e}") from e

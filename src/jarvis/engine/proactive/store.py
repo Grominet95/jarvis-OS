@@ -16,6 +16,7 @@ from pathlib import Path
 
 from jarvis.engine.proactive.schemas import ExecutionMode, Initiative, InitiativeType, Priority
 from jarvis.engine.vocab import AutonomyLevel
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import MEMORY_DATA_DIR
 
 
@@ -110,6 +111,7 @@ class InitiativeStore:
                     if json.loads(line).get("id") == initiative_id:
                         return f
                 except Exception:
+                    collector.warning("JRV-PRO-001", "JRV-PRO-001")
                     pass
         return None
 
@@ -125,6 +127,7 @@ class InitiativeStore:
                     if d.get("status") == "pending":
                         titles.append(d.get("title", ""))
                 except Exception:
+                    collector.warning("JRV-PRO-001", "JRV-PRO-001")
                     pass
         return titles
 
@@ -189,6 +192,7 @@ class InitiativeStore:
                 if data.get("status") == "pending":
                     initiatives.append(self._parse_initiative(data))
             except Exception:
+                collector.warning("JRV-PRO-001", "JRV-PRO-001")
                 pass
 
         return _dedup_initiatives(initiatives)
@@ -205,6 +209,7 @@ class InitiativeStore:
                     if data.get("status") == "pending":
                         all_initiatives.append(self._parse_initiative(data))
                 except Exception:
+                    collector.warning("JRV-PRO-001", "JRV-PRO-001")
                     pass
         return _dedup_initiatives(all_initiatives)
 
@@ -221,6 +226,7 @@ class InitiativeStore:
                     if target is None or data.get("status") in target:
                         all_items.append(self._parse_initiative(data))
                 except Exception:
+                    collector.warning("JRV-PRO-001", "JRV-PRO-001")
                     pass
         return all_items
 
@@ -235,6 +241,7 @@ class InitiativeStore:
                     if data.get("id") == initiative_id:
                         return self._parse_initiative(data)
                 except Exception:
+                    collector.warning("JRV-PRO-001", "JRV-PRO-001")
                     pass
         return None
 
@@ -257,6 +264,7 @@ class InitiativeStore:
                     data.update(updates)
                 line = json.dumps(data)
             except Exception:
+                collector.warning("JRV-PRO-001", "JRV-PRO-001")
                 pass
             updated.append(line)
 
@@ -279,6 +287,7 @@ class InitiativeStore:
                     data["status"] = status
                 line = json.dumps(data)
             except Exception:
+                collector.warning("JRV-PRO-001", "JRV-PRO-001")
                 pass
             updated.append(line)
 

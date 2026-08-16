@@ -13,6 +13,7 @@ from loguru import logger
 
 from jarvis.engine.background.notifications import NotificationQueue
 from jarvis.kernel.contracts import LLMProvider, ToolRegistry
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.events import EventBus, NotificationRequested
 from jarvis.kernel.settings import settings
 
@@ -89,6 +90,7 @@ class BackgroundWorker:
             try:
                 await self._execute(task, record)
             except Exception as e:
+                collector.warning("JRV-BG-001", "JRV-BG-001", cause=e)
                 record.error = str(e)
                 record.completed_at = datetime.now(UTC).isoformat()
                 logger.error("BackgroundTask failed", session_id=task.session_id, error=str(e))

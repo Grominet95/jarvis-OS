@@ -14,6 +14,7 @@ import httpx
 from loguru import logger
 
 from jarvis.capabilities.skills.registry import SKILLS_INSTALLED_DIR, skill_registry
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import UI_STATIC_DIR
 
 ENV_FILE = Path(".env")
@@ -59,6 +60,7 @@ class SkillInstaller:
                 else:
                     raise Exception(f"HTTP {r.status_code}")
         except Exception as e:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
             logger.warning(f"Catalogue GitHub inaccessible: {e} — fallback local")
             all_items = self._load_local_catalog()
             offline = True
@@ -112,6 +114,7 @@ class SkillInstaller:
             return {"success": True, "message": f"'{skill_name}' installé avec succès"}
 
         except Exception as e:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
             if skill_dir.exists():
                 shutil.rmtree(skill_dir)
             logger.error(f"Erreur installation {skill_name}: {e}")
@@ -256,6 +259,7 @@ class SkillInstaller:
             logger.info(f"Skill désinstallé : {skill_name}")
             return {"success": True, "message": f"Skill '{skill_name}' désinstallé"}
         except Exception as e:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
             return {"success": False, "message": str(e)}
 
 

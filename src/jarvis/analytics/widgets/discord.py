@@ -9,6 +9,7 @@ import os
 import httpx
 
 from jarvis.analytics.widgets.base import WidgetBase, WidgetData
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 class DiscordWidget(WidgetBase):
@@ -44,4 +45,5 @@ class DiscordWidget(WidgetBase):
                     },
                 )
         except Exception as e:
+            collector.warning("JRV-OPS-001", "JRV-OPS-001", cause=e)
             return WidgetData(success=False, data={}, error=str(e))

@@ -22,6 +22,7 @@ from loguru import logger
 from jarvis.engine.proactive.collectors.base import CollectorBase
 from jarvis.engine.proactive.schemas import ContextItem, ItemType, Priority
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 _SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
@@ -61,6 +62,7 @@ def _extract_text_body(payload: dict) -> str:
             try:
                 return base64.urlsafe_b64decode(data + "==").decode("utf-8", errors="replace")
             except Exception:
+                collector.warning("JRV-PRO-001", "JRV-PRO-001")
                 return ""
     for part in payload.get("parts", []):
         result = _extract_text_body(part)
@@ -102,6 +104,7 @@ class EmailCollector(CollectorBase):
         try:
             creds = await asyncio.to_thread(_load_gmail_creds, creds_path, token_path)
         except FileNotFoundError as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             logger.warning(f"EmailCollector: {e}")
             return []
 

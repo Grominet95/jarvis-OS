@@ -19,6 +19,7 @@ from fastapi import APIRouter, Request
 from loguru import logger
 from pydantic import BaseModel
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.providers.youtube import get_youtube_snapshot
 
 router = APIRouter()
@@ -84,6 +85,7 @@ async def open_safari_window(url: str, bounds: list[int] | None) -> bool:
             return False
         return True
     except Exception as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.warning("[briefing] open_safari_window: {}", e)
         return False
 
@@ -112,6 +114,7 @@ async def _tasks_line(request: Request) -> str:
         if result and not result.is_error:
             content = result.content
     except Exception as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.warning("[briefing] notion tasks: {}", e)
 
     tasks = [ln[2:].strip() for ln in content.splitlines() if ln.startswith("- ")]

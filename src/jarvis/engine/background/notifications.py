@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -59,6 +60,7 @@ class ProactiveQueue:
         try:
             self._subscribers.remove(q)
         except ValueError:
+            collector.warning("JRV-BG-001", "JRV-BG-001")
             pass
         logger.debug("ProactiveQueue: subscriber removed", total=len(self._subscribers))
 
@@ -125,6 +127,7 @@ def get_broadcast_fn() -> object:
             try:
                 urllib.request.urlopen(req, timeout=2)
             except Exception:
+                collector.warning("JRV-BG-001", "JRV-BG-001")
                 pass
 
         threading.Thread(target=_post, daemon=True).start()

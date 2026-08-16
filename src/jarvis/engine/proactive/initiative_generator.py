@@ -17,6 +17,7 @@ from loguru import logger
 from jarvis.engine.proactive.context_builder import WorldState
 from jarvis.engine.proactive.schemas import ExecutionMode, Initiative, InitiativeType, Priority
 from jarvis.kernel.contracts import LLMProvider
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 MAX_INITIATIVES = 5
 MAX_HIGH = 3
@@ -60,6 +61,7 @@ def _is_valid_json(s: str) -> bool:
         json.loads(s)
         return True
     except Exception:
+        collector.warning("JRV-PRO-001", "JRV-PRO-001")
         return False
 
 
@@ -316,6 +318,7 @@ class InitiativeGenerator:
                 header += f"\n[THREAD_ID: {thread_id}]"
             return f"{header}\n---\n{body}"
         except Exception as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             logger.warning(f"Draft generation failed for {init.id}: {e}")
             return None
 
@@ -355,6 +358,7 @@ class InitiativeGenerator:
                 items = json.loads(clean)
                 clean = json.dumps(items[0]) if items else clean
             except Exception:
+                collector.warning("JRV-PRO-001", "JRV-PRO-001")
                 pass
 
         try:
@@ -373,6 +377,7 @@ class InitiativeGenerator:
                 created_at=initiative.created_at,
             )
         except Exception as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             logger.error(f"Rectify parsing error: {e}")
             return None
 
@@ -410,6 +415,7 @@ class InitiativeGenerator:
                     init._thread_id = item.get("thread_id") or ""  # type: ignore[attr-defined]
                     initiatives.append(init)
                 except (ValueError, KeyError) as e:
+                    collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
                     logger.warning(f"Skipping malformed initiative: {e}")
 
             # Dédup exact puis similitude > 70%
@@ -433,5 +439,6 @@ class InitiativeGenerator:
             return capped
 
         except (json.JSONDecodeError, ValueError) as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             logger.error(f"Initiative parsing error: {e}\nRaw: {raw[:200]}")
             return []

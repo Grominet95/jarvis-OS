@@ -27,6 +27,7 @@ from jarvis.kernel.contracts import (
     CalendarReadTool,
     NotionReadTool,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import Settings
 
 
@@ -186,6 +187,7 @@ class Scheduler:
             try:
                 next_run = next_cron_datetime(expr, after=now)
             except ValueError as exc:
+                collector.warning("JRV-BG-001", "JRV-BG-001", cause=exc)
                 logger.error(f"Routine '{routine.name}': expression cron invalide — {exc}")
                 await asyncio.sleep(3600)
                 continue
@@ -215,6 +217,7 @@ class Scheduler:
             agenda = result.content if not result.is_error else "Agenda indisponible."
             parts.append(f"Agenda : {agenda}")
         except Exception as e:
+            collector.warning("JRV-BG-001", "JRV-BG-001", cause=e)
             parts.append(f"Agenda indisponible ({e}).")
 
         if self._notion_tool is not None:
@@ -223,6 +226,7 @@ class Scheduler:
                 if not tasks_result.is_error and tasks_result.content:
                     parts.append(f"Tâches du jour :\n{tasks_result.content}")
             except Exception as e:
+                collector.warning("JRV-BG-001", "JRV-BG-001", cause=e)
                 logger.debug("Briefing Notion error", error=str(e))
 
         self._proactive.broadcast("Briefing matinal — " + " | ".join(parts))
@@ -260,6 +264,7 @@ class Scheduler:
                 try:
                     event_time = datetime.fromisoformat(iso_match.group(1))
                 except ValueError:
+                    collector.warning("JRV-BG-001", "JRV-BG-001")
                     continue
                 delta_min = (event_time - now).total_seconds() / 60
                 logger.debug("Calendar event delta", delta_min=round(delta_min, 1), event=line[:60])
@@ -268,6 +273,7 @@ class Scheduler:
                     self._proactive.broadcast(f"Rappel dans {int(delta_min)} min : {line}")
                     logger.info("Rappel calendrier envoyé", event=line[:60])
         except Exception:
+            collector.warning("JRV-BG-001", "JRV-BG-001")
             logger.exception("Calendar reminder error")
 
     # ── AutoDream nocturne ────────────────────────────────────
@@ -309,6 +315,7 @@ class Scheduler:
                     skipped=result.skipped_already_handled,
                 )
             except Exception as exc:  # noqa: BLE001 — un scan raté ne tue pas la boucle
+                collector.warning("JRV-BG-001", "JRV-BG-001", cause=exc)
                 logger.warning("Skill Lab scan échec", error=str(exc))
 
     # ── Curator nocturne (PHASE 6) ────────────────────────────
@@ -335,4 +342,5 @@ class Scheduler:
                     skills_stale=report.skills_stale_proposed,
                 )
             except Exception as exc:  # noqa: BLE001
+                collector.warning("JRV-BG-001", "JRV-BG-001", cause=exc)
                 logger.warning("Curator scan échec", error=str(exc))

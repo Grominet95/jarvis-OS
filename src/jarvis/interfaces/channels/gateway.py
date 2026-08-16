@@ -18,6 +18,7 @@ from loguru import logger
 
 from jarvis.engine.gateway import Gateway as JarvisGateway
 from jarvis.interfaces.channels.base import ChannelAdapter, IncomingMessage, MessageTarget
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 _SESSION_MAP_FILE = Path("memory/messaging_sessions.json")
 
@@ -110,6 +111,7 @@ class MessagingGateway:
             try:
                 return json.loads(self._session_map_path.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, OSError) as exc:
+                collector.warning("JRV-MSG-001", "JRV-MSG-001", cause=exc)
                 logger.warning("Impossible de charger messaging_sessions.json", error=str(exc))
         return {}
 
@@ -121,4 +123,5 @@ class MessagingGateway:
                 encoding="utf-8",
             )
         except OSError as exc:
+            collector.warning("JRV-MSG-001", "JRV-MSG-001", cause=exc)
             logger.warning("Impossible de sauvegarder messaging_sessions.json", error=str(exc))

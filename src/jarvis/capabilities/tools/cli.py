@@ -15,6 +15,7 @@ import yaml
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 # ── Whitelist binaires autorisés pour execute_cli ────────────────────────────
@@ -316,12 +317,15 @@ class CLIRunnerTool(Tool):
             logger.info("CLIRunner done", alias=alias, returncode=proc.returncode)
             return ToolResult(content=output, is_error=not success)
         except TimeoutError:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             try:
                 proc.kill()
             except ProcessLookupError:
+                collector.error("JRV-TOL-001", "JRV-TOL-001")
                 pass
             return ToolResult(content=f"Timeout après {_TIMEOUT}s.", is_error=True)
         except OSError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return ToolResult(content=f"Erreur d'exécution : {e}", is_error=True)
 
 
@@ -440,12 +444,15 @@ class ExecuteCLITool(Tool):
             logger.info(f"ExecuteCLI done: rc={proc.returncode}")
             return ToolResult(content=output, is_error=not success)
         except TimeoutError:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             try:
                 proc.kill()
             except ProcessLookupError:
+                collector.error("JRV-TOL-001", "JRV-TOL-001")
                 pass
             return ToolResult(content="Timeout après 300s.", is_error=True)
         except OSError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return ToolResult(content=f"Erreur d'exécution : {e}", is_error=True)
 
     async def execute(
@@ -463,6 +470,7 @@ class ExecuteCLITool(Tool):
         try:
             parts = shlex.split(command)
         except ValueError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.warning(f"ExecuteCLI parse error ({e}): {command[:60]}")
             return ToolResult(
                 content=f"Commande non parsable ({e}). Vérifiez les guillemets.",

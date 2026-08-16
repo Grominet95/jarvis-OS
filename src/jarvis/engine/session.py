@@ -7,6 +7,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from jarvis.kernel.contracts import SessionStore
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.schemas import Session
 
 # Re-export pour compat des call-sites historiques (`from jarvis.engine
@@ -63,6 +64,7 @@ class SessionManager:
         try:
             session = Session(id=UUID(session_id))
         except ValueError:
+            collector.error("JRV-ENG-000", "JRV-ENG-000")
             return None
 
         session.messages = messages

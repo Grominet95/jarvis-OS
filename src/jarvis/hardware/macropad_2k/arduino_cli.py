@@ -19,6 +19,7 @@ from pathlib import Path
 from loguru import logger
 
 from jarvis.hardware.macropad_2k.paths import arduino_cli_dir, arduino_cli_executable
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 DEFAULT_VERSION = "1.4.1"
 
@@ -122,6 +123,7 @@ def install_arduino_cli(
         try:
             os.chmod(exe, 0o755)
         except OSError:
+            collector.warning("JRV-HW-001", "JRV-HW-001")
             pass
 
     if progress:

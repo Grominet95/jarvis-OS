@@ -12,6 +12,8 @@ import platform
 import subprocess
 from pathlib import Path
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 
 def check_app_installed(app: dict) -> dict:
     """
@@ -43,6 +45,7 @@ def check_app_installed(app: dict) -> dict:
                 )
                 installed = bool(result.stdout.strip())
             except Exception:
+                collector.error("JRV-SKL-001", "JRV-SKL-001")
                 pass
 
     elif system == "windows":
@@ -54,6 +57,7 @@ def check_app_installed(app: dict) -> dict:
                 )
                 installed = result.returncode == 0
             except Exception:
+                collector.error("JRV-SKL-001", "JRV-SKL-001")
                 pass
 
     elif system == "linux":
@@ -65,6 +69,7 @@ def check_app_installed(app: dict) -> dict:
                 )
                 installed = result.returncode == 0
             except Exception:
+                collector.error("JRV-SKL-001", "JRV-SKL-001")
                 pass
 
     message = ""

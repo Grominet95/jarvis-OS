@@ -12,6 +12,7 @@ from pathlib import Path
 from loguru import logger
 
 from jarvis.engine.mission.backends.base import BackendResult, ExecutionBackend
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -60,6 +61,7 @@ class LocalBackend(ExecutionBackend):
                 returncode=proc.returncode,
             )
         except TimeoutError:
+            collector.error("JRV-MSN-001", "JRV-MSN-001")
             return BackendResult(
                 success=False,
                 stdout="",
@@ -67,6 +69,7 @@ class LocalBackend(ExecutionBackend):
                 returncode=-1,
             )
         except Exception as exc:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             return BackendResult(
                 success=False,
                 stdout="",

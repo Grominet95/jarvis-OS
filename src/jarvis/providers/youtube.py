@@ -17,6 +17,8 @@ from dataclasses import dataclass
 import httpx
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 _API = "https://www.googleapis.com/youtube/v3"
 
 # Snapshot quotidien (delta hebdo "+47 cette semaine") : la Data API ne donne pas
@@ -103,5 +105,6 @@ async def get_youtube_snapshot() -> YouTubeSnapshot | None:
                 last_video_url=last_url,
             )
     except Exception as e:
+        collector.error("JRV-ENG-000", "JRV-ENG-000", cause=e)
         logger.warning("[briefing] get_youtube_snapshot: {}", e)
         return None

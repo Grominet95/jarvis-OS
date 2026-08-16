@@ -20,6 +20,7 @@ import json
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import CONFIG_DIR
 
 
@@ -83,6 +84,7 @@ def load_approval_config() -> ApprovalConfig:
             }
         )
     except Exception:
+        collector.error("JRV-KRN-002", "JRV-KRN-002")
         return ApprovalConfig()
 
 

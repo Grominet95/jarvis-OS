@@ -10,6 +10,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.providers.llm.base import LLMProvider
 from jarvis.providers.memory.ingest import IngestResult, MemoryIngest
 from jarvis.providers.memory.mirror import MemoryMirror
@@ -100,6 +101,7 @@ class AutoDream:
         try:
             await self._run_micro(user_message, assistant_message)
         except Exception as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.exception("AutoDream micro error", error=str(e))
 
     async def _run_micro(self, user_message: str, assistant_message: str) -> None:
@@ -127,6 +129,7 @@ class AutoDream:
                     event_type="exchange",
                 )
             except Exception as exc:  # noqa: BLE001
+                collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
                 logger.warning("AutoDream micro: ingest Kernel error", error=str(exc))
 
     # ── Deep (nocturne, appelé par le scheduler à 3h) ─────────
@@ -135,6 +138,7 @@ class AutoDream:
         try:
             await self._run_deep()
         except Exception as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.exception("AutoDream deep error", error=str(e))
 
     async def _run_deep(self) -> None:
@@ -174,6 +178,7 @@ class AutoDream:
                     facts=report.facts_exported,
                 )
             except Exception as exc:  # noqa: BLE001
+                collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
                 logger.warning("MemoryMirror export échec", error=str(exc))
 
     # ── Ingestion batch deep ──────────────────────────────────
@@ -201,6 +206,7 @@ class AutoDream:
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
         except OSError:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001")
             return ""
         parts: list[str] = []
         for raw in lines:
@@ -210,6 +216,7 @@ class AutoDream:
             try:
                 obj = json.loads(raw)
             except json.JSONDecodeError:
+                collector.warning("JRV-MEM-001", "JRV-MEM-001")
                 continue
             role = obj.get("role", "")
             content = obj.get("content", "")
@@ -244,6 +251,7 @@ class AutoDream:
                 )
                 results.append(r)
             except Exception as exc:  # noqa: BLE001 — un échec d'ingest ne bloque pas le batch
+                collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
                 logger.warning(
                     "AutoDream deep: ingest session échec",
                     file=path.name,
@@ -266,5 +274,6 @@ class AutoDream:
             try:
                 parts.append(f.read_text(encoding="utf-8"))
             except Exception:
+                collector.warning("JRV-MEM-001", "JRV-MEM-001")
                 pass
         return "\n".join(parts)[:8000]

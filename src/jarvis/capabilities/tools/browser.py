@@ -11,6 +11,7 @@ import httpx
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 _TIMEOUT = 20.0
 _MAX_TEXT_LEN = 8000  # chars max retournés au LLM
@@ -44,6 +45,7 @@ def _validate_url(url: str) -> str | None:
     try:
         parsed = urlparse(url)
     except Exception:
+        collector.error("JRV-TOL-001", "JRV-TOL-001")
         return "URL invalide."
     if parsed.scheme not in ("http", "https"):
         return f"Schéma non supporté : '{parsed.scheme}'. Seuls http et https sont autorisés."
@@ -132,10 +134,13 @@ class BrowserTool(Tool):
                 r.raise_for_status()
                 return r.text, None
         except httpx.TimeoutException:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             return "", f"Timeout ({_TIMEOUT}s) pour {url}."
         except httpx.HTTPStatusError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return "", f"HTTP {e.response.status_code} sur {url}."
         except httpx.RequestError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return "", f"Erreur réseau : {e}."
 
     def _require_bs4(self) -> str | None:
@@ -145,6 +150,7 @@ class BrowserTool(Tool):
 
             return None
         except ImportError:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             return "beautifulsoup4 non installé. Lance : uv add beautifulsoup4 lxml"
 
     async def _get_text(self, url: str) -> ToolResult:

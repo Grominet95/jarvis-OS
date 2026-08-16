@@ -2,53 +2,48 @@
 # This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
 # See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
 
-"""Hiérarchie d'exceptions Jarvis (CDC §A.1.3).
-
-Toute exception métier hérite de `JarvisError` — permet aux couches hautes
-(interfaces, bootstrap) d'attraper une famille d'erreurs sans connaître les
-détails des couches basses.
-
-Recensement des exceptions ad hoc existantes (baseline 2026-06-10) :
-- agent.worker_agent._BudgetExceeded → équivalent : kernel.errors.BudgetExceeded
-
-Les autres modules lèvent essentiellement des exceptions stdlib (ValueError,
-RuntimeError, OSError, etc.) ou des erreurs des libs (httpx, anthropic, …).
-Les Phases B/C feront migrer les call-sites vers cette hiérarchie sans
-changer le comportement (cf. CDC §0 règle 5).
-"""
+"""Hiérarchie d'exceptions Jarvis (CDC §A.1.3)."""
 
 from __future__ import annotations
 
+from typing import Any
+
 
 class JarvisError(Exception):
-    """Racine de toutes les exceptions métier de Jarvis."""
-
-
-# ── Couches L1 ────────────────────────────────────────────────────────────────
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        *,
+        cause: BaseException | None = None,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.cause = cause
+        self.context = context or {}
 
 
 class LLMError(JarvisError):
-    """Erreur du provider LLM (timeout, quota, format de réponse, …)."""
+    pass
 
 
-class MemoryError_(JarvisError):  # noqa: N801 — `_` pour éviter shadowing du builtin MemoryError
-    """Erreur de la couche mémoire (lecture/écriture store, FTS, schémas)."""
+class MemoryError_(JarvisError):  # noqa: N801
+    pass
 
 
 class ToolError(JarvisError):
-    """Erreur d'exécution d'un outil."""
+    pass
 
 
 class SkillError(JarvisError):
-    """Erreur de chargement, d'instanciation ou d'exécution d'un skill."""
-
-
-# ── Couches L2 ────────────────────────────────────────────────────────────────
+    pass
 
 
 class BudgetExceeded(JarvisError):
-    """Budget LLM dépassé pour la mission/session en cours."""
+    pass
 
 
 class PermissionDenied(JarvisError):
-    """Action refusée par la couche de permissions/approvals."""
+    pass

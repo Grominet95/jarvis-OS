@@ -18,7 +18,9 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
+
+from jarvis.kernel.http_errors import raise_api_error
 
 router = APIRouter()
 
@@ -67,10 +69,10 @@ async def get_routine(name: str, request: Request) -> dict:
     """Détail d'une routine et son dernier run terminé (SUCCESS ou FAILED)."""
     store = _get_store(request)
     if store is None:
-        raise HTTPException(status_code=503, detail="Routines désactivées")
+        raise_api_error("JRV-API-005", 503, "Routines désactivées")
     routine = store.get_routine(name)
     if routine is None:
-        raise HTTPException(status_code=404, detail=f"Routine '{name}' introuvable")
+        raise_api_error("JRV-API-003", 404, f"Routine '{name}' introuvable")
     last_run = store.last_finished_run(name)
     return {
         "routine": asdict(routine),

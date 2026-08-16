@@ -16,6 +16,7 @@ from jarvis.engine.llm_errors import friendly_llm_error
 from jarvis.engine.router import RouteEnum, SpeedRouter
 from jarvis.engine.session import Session, SessionManager
 from jarvis.kernel.contracts import CrossSessionRecall
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 def _fallback(exc: BaseException | None = None) -> str:
@@ -78,6 +79,7 @@ class Gateway:
                 if recall_summary:
                     logger.debug("CrossSessionRecall injected", chars=len(recall_summary))
             except Exception as e:
+                collector.error("JRV-GWY-001", "JRV-GWY-001", cause=e)
                 logger.warning("CrossSessionRecall failed", error=str(e))
 
         try:
@@ -128,6 +130,7 @@ class Gateway:
                         async for chunk in clean_synth:
                             yield chunk
                     except Exception as e:
+                        collector.error("JRV-GWY-001", "JRV-GWY-001", cause=e)
                         logger.opt(exception=True).error(
                             "CF tool or synthesize error",
                             error=type(e).__name__,
@@ -139,6 +142,7 @@ class Gateway:
             return await self._finalize(session, route, _pipe(), stream)
 
         except Exception as e:
+            collector.error("JRV-GWY-001", "JRV-GWY-001", cause=e)
             logger.opt(exception=True).error(
                 "Gateway error", error=type(e).__name__, detail=str(e), session_id=str(session.id)
             )

@@ -13,6 +13,8 @@ from fastapi import APIRouter
 from loguru import logger
 from pydantic import BaseModel
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api")
@@ -79,6 +81,7 @@ async def get_tasks() -> TasksResponse:
             )
             resp.raise_for_status()
     except Exception as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.error("Notion widget error", error=str(e))
         return TasksResponse(tasks=[])
 
@@ -153,9 +156,8 @@ async def create_task(body: TaskCreate) -> Task:
     token = settings.notion_token.get_secret_value()
     page_id = settings.notion_page_id
     if not token or not page_id:
-        from fastapi import HTTPException
 
-        raise HTTPException(status_code=503, detail="Notion non configuré")
+        raise_api_error("JRV-API-005", 503, "Notion non configuré")
 
     new_block = {
         "type": "to_do",
@@ -186,9 +188,8 @@ async def create_task(body: TaskCreate) -> Task:
 async def update_task(block_id: str, body: TaskPatch) -> Task:
     token = settings.notion_token.get_secret_value()
     if not token:
-        from fastapi import HTTPException
 
-        raise HTTPException(status_code=503, detail="Notion non configuré")
+        raise_api_error("JRV-API-005", 503, "Notion non configuré")
 
     update: dict = {"to_do": {}}
     if body.done is not None:
@@ -214,9 +215,8 @@ async def update_task(block_id: str, body: TaskPatch) -> Task:
 async def delete_task(block_id: str) -> dict:
     token = settings.notion_token.get_secret_value()
     if not token:
-        from fastapi import HTTPException
 
-        raise HTTPException(status_code=503, detail="Notion non configuré")
+        raise_api_error("JRV-API-005", 503, "Notion non configuré")
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.delete(
@@ -254,6 +254,7 @@ async def _fetch_today_events() -> list[CalEvent]:
     try:
         from google.oauth2.credentials import Credentials  # noqa: F401
     except ImportError:
+        collector.error("JRV-API-001", "JRV-API-001")
         logger.warning("google-api-python-client non installé")
         return []
 
@@ -264,6 +265,7 @@ async def _fetch_today_events() -> list[CalEvent]:
     try:
         creds = await asyncio.to_thread(_load_calendar_creds, token_path)
     except Exception as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.error("Calendar widget creds error", error=str(e))
         return []
 
@@ -327,5 +329,6 @@ async def get_events() -> EventsResponse:
             _cal_cache_ts = datetime.now(UTC)
             return EventsResponse(events=events)
         except Exception as e:
+            collector.error("JRV-API-001", "JRV-API-001", cause=e)
             logger.error("Calendar widget error", error=str(e))
             return EventsResponse(events=_cal_cache)  # retourne le cache périmé si erreur

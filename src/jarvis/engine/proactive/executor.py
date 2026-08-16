@@ -31,6 +31,7 @@ from loguru import logger
 from jarvis.engine.proactive.schemas import Initiative, InitiativeType
 from jarvis.engine.proactive.store import InitiativeStore
 from jarvis.kernel.approvals import ApprovalMode, approval_config
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 # Signature du callable d'envoi d'email injecté : reçoit le brouillon parsé et
@@ -177,6 +178,7 @@ class InitiativeExecutor:
             logger.info(f"InitiativeExecutor: mail envoyé (initiative {init.id})")
             return {"status": "sent", "message_id": msg_id}
         except ImportError:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001")
             # Outil d'envoi absent — expose le brouillon prêt à copier
             self._store.update_status(init.id, "done")
             return {
@@ -185,6 +187,7 @@ class InitiativeExecutor:
                 "note": "Outil d'envoi indisponible — brouillon prêt à copier",
             }
         except Exception as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             self._store.update_status(init.id, "failed")
             logger.error(f"InitiativeExecutor: envoi mail échoué: {e}")
             return {"error": str(e), "status": "error"}
@@ -226,6 +229,7 @@ class InitiativeExecutor:
                 "steps": len(project.steps),
             }
         except Exception as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             self._store.update_status(init.id, "failed")
             logger.error(f"InitiativeExecutor: lancement mission échoué: {e}")
             return {"error": str(e), "status": "error"}

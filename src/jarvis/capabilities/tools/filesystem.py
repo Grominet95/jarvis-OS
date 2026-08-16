@@ -14,6 +14,7 @@ from pathlib import Path
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.permissions import permissions as _perms
 
 _EXCLUDED_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".cache", "Library"}
@@ -55,6 +56,7 @@ async def _mdfind(pattern: str, directory: str | None = None) -> list[str]:
         # Post-filter avec le glob exact
         return [line for line in lines if fnmatch.fnmatch(Path(line).name, pattern)]
     except Exception as e:
+        collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
         logger.debug("mdfind failed", error=str(e))
         return []
 
@@ -114,6 +116,7 @@ class ReadFileTool(Tool):
             logger.debug("File read", path=str(p), chars=len(content))
             return ToolResult(content=content)
         except OSError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return ToolResult(content=f"Erreur de lecture : {e}", is_error=True)
 
 

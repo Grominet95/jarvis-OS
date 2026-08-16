@@ -30,6 +30,7 @@ from jarvis.hardware.macropad_2k.paths import (
     sketch_dir,
     sketch_ino,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 ProgressCallback = Callable[[str], None]
 
@@ -188,6 +189,7 @@ def upload_firmware_python(
         import usb.backend.libusb1  # noqa: F401
         import usb.core  # noqa: F401
     except Exception as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         raise RuntimeError("pyusb/libusb-package missing") from exc
 
     if progress:
@@ -211,5 +213,6 @@ def upload_firmware(
         try:
             return upload_firmware_python(workspace, progress=progress)
         except Exception as exc:
+            collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
             logger.warning("Python upload failed, falling back to arduino-cli: {}", exc)
     return upload_firmware_arduino_cli(workspace, progress=progress, attempts=attempts)

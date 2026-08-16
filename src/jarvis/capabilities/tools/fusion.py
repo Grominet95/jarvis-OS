@@ -21,6 +21,7 @@ from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.approval import get_approval_checker
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -72,6 +73,7 @@ class _FusionClient:
             )
             return "result" in resp
         except Exception:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             return False
 
     async def call(self, tool_name: str, arguments: dict) -> tuple[bool, str]:
@@ -97,6 +99,7 @@ def _parse_sse(body: str) -> dict:
             try:
                 return json.loads(line[6:])
             except Exception:
+                collector.error("JRV-TOL-001", "JRV-TOL-001")
                 pass
     return {}
 
@@ -126,6 +129,7 @@ def run(context):
         _orig_run(context)
         print("FUSION_OK: script exécuté avec succès")
     except Exception as _e:
+        collector.error("JRV-TOL-001", "JRV-TOL-001", cause=_e)
         print("FUSION_ERROR: " + _tb.format_exc())
 """
 
@@ -172,6 +176,7 @@ def run(context):
         ext_input.setDistanceExtent(False, adsk.core.ValueInput.createByReal(3))
         root.features.extrudeFeatures.add(ext_input)
     except:
+        collector.error("JRV-TOL-001", "JRV-TOL-001")
         adsk.core.Application.get().userInterface.messageBox(traceback.format_exc())
 \"\"\"
 
@@ -339,11 +344,13 @@ Cut (CutFeatureOperation) : "Aucun corps cible" = sketch sur mauvais plan
             return ToolResult(content=f"Action inconnue: {action}", is_error=True)
 
         except httpx.ConnectError:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             _client._session_id = None
             return ToolResult(
                 content=f"Connexion perdue avec Fusion 360 MCP (port {settings.fusion_mcp_port}).",
                 is_error=True,
             )
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(f"Fusion 360 error: {e}")
             return ToolResult(content=str(e), is_error=True)

@@ -8,6 +8,7 @@ import httpx
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 class WeatherTool(Tool):
@@ -38,4 +39,5 @@ class WeatherTool(Tool):
                 logger.debug("Weather fetched", city=city)
                 return ToolResult(content=r.text.strip())
         except httpx.HTTPError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return ToolResult(content=f"Météo indisponible pour {city}: {e}", is_error=True)

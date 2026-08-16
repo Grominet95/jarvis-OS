@@ -14,6 +14,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -127,6 +128,7 @@ class DockerExecutor:
             }
 
         except TimeoutError:
+            collector.error("JRV-MSN-001", "JRV-MSN-001")
             # Tuer tous les process dans le container puis signaler proprement
             try:
                 kill = await asyncio.create_subprocess_exec(
@@ -141,6 +143,7 @@ class DockerExecutor:
                 )
                 await kill.communicate()
             except Exception:
+                collector.error("JRV-MSN-001", "JRV-MSN-001")
                 pass
             logger.warning("Docker exec timeout", command=command[:60], timeout=timeout)
             return {
@@ -181,4 +184,5 @@ class DockerExecutor:
             await proc.communicate()
             return proc.returncode == 0
         except FileNotFoundError:
+            collector.error("JRV-MSN-001", "JRV-MSN-001")
             return False

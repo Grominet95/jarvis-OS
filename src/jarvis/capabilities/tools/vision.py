@@ -16,6 +16,7 @@ from PIL import Image, ImageGrab
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.contracts import VisualMemory
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.permissions import permissions as _perms
 from jarvis.kernel.settings import settings
 
@@ -193,6 +194,7 @@ class VisionTool(Tool):
 
             return ToolResult(content=result_text)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error("Vision API error", error=str(e))
             return ToolResult(content=f"Erreur GPT-4o Vision : {e}", is_error=True)
 
@@ -217,6 +219,7 @@ class VisionTool(Tool):
         try:
             await self._visual_memory.store(description=description, source=source, context=context)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.debug("Visual memory store failed", error=str(e))
 
     # ── Captures ──────────────────────────────────────────────────────────────
@@ -226,6 +229,7 @@ class VisionTool(Tool):
         try:
             import cv2  # type: ignore[import-untyped]
         except ImportError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(
                 "Vision: dépendance manquante", error=str(e), hint="uv add opencv-python pillow"
             )
@@ -255,6 +259,7 @@ class VisionTool(Tool):
             return buf.getvalue()
 
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error("Webcam capture error", error=str(e))
             return None
         finally:
@@ -297,12 +302,14 @@ class VisionTool(Tool):
             logger.debug("Screen capture via screencapture", kb=round(len(data) / 1024, 1))
             return self._resize_jpeg(data)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.debug("screencapture tempfile failed", error=str(e))
             return None
         finally:
             try:
                 os.unlink(tmp_path)
             except OSError:
+                collector.error("JRV-TOL-001", "JRV-TOL-001")
                 pass
 
     def _capture_screen_pil(self) -> bytes | None:
@@ -325,6 +332,7 @@ class VisionTool(Tool):
             )
             return buf.getvalue()
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error("Screen capture PIL error", error=str(e))
             return None
 
@@ -342,4 +350,5 @@ class VisionTool(Tool):
             logger.debug("Screen resized", width=max_w, kb=round(buf.tell() / 1024, 1))
             return buf.getvalue()
         except Exception:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             return jpeg_bytes

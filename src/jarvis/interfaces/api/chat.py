@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from jarvis.engine.background.notifications import broadcast_event
 from jarvis.engine.background.worker import BackgroundTask
 from jarvis.engine.router import RouteEnum
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 from jarvis.providers.audio.tts import tts_engine
 
@@ -118,6 +119,7 @@ async def voice_generate(body: VoiceGenerateRequest, request: Request) -> Stream
                     full += chunk
                     yield chunk
         except Exception as e:
+            collector.error("JRV-API-001", "JRV-API-001", cause=e)
             from loguru import logger as _log
 
             from jarvis.engine.llm_errors import friendly_llm_error

@@ -8,7 +8,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import Response
 from pydantic import BaseModel
 
@@ -16,6 +16,8 @@ from jarvis.engine.background.notifications import NotificationQueue
 from jarvis.engine.background.scheduler import Scheduler
 from jarvis.engine.background.worker import BackgroundWorker
 from jarvis.interfaces.api.ui import inject_client_config
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.paths import PROJECT_ROOT, UI_STATIC_DIR
 from jarvis.kernel.settings import settings
 from jarvis.providers.memory.sessions import SessionStore
@@ -92,6 +94,7 @@ async def list_sessions(request: Request) -> list[SessionMeta]:
             lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()]
             count = len(lines)
         except OSError:
+            collector.error("JRV-API-001", "JRV-API-001")
             count = 0
         result.append(
             SessionMeta(
@@ -110,7 +113,7 @@ async def get_session(session_id: str, request: Request) -> list[SessionMessage]
     store: SessionStore = SessionStore(_memory_dir(request) / "sessions")
     path = store._find(session_id)  # noqa: SLF001
     if not path:
-        raise HTTPException(status_code=404, detail="Session introuvable.")
+        raise_api_error("JRV-API-003", 404, "Session introuvable.")
     messages: list[SessionMessage] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
@@ -126,6 +129,7 @@ async def get_session(session_id: str, request: Request) -> list[SessionMessage]
                 )
             )
         except json.JSONDecodeError:
+            collector.error("JRV-API-001", "JRV-API-001")
             continue
     return messages
 
@@ -184,20 +188,20 @@ async def put_memory_prefs(body: ContentBody, request: Request) -> dict:
 @router.get("/memory/topics/{filename}")
 async def get_topic(filename: str, request: Request) -> dict:
     if "/" in filename or "\\" in filename:
-        raise HTTPException(status_code=400, detail="Nom de fichier invalide.")
+        raise_api_error("JRV-API-004", 400, "Nom de fichier invalide.")
     path = _memory_dir(request) / "topics" / filename
     if not path.exists():
-        raise HTTPException(status_code=404, detail="Fichier introuvable.")
+        raise_api_error("JRV-API-003", 404, "Fichier introuvable.")
     return {"content": path.read_text(encoding="utf-8")}
 
 
 @router.put("/memory/topics/{filename}")
 async def put_topic(filename: str, body: ContentBody, request: Request) -> dict:
     if "/" in filename or "\\" in filename:
-        raise HTTPException(status_code=400, detail="Nom de fichier invalide.")
+        raise_api_error("JRV-API-004", 400, "Nom de fichier invalide.")
     path = _memory_dir(request) / "topics" / filename
     if not path.exists():
-        raise HTTPException(status_code=404, detail="Fichier introuvable.")
+        raise_api_error("JRV-API-003", 404, "Fichier introuvable.")
     path.write_text(body.content, encoding="utf-8")
     return {"ok": True}
 
@@ -205,10 +209,10 @@ async def put_topic(filename: str, body: ContentBody, request: Request) -> dict:
 @router.delete("/memory/topics/{filename}")
 async def delete_topic(filename: str, request: Request) -> dict:
     if "/" in filename or "\\" in filename:
-        raise HTTPException(status_code=400, detail="Nom de fichier invalide.")
+        raise_api_error("JRV-API-004", 400, "Nom de fichier invalide.")
     path = _memory_dir(request) / "topics" / filename
     if not path.exists():
-        raise HTTPException(status_code=404, detail="Fichier introuvable.")
+        raise_api_error("JRV-API-003", 404, "Fichier introuvable.")
     path.unlink()
     return {"ok": True}
 

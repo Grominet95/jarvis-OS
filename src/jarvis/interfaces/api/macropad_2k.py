@@ -8,7 +8,7 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import Response
 from loguru import logger
 from pydantic import BaseModel
@@ -40,6 +40,8 @@ from jarvis.hardware.macropad_2k.profile_store import (
 )
 from jarvis.hardware.macropad_2k.usb import usb_status
 from jarvis.interfaces.api.ui import inject_client_config
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 
 router = APIRouter(prefix="/api/macropad", tags=["macropad"])
 _ui_router = APIRouter()
@@ -89,9 +91,10 @@ def _resolve_workspace(raw: str | None) -> Path:
     else:
         ws = Path(raw).expanduser().resolve()
     if not is_valid_workspace(ws):
-        raise HTTPException(
-            status_code=400,
-            detail=f"workspace invalide (CH552_HID_Keyboard manquant): {ws}",
+        raise_api_error(
+            "JRV-API-004",
+            400,
+            f"workspace invalide (CH552_HID_Keyboard manquant): {ws}",
         )
     return ws
 
@@ -118,8 +121,10 @@ async def get_workspace() -> dict[str, Any]:
 async def set_workspace(body: WorkspaceBody) -> dict[str, Any]:
     ws = Path(body.path).expanduser().resolve()
     if not is_valid_workspace(ws):
-        raise HTTPException(
-            status_code=400, detail="dossier invalide (CH552_HID_Keyboard manquant)"
+        raise_api_error(
+            "JRV-API-004",
+            400,
+            "dossier invalide (CH552_HID_Keyboard manquant)",
         )
     save_default_workspace(ws)
     return {"workspace": str(ws), "valid": True}
@@ -144,7 +149,7 @@ async def put_profile(body: ProfileBundleBody) -> dict[str, Any]:
     try:
         bundle = migrate_to_bundle(body.bundle, str(ws))
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"profil invalide: {exc}") from exc
+        raise_api_error("JRV-API-004", 400, f"profil invalide: {exc}", cause=exc)
     await asyncio.to_thread(persist_bundle, bundle, ws)
     return {"ok": True, "workspace": str(ws)}
 
@@ -164,8 +169,7 @@ async def post_install_arduino_cli() -> dict[str, Any]:
     try:
         path = await asyncio.to_thread(install_arduino_cli)
     except Exception as exc:
-        logger.exception("install_arduino_cli failed")
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise_api_error("JRV-API-001", 500, str(exc), cause=exc)
     return {"ok": True, "path": str(path)}
 
 
@@ -183,8 +187,9 @@ async def post_compile(body: CompileBody) -> dict[str, Any]:
             None,
         )
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         logger.exception("compile_firmware failed")
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise_api_error("JRV-API-001", 500, str(exc), cause=exc)
     return result
 
 
@@ -200,8 +205,9 @@ async def post_upload(body: UploadBody) -> dict[str, Any]:
             max(1, body.attempts),
         )
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         logger.exception("upload_firmware failed")
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise_api_error("JRV-API-001", 500, str(exc), cause=exc)
     return result
 
 
@@ -216,20 +222,23 @@ async def get_installed_apps() -> dict[str, Any]:
 @router.post("/launcher")
 async def post_launcher(body: LauncherBody) -> dict[str, Any]:
     if not is_windows():
-        raise HTTPException(status_code=400, detail="launcher disponible uniquement sous Windows")
+        raise_api_error("JRV-API-004", 400, "launcher disponible uniquement sous Windows")
     try:
         alias = await asyncio.to_thread(create_app_launcher, body.appId, body.appName, body.slot)
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         logger.exception("create_app_launcher failed")
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise_api_error("JRV-API-001", 500, str(exc), cause=exc)
     return {"ok": True, "alias": alias}
 
 
 @router.post("/open-device-manager")
 async def post_open_device_manager() -> dict[str, Any]:
     if not is_windows():
-        raise HTTPException(
-            status_code=400, detail="device manager disponible uniquement sous Windows"
+        raise_api_error(
+            "JRV-API-004",
+            400,
+            "device manager disponible uniquement sous Windows",
         )
     ok = await asyncio.to_thread(open_device_manager)
     return {"ok": ok}

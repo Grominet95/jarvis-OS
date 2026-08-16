@@ -18,6 +18,7 @@ from loguru import logger
 # ré-exports gardent les call-sites historiques compatibles.
 from jarvis.kernel.approval import get_approval_checker, set_approval_checker  # noqa: F401
 from jarvis.kernel.approvals import ApprovalMode, approval_config
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 class ApprovalChecker:
@@ -64,6 +65,7 @@ class ApprovalChecker:
             result = await asyncio.wait_for(future, timeout=120.0)
             return result
         except TimeoutError:
+            collector.error("JRV-ENG-000", "JRV-ENG-000")
             logger.warning(f"Approval timeout: {category} ({action_id})")
             self._pending.pop(action_id, None)
             return False

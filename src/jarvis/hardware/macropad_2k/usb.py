@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 KEYPAD_HID_VID = 0x1209
 KEYPAD_HID_PID = 0xC55D
 CH55X_BOOTLOADER_VID = 0x4348
@@ -16,6 +18,7 @@ def keypad_hid_present() -> bool:
     try:
         import hid
     except Exception as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         logger.debug("keypad_hid_present: hidapi unavailable: {}", exc)
         return False
     try:
@@ -23,6 +26,7 @@ def keypad_hid_present() -> bool:
             if d.get("vendor_id") == KEYPAD_HID_VID and d.get("product_id") == KEYPAD_HID_PID:
                 return True
     except Exception as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         logger.debug("keypad_hid_present: enumerate failed: {}", exc)
     return False
 
@@ -33,6 +37,7 @@ def ch55x_bootloader_present() -> bool:
         import usb.backend.libusb1
         import usb.core
     except Exception as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         logger.debug("ch55x_bootloader_present: pyusb unavailable: {}", exc)
         return False
     try:
@@ -47,6 +52,7 @@ def ch55x_bootloader_present() -> bool:
         )
         return any(True for _ in (devices or []))
     except Exception as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         logger.debug("ch55x_bootloader_present: find failed: {}", exc)
         return False
 

@@ -32,11 +32,10 @@ def test_all_descend_from_jarvis_error(exc: type[Exception]) -> None:
 
 
 def test_catching_jarvis_error_catches_subclasses() -> None:
-    """Une couche haute doit pouvoir attraper toute la famille via JarvisError seul."""
     families = (LLMError, MemoryError_, ToolError, SkillError, BudgetExceeded, PermissionDenied)
     for exc_cls in families:
         with pytest.raises(JarvisError):
-            raise exc_cls("boom")
+            raise exc_cls("JRV-ENG-000", "boom")
 
 
 def test_memory_error_does_not_shadow_builtin() -> None:

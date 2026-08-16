@@ -1,4 +1,11 @@
-# ── Python ───────────────────────────────────────────────────
+# ── AI knowledge base ────────────────────────────────────────
+Documentation_Helper/AI_INSTRUCTIONS.md
+Documentation_Helper/doc_index.sqlite
+Documentation_Helper/doc_index.sqlite-*
+
+# ── Doc helper Node deps ─────────────────────────────────────
+scripts/doc_helper/node_modules/
+
 __pycache__/
 *.py[oc]
 build/

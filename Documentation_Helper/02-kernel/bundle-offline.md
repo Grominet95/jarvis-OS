@@ -1,0 +1,21 @@
+# Bundle Offline
+
+`bundle.py`, `bundle_download.py` — offline venv and CDN download.
+
+See module cards in [modules/](modules/) for per-file detail.
+
+
+## Related docs
+
+- [INDEX](../INDEX.md)
+- [AI_INSTRUCTIONS](../AI_INSTRUCTIONS.md)
+- [overview](./overview.md)
+- [env-reference](../07-config/env-reference.md)
+- [architecture-layers](../00-meta/architecture-layers.md)
+- [setup-flow](../01-entry-points/setup-flow.md)
+- [windows-launchers](../01-entry-points/windows-launchers.md)
+- [process-map](../maps/process-map.md)
+- [run-flow](../01-entry-points/run-flow.md)
+- [logs-and-doctor](../09-operations/logs-and-doctor.md)
+
+- **Last reviewed:** 2026-08-13 (jarvis-os @ local)

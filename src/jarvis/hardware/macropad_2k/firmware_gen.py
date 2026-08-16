@@ -16,6 +16,7 @@ from jarvis.hardware.macropad_2k.models import (
     get_active_profile,
 )
 from jarvis.hardware.macropad_2k.paths import generated_dir, sketch_dir, usb_hid_dir
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 MANUFACTURER_USB = "Techalchemy SI"
 USB_SERIAL_FIXED = "TCY-CH552-KB"
@@ -76,6 +77,7 @@ def _clamp_int(value: object, lo: int, hi: int, fallback: int) -> int:
     try:
         n = int(round(float(value)))
     except (TypeError, ValueError):
+        collector.warning("JRV-HW-001", "JRV-HW-001")
         return fallback
     return max(lo, min(hi, n))
 
@@ -84,6 +86,7 @@ def _clamp01(value: object, fallback: float = 1.0) -> float:
     try:
         n = float(value)
     except (TypeError, ValueError):
+        collector.warning("JRV-HW-001", "JRV-HW-001")
         return fallback
     if n != n:
         return fallback
@@ -103,6 +106,7 @@ def _hex_to_rgb(
     try:
         n = int(raw, 16)
     except ValueError:
+        collector.warning("JRV-HW-001", "JRV-HW-001")
         return fallback
     return (n >> 16) & 0xFF, (n >> 8) & 0xFF, n & 0xFF
 

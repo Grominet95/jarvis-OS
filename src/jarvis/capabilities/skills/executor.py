@@ -13,6 +13,7 @@ from loguru import logger
 
 from jarvis.capabilities.skills.app_checker import check_all_apps
 from jarvis.capabilities.skills.base import PresetSkill, PresetStep
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.notifications import broadcast_audio
 from jarvis.kernel.settings import settings
 
@@ -143,6 +144,7 @@ class PresetExecutor:
         try:
             return await handler(step)
         except Exception as e:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
             logger.error(f"Erreur step '{step.name}': {e}")
             return {"status": "failed", "message": str(e)}
 

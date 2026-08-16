@@ -29,6 +29,7 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 router = APIRouter()
@@ -40,6 +41,7 @@ def _safe_load_json(p: Path) -> dict | None:
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
+        collector.error("JRV-API-001", "JRV-API-001")
         return None
 
 
@@ -62,6 +64,7 @@ def _google_health(token_path: Path) -> dict:
         else:
             exp_ts = float(expiry)
     except Exception:  # noqa: BLE001
+        collector.error("JRV-API-001", "JRV-API-001")
         return {"token_health": "error", "expires_at": str(expiry)}
     # On considère "expired" si plus de refresh possible. En pratique le
     # refresh_token Google ne meurt pas tant qu'il n'a pas été révoqué — donc

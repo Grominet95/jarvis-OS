@@ -1,0 +1,3126 @@
+{
+  "total": 390,
+  "unmapped_count": 0,
+  "sites": [
+    {
+      "file": "src/jarvis/analytics/widgets/conso.py",
+      "line": 53,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-OPS-001\", \"JRV-OPS-001\", cause=e)             return WidgetDat",
+      "mapped": true,
+      "suggested_code": "JRV-OPS-001"
+    },
+    {
+      "file": "src/jarvis/analytics/widgets/discord.py",
+      "line": 47,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-OPS-001\", \"JRV-OPS-001\", cause=e)             return WidgetDat",
+      "mapped": true,
+      "suggested_code": "JRV-OPS-001"
+    },
+    {
+      "file": "src/jarvis/analytics/widgets/github.py",
+      "line": 58,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-OPS-001\", \"JRV-OPS-001\", cause=e)             return WidgetDat",
+      "mapped": true,
+      "suggested_code": "JRV-OPS-001"
+    },
+    {
+      "file": "src/jarvis/analytics/widgets/jarvis_stats.py",
+      "line": 67,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-OPS-001\", \"JRV-OPS-001\", cause=e)             return WidgetDat",
+      "mapped": true,
+      "suggested_code": "JRV-OPS-001"
+    },
+    {
+      "file": "src/jarvis/analytics/widgets/youtube.py",
+      "line": 72,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-OPS-001\", \"JRV-OPS-001\", cause=e)             return WidgetDat",
+      "mapped": true,
+      "suggested_code": "JRV-OPS-001"
+    },
+    {
+      "file": "src/jarvis/app.py",
+      "line": 17,
+      "kind": "except",
+      "snippet": "except (AttributeError, ValueError, OSError):  # jrv: stream reconfigure best-effort         pass",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/app.py",
+      "line": 242,
+      "kind": "except",
+      "snippet": "except asyncio.CancelledError:  # jrv: expected worker shutdown         pass",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/app.py",
+      "line": 251,
+      "kind": "except",
+      "snippet": "except RuntimeError as e:                 collector.warning(\"JRV-MSG-001\", \"Telegram shutdown ignored\", cause=e)",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/bootstrap.py",
+      "line": 652,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 la mission est close, on d\u00e9grade             collector.error(\"JRV-BTS-001\", \"",
+      "mapped": true,
+      "suggested_code": "JRV-BTS-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/_clawhub.py",
+      "line": 27,
+      "kind": "except",
+      "snippet": "except httpx.HTTPError as e:         collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)         logger.error(\"ClawHu",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/_clawhub.py",
+      "line": 49,
+      "kind": "except",
+      "snippet": "except httpx.HTTPError as e:         collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)         return False, f\"Erre",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/_clawhub.py",
+      "line": 62,
+      "kind": "except",
+      "snippet": "except zipfile.BadZipFile:         collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")         dest.rmdir()         return Fal",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/_loader.py",
+      "line": 25,
+      "kind": "except",
+      "snippet": "except OSError:         collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")         logger.warning(\"Cannot read skill\", path=s",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/_loader.py",
+      "line": 37,
+      "kind": "except",
+      "snippet": "except yaml.YAMLError as e:         collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)         logger.warning(\"Skill",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/app_checker.py",
+      "line": 47,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/app_checker.py",
+      "line": 59,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/app_checker.py",
+      "line": 71,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/executor.py",
+      "line": 146,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)             logger.error(f\"Err",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/installer.py",
+      "line": 62,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)             logger.warning(f\"C",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/installer.py",
+      "line": 116,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)             if skill_dir.exist",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/installer.py",
+      "line": 261,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)             return {\"success\":",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 374,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 synth\u00e8se foireuse, on log             collector.error(\"JRV-SKL-001\", \"JRV-SKL",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 422,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=exc)           ",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 597,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")             return SandboxTestRes",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 287,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 best-effort par event                 collector.error(\"JRV-SKL-001\", \"JRV-SKL",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 396,
+      "kind": "except",
+      "snippet": "except (TypeError, json.JSONDecodeError):                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")                 ",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 513,
+      "kind": "except",
+      "snippet": "except TimeoutError:                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")                 # Tue le container   ",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 573,
+      "kind": "except",
+      "snippet": "except TimeoutError:                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\")                 proc.kill()          ",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/lab.py",
+      "line": 665,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=exc)       ",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/registry.py",
+      "line": 98,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)             logger.error(f\"Err",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/registry.py",
+      "line": 146,
+      "kind": "except",
+      "snippet": "except Exception as e:                 collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=e)                 logger.err",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/standard.py",
+      "line": 188,
+      "kind": "except",
+      "snippet": "except yaml.YAMLError as exc:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=exc)             logger.wa",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/skills/synthesizer.py",
+      "line": 263,
+      "kind": "except",
+      "snippet": "except yaml.YAMLError as exc:             collector.error(\"JRV-SKL-001\", \"JRV-SKL-001\", cause=exc)             logger.wa",
+      "mapped": true,
+      "suggested_code": "JRV-SKL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/browser.py",
+      "line": 47,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")         return \"URL invalide.\"",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/browser.py",
+      "line": 136,
+      "kind": "except",
+      "snippet": "except httpx.TimeoutException:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             return \"\", f\"Timeou",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/browser.py",
+      "line": 139,
+      "kind": "except",
+      "snippet": "except httpx.HTTPStatusError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/browser.py",
+      "line": 142,
+      "kind": "except",
+      "snippet": "except httpx.RequestError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return \"\"",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/browser.py",
+      "line": 152,
+      "kind": "except",
+      "snippet": "except ImportError:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             return \"beautifulsoup4 non ins",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/calendar.py",
+      "line": 26,
+      "kind": "except",
+      "snippet": "except ImportError:     collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")     _HAS_GOOGLE = False",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/calendar.py",
+      "line": 92,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return ToolResult(",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/calendar.py",
+      "line": 126,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(f\"Cal",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/calendar.py",
+      "line": 169,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return ToolResult(",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/calendar.py",
+      "line": 196,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(f\"Cal",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/calendar.py",
+      "line": 44,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")                 token_path.unlink(missin",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/capability.py",
+      "line": 92,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=exc)           ",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/cli.py",
+      "line": 319,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             try:                 proc.kil",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/cli.py",
+      "line": 327,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return ToolResult(co",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/cli.py",
+      "line": 446,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             try:                 proc.kil",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/cli.py",
+      "line": 454,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return ToolResult(co",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/cli.py",
+      "line": 472,
+      "kind": "except",
+      "snippet": "except ValueError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.warning(f\"",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/cli.py",
+      "line": 323,
+      "kind": "except",
+      "snippet": "except ProcessLookupError:                 collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/cli.py",
+      "line": 450,
+      "kind": "except",
+      "snippet": "except ProcessLookupError:                 collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/filesystem.py",
+      "line": 58,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)         logger.debug(\"mdfind faile",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/filesystem.py",
+      "line": 118,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return ToolResult(co",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/fusion.py",
+      "line": 75,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             return False",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/fusion.py",
+      "line": 346,
+      "kind": "except",
+      "snippet": "except httpx.ConnectError:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             _client._session_id = N",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/fusion.py",
+      "line": 353,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(f\"Fus",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/fusion.py",
+      "line": 101,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/gmail.py",
+      "line": 30,
+      "kind": "except",
+      "snippet": "except ImportError:     collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")     _HAS_GOOGLE = False",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/gmail.py",
+      "line": 93,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return ToolResult(",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/gmail.py",
+      "line": 142,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(f\"Gma",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/map_control.py",
+      "line": 139,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/memory.py",
+      "line": 149,
+      "kind": "except",
+      "snippet": "except (TypeError, ValueError):             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             k_int = 5",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/notion.py",
+      "line": 49,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(\"Noti",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/printer.py",
+      "line": 168,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             proc.kill()             retur",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/printer.py",
+      "line": 217,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(f\"Pri",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/printer.py",
+      "line": 263,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(f\"Pri",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/printer.py",
+      "line": 293,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(f\"Pri",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/registry.py",
+      "line": 101,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(code, f\"Tool {name} failed\", cause=e)             logger.error(\"Tool ",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/show_view.py",
+      "line": 257,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/skills.py",
+      "line": 84,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=exc)           ",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/skills.py",
+      "line": 156,
+      "kind": "except",
+      "snippet": "except FileNotFoundError as exc:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=exc)             return",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/skills.py",
+      "line": 159,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=exc)           ",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/spotify.py",
+      "line": 236,
+      "kind": "except",
+      "snippet": "except httpx.TimeoutException:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             logger.warning(\"Spo",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/spotify.py",
+      "line": 240,
+      "kind": "except",
+      "snippet": "except httpx.RequestError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.er",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/subagent.py",
+      "line": 84,
+      "kind": "except",
+      "snippet": "except Exception as exc:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=exc)             logger.error(\"",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 196,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(\"Visi",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 221,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.debug(\"Visu",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 231,
+      "kind": "except",
+      "snippet": "except ImportError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(   ",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 261,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(\"Webc",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 304,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.debug(\"scre",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 334,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             logger.error(\"Scre",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 352,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")             return jpeg_bytes",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/vision.py",
+      "line": 311,
+      "kind": "except",
+      "snippet": "except OSError:                 collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/capabilities/tools/weather.py",
+      "line": 41,
+      "kind": "except",
+      "snippet": "except httpx.HTTPError as e:             collector.error(\"JRV-TOL-001\", \"JRV-TOL-001\", cause=e)             return ToolR",
+      "mapped": true,
+      "suggested_code": "JRV-TOL-001"
+    },
+    {
+      "file": "src/jarvis/engine/approval_checker.py",
+      "line": 67,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\")             logger.warning(f\"Approval tim",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/engine/background/notifications.py",
+      "line": 62,
+      "kind": "except",
+      "snippet": "except ValueError:             collector.warning(\"JRV-BG-001\", \"JRV-BG-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/notifications.py",
+      "line": 129,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-BG-001\", \"JRV-BG-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/routines.py",
+      "line": 174,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-BG-001\", \"JRV-BG-001\", cause=exc)           ",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/routines.py",
+      "line": 186,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-BG-001\", \"JRV-BG-001\", cause=exc)           ",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/scheduler.py",
+      "line": 219,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-BG-001\", \"JRV-BG-001\", cause=e)             parts.append(f\"Age",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/scheduler.py",
+      "line": 275,
+      "kind": "except",
+      "snippet": "except Exception:             collector.warning(\"JRV-BG-001\", \"JRV-BG-001\")             logger.exception(\"Calendar remin",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/scheduler.py",
+      "line": 189,
+      "kind": "except",
+      "snippet": "except ValueError as exc:                 collector.warning(\"JRV-BG-001\", \"JRV-BG-001\", cause=exc)                 logge",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/scheduler.py",
+      "line": 228,
+      "kind": "except",
+      "snippet": "except Exception as e:                 collector.warning(\"JRV-BG-001\", \"JRV-BG-001\", cause=e)                 logger.deb",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/scheduler.py",
+      "line": 317,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 un scan rat\u00e9 ne tue pas la boucle                 collector.warning(\"JRV-BG-0",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/scheduler.py",
+      "line": 344,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.warning(\"JRV-BG-001\", \"JRV-BG-001\", cause=exc)       ",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/scheduler.py",
+      "line": 266,
+      "kind": "except",
+      "snippet": "except ValueError:                     collector.warning(\"JRV-BG-001\", \"JRV-BG-001\")                     continue",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/background/worker.py",
+      "line": 92,
+      "kind": "except",
+      "snippet": "except Exception as e:                 collector.warning(\"JRV-BG-001\", \"JRV-BG-001\", cause=e)                 record.err",
+      "mapped": true,
+      "suggested_code": "JRV-BG-001"
+    },
+    {
+      "file": "src/jarvis/engine/budget.py",
+      "line": 80,
+      "kind": "except",
+      "snippet": "except Exception as exc:             collector.error(\"JRV-BGT-001\", \"JRV-BGT-001\", cause=exc)             logger.warning",
+      "mapped": true,
+      "suggested_code": "JRV-BGT-001"
+    },
+    {
+      "file": "src/jarvis/engine/budget.py",
+      "line": 90,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-BGT-001\", \"JRV-BGT-001\")             return 0.0",
+      "mapped": true,
+      "suggested_code": "JRV-BGT-001"
+    },
+    {
+      "file": "src/jarvis/engine/gateway.py",
+      "line": 144,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-GWY-001\", \"JRV-GWY-001\", cause=e)             logger.opt(excepti",
+      "mapped": true,
+      "suggested_code": "JRV-GWY-001"
+    },
+    {
+      "file": "src/jarvis/engine/gateway.py",
+      "line": 81,
+      "kind": "except",
+      "snippet": "except Exception as e:                 collector.error(\"JRV-GWY-001\", \"JRV-GWY-001\", cause=e)                 logger.war",
+      "mapped": true,
+      "suggested_code": "JRV-GWY-001"
+    },
+    {
+      "file": "src/jarvis/engine/gateway.py",
+      "line": 132,
+      "kind": "except",
+      "snippet": "except Exception as e:                         collector.error(\"JRV-GWY-001\", \"JRV-GWY-001\", cause=e)                   ",
+      "mapped": true,
+      "suggested_code": "JRV-GWY-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/backends/local.py",
+      "line": 63,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")             return BackendResult(        ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/backends/local.py",
+      "line": 71,
+      "kind": "except",
+      "snippet": "except Exception as exc:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)             return Backend",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/backends/rpc.py",
+      "line": 208,
+      "kind": "except",
+      "snippet": "except asyncio.CancelledError:                 collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/backends/rpc.py",
+      "line": 186,
+      "kind": "except",
+      "snippet": "except Exception as exc:                         collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)               ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/backends/ssh.py",
+      "line": 103,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")             return BackendResult(        ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/backends/ssh.py",
+      "line": 111,
+      "kind": "except",
+      "snippet": "except Exception as exc:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)             return Backend",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/capability_engine.py",
+      "line": 159,
+      "kind": "except",
+      "snippet": "except yaml.YAMLError as exc:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)             logger.wa",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/capability_engine.py",
+      "line": 387,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 registry peut planter             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/capability_engine.py",
+      "line": 414,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)           ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/docker_executor.py",
+      "line": 130,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")             # Tuer tous les process dans ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/docker_executor.py",
+      "line": 186,
+      "kind": "except",
+      "snippet": "except FileNotFoundError:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")             return False",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/docker_executor.py",
+      "line": 145,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/orchestrator.py",
+      "line": 75,
+      "kind": "except",
+      "snippet": "except ValueError as exc:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)             project.statu",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/orchestrator.py",
+      "line": 253,
+      "kind": "except",
+      "snippet": "except TimeoutError:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")             self._pending_approvals.pop(k",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/project_manager.py",
+      "line": 303,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError as e:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=e)             logger.",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/project_store.py",
+      "line": 56,
+      "kind": "except",
+      "snippet": "except Exception:             collector.warning(\"JRV-MSN-002\", \"JRV-MSN-002\")             return None",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/project_store.py",
+      "line": 102,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-MSN-002\", \"JRV-MSN-002\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/project_store.py",
+      "line": 147,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-MSN-002\", \"JRV-MSN-002\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/project_store.py",
+      "line": 125,
+      "kind": "except",
+      "snippet": "except Exception:                     collector.warning(\"JRV-MSN-002\", \"JRV-MSN-002\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/quality_checker.py",
+      "line": 88,
+      "kind": "except",
+      "snippet": "except SyntaxError as e:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=e)             return {\"valid\":",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/reflexion.py",
+      "line": 299,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:         collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")         return None",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/reflexion.py",
+      "line": 157,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 pas de le\u00e7on vaut mieux qu'un crash             collector.error(\"JRV-MSN-001\"",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/reflexion.py",
+      "line": 112,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 la mission est close, on d\u00e9grade                 collector.error(\"JRV-MSN-001",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/reflexion.py",
+      "line": 140,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)       ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/reflexion.py",
+      "line": 124,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)       ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/verifier.py",
+      "line": 118,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 on capture tout exec error             collector.error(\"JRV-MSN-001\", \"JRV-MS",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/verifier.py",
+      "line": 186,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 erreur LLM = doute = verified=false             collector.error(\"JRV-MSN-001\"",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/verifier.py",
+      "line": 240,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")             return None",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/verifier.py",
+      "line": 310,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=exc)       ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 66,
+      "kind": "except",
+      "snippet": "except FileNotFoundError:     collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")     _QUALITY_RULES = \"\"",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 364,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=e)             project.status = P",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 410,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 la mission est close, on log et basta             collector.error(\"JRV-MSN-00",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 737,
+      "kind": "except",
+      "snippet": "except ValueError as e:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=e)             # Sandbox violati",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 742,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\", cause=e)             await self._log(\"e",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 510,
+      "kind": "except",
+      "snippet": "except BudgetExceeded:                 collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")                 # Hard-stop budget ",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 531,
+      "kind": "except",
+      "snippet": "except TimeoutError:                 collector.error(\"JRV-MSN-001\", \"JRV-MSN-001\")                 step.status = StepSta",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/mission/worker_agent.py",
+      "line": 537,
+      "kind": "except",
+      "snippet": "except Exception as e:  # noqa: BLE001 \u2014 exec failure surfaced as step FAILED                 collector.error(\"JRV-MSN-0",
+      "mapped": true,
+      "suggested_code": "JRV-MSN-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/collectors/base.py",
+      "line": 26,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             if is_offline_mo",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/collectors/email.py",
+      "line": 106,
+      "kind": "except",
+      "snippet": "except FileNotFoundError as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             logger.w",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/collectors/email.py",
+      "line": 64,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                 return \"\"",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/collectors/home_assistant.py",
+      "line": 79,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             logger.warning(f",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/collectors/news.py",
+      "line": 108,
+      "kind": "except",
+      "snippet": "except Exception:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")             return []",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/command_center.py",
+      "line": 135,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 un store d\u00e9faillant n'arr\u00eate pas la vue             collector.warning(\"JRV-PR",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/command_center.py",
+      "line": 144,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=exc)         ",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/command_center.py",
+      "line": 208,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=exc)         ",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/command_center.py",
+      "line": 237,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")             pending = []",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/command_center.py",
+      "line": 242,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")             stale = []",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/command_center.py",
+      "line": 231,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001                 collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                 by_sta",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/curator.py",
+      "line": 352,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=exc)         ",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/curator.py",
+      "line": 378,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=exc)         ",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/curator.py",
+      "line": 454,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=exc)         ",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/engine.py",
+      "line": 193,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             logger.error(f\"P",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/executor.py",
+      "line": 180,
+      "kind": "except",
+      "snippet": "except ImportError:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")             # Outil d'envoi absent \u2014 exp",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/executor.py",
+      "line": 189,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             self._store.upda",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/executor.py",
+      "line": 231,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             self._store.upda",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/initiative_generator.py",
+      "line": 63,
+      "kind": "except",
+      "snippet": "except Exception:         collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")         return False",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/initiative_generator.py",
+      "line": 320,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             logger.warning(f",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/initiative_generator.py",
+      "line": 379,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)             logger.error(f\"R",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/initiative_generator.py",
+      "line": 441,
+      "kind": "except",
+      "snippet": "except (json.JSONDecodeError, ValueError) as e:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)    ",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/initiative_generator.py",
+      "line": 360,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/initiative_generator.py",
+      "line": 417,
+      "kind": "except",
+      "snippet": "except (ValueError, KeyError) as e:                     collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\", cause=e)        ",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 194,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 266,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 289,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 113,
+      "kind": "except",
+      "snippet": "except Exception:                     collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 129,
+      "kind": "except",
+      "snippet": "except Exception:                     collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 211,
+      "kind": "except",
+      "snippet": "except Exception:                     collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 228,
+      "kind": "except",
+      "snippet": "except Exception:                     collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/store.py",
+      "line": 243,
+      "kind": "except",
+      "snippet": "except Exception:                     collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/trackers/jobs.py",
+      "line": 49,
+      "kind": "except",
+      "snippet": "except Exception:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")             return 0",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/proactive/trackers/jobs.py",
+      "line": 69,
+      "kind": "except",
+      "snippet": "except Exception:             collector.warning(\"JRV-PRO-001\", \"JRV-PRO-001\")             return []",
+      "mapped": true,
+      "suggested_code": "JRV-PRO-001"
+    },
+    {
+      "file": "src/jarvis/engine/router.py",
+      "line": 89,
+      "kind": "except",
+      "snippet": "except ValueError:                 collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\")                 route = RouteEnum.INSTA",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/engine/router.py",
+      "line": 102,
+      "kind": "except",
+      "snippet": "except ValueError:                     collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\")                     route = RouteEn",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/engine/session.py",
+      "line": 66,
+      "kind": "except",
+      "snippet": "except ValueError:             collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\")             return None",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/engine/tracking.py",
+      "line": 60,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/engine/tracking.py",
+      "line": 330,
+      "kind": "except",
+      "snippet": "except (ValueError, IndexError):                 collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/engine/tracking.py",
+      "line": 76,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:                     collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/arduino_cli.py",
+      "line": 125,
+      "kind": "except",
+      "snippet": "except OSError:             collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/firmware_gen.py",
+      "line": 79,
+      "kind": "except",
+      "snippet": "except (TypeError, ValueError):         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")         return fallback",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/firmware_gen.py",
+      "line": 88,
+      "kind": "except",
+      "snippet": "except (TypeError, ValueError):         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")         return fallback",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/firmware_gen.py",
+      "line": 108,
+      "kind": "except",
+      "snippet": "except ValueError:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")         return fallback",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/flasher.py",
+      "line": 191,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)         raise RuntimeError(\"py",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/flasher.py",
+      "line": 215,
+      "kind": "except",
+      "snippet": "except Exception as exc:             collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)             logger.warning",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/launcher.py",
+      "line": 47,
+      "kind": "except",
+      "snippet": "except (OSError, subprocess.SubprocessError) as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)   ",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/launcher.py",
+      "line": 59,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")         return []",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/launcher.py",
+      "line": 142,
+      "kind": "except",
+      "snippet": "except (OSError, subprocess.SubprocessError) as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)   ",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/launcher.py",
+      "line": 173,
+      "kind": "except",
+      "snippet": "except OSError:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")         return False",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/profile_store.py",
+      "line": 47,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)         logger.warning(\"merge_",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/profile_store.py",
+      "line": 87,
+      "kind": "except",
+      "snippet": "except (json.JSONDecodeError, OSError):         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")         return default_bun",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/profile_store.py",
+      "line": 114,
+      "kind": "except",
+      "snippet": "except (json.JSONDecodeError, OSError):             collector.warning(\"JRV-HW-001\", \"JRV-HW-001\")             data = {}",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/usb.py",
+      "line": 20,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)         logger.debug(\"keypad_h",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/usb.py",
+      "line": 28,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)         logger.debug(\"keypad_h",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/usb.py",
+      "line": 39,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)         logger.debug(\"ch55x_bo",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/hardware/macropad_2k/usb.py",
+      "line": 54,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.warning(\"JRV-HW-001\", \"JRV-HW-001\", cause=exc)         logger.debug(\"ch55x_bo",
+      "mapped": true,
+      "suggested_code": "JRV-HW-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/admin.py",
+      "line": 96,
+      "kind": "except",
+      "snippet": "except OSError:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             count = 0",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/admin.py",
+      "line": 131,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             continue",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/analytics.py",
+      "line": 64,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/analytics.py",
+      "line": 187,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         return {\"configured\": ",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/analytics.py",
+      "line": 259,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         body = {}",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/analytics.py",
+      "line": 80,
+      "kind": "except",
+      "snippet": "except ValueError:                 collector.error(\"JRV-API-001\", \"JRV-API-001\")                 continue",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/analytics.py",
+      "line": 93,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-API-001\", \"JRV-API-001\")                 continue",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/analytics.py",
+      "line": 44,
+      "kind": "except",
+      "snippet": "except OSError:                     collector.error(\"JRV-API-001\", \"JRV-API-001\")                     pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/analytics.py",
+      "line": 59,
+      "kind": "except",
+      "snippet": "except ValueError:                         collector.error(\"JRV-API-001\", \"JRV-API-001\")                         created",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/briefing.py",
+      "line": 87,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.warning(\"[briefing]",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/briefing.py",
+      "line": 116,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.warning(\"[briefing]",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/channels.py",
+      "line": 32,
+      "kind": "except",
+      "snippet": "except ValueError:         raise_api_error(\"JRV-API-003\", 404, f\"Plateforme inconnue : {platform}\")",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/chat.py",
+      "line": 121,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)             from loguru import",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/devices.py",
+      "line": 116,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/devices.py",
+      "line": 57,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             model = platform.node().replace(",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/devices.py",
+      "line": 126,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/devices.py",
+      "line": 162,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             return \"on\"",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/devices.py",
+      "line": 132,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/llm.py",
+      "line": 77,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         return {\"available\": False, \"models\": []",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/llm.py",
+      "line": 102,
+      "kind": "except",
+      "snippet": "except Exception as exc:             collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)             yield f\"data: ",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/permissions.py",
+      "line": 62,
+      "kind": "except",
+      "snippet": "except ValueError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         msg = f\"Mode invalide: {body.mode}. Val",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/settings.py",
+      "line": 265,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/settings.py",
+      "line": 307,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         return {\"ok\": False, \"",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/settings.py",
+      "line": 174,
+      "kind": "except",
+      "snippet": "except (ValueError, TypeError):             collector.error(\"JRV-API-001\", \"JRV-API-001\")             object.__setattr__",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/settings.py",
+      "line": 231,
+      "kind": "except",
+      "snippet": "except Exception as exc:             collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)             logger.warning",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/settings.py",
+      "line": 72,
+      "kind": "except",
+      "snippet": "except (ValueError, TypeError):                 collector.error(\"JRV-API-001\", \"JRV-API-001\")                 return get",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/config/settings.py",
+      "line": 78,
+      "kind": "except",
+      "snippet": "except (ValueError, TypeError):                 collector.error(\"JRV-API-001\", \"JRV-API-001\")                 return get",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/connectors.py",
+      "line": 43,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001         collector.error(\"JRV-API-001\", \"JRV-API-001\")         return None",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/connectors.py",
+      "line": 66,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001         collector.error(\"JRV-API-001\", \"JRV-API-001\")         return {\"token_health\": ",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/deezer.py",
+      "line": 135,
+      "kind": "except",
+      "snippet": "except httpx.TimeoutException:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         logger.debug(\"Deezer player",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/deezer.py",
+      "line": 139,
+      "kind": "except",
+      "snippet": "except httpx.RequestError as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.warning(\"D",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/deezer.py",
+      "line": 185,
+      "kind": "except",
+      "snippet": "except (httpx.TimeoutException, httpx.RequestError) as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/globe.py",
+      "line": 97,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         if is_offline_mode(): ",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/globe.py",
+      "line": 194,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             return key, {                 \"n",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/google_oauth.py",
+      "line": 138,
+      "kind": "except",
+      "snippet": "except ImportError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         logger.error(\"google-auth-oauthlib non",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/google_oauth.py",
+      "line": 142,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         logger.exception(\"Goog",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/google_oauth.py",
+      "line": 182,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         logger.exception(\"Goog",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 63,
+      "kind": "except",
+      "snippet": "except FileNotFoundError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         logger.debug(\"nowplaying-cli not",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 67,
+      "kind": "except",
+      "snippet": "except (TimeoutError, Exception) as e:  # noqa: BLE001         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)   ",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 86,
+      "kind": "except",
+      "snippet": "except ValueError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         rate = 0.0",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 91,
+      "kind": "except",
+      "snippet": "except ValueError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         duration_ms = 0",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 96,
+      "kind": "except",
+      "snippet": "except ValueError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         progress_ms = 0",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 170,
+      "kind": "except",
+      "snippet": "except (ValueError, TypeError):         collector.error(\"JRV-API-001\", \"JRV-API-001\")         duration_ms = 0",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 209,
+      "kind": "except",
+      "snippet": "except Exception as e:  # noqa: BLE001         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.deb",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 229,
+      "kind": "except",
+      "snippet": "except Exception as e:  # noqa: BLE001         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.deb",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 241,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001         collector.error(\"JRV-API-001\", \"JRV-API-001\")         return",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 252,
+      "kind": "except",
+      "snippet": "except Exception as e:  # noqa: BLE001         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.deb",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 149,
+      "kind": "except",
+      "snippet": "except OSError:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             return None",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 199,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001             collector.error(\"JRV-API-001\", \"JRV-API-001\")             continue",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/local_music.py",
+      "line": 225,
+      "kind": "except",
+      "snippet": "except Exception:  # noqa: BLE001             collector.error(\"JRV-API-001\", \"JRV-API-001\")             position = 0",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/macropad_2k.py",
+      "line": 151,
+      "kind": "except",
+      "snippet": "except Exception as exc:         raise_api_error(\"JRV-API-004\", 400, f\"profil invalide: {exc}\", cause=exc)",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/macropad_2k.py",
+      "line": 171,
+      "kind": "except",
+      "snippet": "except Exception as exc:         raise_api_error(\"JRV-API-001\", 500, str(exc), cause=exc)",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/macropad_2k.py",
+      "line": 189,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         logger.exception(\"comp",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/macropad_2k.py",
+      "line": 207,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         logger.exception(\"uplo",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/macropad_2k.py",
+      "line": 228,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=exc)         logger.exception(\"crea",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/memory.py",
+      "line": 149,
+      "kind": "except",
+      "snippet": "except ValueError:         raise_api_error(             \"JRV-API-004\",             400,             f\"Status invalide '{",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/memory.py",
+      "line": 194,
+      "kind": "except",
+      "snippet": "except ValueError:             raise_api_error(                 \"JRV-API-004\",                 400,                 f\"St",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/proactive.py",
+      "line": 111,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         _log.error(f\"Initiative ap",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/projects.py",
+      "line": 142,
+      "kind": "except",
+      "snippet": "except FileNotFoundError as e:         raise_api_error(\"JRV-API-003\", 404, str(e), cause=e)",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/projects.py",
+      "line": 144,
+      "kind": "except",
+      "snippet": "except ValueError as e:         raise_api_error(\"JRV-PRM-001\", 403, str(e), cause=e)",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/sessions.py",
+      "line": 36,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         return {}",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/sessions.py",
+      "line": 68,
+      "kind": "except",
+      "snippet": "except OSError:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/sessions.py",
+      "line": 79,
+      "kind": "except",
+      "snippet": "except (json.JSONDecodeError, KeyError):                 collector.error(\"JRV-API-001\", \"JRV-API-001\")                 p",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/setup_wizard.py",
+      "line": 67,
+      "kind": "except",
+      "snippet": "except OSError:                 collector.error(\"JRV-API-001\", \"JRV-API-001\")                 continue",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/skills.py",
+      "line": 74,
+      "kind": "except",
+      "snippet": "except ValueError:             raise_api_error(\"JRV-API-004\", 400, f\"Status invalide : {status}\")",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/skills.py",
+      "line": 235,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             continue",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/spotify.py",
+      "line": 126,
+      "kind": "except",
+      "snippet": "except httpx.RequestError as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.warning(\"S",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/spotify.py",
+      "line": 146,
+      "kind": "except",
+      "snippet": "except httpx.TimeoutException:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         logger.debug(\"Spotify playe",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/spotify.py",
+      "line": 150,
+      "kind": "except",
+      "snippet": "except httpx.RequestError as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.warning(\"S",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/spotify.py",
+      "line": 229,
+      "kind": "except",
+      "snippet": "except httpx.TimeoutException:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         logger.debug(\"Spotify actio",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/spotify.py",
+      "line": 233,
+      "kind": "except",
+      "snippet": "except httpx.RequestError as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.warning(\"S",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/spotify.py",
+      "line": 182,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 100,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         checks[\"docker\"] = {\"status\": \"error\", \"",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 111,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         checks[\"skills\"] = {\"status\": \"warning\",",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 201,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 52,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             checks[\"anthropic\"] = {\"status\":",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 65,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             checks[\"elevenlabs\"] = {\"status\"",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 78,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             checks[\"deepgram\"] = {\"status\": ",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 146,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/system.py",
+      "line": 245,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/ui.py",
+      "line": 66,
+      "kind": "except",
+      "snippet": "except OSError:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/vision.py",
+      "line": 117,
+      "kind": "except",
+      "snippet": "except ImportError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         return {\"recognized\": False, \"name\": \"",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/vision.py",
+      "line": 128,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         return {\"recognized\": False, \"name\": \"er",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/vision.py",
+      "line": 53,
+      "kind": "except",
+      "snippet": "except ImportError:             collector.error(\"JRV-API-001\", \"JRV-API-001\")             return {\"recognized\": False, \"",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 66,
+      "kind": "except",
+      "snippet": "except WebSocketDisconnect:         collector.error(\"JRV-WS-001\", \"JRV-WS-001\")         pass",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 69,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-WS-001\", \"JRV-WS-001\", cause=e)         logger.warning(\"ws/logs erro",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 339,
+      "kind": "except",
+      "snippet": "except WebSocketDisconnect:         collector.error(\"JRV-WS-001\", \"JRV-WS-001\")         logger.info(\"WebSocket connectio",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 342,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-WS-001\", \"JRV-WS-001\", cause=e)         logger.error(\"WebSocket fata",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 175,
+      "kind": "except",
+      "snippet": "except Exception as e:                 collector.error(\"JRV-WS-001\", \"JRV-WS-001\", cause=e)                 logger.error",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 220,
+      "kind": "except",
+      "snippet": "except Exception as e:                 collector.error(\"JRV-WS-001\", \"JRV-WS-001\", cause=e)                 logger.warni",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 229,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.error(\"JRV-WS-001\", \"JRV-WS-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 242,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:                 collector.error(\"JRV-WS-001\", \"JRV-WS-001\")                 await websocket",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 347,
+      "kind": "except",
+      "snippet": "except Exception:             collector.error(\"JRV-WS-001\", \"JRV-WS-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 62,
+      "kind": "except",
+      "snippet": "except Exception:                     collector.error(\"JRV-WS-001\", \"JRV-WS-001\")                     return",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 284,
+      "kind": "except",
+      "snippet": "except Exception as e:                     collector.error(\"JRV-WS-001\", \"JRV-WS-001\", cause=e)                     logg",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/websocket.py",
+      "line": 310,
+      "kind": "except",
+      "snippet": "except Exception as exc:                             collector.error(\"JRV-WS-001\", \"JRV-WS-001\", cause=exc)             ",
+      "mapped": true,
+      "suggested_code": "JRV-WS-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/widgets.py",
+      "line": 83,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.error(\"Notion widge",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/widgets.py",
+      "line": 256,
+      "kind": "except",
+      "snippet": "except ImportError:         collector.error(\"JRV-API-001\", \"JRV-API-001\")         logger.warning(\"google-api-python-clie",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/widgets.py",
+      "line": 267,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)         logger.error(\"Calendar wid",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/api/widgets.py",
+      "line": 331,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-API-001\", \"JRV-API-001\", cause=e)             logger.error(\"Cale",
+      "mapped": true,
+      "suggested_code": "JRV-API-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/channels/discord_bot.py",
+      "line": 36,
+      "kind": "except",
+      "snippet": "except ImportError:     collector.warning(\"JRV-MSG-001\", \"JRV-MSG-001\")     DISCORD_AVAILABLE = False",
+      "mapped": true,
+      "suggested_code": "JRV-MSG-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/channels/discord_bot.py",
+      "line": 131,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-MSG-001\", \"JRV-MSG-001\", cause=exc)         ",
+      "mapped": true,
+      "suggested_code": "JRV-MSG-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/channels/gateway.py",
+      "line": 125,
+      "kind": "except",
+      "snippet": "except OSError as exc:             collector.warning(\"JRV-MSG-001\", \"JRV-MSG-001\", cause=exc)             logger.warning",
+      "mapped": true,
+      "suggested_code": "JRV-MSG-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/channels/gateway.py",
+      "line": 113,
+      "kind": "except",
+      "snippet": "except (json.JSONDecodeError, OSError) as exc:                 collector.warning(\"JRV-MSG-001\", \"JRV-MSG-001\", cause=exc",
+      "mapped": true,
+      "suggested_code": "JRV-MSG-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/channels/telegram_bot.py",
+      "line": 80,
+      "kind": "except",
+      "snippet": "except ImportError:     collector.warning(\"JRV-MSG-001\", \"JRV-MSG-001\")     TELEGRAM_AVAILABLE = False",
+      "mapped": true,
+      "suggested_code": "JRV-MSG-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/channels/telegram_bot.py",
+      "line": 276,
+      "kind": "except",
+      "snippet": "except Exception as e:  # noqa: BLE001             collector.warning(\"JRV-MSG-001\", \"JRV-MSG-001\", cause=e)             ",
+      "mapped": true,
+      "suggested_code": "JRV-MSG-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/channels/telegram_bot.py",
+      "line": 306,
+      "kind": "except",
+      "snippet": "except Exception as e:  # noqa: BLE001             collector.warning(\"JRV-MSG-001\", \"JRV-MSG-001\", cause=e)             ",
+      "mapped": true,
+      "suggested_code": "JRV-MSG-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 64,
+      "kind": "except",
+      "snippet": "except Exception:     collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\")     pass",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 109,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\", cause=e)         logger.warning(\"Skills non",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 139,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\", cause=e)         logger.warning(\"Profil uti",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 353,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\", cause=e)         logger.warning(\"STT '%s' i",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 470,
+      "kind": "except",
+      "snippet": "except ImportError as exc:         collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\", cause=exc)         logger.warning(     ",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 191,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\", cause=e)             logger.debug(\"Voic",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 238,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\", cause=e)             logger.warning(   ",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/interfaces/voice/agent.py",
+      "line": 507,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-VOI-001\", \"JRV-VOI-001\", cause=e)             logger.warning(\"Pr",
+      "mapped": true,
+      "suggested_code": "JRV-VOI-001"
+    },
+    {
+      "file": "src/jarvis/kernel/approvals.py",
+      "line": 86,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")         return ApprovalConfig()",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/backends.py",
+      "line": 82,
+      "kind": "except",
+      "snippet": "except Exception:         collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")         logger.warning(\"config/backends.json ill",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/bundle.py",
+      "line": 39,
+      "kind": "except",
+      "snippet": "except ValueError:         collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")         return str(path)",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/bundle.py",
+      "line": 63,
+      "kind": "except",
+      "snippet": "except (OSError, subprocess.TimeoutExpired):         collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")         pass",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/bundle.py",
+      "line": 328,
+      "kind": "except",
+      "snippet": "except FileNotFoundError:         collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")         pass",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/bundle.py",
+      "line": 88,
+      "kind": "except",
+      "snippet": "except OSError:             collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/bundle.py",
+      "line": 102,
+      "kind": "except",
+      "snippet": "except OSError:             collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")             resolved = str(candidate)",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/bundle.py",
+      "line": 154,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:             collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\")             missing.append(\"manif",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/bundle_download.py",
+      "line": 298,
+      "kind": "except",
+      "snippet": "except Exception as exc:         collector.error(\"JRV-KRN-002\", \"JRV-KRN-002\", cause=exc)         _set_state(           ",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/error_doc_lookup.py",
+      "line": 55,
+      "kind": "except",
+      "snippet": "except sqlite3.Error:  # jrv: JRV-KRN-002 optional doc_index read         return None",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/error_hooks.py",
+      "line": 62,
+      "kind": "except",
+      "snippet": "except RuntimeError:  # jrv: no running loop at hook install         try:             target = asyncio.get_event_loop() ",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/error_hooks.py",
+      "line": 65,
+      "kind": "except",
+      "snippet": "except RuntimeError:  # jrv: no event loop fallback failed             return",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-002"
+    },
+    {
+      "file": "src/jarvis/kernel/preflight.py",
+      "line": 178,
+      "kind": "except",
+      "snippet": "except urllib.error.HTTPError as e:         if e.code in (401, 403):             _warn(                 \"JRV-KRN-008\",  ",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-011"
+    },
+    {
+      "file": "src/jarvis/kernel/preflight.py",
+      "line": 191,
+      "kind": "except",
+      "snippet": "except Exception:  # jrv: offline network \u2014 non-blocking         pass",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-011"
+    },
+    {
+      "file": "src/jarvis/kernel/preflight.py",
+      "line": 201,
+      "kind": "except",
+      "snippet": "except OSError:         _err(             \"JRV-KRN-010\",             f\"Port {port} d\u00e9j\u00e0 utilis\u00e9\",             f\"Le port ",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-011"
+    },
+    {
+      "file": "src/jarvis/kernel/preflight.py",
+      "line": 81,
+      "kind": "except",
+      "snippet": "except Exception as e:  # jrv: probe missing dep import             missing.append((mod, role, type(e).__name__))",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-011"
+    },
+    {
+      "file": "src/jarvis/kernel/preflight.py",
+      "line": 211,
+      "kind": "except",
+      "snippet": "except Exception:  # jrv: socket close best-effort             pass",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-011"
+    },
+    {
+      "file": "src/jarvis/kernel/preflight.py",
+      "line": 223,
+      "kind": "except",
+      "snippet": "except Exception as e:             _err(\"JRV-KRN-011\", f\"\u00c9chec de la v\u00e9rification \u00ab {chk.__name__} \u00bb\", str(e))          ",
+      "mapped": true,
+      "suggested_code": "JRV-KRN-011"
+    },
+    {
+      "file": "src/jarvis/providers/audio/clap_detector.py",
+      "line": 71,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 PortAudioError, ValueError, OSError\u2026             collector.warning(\"JRV-AUD-0",
+      "mapped": true,
+      "suggested_code": "JRV-AUD-001"
+    },
+    {
+      "file": "src/jarvis/providers/audio/clap_detector.py",
+      "line": 95,
+      "kind": "except",
+      "snippet": "except sd.PortAudioError as exc:             collector.warning(\"JRV-AUD-001\", \"JRV-AUD-001\", cause=exc)             logg",
+      "mapped": true,
+      "suggested_code": "JRV-AUD-001"
+    },
+    {
+      "file": "src/jarvis/providers/audio/elevenlabs_voices.py",
+      "line": 65,
+      "kind": "except",
+      "snippet": "except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:         collector.warning(\"JRV-AUD-0",
+      "mapped": true,
+      "suggested_code": "JRV-AUD-001"
+    },
+    {
+      "file": "src/jarvis/providers/audio/tts.py",
+      "line": 101,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-AUD-001\", \"JRV-AUD-001\", cause=e)             logger.error(\"El",
+      "mapped": true,
+      "suggested_code": "JRV-AUD-001"
+    },
+    {
+      "file": "src/jarvis/providers/audio/tts.py",
+      "line": 168,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-AUD-001\", \"JRV-AUD-001\", cause=e)             msg = str(e)    ",
+      "mapped": true,
+      "suggested_code": "JRV-AUD-001"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 136,
+      "kind": "except",
+      "snippet": "except anthropic.APIError as e:             collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)             if not _i",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 417,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)             logger.error(\"Anth",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 623,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)             logger.error(\"Mist",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 644,
+      "kind": "except",
+      "snippet": "except ImportError as exc:             collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=exc)             raise Import",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 909,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)             logger.error(\"Gemi",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 1145,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)             logger.error(\"Open",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 223,
+      "kind": "except",
+      "snippet": "except anthropic.APIError as e:                 collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)                 #",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 302,
+      "kind": "except",
+      "snippet": "except anthropic.APIError as e:                 collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)                 #",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 539,
+      "kind": "except",
+      "snippet": "except _json.JSONDecodeError:                 collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\")                 tool_input =",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 1060,
+      "kind": "except",
+      "snippet": "except _json.JSONDecodeError:                 collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\")                 tool_input =",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 595,
+      "kind": "except",
+      "snippet": "except _json.JSONDecodeError:                     collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\")                     inp ",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 1117,
+      "kind": "except",
+      "snippet": "except _json.JSONDecodeError:                     collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\")                     inp ",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/api.py",
+      "line": 293,
+      "kind": "except",
+      "snippet": "except _json.JSONDecodeError:                                     collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\")         ",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/local.py",
+      "line": 253,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=e)             logger.error(\"Olla",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/local.py",
+      "line": 179,
+      "kind": "except",
+      "snippet": "except Exception as exc:                 collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\", cause=exc)                 logger",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/llm/local.py",
+      "line": 227,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:                         collector.error(\"JRV-LLM-002\", \"JRV-LLM-002\")                      ",
+      "mapped": true,
+      "suggested_code": "JRV-LLM-002"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 103,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.exception",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 140,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.exception",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 208,
+      "kind": "except",
+      "snippet": "except OSError:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")             return \"\"",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 131,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=exc)     ",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 180,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=exc)     ",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 218,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:                 collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")                 continue",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 253,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 un \u00e9chec d'ingest ne bloque pas le batch                 collector.warning(\"J",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/auto_dream.py",
+      "line": 276,
+      "kind": "except",
+      "snippet": "except Exception:                 collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/consolidation.py",
+      "line": 63,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.error(\"Co",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/consolidation.py",
+      "line": 113,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logge",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/consolidation.py",
+      "line": 217,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.warning(\"",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/consolidation.py",
+      "line": 97,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001                 collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=exc)     ",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/index.py",
+      "line": 26,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.error(\"Memo",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/index.py",
+      "line": 74,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.error(\"Memo",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/ingest.py",
+      "line": 546,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError as exc:         collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=exc)         return _A",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/ingest.py",
+      "line": 576,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError as exc:         collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=exc)         logger.de",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/ingest.py",
+      "line": 301,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=exc)         ",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/ingest.py",
+      "line": 421,
+      "kind": "except",
+      "snippet": "except Exception as exc:  # noqa: BLE001 \u2014 erreur LLM = doute = new             collector.warning(\"JRV-MEM-001\", \"JRV-ME",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/ingest.py",
+      "line": 598,
+      "kind": "except",
+      "snippet": "except (TypeError, ValueError):             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")             imp = 0.5",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/kernel.py",
+      "line": 446,
+      "kind": "except",
+      "snippet": "except sqlite3.OperationalError:                 collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")                 return ",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/search.py",
+      "line": 83,
+      "kind": "except",
+      "snippet": "except ImportError as e:  # pragma: no cover \u2014 d\u00e9pendance d\u00e9clar\u00e9e             collector.warning(\"JRV-MEM-001\", \"JRV-MEM",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/search.py",
+      "line": 193,
+      "kind": "except",
+      "snippet": "except (OSError, ValueError, json.JSONDecodeError) as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cau",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/search.py",
+      "line": 263,
+      "kind": "except",
+      "snippet": "except OSError:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")             return \"\"",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/search.py",
+      "line": 327,
+      "kind": "except",
+      "snippet": "except sqlite3.OperationalError:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")             # Requ\u00eate FTS5 ",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/search.py",
+      "line": 273,
+      "kind": "except",
+      "snippet": "except json.JSONDecodeError:                 collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\")                 continue",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/sessions.py",
+      "line": 51,
+      "kind": "except",
+      "snippet": "except (OSError, json.JSONDecodeError) as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)       ",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/sessions.py",
+      "line": 63,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.error(\"Sess",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/topics.py",
+      "line": 31,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.error(\"Topi",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/topics.py",
+      "line": 46,
+      "kind": "except",
+      "snippet": "except OSError as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.error(\"Topi",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/memory/user_model.py",
+      "line": 53,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-MEM-001\", \"JRV-MEM-001\", cause=e)             logger.error(\"Us",
+      "mapped": true,
+      "suggested_code": "JRV-MEM-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/daemon.py",
+      "line": 54,
+      "kind": "except",
+      "snippet": "except ImportError:         collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\")         logger.error(\"Vision daemon: opencv-",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/daemon.py",
+      "line": 191,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\", cause=e)         logger.debug(\"Vision eve",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/face_recognizer.py",
+      "line": 56,
+      "kind": "except",
+      "snippet": "except ImportError:             collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\")             if settings.face_recognition",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/face_recognizer.py",
+      "line": 162,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\", cause=e)             logger.error(f\"F",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/face_recognizer.py",
+      "line": 182,
+      "kind": "except",
+      "snippet": "except Exception as e:             collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\", cause=e)             logger.error(f\"F",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/face_recognizer.py",
+      "line": 86,
+      "kind": "except",
+      "snippet": "except Exception as e:                 collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\", cause=e)                 logger.e",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/objects_queue.py",
+      "line": 34,
+      "kind": "except",
+      "snippet": "except ValueError:             collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\")             pass",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/vision/objects_queue.py",
+      "line": 22,
+      "kind": "except",
+      "snippet": "except asyncio.QueueFull:                 collector.warning(\"JRV-VIS-001\", \"JRV-VIS-001\")                 pass",
+      "mapped": true,
+      "suggested_code": "JRV-VIS-001"
+    },
+    {
+      "file": "src/jarvis/providers/youtube.py",
+      "line": 107,
+      "kind": "except",
+      "snippet": "except Exception as e:         collector.error(\"JRV-ENG-000\", \"JRV-ENG-000\", cause=e)         logger.warning(\"[briefing]",
+      "mapped": true,
+      "suggested_code": "JRV-ENG-000"
+    }
+  ]
+}

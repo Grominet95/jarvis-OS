@@ -44,6 +44,7 @@ from jarvis.kernel.contracts import (
     SkillRegistry,
     ToolRegistry,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.schemas import SkillRecord, SkillStatus
 
 # Seuil heuristique de matching textuel (sur jaccard normalisé).
@@ -156,6 +157,7 @@ class Whitelist:
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         except yaml.YAMLError as exc:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             logger.warning("Whitelist YAML invalide", error=str(exc))
             return cls(domains=[])
         domains = []
@@ -383,6 +385,7 @@ class CapabilityEngine:
         try:
             installed = self._skill_registry.list_installed()
         except Exception as exc:  # noqa: BLE001 — registry peut planter
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             logger.warning("CapabilityEngine: skill_registry.list_installed échec", error=str(exc))
             return None
 
@@ -409,6 +412,7 @@ class CapabilityEngine:
         try:
             schemas = self._tool_registry.schemas()
         except Exception as exc:  # noqa: BLE001
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             logger.warning("CapabilityEngine: tool_registry.schemas échec", error=str(exc))
             return None
 

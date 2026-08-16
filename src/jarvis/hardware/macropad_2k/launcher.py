@@ -13,6 +13,7 @@ from pathlib import Path
 from loguru import logger
 
 from jarvis.hardware.macropad_2k.paths import launchers_dir
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 def is_windows() -> bool:
@@ -44,6 +45,7 @@ def list_installed_apps() -> list[dict[str, str]]:
             check=False,
         )
     except (OSError, subprocess.SubprocessError) as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         logger.warning("list_installed_apps powershell failed: {}", exc)
         return []
     if proc.returncode != 0:
@@ -55,6 +57,7 @@ def list_installed_apps() -> list[dict[str, str]]:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
+        collector.warning("JRV-HW-001", "JRV-HW-001")
         return []
 
     if isinstance(data, dict):
@@ -137,6 +140,7 @@ def _ensure_user_path_contains(directory: Path) -> None:
             check=False,
         )
     except (OSError, subprocess.SubprocessError) as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         logger.warning("Failed to update user PATH for launchers: {}", exc)
 
 
@@ -167,4 +171,5 @@ def open_device_manager() -> bool:
         os.startfile("devmgmt.msc")
         return True
     except OSError:
+        collector.warning("JRV-HW-001", "JRV-HW-001")
         return False

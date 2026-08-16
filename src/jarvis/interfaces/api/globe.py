@@ -16,6 +16,7 @@ from fastapi import APIRouter
 from loguru import logger
 
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/globe", tags=["globe"])
@@ -94,6 +95,7 @@ async def get_flights() -> dict[str, Any]:
             r.raise_for_status()
             data = r.json()
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         if is_offline_mode():
             logger.debug(f"OpenSky ignoré — mode local ({type(exc).__name__})")
         else:
@@ -190,6 +192,7 @@ async def get_weather() -> dict[str, Any]:
                 "desc": WMO.get(cur["weathercode"], "—"),
             }
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             return key, {
                 "name": city["name"],
                 "lat": city["lat"],

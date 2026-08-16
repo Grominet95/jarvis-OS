@@ -17,6 +17,8 @@ from jeepney import DBusAddress, Properties, new_method_call
 from jeepney.io.blocking import DBusConnection, open_dbus_connection
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 router = APIRouter(prefix="/api/local-music")
 
 # Pochette : on n'embarque que des fichiers locaux raisonnables (anti-DoS mémoire).
@@ -59,9 +61,11 @@ async def _run(cmd: str, *args: str) -> str | None:
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=3.0)
         return stdout.decode().strip()
     except FileNotFoundError:
+        collector.error("JRV-API-001", "JRV-API-001")
         logger.debug("nowplaying-cli not installed")
         return None
     except (TimeoutError, Exception) as e:  # noqa: BLE001
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.debug("nowplaying-cli error", error=str(e))
         return None
 
@@ -80,14 +84,17 @@ def _macos_state_from_output(output: str) -> dict:
     try:
         rate = float(values.get("playbackRate") or 0)
     except ValueError:
+        collector.error("JRV-API-001", "JRV-API-001")
         rate = 0.0
     try:
         duration_ms = int(float(values.get("duration") or 0) * 1000)
     except ValueError:
+        collector.error("JRV-API-001", "JRV-API-001")
         duration_ms = 0
     try:
         progress_ms = int(float(values.get("elapsedTime") or 0) * 1000)
     except ValueError:
+        collector.error("JRV-API-001", "JRV-API-001")
         progress_ms = 0
 
     art = values.get("artworkURL", "")
@@ -140,6 +147,7 @@ def _resolve_art(art_url: str) -> str | None:
                 return None
             data = path.read_bytes()
         except OSError:
+            collector.error("JRV-API-001", "JRV-API-001")
             return None
         return f"data:{_sniff_mime(data)};base64,{base64.b64encode(data).decode('ascii')}"
     return None
@@ -160,6 +168,7 @@ def _state_from_mpris(status: str, metadata: dict, position_us: int) -> dict:
     try:
         duration_ms = int(metadata.get("mpris:length") or 0) // 1000
     except (ValueError, TypeError):
+        collector.error("JRV-API-001", "JRV-API-001")
         duration_ms = 0
 
     return {
@@ -188,6 +197,7 @@ def _pick_player(conn: DBusConnection, players: list[str]) -> str:
             if status == "Playing":
                 return p
         except Exception:  # noqa: BLE001
+            collector.error("JRV-API-001", "JRV-API-001")
             continue
     return players[0]
 
@@ -197,6 +207,7 @@ def _mpris_state_blocking() -> dict:
     try:
         conn = open_dbus_connection(bus="SESSION")
     except Exception as e:  # noqa: BLE001
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.debug("Session D-Bus indisponible", error=str(e))
         return {"connected": False}
     try:
@@ -212,9 +223,11 @@ def _mpris_state_blocking() -> dict:
         try:
             position = conn.send_and_get_reply(props.get("Position")).body[0][1]
         except Exception:  # noqa: BLE001
+            collector.error("JRV-API-001", "JRV-API-001")
             position = 0
         return _state_from_mpris(status, metadata, int(position or 0))
     except Exception as e:  # noqa: BLE001
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.debug("Lecture MPRIS échouée", error=str(e))
         return {"connected": True, "is_playing": False, "track": None}
     finally:
@@ -226,6 +239,7 @@ def _mpris_control_blocking(method: str) -> None:
     try:
         conn = open_dbus_connection(bus="SESSION")
     except Exception:  # noqa: BLE001
+        collector.error("JRV-API-001", "JRV-API-001")
         return
     try:
         players = _list_players(conn)
@@ -236,6 +250,7 @@ def _mpris_control_blocking(method: str) -> None:
         )
         conn.send_and_get_reply(new_method_call(addr, method))
     except Exception as e:  # noqa: BLE001
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.debug("Contrôle MPRIS échoué", error=str(e))
     finally:
         conn.close()

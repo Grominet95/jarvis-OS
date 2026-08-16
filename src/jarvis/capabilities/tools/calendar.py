@@ -12,6 +12,7 @@ import httpx
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 _SCOPES = ["https://www.googleapis.com/auth/calendar"]
 _CAL_BASE = "https://www.googleapis.com/calendar/v3"
@@ -23,6 +24,7 @@ try:
 
     _HAS_GOOGLE = True
 except ImportError:
+    collector.error("JRV-TOL-001", "JRV-TOL-001")
     _HAS_GOOGLE = False
 
 
@@ -40,6 +42,7 @@ def _load_creds(token_path: Path, credentials_path: Path) -> Credentials:
             try:
                 creds.refresh(Request())
             except Exception:
+                collector.error("JRV-TOL-001", "JRV-TOL-001")
                 token_path.unlink(missing_ok=True)
                 creds = None
 
@@ -87,6 +90,7 @@ class CalendarListTool(Tool):
         try:
             creds = await asyncio.to_thread(_load_creds, self._token, self._creds)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return ToolResult(content=f"Erreur credentials : {e}", is_error=True)
 
         now_iso = datetime.now(UTC).isoformat()
@@ -120,6 +124,7 @@ class CalendarListTool(Tool):
             return ToolResult(content=content)
 
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(f"Calendar list error: {type(e).__name__}: {e}")
             return ToolResult(content=f"Erreur Calendar : {e}", is_error=True)
 
@@ -162,6 +167,7 @@ class CalendarCreateTool(Tool):
         try:
             creds = await asyncio.to_thread(_load_creds, self._token, self._creds)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return ToolResult(content=f"Erreur credentials : {e}", is_error=True)
 
         body = {
@@ -188,5 +194,6 @@ class CalendarCreateTool(Tool):
             return ToolResult(content=f"Événement créé : {created.get('htmlLink', title)}")
 
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(f"Calendar create error: {type(e).__name__}: {e}")
             return ToolResult(content=f"Erreur Calendar : {e}", is_error=True)

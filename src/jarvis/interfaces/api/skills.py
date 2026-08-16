@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dotenv import dotenv_values
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 
 from jarvis.capabilities.skills.app_checker import check_all_apps
 from jarvis.capabilities.skills.executor import PresetExecutor
@@ -13,6 +13,8 @@ from jarvis.capabilities.skills.installer import skill_installer
 from jarvis.capabilities.skills.lifecycle import SkillStatus
 from jarvis.capabilities.skills.registry import skill_registry
 from jarvis.engine.background.notifications import broadcast_event
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.paths import SKILLS_INSTALLED_DIR, UI_STATIC_DIR
 from jarvis.providers.audio.tts import tts_engine
 
@@ -25,14 +27,14 @@ router = APIRouter()
 def _lab(request: Request):  # noqa: ANN202 — type circulaire
     lab = getattr(request.app.state, "skill_lab", None)
     if lab is None:
-        raise HTTPException(503, "SkillLab non disponible — main.py n'a pas câblé.")
+        raise_api_error("JRV-API-005", 503, "SkillLab non disponible — main.py n'a pas câblé.")
     return lab
 
 
 def _lifecycle(request: Request):  # noqa: ANN202
     lc = getattr(request.app.state, "skill_lifecycle", None)
     if lc is None:
-        raise HTTPException(503, "SkillLifecycle non disponible.")
+        raise_api_error("JRV-API-005", 503, "SkillLifecycle non disponible.")
     return lc
 
 
@@ -70,7 +72,7 @@ async def list_lab_candidates(
         try:
             s = SkillStatus(status)
         except ValueError:
-            raise HTTPException(400, f"Status invalide : {status}") from None
+            raise_api_error("JRV-API-004", 400, f"Status invalide : {status}")
         records = lc.list_by_status(s)
     return [_record_to_dict(r) for r in records]
 
@@ -84,7 +86,8 @@ async def promote_lab_skill(name: str, request: Request) -> dict:
     lab = _lab(request)
     record = lab.promote(name)
     if record is None:
-        raise HTTPException(
+        raise_api_error(
+            "JRV-API-004",
             409,
             f"Promotion refusée pour '{name}' : skill inconnue, non en "
             "SANDBOXED_PASS, ou collision avec une skill installée.",
@@ -103,7 +106,7 @@ async def reject_lab_skill(
     lab = _lab(request)
     record = lab.reject(name, reason=reason, delete_files=delete_files)
     if record is None:
-        raise HTTPException(404, f"Skill '{name}' inconnue.")
+        raise_api_error("JRV-API-003", 404, f"Skill '{name}' inconnue.")
     return {"ok": True, "record": _record_to_dict(record)}
 
 
@@ -230,6 +233,7 @@ async def get_view_scripts() -> dict:
         try:
             meta = yaml.safe_load(yaml_path.read_text()) or {}
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             continue
         if meta.get("type") != "view":
             continue

@@ -24,6 +24,7 @@ from jarvis.engine.proactive.context_builder import ContextBuilder
 from jarvis.engine.proactive.initiative_generator import InitiativeGenerator
 from jarvis.engine.proactive.schemas import ExecutionMode, Initiative, Priority
 from jarvis.engine.proactive.store import InitiativeStore
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 _AUDIT_MAXLEN = 200
@@ -190,6 +191,7 @@ class ProactiveEngine:
             return initiatives
 
         except Exception as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             logger.error(f"ProactiveEngine cycle error: {e}")
             return []
 

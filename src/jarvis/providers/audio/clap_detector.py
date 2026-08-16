@@ -17,6 +17,7 @@ import numpy as np
 import sounddevice as sd
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -68,6 +69,7 @@ class ClapDetector:
                 samplerate=self.SAMPLE_RATE, channels=1, dtype="float32"
             )
         except Exception as exc:  # noqa: BLE001 — PortAudioError, ValueError, OSError…
+            collector.warning("JRV-AUD-001", "JRV-AUD-001", cause=exc)
             logger.warning(
                 "ClapDetector désactivé : aucun périphérique audio d'entrée détecté "
                 "({}). Normal sur un serveur headless/VPS : le double-clap nécessite un "
@@ -91,6 +93,7 @@ class ClapDetector:
                 while self._running:  # noqa: ASYNC110 — Event refactoring hors scope (stream sounddevice)
                     await asyncio.sleep(0.1)
         except sd.PortAudioError as exc:
+            collector.warning("JRV-AUD-001", "JRV-AUD-001", cause=exc)
             logger.warning(
                 "ClapDetector arrêté : erreur audio PortAudio ({}). Micro hôte "
                 "indisponible ?",

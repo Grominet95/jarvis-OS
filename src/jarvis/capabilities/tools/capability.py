@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.contracts import CapabilityEngine
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 class ReportMissingCapabilityTool(Tool):
@@ -89,6 +90,7 @@ class ReportMissingCapabilityTool(Tool):
                 example_input=example_input or None,
             )
         except Exception as exc:  # noqa: BLE001
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=exc)
             return ToolResult(content=f"Erreur CapabilityEngine : {exc}", is_error=True)
 
         kind = resolution.kind.value

@@ -10,7 +10,24 @@ from openai import APIStatusError as OpenAIStatusError
 from openai import AuthenticationError as OpenAIAuthenticationError
 from openai import RateLimitError as OpenAIRateLimitError
 
+from jarvis.kernel.error_collector import collector
 from jarvis.kernel.settings import Settings, settings
+
+
+def _emit_llm_code(exc: BaseException) -> None:
+    if isinstance(exc, (anthropic.RateLimitError, OpenAIRateLimitError)):
+        collector.error("JRV-LLM-001", "LLM rate limit", cause=exc)
+    elif isinstance(exc, (anthropic.AuthenticationError, OpenAIAuthenticationError)):
+        collector.error("JRV-LLM-003", "LLM authentication failed", cause=exc)
+    elif isinstance(exc, (anthropic.APIConnectionError, OpenAIConnectionError)):
+        collector.error("JRV-LLM-002", "LLM connection failed", cause=exc)
+    elif isinstance(exc, (anthropic.APIStatusError, OpenAIStatusError)):
+        if exc.status_code in (529, 503):
+            collector.error("JRV-LLM-002", "LLM provider overloaded", cause=exc)
+        else:
+            collector.error("JRV-ENG-000", "LLM provider error", cause=exc)
+    else:
+        collector.warning("JRV-ENG-000", "Unclassified LLM error", cause=exc)
 
 
 def llm_config_error(cfg: Settings | None = None) -> str | None:
@@ -45,6 +62,7 @@ def llm_config_error(cfg: Settings | None = None) -> str | None:
 
 def friendly_llm_error(exc: BaseException, cfg: Settings | None = None) -> str:
     """Map provider exceptions to a short French message for the user."""
+    _emit_llm_code(exc)
     cfg = cfg or settings
     name = cfg.display_name
 

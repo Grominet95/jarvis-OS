@@ -1,0 +1,216 @@
+# Route map
+
+HTTP and WebSocket endpoints aggregated from jarvis.app and setup/admin mounts.
+Baseline: scripts/migration/routes.baseline.txt.
+
+## All routes
+
+| Method | Path |
+|--------|------|
+| APIWebSocketRoute | /ws |
+| APIWebSocketRoute | /ws/logs |
+| DELETE | /admin/api/memory/topics/{filename} |
+| DELETE | /api/analytics/remove/{widget_id} |
+| DELETE | /api/memory/topics/{name} |
+| DELETE | /api/projects/{project_id} |
+| DELETE | /api/sessions/{session_id} |
+| DELETE | /api/skills/uninstall/{skill_name} |
+| DELETE | /api/system/projects/done |
+| DELETE | /api/tasks/{block_id} |
+| GET | / |
+| GET | /admin |
+| GET | /admin/api/memory |
+| GET | /admin/api/memory/index |
+| GET | /admin/api/memory/prefs |
+| GET | /admin/api/memory/topics/{filename} |
+| GET | /admin/api/notifications |
+| GET | /admin/api/sessions |
+| GET | /admin/api/sessions/{session_id} |
+| GET | /admin/api/tasks |
+| GET | /api/analytics/active |
+| GET | /api/analytics/catalog |
+| GET | /api/analytics/data |
+| GET | /api/analytics/jarvis |
+| GET | /api/analytics/summary |
+| GET | /api/analytics/youtube |
+| GET | /api/approvals/config |
+| GET | /api/briefing/preset/{preset_id} |
+| GET | /api/budget/remaining |
+| GET | /api/budget/status |
+| GET | /api/command-center/snapshot |
+| GET | /api/config/llm-status |
+| GET | /api/connectors/status |
+| GET | /api/conso/by_model |
+| GET | /api/conso/calls |
+| GET | /api/conso/daily |
+| GET | /api/conso/daily_providers |
+| GET | /api/conso/hourly |
+| GET | /api/conso/monthly |
+| GET | /api/conso/providers |
+| GET | /api/conso/session |
+| GET | /api/curator/latest |
+| GET | /api/deezer/auth |
+| GET | /api/deezer/callback |
+| GET | /api/deezer/player |
+| GET | /api/deezer/token |
+| GET | /api/events |
+| GET | /api/globe/config |
+| GET | /api/globe/flights |
+| GET | /api/globe/weather |
+| GET | /api/google/auth/{service} |
+| GET | /api/google/callback/{service} |
+| GET | /api/health |
+| GET | /api/initiatives |
+| GET | /api/local-music/player |
+| GET | /api/macropad/arduino-cli |
+| GET | /api/macropad/installed-apps |
+| GET | /api/macropad/profile |
+| GET | /api/macropad/status |
+| GET | /api/macropad/workspace |
+| GET | /api/macropad/workspace/validate |
+| GET | /api/memory/facts |
+| GET | /api/memory/index |
+| GET | /api/memory/topics |
+| GET | /api/memory/topics/{name} |
+| GET | /api/music/provider-status |
+| GET | /api/music/status |
+| GET | /api/ollama/models |
+| GET | /api/permissions |
+| GET | /api/presets |
+| GET | /api/proactive/initiatives |
+| GET | /api/proactive/status |
+| GET | /api/projects |
+| GET | /api/projects/{project_id} |
+| GET | /api/projects/{project_id}/files |
+| GET | /api/projects/{project_id}/files/{path:path} |
+| GET | /api/projects/{project_id}/logs |
+| GET | /api/routines |
+| GET | /api/routines/runs |
+| GET | /api/routines/{name} |
+| GET | /api/sessions |
+| GET | /api/sessions/{session_id}/messages |
+| GET | /api/settings |
+| GET | /api/settings/connectors |
+| GET | /api/settings/devices |
+| GET | /api/settings/env-status |
+| GET | /api/settings/voices |
+| GET | /api/skills/catalog |
+| GET | /api/skills/installed |
+| GET | /api/skills/lab/candidates |
+| GET | /api/skills/view-scripts |
+| GET | /api/spotify/auth |
+| GET | /api/spotify/callback |
+| GET | /api/spotify/player |
+| GET | /api/spotify/token |
+| GET | /api/system/logs |
+| GET | /api/system/perf |
+| GET | /api/system/stats |
+| GET | /api/tasks |
+| GET | /api/tools |
+| GET | /api/voice/token |
+| GET | /api/wakeup/status |
+| GET | /capabilities |
+| GET | /command |
+| GET | /dashboard |
+| GET | /docs |
+| GET | /docs/oauth2-redirect |
+| GET | /health |
+| GET | /macropad |
+| GET | /openapi.json |
+| GET | /redoc |
+| GET | /settings |
+| GET | /static/mapbox-style.json |
+| HEAD | /docs |
+| HEAD | /docs/oauth2-redirect |
+| HEAD | /openapi.json |
+| HEAD | /redoc |
+| — | Mount |
+| PATCH | /api/approvals/config/{category} |
+| PATCH | /api/permissions/{key} |
+| PATCH | /api/tasks/{block_id} |
+| POST | /admin/api/system/update |
+| POST | /api/analytics/add/{widget_id} |
+| POST | /api/analytics/refresh |
+| POST | /api/analytics/reorder |
+| POST | /api/approvals/{action_id}/resolve |
+| POST | /api/briefing/open-url |
+| POST | /api/curator/patches/{patch_index}/apply |
+| POST | /api/curator/scan |
+| POST | /api/deezer/next |
+| POST | /api/deezer/pause |
+| POST | /api/deezer/play |
+| POST | /api/deezer/previous |
+| POST | /api/initiatives/{initiative_id}/approve |
+| POST | /api/initiatives/{initiative_id}/rectify |
+| POST | /api/initiatives/{initiative_id}/reject |
+| POST | /api/local-music/next |
+| POST | /api/local-music/pause |
+| POST | /api/local-music/play |
+| POST | /api/local-music/previous |
+| POST | /api/macropad/arduino-cli/install |
+| POST | /api/macropad/compile |
+| POST | /api/macropad/launcher |
+| POST | /api/macropad/open-device-manager |
+| POST | /api/macropad/upload |
+| POST | /api/macropad/workspace |
+| POST | /api/memory/autodream |
+| POST | /api/memory/correct |
+| POST | /api/memory/trigger-deep |
+| POST | /api/music/next |
+| POST | /api/music/pause |
+| POST | /api/music/play |
+| POST | /api/music/prev |
+| POST | /api/ollama/pull |
+| POST | /api/presets/{preset_name}/execute |
+| POST | /api/proactive/initiatives/{initiative_id}/confirm |
+| POST | /api/proactive/initiatives/{initiative_id}/dismiss |
+| POST | /api/proactive/initiatives/{initiative_id}/run |
+| POST | /api/proactive/run |
+| POST | /api/projects/{project_id}/approve |
+| POST | /api/projects/{project_id}/kill |
+| POST | /api/projects/{project_id}/reset-steps |
+| POST | /api/projects/{project_id}/retry |
+| POST | /api/settings/test-key |
+| POST | /api/settings/update |
+| POST | /api/skills/install/{skill_name} |
+| POST | /api/skills/lab/scan |
+| POST | /api/skills/lab/{name}/promote |
+| POST | /api/skills/lab/{name}/reject |
+| POST | /api/skills/reload |
+| POST | /api/spotify/next |
+| POST | /api/spotify/pause |
+| POST | /api/spotify/play |
+| POST | /api/spotify/previous |
+| POST | /api/spotify/transfer |
+| POST | /api/system/restart |
+| POST | /api/tasks |
+| POST | /api/tools/execute |
+| POST | /api/vision/faces/add |
+| POST | /api/vision/verify-face |
+| POST | /api/vision/verify-face-frame |
+| POST | /api/voice/generate |
+| POST | /api/voice/speak |
+| POST | /api/webhooks/face_recognition |
+| POST | /api/webhooks/object_detected |
+| POST | /internal/broadcast |
+| POST | /internal/memory_tool |
+| PUT | /admin/api/memory/index |
+| PUT | /admin/api/memory/prefs |
+| PUT | /admin/api/memory/topics/{filename} |
+| PUT | /api/macropad/profile |
+| PUT | /api/memory/index |
+| PUT | /api/memory/topics/{name} |
+| PUT | /api/sessions/{session_id}/title |
+
+## Related docs
+
+- [INDEX](../INDEX.md)
+- [AI_INSTRUCTIONS](../AI_INSTRUCTIONS.md)
+- [setup-flow](../01-entry-points/setup-flow.md)
+- [windows-launchers](../01-entry-points/windows-launchers.md)
+- [bundle-offline](../02-kernel/bundle-offline.md)
+- [process-map](./process-map.md)
+- [env-reference](../07-config/env-reference.md)
+- [run-flow](../01-entry-points/run-flow.md)
+- [logs-and-doctor](../09-operations/logs-and-doctor.md)
+- [troubleshooting](../09-operations/troubleshooting.md)

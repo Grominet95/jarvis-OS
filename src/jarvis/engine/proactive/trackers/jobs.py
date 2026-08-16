@@ -16,6 +16,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -46,6 +47,7 @@ class JobApplication:
             applied = date.fromisoformat(self.applied_at[:10])
             return (date.today() - applied).days
         except Exception:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001")
             return 0
 
     def is_pending(self) -> bool:
@@ -65,6 +67,7 @@ class JobTracker:
             data = json.loads(path.read_text(encoding="utf-8"))
             return [JobApplication(**item) for item in data]
         except Exception:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001")
             return []
 
     def save_all(self, apps: list[JobApplication]) -> None:

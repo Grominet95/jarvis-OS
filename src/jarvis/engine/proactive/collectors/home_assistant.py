@@ -12,6 +12,7 @@ from loguru import logger
 from jarvis.engine.proactive.collectors.base import CollectorBase
 from jarvis.engine.proactive.schemas import ContextItem, ItemType, Priority
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -76,5 +77,6 @@ class HomeAssistantCollector(CollectorBase):
             return critical_entities
 
         except Exception as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             logger.warning(f"HomeAssistantCollector error: {e}")
             return []

@@ -18,6 +18,7 @@ from loguru import logger
 from openai import AsyncOpenAI
 
 from jarvis.kernel.contracts import UsageTracker
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.schemas import ToolCapture, UsageEntry, calculate_cost
 from jarvis.kernel.settings import settings
 from jarvis.providers.llm.base import LLMProvider
@@ -133,6 +134,7 @@ async def _anthropic_retry(coro_factory: Callable[[], Awaitable[_T]]) -> _T:
         try:
             return await coro_factory()
         except anthropic.APIError as e:
+            collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
             if not _is_retryable_anthropic(e) or attempt + 1 >= _MAX_ANTHROPIC_RETRIES:
                 raise
             await asyncio.sleep(min(2**attempt, 8))
@@ -219,6 +221,7 @@ class AnthropicProvider(LLMProvider):
                         yield chunk
                 return
             except anthropic.APIError as e:
+                collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
                 # Un chunk deja `yield` est parti chez l'appelant : on ne peut pas
                 # le reprendre. Rejouer la requete reemettrait le debut de la
                 # reponse par-dessus, et l'utilisateur lirait le texte en double.
@@ -288,6 +291,7 @@ class AnthropicProvider(LLMProvider):
                                 try:
                                     tool_input = _json.loads(raw)
                                 except _json.JSONDecodeError:
+                                    collector.error("JRV-LLM-002", "JRV-LLM-002")
                                     tool_input = {}
                                 capture.calls.append((tool_id, tool_name, tool_input))
                         elif event.type == "message_delta":
@@ -296,6 +300,7 @@ class AnthropicProvider(LLMProvider):
                                 capture.stop_reason = sr
                 return
             except anthropic.APIError as e:
+                collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
                 # Idem _stream : les accumulateurs d'outils se vident proprement,
                 # mais le texte deja `yield` est irrecuperable. Pas de retry une
                 # fois le premier token parti.
@@ -410,6 +415,7 @@ class AnthropicProvider(LLMProvider):
             )
             return True
         except Exception as e:
+            collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
             logger.error("Anthropic health check failed", error=str(e))
             return False
 
@@ -531,6 +537,7 @@ class MistralProvider(LLMProvider):
             try:
                 tool_input = _json.loads(call["arguments"]) if call["arguments"] else {}
             except _json.JSONDecodeError:
+                collector.error("JRV-LLM-002", "JRV-LLM-002")
                 tool_input = {}
             capture.calls.append((call["id"], call["name"], tool_input))
 
@@ -586,6 +593,7 @@ class MistralProvider(LLMProvider):
                 try:
                     inp = _json.loads(tc.function.arguments or "{}")
                 except _json.JSONDecodeError:
+                    collector.error("JRV-LLM-002", "JRV-LLM-002")
                     inp = {}
                 parsed.append((tc.id, tc.function.name, inp))
 
@@ -613,6 +621,7 @@ class MistralProvider(LLMProvider):
             )
             return True
         except Exception as e:
+            collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
             logger.error("Mistral health check failed", error=str(e))
             return False
 
@@ -633,6 +642,7 @@ class GeminiProvider(LLMProvider):
         try:
             from google import genai
         except ImportError as exc:
+            collector.error("JRV-LLM-002", "JRV-LLM-002", cause=exc)
             raise ImportError("google-genai requis : pip install google-genai") from exc
         api_key = os.environ.get("GEMINI_API_KEY", "")
         self._client = genai.Client(api_key=api_key)
@@ -897,6 +907,7 @@ class GeminiProvider(LLMProvider):
             )
             return True
         except Exception as e:
+            collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
             logger.error("Gemini health check failed", error=str(e))
             return False
 
@@ -1047,6 +1058,7 @@ class OpenAIProvider(LLMProvider):
             try:
                 tool_input = _json.loads(call["arguments"]) if call["arguments"] else {}
             except _json.JSONDecodeError:
+                collector.error("JRV-LLM-002", "JRV-LLM-002")
                 tool_input = {}
             capture.calls.append((call["id"], call["name"], tool_input))
 
@@ -1103,6 +1115,7 @@ class OpenAIProvider(LLMProvider):
                 try:
                     inp = _json.loads(tc.function.arguments or "{}")
                 except _json.JSONDecodeError:
+                    collector.error("JRV-LLM-002", "JRV-LLM-002")
                     inp = {}
                 parsed.append((tc.id, tc.function.name, inp))
 
@@ -1130,6 +1143,7 @@ class OpenAIProvider(LLMProvider):
             )
             return True
         except Exception as e:
+            collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
             logger.error("OpenAI health check failed", error=str(e))
             return False
 

@@ -1,0 +1,13 @@
+{
+  "name": "jarvis-doc-helper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build-index": "node build_fts_index.js",
+    "query": "node query_context.js",
+    "enrich-links": "node enrich_crosslinks.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  }
+}

@@ -29,6 +29,8 @@ from jarvis.engine.mission.worker_cli import WorkerCLITool
 from jarvis.engine.vocab import AccessLevel
 from jarvis.kernel.approvals import approval_config
 from jarvis.kernel.contracts import LLMProvider
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.errors import BudgetExceeded
 from jarvis.kernel.events import EventBus, MissionCompleted
 from jarvis.kernel.paths import PROMPTS_DIR
 from jarvis.kernel.settings import settings
@@ -62,6 +64,7 @@ _QUALITY_RULES_PATH = PROMPTS_DIR / "worker_system.md"
 try:
     _QUALITY_RULES = _QUALITY_RULES_PATH.read_text(encoding="utf-8")
 except FileNotFoundError:
+    collector.error("JRV-MSN-001", "JRV-MSN-001")
     _QUALITY_RULES = ""
 
 _WORKER_SYSTEM = """\
@@ -208,10 +211,6 @@ _WORKER_TOOLS: list[dict] = [
         },
     },
 ]
-
-
-class _BudgetExceeded(Exception):
-    """Levée quand le budget est épuisé — met le projet en pause au lieu de le tuer."""
 
 
 class WorkerAgent:
@@ -363,6 +362,7 @@ class WorkerAgent:
                     }
                 )
         except Exception as e:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=e)
             project.status = ProjectStatus.FAILED
             await self._log("error", f"Erreur inattendue : {e}")
         finally:
@@ -408,6 +408,7 @@ class WorkerAgent:
         try:
             lesson = await self._reflexion.reflect(self._project)
         except Exception as exc:  # noqa: BLE001 — la mission est close, on log et basta
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             logger.warning(
                 "Reflexion error in worker.finally",
                 project_id=self._project.id,
@@ -506,7 +507,8 @@ class WorkerAgent:
                     timeout=300,
                 )
                 step.output = result
-            except _BudgetExceeded:
+            except BudgetExceeded:
+                collector.error("JRV-MSN-001", "JRV-MSN-001")
                 # Hard-stop budget : on met le projet en pause (reprise possible)
                 await self._log(
                     "warning",
@@ -527,11 +529,13 @@ class WorkerAgent:
                 )
                 return
             except TimeoutError:
+                collector.error("JRV-MSN-001", "JRV-MSN-001")
                 step.status = StepStatus.FAILED
                 step.error = "Timeout (5 min) dépassé."
                 await self._log("error", f"Timeout : {step.title}", step_id=step.id)
                 return
             except Exception as e:  # noqa: BLE001 — exec failure surfaced as step FAILED
+                collector.error("JRV-MSN-001", "JRV-MSN-001", cause=e)
                 step.status = StepStatus.FAILED
                 step.error = str(e)
                 await self._log("error", f"Erreur : {step.title} — {e}", step_id=step.id)
@@ -613,9 +617,10 @@ class WorkerAgent:
             global_ok = await self._budget.reserve("global", _est_usd)
             project_ok = await self._budget.reserve(f"project:{self._project.id}", _est_usd)
             if not global_ok or not project_ok:
-                raise _BudgetExceeded(
+                raise BudgetExceeded(
+                    "JRV-BGT-001",
                     f"Budget dépassé (global={'ok' if global_ok else 'stop'}, "
-                    f"project={'ok' if project_ok else 'stop'})"
+                    f"project={'ok' if project_ok else 'stop'})",
                 )
 
         # Haiku pour le worker : 20x moins cher que Sonnet, largement suffisant.
@@ -730,10 +735,12 @@ class WorkerAgent:
             return f"Outil inconnu : {name}"
 
         except ValueError as e:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=e)
             # Sandbox violation
             await self._log("error", f"SANDBOX: {e}")
             return f"ACCÈS REFUSÉ : {e}"
         except Exception as e:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=e)
             await self._log("error", f"Tool error {name}: {e}")
             return f"Erreur : {e}"
 

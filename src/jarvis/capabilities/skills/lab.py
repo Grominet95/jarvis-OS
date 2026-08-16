@@ -50,6 +50,7 @@ from jarvis.capabilities.skills.synthesizer import (
 )
 from jarvis.engine.mission.docker_executor import DockerExecutor
 from jarvis.kernel.contracts import MemoryStore as MemoryKernel
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import PROJECT_ROOT
 from jarvis.kernel.settings import settings
 
@@ -123,6 +124,7 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         from jarvis.capabilities.skills.base import SkillBase  # lazy: sandbox path
     except Exception as exc:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("import", f"SkillBase indisponible dans la sandbox : {exc!r}")
 
 
@@ -135,6 +137,7 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
     except Exception as exc:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("import", f"import a échoué : {exc!r}\\n{traceback.format_exc()[:600]}")
 
     skill_class = None
@@ -161,6 +164,7 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
             with SKILL_YAML.open() as f:
                 metadata = yaml.safe_load(f) or {}
         except Exception as exc:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
             _fail("import", f"skill.yaml illisible : {exc!r}")
 
 
@@ -168,6 +172,7 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         skill = skill_class(metadata=metadata)
     except Exception as exc:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("instantiate", f"instantiation a échoué : {exc!r}")
 
 
@@ -175,6 +180,7 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         prompt = skill.get_system_prompt()
     except Exception as exc:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("system_prompt", f"get_system_prompt() a levé : {exc!r}")
 
     if not isinstance(prompt, str) or not prompt.strip():
@@ -186,6 +192,7 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         tools = skill.get_tools()
     except Exception as exc:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("tools", f"get_tools() a levé : {exc!r}")
 
     if tools:
@@ -278,6 +285,7 @@ class SkillLab:
                 elif outcome and outcome.status == SkillStatus.SANDBOXED_FAIL:
                     result.sandbox_failed += 1
             except Exception as exc:  # noqa: BLE001 — best-effort par event
+                collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
                 logger.warning(
                     "SkillLab: scan échec sur event",
                     event_id=event_id,
@@ -364,6 +372,7 @@ class SkillLab:
                 trajectory, target_dir=self._candidates_dir
             )
         except Exception as exc:  # noqa: BLE001 — synthèse foireuse, on log
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
             logger.warning(
                 "SkillLab: génération candidate échouée",
                 source_event_id=source_event_id,
@@ -385,6 +394,7 @@ class SkillLab:
             try:
                 meta = json.loads(event_payload["metadata_json"]) or {}
             except (TypeError, json.JSONDecodeError):
+                collector.error("JRV-SKL-001", "JRV-SKL-001")
                 pass
         return {
             "task_description": event_payload.get("content", "")[:600],
@@ -410,6 +420,7 @@ class SkillLab:
         try:
             result = await self._run_sandbox_test(cand_dir)
         except Exception as exc:  # noqa: BLE001
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
             result = SandboxTestResult(
                 passed=False,
                 layer_failed="sandbox_error",
@@ -500,6 +511,7 @@ class SkillLab:
                     proc.communicate(), timeout=_SANDBOX_TIMEOUT
                 )
             except TimeoutError:
+                collector.error("JRV-SKL-001", "JRV-SKL-001")
                 # Tue le container
                 killer = await asyncio.create_subprocess_exec(
                     "docker",
@@ -559,6 +571,7 @@ class SkillLab:
                     proc.communicate(), timeout=_SANDBOX_TIMEOUT
                 )
             except TimeoutError:
+                collector.error("JRV-SKL-001", "JRV-SKL-001")
                 proc.kill()
                 await proc.wait()
                 return SandboxTestResult(
@@ -582,6 +595,7 @@ class SkillLab:
         try:
             payload = json.loads(out)
         except json.JSONDecodeError:
+            collector.error("JRV-SKL-001", "JRV-SKL-001")
             return SandboxTestResult(
                 passed=False,
                 layer_failed="parse",
@@ -649,6 +663,7 @@ class SkillLab:
             try:
                 self._registry_reload()
             except Exception as exc:  # noqa: BLE001
+                collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
                 logger.warning("SkillRegistry.reload() échec", error=str(exc))
 
         logger.info("Skill promue et installée", name=skill_name)

@@ -31,6 +31,7 @@ from typing import Any
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.providers.memory.schemas import (
     DecayPolicy,
     Event,
@@ -443,6 +444,7 @@ class MemoryKernel:
                     (safe, k),
                 ).fetchall()
             except sqlite3.OperationalError:
+                collector.warning("JRV-MEM-001", "JRV-MEM-001")
                 return []
         return [(self._row_to_fact(r), float(r["score"])) for r in rows]
 

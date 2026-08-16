@@ -12,6 +12,7 @@ from pathlib import Path
 from loguru import logger
 
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import PROMPTS_DIR  # noqa: E402
 from jarvis.providers.llm.base import LLMProvider
 from jarvis.providers.memory.index import MemoryIndex
@@ -60,6 +61,7 @@ class ConsolidationAgent:
         try:
             await self._run(user_message, assistant_message)
         except Exception as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("Consolidation error", error=str(e))
 
     async def _run(self, user_message: str, assistant_message: str) -> None:
@@ -93,6 +95,7 @@ class ConsolidationAgent:
                     event_type="exchange",
                 )
             except Exception as exc:  # noqa: BLE001
+                collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
                 logger.warning("Consolidation: ingest Kernel error", error=str(exc))
 
     def _apply(self, raw: str) -> None:
@@ -108,6 +111,7 @@ class ConsolidationAgent:
         try:
             data = json.loads(match.group())
         except json.JSONDecodeError as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("Consolidation: JSON parse error", error=str(e), preview=raw[:120])
             return
 
@@ -211,5 +215,6 @@ class CrossSessionRecall:
             )
             return str(summary).strip() or None
         except Exception as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.warning("CrossSessionRecall LLM failed", error=str(e))
             return None

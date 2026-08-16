@@ -10,6 +10,8 @@ from enum import StrEnum
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 
 class RouteEnum(StrEnum):
     INSTANT = "I"
@@ -85,6 +87,7 @@ class SpeedRouter:
             try:
                 route = RouteEnum(tag)
             except ValueError:
+                collector.error("JRV-ENG-000", "JRV-ENG-000")
                 route = RouteEnum.INSTANT
             prefix = ""
             stripped = _TAG_RE.sub("", buffer)
@@ -97,6 +100,7 @@ class SpeedRouter:
                 try:
                     route = RouteEnum(tag)
                 except ValueError:
+                    collector.error("JRV-ENG-000", "JRV-ENG-000")
                     route = RouteEnum.INSTANT
                 prefix = buffer[: search.start()]
                 stripped = buffer[search.end() :]

@@ -24,6 +24,7 @@ from jarvis.kernel.bundle import (
     prerequisites_status,
     stage_models_from_bundle,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 BUNDLE_RELEASE_VERSION = "v0.3.2"
 BUNDLE_CDN_ROOT = f"https://techalchemy.fr/jarvis-bundle-windows-{BUNDLE_RELEASE_VERSION}"
@@ -295,6 +296,7 @@ def _run_download() -> None:
             eta_seconds=0,
         )
     except Exception as exc:
+        collector.error("JRV-KRN-002", "JRV-KRN-002", cause=exc)
         _set_state(
             running=False,
             phase="error",

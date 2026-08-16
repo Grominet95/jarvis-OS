@@ -8,9 +8,10 @@ import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.settings import settings
 from jarvis.providers.memory.schemas import FactStatus
 
@@ -69,20 +70,20 @@ async def list_memory_topics(request: Request) -> list[dict]:
 @router.get("/api/memory/topics/{name}")
 async def get_memory_topic(name: str, request: Request) -> dict:
     if "/" in name or "\\" in name or ".." in name:
-        raise HTTPException(400, "Nom invalide")
+        raise_api_error("JRV-API-004", 400, "Nom invalide")
     p = _mem_dir(request) / "topics" / name
     if not p.exists():
-        raise HTTPException(404, "Fichier introuvable")
+        raise_api_error("JRV-API-003", 404, "Fichier introuvable")
     return {"name": name, "content": p.read_text(encoding="utf-8")}
 
 
 @router.put("/api/memory/topics/{name}")
 async def put_memory_topic(name: str, body: _ContentBody, request: Request) -> dict:
     if "/" in name or "\\" in name or ".." in name:
-        raise HTTPException(400, "Nom invalide")
+        raise_api_error("JRV-API-004", 400, "Nom invalide")
     p = _mem_dir(request) / "topics" / name
     if not p.exists():
-        raise HTTPException(404, "Fichier introuvable")
+        raise_api_error("JRV-API-003", 404, "Fichier introuvable")
     p.write_text(body.content, encoding="utf-8")
 
     # Synchronise le VectorIndex si disponible
@@ -105,10 +106,10 @@ async def put_memory_topic(name: str, body: _ContentBody, request: Request) -> d
 @router.delete("/api/memory/topics/{name}")
 async def delete_memory_topic(name: str, request: Request) -> dict:
     if "/" in name or "\\" in name or ".." in name:
-        raise HTTPException(400, "Nom invalide")
+        raise_api_error("JRV-API-004", 400, "Nom invalide")
     p = _mem_dir(request) / "topics" / name
     if not p.exists():
-        raise HTTPException(404, "Fichier introuvable")
+        raise_api_error("JRV-API-003", 404, "Fichier introuvable")
     p.unlink()
 
     # Retire le document du VectorIndex si disponible
@@ -142,13 +143,15 @@ async def list_memory_facts(
 
     kernel = getattr(request.app.state, "memory_kernel", None)
     if kernel is None:
-        raise HTTPException(503, "Memory Kernel non disponible.")
+        raise_api_error("JRV-API-005", 503, "Memory Kernel non disponible.")
     try:
         st = FactStatus(status)
     except ValueError:
-        raise HTTPException(
-            400, f"Status invalide '{status}'. Valeurs : {[s.value for s in FactStatus]}"
-        ) from None
+        raise_api_error(
+            "JRV-API-004",
+            400,
+            f"Status invalide '{status}'. Valeurs : {[s.value for s in FactStatus]}",
+        )
     facts = kernel.list_facts_by_status(st, limit=limit)
     if category:
         facts = [f for f in facts if f.category == category]
@@ -182,17 +185,18 @@ async def correct_memory_fact(body: _CorrectionBody, request: Request) -> dict:
 
     kernel = getattr(request.app.state, "memory_kernel", None)
     if kernel is None:
-        raise HTTPException(503, "Memory Kernel non disponible.")
+        raise_api_error("JRV-API-005", 503, "Memory Kernel non disponible.")
 
     new_status_enum: FactStatus | None = None
     if body.new_status:
         try:
             new_status_enum = FactStatus(body.new_status)
         except ValueError:
-            raise HTTPException(
+            raise_api_error(
+                "JRV-API-004",
                 400,
                 f"Status invalide '{body.new_status}'. Valeurs : {[s.value for s in FactStatus]}",
-            ) from None
+            )
 
     event, fact = kernel.apply_correction(
         target_fact_id=body.target_fact_id,
@@ -224,7 +228,7 @@ async def trigger_autodream(request: Request) -> dict:
 
     auto_dream = getattr(request.app.state, "auto_dream", None)
     if not auto_dream:
-        raise HTTPException(503, "AutoDream non disponible")
+        raise_api_error("JRV-API-005", 503, "AutoDream non disponible")
     asyncio.create_task(
         auto_dream._run_micro_safe(user_message="[trigger manuel]", assistant_message=""),
         name="autodream-manual",
@@ -247,7 +251,8 @@ async def trigger_deep(request: Request) -> dict:
     """
 
     if not settings.ingest_deep_enabled:
-        raise HTTPException(
+        raise_api_error(
+            "JRV-API-005",
             503,
             "Ingestion deep désactivée (settings.ingest_deep_enabled=False). "
             "Flip le flag avant d'utiliser cet endpoint.",
@@ -255,7 +260,7 @@ async def trigger_deep(request: Request) -> dict:
 
     auto_dream = getattr(request.app.state, "auto_dream", None)
     if not auto_dream:
-        raise HTTPException(503, "AutoDream non disponible")
+        raise_api_error("JRV-API-005", 503, "AutoDream non disponible")
 
     asyncio.create_task(auto_dream.deep_analyze(), name="autodream-deep-manual")
     return {"triggered": True, "scope": "deep"}

@@ -1,0 +1,25 @@
+# API Routers Overview
+
+Aggregated in `interfaces/api/http.py`:
+
+ui, logs, system, sessions, memory, skills, config, proactive, vision, chat, analytics.
+
+Additional routers mounted in `app.py`: budget, briefing, music, spotify, projects, routines, globe, macropad, google_oauth, websocket, channels, admin.
+
+See [maps/route-map.md](../../maps/route-map.md).
+
+
+## Related docs
+
+- [INDEX](../../INDEX.md)
+- [AI_INSTRUCTIONS](../../AI_INSTRUCTIONS.md)
+- [overview](../overview.md)
+- [route-map](../../maps/route-map.md)
+- [setup-flow](../../01-entry-points/setup-flow.md)
+- [windows-launchers](../../01-entry-points/windows-launchers.md)
+- [bundle-offline](../../02-kernel/bundle-offline.md)
+- [process-map](../../maps/process-map.md)
+- [env-reference](../../07-config/env-reference.md)
+- [run-flow](../../01-entry-points/run-flow.md)
+
+- **Last reviewed:** 2026-08-13 (jarvis-os @ local)
