@@ -293,12 +293,14 @@ app.include_router(projects_router)
 app.include_router(widgets_router)
 app.include_router(spotify_router)
 app.include_router(deezer_router)
-app.include_router(local_music_router)
+if not settings.is_cloud:
+    app.include_router(local_music_router)
 app.include_router(music_router)
 app.include_router(globe_router)
 app.include_router(briefing_router)
-app.include_router(macropad_router)
-app.include_router(macropad_ui_router)
+if not settings.is_cloud:
+    app.include_router(macropad_router)
+    app.include_router(macropad_ui_router)
 app.include_router(google_oauth_router)
 
 # ── [SURFACE] ────────────────────────────────────────────────────────────────

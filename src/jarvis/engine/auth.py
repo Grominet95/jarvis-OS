@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hmac
 from collections.abc import Sequence
+from urllib.parse import parse_qs
 
 from loguru import logger
 from starlette.requests import HTTPConnection
@@ -60,9 +61,20 @@ async def verify_api_token(request: HTTPConnection) -> None:
     if not settings.api_auth_enabled:
         return
 
-    # WebSocket : le navigateur ne peut pas envoyer Authorization à l'upgrade
     if request.scope.get("type") == "websocket":
-        return
+        query = parse_qs(request.scope.get("query_string", b"").decode())
+        token = (query.get("token") or [""])[0]
+        expected = settings.api_token.get_secret_value()
+        if expected and token and hmac.compare_digest(
+            token.encode("utf-8"),
+            expected.encode("utf-8"),
+        ):
+            return
+        logger.warning(
+            "Auth: WebSocket token missing or invalid",
+            path=request.url.path,
+        )
+        raise_api_error("JRV-API-002", 401, "Token WebSocket requis.")
 
     path: str = request.url.path
     if path in _EXEMPT_EXACT:

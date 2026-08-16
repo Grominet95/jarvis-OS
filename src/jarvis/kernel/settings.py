@@ -93,6 +93,17 @@ class Settings(BaseSettings):
     )
     port: int = Field(default=8000)
     environment: Literal["development", "production"] = Field(default="development")
+    jarvis_deployment: Literal["local", "cloud"] = Field(
+        default="local",
+        description=(
+            "Profil de déploiement. 'cloud' désactive le matériel hôte (macropad, "
+            "musique locale MPRIS) et active les garde-fous réseau renforcés."
+        ),
+    )
+
+    @property
+    def is_cloud(self) -> bool:
+        return self.jarvis_deployment == "cloud"
 
     # ── Sécurité réseau ───────────────────────────────────────
     api_auth_enabled: bool = Field(
