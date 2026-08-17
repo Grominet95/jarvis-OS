@@ -118,7 +118,7 @@ Python système et LiveKit **ne sont pas requis** : le script de build les intè
 
 ### Parcours A : Utilisateur final (Windows)
 
-**Clone Git sans `bundle/`** : double-clique `setup.bat` (ou `.\jarvis.ps1 setup`). **Aucun Python requis** : le lanceur télécharge le bundle (~700 Mo) depuis techalchemy.fr, puis ouvre l'assistant web. **Release avec `bundle/` déjà inclus** : configuration directe.
+**Clone Git ou archive sans `bundle/`** : à l'étape 1 du setup, clique sur **Télécharger** — le wizard récupère `bundle.zip` (~628 Mo), l'extrait dans `bundle/` et vérifie les prérequis. **Aucune extraction manuelle.** **Release avec `bundle/` déjà inclus** : le bouton n'apparaît pas, tu passes directement à la configuration.
 
 > **OneDrive interdit.** Ne place pas `jarvis-OS` dans OneDrive (Documents synchronisés, etc.) : OneDrive casse les liens symboliques du venv Python embarqué. Au premier lancement, Jarvis **bloque l'installation** et propose soit un **déplacement automatique** vers un dossier local (Documents hors sync, ou `%USERPROFILE%\jarvis-OS`), soit des instructions pour déplacer manuellement puis relancer `setup.bat`.
 
@@ -128,7 +128,7 @@ Le plus simple : **double-clique sur `setup.bat`**, puis sur `run.bat`. Ou en li
 # 1. Cloner ou décompresser, puis ouvrir le dossier (hors OneDrive)
 cd C:\jarvis-OS
 
-# 2. Setup (telecharge le bundle si absent, puis ouvre le navigateur)
+# 2. Configuration web (navigateur — étape 1 : Télécharger si bundle/ absent)
 .\jarvis.bat setup
 
 # 3. Démarrage

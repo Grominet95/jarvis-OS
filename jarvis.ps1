@@ -6,6 +6,9 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
+$BundleReleaseVersion = "v0.3.2"
+$BundleReleaseUrl = "https://github.com/Grominet95/jarvis-OS/releases/download/$BundleReleaseVersion/jarvis-offline-windows-$BundleReleaseVersion.zip"
+
 # Force UTF-8 for every child Python process. When stdout/stderr are redirected to
 # a log file (run command), Python otherwise falls back to the legacy ANSI code page
 # (cp1252) with strict error handling, so any non-cp1252 char in a log line (e.g. the
@@ -14,24 +17,53 @@ $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
 
 . (Join-Path $PSScriptRoot "scripts\onedrive_guard.ps1")
-. (Join-Path $PSScriptRoot "scripts\download_bundle.ps1")
 
 function Test-BundlePresent {
-    return Test-JarvisBundlePresent -ProjectRoot $PSScriptRoot
+    $manifest = Join-Path $PSScriptRoot "bundle\manifest.json"
+    $venvPy = Join-Path $PSScriptRoot "bundle\.venv\Scripts\python.exe"
+    return (Test-Path $manifest) -and (Test-Path $venvPy)
 }
 
 function Test-DevVenvPresent {
     return Test-Path (Join-Path $PSScriptRoot ".venv\Scripts\python.exe")
 }
 
-function Require-JarvisBundle {
+function Ensure-Bundle {
     if (Test-BundlePresent) { return }
     if (Test-DevVenvPresent) { return }
     Write-Host ""
-    Write-Host "  Bundle offline absent." -ForegroundColor Red
-    Write-Host "  Lance d'abord : .\jarvis.ps1 setup" -ForegroundColor White
+    Write-Host "  Bundle offline introuvable, telechargement..." -ForegroundColor Yellow
+    Write-Host "  $BundleReleaseUrl" -ForegroundColor DarkGray
     Write-Host ""
-    exit 1
+    $staging = Join-Path $env:TEMP "jarvis-bundle-download"
+    Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $staging -Force | Out-Null
+    $zipPath = Join-Path $staging "jarvis-offline.zip"
+    try {
+        Invoke-WebRequest -Uri $BundleReleaseUrl -OutFile $zipPath -UseBasicParsing
+        $extractDir = Join-Path $staging "extract"
+        Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+        $bundleSrc = Get-ChildItem -Path $extractDir -Recurse -Directory -Filter "bundle" |
+            Where-Object { Test-Path (Join-Path $_.FullName "manifest.json") } |
+            Select-Object -First 1
+        if (-not $bundleSrc) {
+            Write-Host "  Archive invalide : dossier bundle/ introuvable." -ForegroundColor Red
+            exit 1
+        }
+        $bundleDest = Join-Path $PSScriptRoot "bundle"
+        if (Test-Path $bundleDest) {
+            Remove-Item $bundleDest -Recurse -Force
+        }
+        Copy-Item $bundleSrc.FullName $bundleDest -Recurse -Force
+        Write-Host "  Bundle installe dans $bundleDest" -ForegroundColor Green
+        Write-Host ""
+    } catch {
+        Write-Host "  Echec du telechargement : $_" -ForegroundColor Red
+        Write-Host "  Telecharge manuellement la release offline depuis GitHub." -ForegroundColor White
+        exit 1
+    } finally {
+        Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function Repair-BundleVenv {
@@ -366,14 +398,8 @@ switch ($Command.ToLowerInvariant()) {
 }
 
 if ($Command.Trim() -ne "") {
-    $cmd = $Command.ToLowerInvariant()
-    if ($cmd -in @("eclosion", "setup")) {
-        Install-JarvisBundle -ProjectRoot $PSScriptRoot
-        Repair-BundleVenv
-    } elseif ($cmd -in @("run", "start", "api", "voice", "livekit")) {
-        Require-JarvisBundle
-        Repair-BundleVenv
-    }
+    Ensure-Bundle
+    Repair-BundleVenv
 }
 
 switch ($Command.ToLowerInvariant()) {
