@@ -21,7 +21,14 @@ function Get-JarvisZipMemberRelPath {
         $normalized = $normalized.Substring(7)
     }
     if (-not $normalized) { return $null }
-    if ($normalized -match '^[A-Za-z]:' -or $normalized.Contains("..")) { return $null }
+    # Meme jeu de rejets que _zip_member_dest cote Python (kernel/bundle_download.py) :
+    # lettre de lecteur, remontee `..`, et chemin enracine. Join-Path ne traite pas
+    # une partie droite enracinee comme absolue, donc le "/" ne s'echappe pas ici —
+    # on le rejette quand meme pour que les deux implementations acceptent
+    # exactement le meme ensemble de membres, et pour ne pas dependre de ce detail.
+    if ($normalized -match '^[A-Za-z]:' -or
+        $normalized.Contains("..") -or
+        $normalized.StartsWith("/")) { return $null }
     return $normalized
 }
 
@@ -82,6 +89,10 @@ function Install-JarvisBundle {
         }
         New-Item -ItemType Directory -Path $bundleDest -Force | Out-Null
         Expand-JarvisBundleZip -ZipPath $zipPath -BundleDest $bundleDest
+        # Rehome ici meme si jarvis.ps1 rappelle Repair-BundleVenv juste apres :
+        # Install-JarvisBundle doit rendre un bundle utilisable a elle seule. Le
+        # re-ancrage est idempotent, et le rejouer coute infiniment moins qu'une
+        # fonction publique qui depend de ce que fait son appelant.
         $rehome = Join-Path $ProjectRoot "scripts\release\rehome_bundle.ps1"
         if (Test-Path $rehome) {
             & $rehome -ProjectRoot $ProjectRoot
