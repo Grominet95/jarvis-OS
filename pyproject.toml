@@ -113,6 +113,12 @@ ban-relative-imports = "all"
 # démarrage sous Windows, cf. jarvis.ps1 run). Ce code-avant-imports volontaire
 # déclenche E402 sur tous les imports suivants.
 "src/jarvis/app.py" = ["E402"]
+# scripts/doc_helper/write_overviews.py est un generateur one-shot dont le corps
+# est presque entierement de la prose Markdown dans des f-strings : phrases longues
+# et lignes de tableau `| ... | ... |`, qu'on ne peut pas couper sans casser le
+# rendu du document genere. Les vraies regles (E402, B005, imports) sont
+# respectees ; seule la longueur de ligne est exemptee.
+"scripts/doc_helper/write_overviews.py" = ["E501"]
 # tests/test_settings_consumers.py utilise `Any` dans des Spy classes qui
 # capturent des kwargs arbitraires des constructeurs patchés (AsyncOpenAI,
 # AsyncAnthropic, httpx.AsyncClient). Typer ces kwargs précisément demanderait

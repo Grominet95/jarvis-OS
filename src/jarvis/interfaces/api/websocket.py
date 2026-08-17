@@ -64,6 +64,7 @@ async def websocket_logs(websocket: WebSocket) -> None:
                     return
             last_sent = len(buf)
     except WebSocketDisconnect:
+        # jrv: pas de code — deconnexion normale du client
         pass
     except Exception as e:
         collector.error("JRV-WS-001", "JRV-WS-001", cause=e)
@@ -336,6 +337,7 @@ async def websocket_chat(websocket: WebSocket) -> None:
                 _user_model.fire(user_message=message, assistant_message=full)
 
     except WebSocketDisconnect:
+        # jrv: pas de code — deconnexion normale du client
         logger.info("WebSocket connection closed")
     except Exception as e:
         collector.error("JRV-WS-001", "JRV-WS-001", cause=e)

@@ -15,7 +15,9 @@ import jarvis.kernel.preflight as preflight
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_check_python_emits_krn003(capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_check_python_emits_krn003(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(preflight.sys, "version_info", (3, 10, 0))
     assert preflight.check_python() is False
     err = capsys.readouterr().err

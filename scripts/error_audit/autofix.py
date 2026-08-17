@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -116,8 +115,19 @@ def fix_file(path: Path) -> bool:
         i += 1
         block_lines: list[str] = []
         while i < len(lines):
-            if lines[i].strip() and not lines[i].startswith(indent + " ") and not lines[i].strip().startswith("#"):
-                if EXCEPT_RE.match(lines[i].rstrip("\n")) or lines[i].startswith(indent + "except ") or lines[i].startswith("except "):
+            ligne = lines[i]
+            hors_bloc = (
+                ligne.strip()
+                and not ligne.startswith(indent + " ")
+                and not ligne.strip().startswith("#")
+            )
+            if hors_bloc:
+                nouvel_except = (
+                    EXCEPT_RE.match(ligne.rstrip("\n"))
+                    or ligne.startswith(indent + "except ")
+                    or ligne.startswith("except ")
+                )
+                if nouvel_except:
                     break
                 if len(lines[i]) - len(lines[i].lstrip()) <= len(indent) and lines[i].strip():
                     break

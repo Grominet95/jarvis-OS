@@ -56,6 +56,7 @@ class ToolRegistry:
             logger.debug("Tool registered", name=tool.name)
 
     def replace_skill_tools(self, *tools: Tool) -> None:
+        """Remplace atomiquement les outils venant des skills."""
         for name in list(self._skill_tool_names):
             self._tools.pop(name, None)
         self._skill_tool_names = set()
@@ -69,9 +70,11 @@ class ToolRegistry:
         return bool(self._tools)
 
     def schemas(self) -> list[dict]:
+        """Retourne les schémas Claude de tous les outils enregistrés."""
         return [t.to_claude_schema() for t in self._tools.values()]
 
     def core_schemas(self) -> list[dict]:
+        """Retourne uniquement les schémas des outils natifs (hors skills)."""
         return [
             t.to_claude_schema()
             for name, t in self._tools.items()
@@ -79,6 +82,7 @@ class ToolRegistry:
         ]
 
     async def call(self, name: str, inputs: dict) -> ToolResult:
+        """Exécute un outil par nom. Retourne une ToolResult d'erreur si inconnu."""
         tool = self._tools.get(name)
         code = _tool_code(name)
         if tool is None:

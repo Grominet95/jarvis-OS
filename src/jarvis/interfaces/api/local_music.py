@@ -61,6 +61,7 @@ async def _run(cmd: str, *args: str) -> str | None:
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=3.0)
         return stdout.decode().strip()
     except FileNotFoundError:
+        # jrv: pas de code — nowplaying-cli est optionnel (macOS), son absence est nominale
         logger.debug("nowplaying-cli not installed")
         return None
     except (TimeoutError, Exception) as e:  # noqa: BLE001

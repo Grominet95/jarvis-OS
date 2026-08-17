@@ -115,7 +115,11 @@ async def test_registry_call_str_error() -> None:
 
     registry = ToolRegistry()
     text = await registry.call_str("unknown", {})
-    assert text.startswith("[ERREUR]")
+    # Le marqueur d'erreur rendu au LLM est desormais le code JRV lui-meme
+    # (PR #55) et non plus "[ERREUR]" : c'est lui qui rend l'echec tracable
+    # jusqu'au registre. Le test verifie le contrat, pas la chaine exacte.
+    assert text.startswith("[JRV-"), text
+    assert "Outil inconnu" in text
 
 
 # ── WeatherTool ───────────────────────────────────────────────

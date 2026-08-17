@@ -206,6 +206,7 @@ class ScriptRPCRunner:
             try:
                 await dispatch_task
             except asyncio.CancelledError:
+                # jrv: pas de code — annulation normale de la tache, pas une panne
                 pass
             shutil.rmtree(rpc_dir, ignore_errors=True)
 

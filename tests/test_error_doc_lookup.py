@@ -17,48 +17,50 @@ from jarvis.kernel.error_doc_lookup import (
 )
 
 
-def test_normalize_code():
+def test_normalize_code() -> None:
     assert normalize_code("jrv-krn-011") == "JRV-KRN-011"
 
 
-def test_lookup_known_code():
+def test_lookup_known_code() -> None:
     spec = lookup_code("JRV-KRN-011")
     assert spec is not None
     assert spec.get("domain") == "KRN"
 
 
-def test_format_jrv_reply_known():
+def test_format_jrv_reply_known() -> None:
     text = format_jrv_reply("JRV-KRN-011")
     assert "JRV-KRN-011" in text
     assert "Résolution" in text
 
 
-def test_format_jrv_reply_unknown():
+def test_format_jrv_reply_unknown() -> None:
     text = format_jrv_reply("JRV-ZZZ-999")
     assert "inconnu" in text
 
 
-def test_extract_jrv_codes():
+def test_extract_jrv_codes() -> None:
     assert extract_jrv_codes("log: [JRV-TOL-001] failed") == ["JRV-TOL-001"]
 
 
-def test_parse_jrv_command_slash():
+def test_parse_jrv_command_slash() -> None:
     reply = parse_jrv_command("/error JRV-KRN-011")
     assert reply is not None
     assert "JRV-KRN-011" in reply
 
 
-def test_parse_jrv_command_bare_code():
+def test_parse_jrv_command_bare_code() -> None:
     reply = parse_jrv_command("JRV-KRN-011")
     assert reply is not None
     assert "JRV-KRN-011" in reply
 
 
-def test_parse_jrv_command_normal_message():
+def test_parse_jrv_command_normal_message() -> None:
     assert parse_jrv_command("Quelle est la météo ?") is None
 
 
-def test_format_jrv_reply_uses_sqlite_when_present(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_format_jrv_reply_uses_sqlite_when_present(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     db_path = tmp_path / "doc_index.sqlite"
     with sqlite3.connect(db_path) as conn:
         conn.execute(

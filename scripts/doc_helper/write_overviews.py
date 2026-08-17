@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Write Documentation_Helper overview and flow docs (non-module-card files)."""
+import re
 from pathlib import Path
 
 DOC = Path("Documentation_Helper")
@@ -188,7 +189,7 @@ flowchart LR
 """)
 
 # dependency-versions from pyproject
-import re
+
 pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
 deps = re.findall(r'"([^"]+>=[^"]+)"', pyproject)
 w("00-meta/dependency-versions.md", f"""# Dependency Versions
@@ -221,7 +222,9 @@ for line in env_lines:
         if buf:
             groups.append((current, buf))
             buf = []
-        current = line.strip("# ─ ").strip()
+        # Deshabille un titre de section "# ── Titre ────" : on retire les
+        # caracteres de decoration en tete et en queue, pas une sous-chaine.
+        current = re.sub(r"^[#\s\u2500]+|[#\s\u2500]+$", "", line)
     elif line.strip() and not line.strip().startswith("#"):
         key = line.split("=", 1)[0].strip()
         buf.append(f"- `{key}`")
@@ -234,7 +237,7 @@ for title, keys in groups:
         env_md.append("")
         env_md.extend(keys)
         env_md.append("")
-env_md.append(f"- **Source of truth:** [.env.example](../../.env.example)")
+env_md.append("- **Source of truth:** [.env.example](../../.env.example)")
 env_md.append(f"- **Last reviewed:** {TODAY} (jarvis-os @ local)")
 w("07-config/env-reference.md", "\n".join(env_md))
 
@@ -294,7 +297,7 @@ Bootstrap dependencies and optional bundle paths for Linux/macOS dev.
 - **Last reviewed:** {TODAY} (jarvis-os @ local)
 """)
 
-w("01-entry-points/setup-flow.md", f"""# Setup Flow
+w("01-entry-points/setup-flow.md", rf"""# Setup Flow
 
 ## Trigger
 
@@ -324,7 +327,7 @@ w("01-entry-points/run-flow.md", f"""# Run Flow
 
 ## Trigger
 
-`.\jarvis.ps1 run` after setup complete.
+`.\\jarvis.ps1 run` after setup complete.
 
 ## Sequence
 
@@ -647,7 +650,7 @@ w("09-operations/troubleshooting.md", f"""# Troubleshooting
 
 **Symptom:** `Bundle offline absent` on run.
 
-**Fix:** Run `.\jarvis.ps1 setup` to download CDN bundle.
+**Fix:** Run `.\\jarvis.ps1 setup` to download CDN bundle.
 
 ## OneDrive install
 
@@ -682,7 +685,7 @@ w("09-operations/logs-and-doctor.md", f"""# Logs and Doctor
 
 ## Doctor
 
-`.\jarvis.ps1 doctor` — environment diagnostics.
+`.\\jarvis.ps1 doctor` — environment diagnostics.
 
 ## Preflight
 

@@ -43,9 +43,12 @@ def _asyncio_handler(loop: asyncio.AbstractEventLoop, context: dict[str, Any]) -
 
 
 def _thread_handler(args: threading.ExceptHookArgs) -> None:
+    # `args.thread` est Thread | None : il vaut None quand le thread est déjà
+    # détruit au moment où le hook tourne (cas documenté de threading.excepthook).
+    nom = args.thread.name if args.thread is not None else "inconnu"
     collector.error(
         "JRV-UNK-001",
-        f"Thread {args.thread.name} failed",
+        f"Thread {nom} failed",
         cause=args.exc_value,
     )
 
@@ -53,7 +56,7 @@ def _thread_handler(args: threading.ExceptHookArgs) -> None:
 def install_error_hooks() -> None:
     sys.excepthook = _handle_uncaught
     if hasattr(threading, "excepthook"):
-        threading.excepthook = _thread_handler  # type: ignore[attr-defined]
+        threading.excepthook = _thread_handler
 
 
 def install_asyncio_handler(loop: asyncio.AbstractEventLoop | None = None) -> None:

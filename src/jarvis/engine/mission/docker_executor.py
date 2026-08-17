@@ -184,4 +184,5 @@ class DockerExecutor:
             await proc.communicate()
             return proc.returncode == 0
         except FileNotFoundError:
+            # jrv: pas de code — sonde de capacite — docker absent, False EST la reponse
             return False
