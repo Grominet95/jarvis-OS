@@ -124,7 +124,6 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         from jarvis.capabilities.skills.base import SkillBase  # lazy: sandbox path
     except Exception as exc:
-        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("import", f"SkillBase indisponible dans la sandbox : {exc!r}")
 
 
@@ -137,7 +136,6 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
     except Exception as exc:
-        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("import", f"import a échoué : {exc!r}\\n{traceback.format_exc()[:600]}")
 
     skill_class = None
@@ -164,7 +162,6 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
             with SKILL_YAML.open() as f:
                 metadata = yaml.safe_load(f) or {}
         except Exception as exc:
-            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
             _fail("import", f"skill.yaml illisible : {exc!r}")
 
 
@@ -172,7 +169,6 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         skill = skill_class(metadata=metadata)
     except Exception as exc:
-        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("instantiate", f"instantiation a échoué : {exc!r}")
 
 
@@ -180,7 +176,6 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         prompt = skill.get_system_prompt()
     except Exception as exc:
-        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("system_prompt", f"get_system_prompt() a levé : {exc!r}")
 
     if not isinstance(prompt, str) or not prompt.strip():
@@ -192,7 +187,6 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
     try:
         tools = skill.get_tools()
     except Exception as exc:
-        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
         _fail("tools", f"get_tools() a levé : {exc!r}")
 
     if tools:

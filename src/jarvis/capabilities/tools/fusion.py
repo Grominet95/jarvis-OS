@@ -129,7 +129,6 @@ def run(context):
         _orig_run(context)
         print("FUSION_OK: script exécuté avec succès")
     except Exception as _e:
-        collector.error("JRV-TOL-001", "JRV-TOL-001", cause=_e)
         print("FUSION_ERROR: " + _tb.format_exc())
 """
 
@@ -176,7 +175,6 @@ def run(context):
         ext_input.setDistanceExtent(False, adsk.core.ValueInput.createByReal(3))
         root.features.extrudeFeatures.add(ext_input)
     except:
-        collector.error("JRV-TOL-001", "JRV-TOL-001")
         adsk.core.Application.get().userInterface.messageBox(traceback.format_exc())
 \"\"\"
 
