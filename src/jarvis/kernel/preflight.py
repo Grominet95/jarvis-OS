@@ -14,6 +14,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 _USE_COLOR = sys.stderr.isatty() and os.name != "nt"
 _LEVEL_PREFIX = {"error": "ERROR", "warning": "WARN", "impossible": "IMPOSSIBLE"}
 
@@ -213,6 +215,7 @@ def check_port() -> bool:
 
 
 def main() -> int:
+    load_dotenv()
     print(_c("2", "Vérification de l'environnement Jarvis…"), file=sys.stderr)
 
     fatal = False
