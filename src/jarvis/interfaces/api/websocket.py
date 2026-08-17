@@ -64,7 +64,6 @@ async def websocket_logs(websocket: WebSocket) -> None:
                     return
             last_sent = len(buf)
     except WebSocketDisconnect:
-        collector.error("JRV-WS-001", "JRV-WS-001")
         pass
     except Exception as e:
         collector.error("JRV-WS-001", "JRV-WS-001", cause=e)
@@ -337,7 +336,6 @@ async def websocket_chat(websocket: WebSocket) -> None:
                 _user_model.fire(user_message=message, assistant_message=full)
 
     except WebSocketDisconnect:
-        collector.error("JRV-WS-001", "JRV-WS-001")
         logger.info("WebSocket connection closed")
     except Exception as e:
         collector.error("JRV-WS-001", "JRV-WS-001", cause=e)

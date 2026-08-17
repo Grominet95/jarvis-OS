@@ -184,5 +184,4 @@ class DockerExecutor:
             await proc.communicate()
             return proc.returncode == 0
         except FileNotFoundError:
-            collector.error("JRV-MSN-001", "JRV-MSN-001")
             return False

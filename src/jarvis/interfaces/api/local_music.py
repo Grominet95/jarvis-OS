@@ -61,7 +61,6 @@ async def _run(cmd: str, *args: str) -> str | None:
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=3.0)
         return stdout.decode().strip()
     except FileNotFoundError:
-        collector.error("JRV-API-001", "JRV-API-001")
         logger.debug("nowplaying-cli not installed")
         return None
     except (TimeoutError, Exception) as e:  # noqa: BLE001

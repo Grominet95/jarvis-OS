@@ -326,7 +326,6 @@ def prerequisites_status() -> dict[str, Any]:
         elif monorepo_python["present"] and runtime == _monorepo_python():
             runtime_source = "monorepo"
     except FileNotFoundError:
-        collector.error("JRV-KRN-002", "JRV-KRN-002")
         pass
 
     yolo_bundle = _bundle_model_path(manifest, "yolo", "models/yolov8n.pt")

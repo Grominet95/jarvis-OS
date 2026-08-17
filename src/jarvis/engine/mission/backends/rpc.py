@@ -206,7 +206,6 @@ class ScriptRPCRunner:
             try:
                 await dispatch_task
             except asyncio.CancelledError:
-                collector.error("JRV-MSN-001", "JRV-MSN-001")
                 pass
             shutil.rmtree(rpc_dir, ignore_errors=True)
 
