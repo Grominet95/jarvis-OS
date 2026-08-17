@@ -28,7 +28,7 @@ dependencies = [
     # Tools
     "pyyaml>=6.0.3",
     "beautifulsoup4>=4.12.0",
-    "lxml>=5.0.0",
+    "lxml>=6.1.1",
     "opencv-python>=4.13.0.92",
     "pillow>=10.0.0",
     "ultralytics>=8.0.0",
