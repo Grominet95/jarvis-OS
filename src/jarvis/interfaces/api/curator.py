@@ -20,9 +20,10 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 
 from jarvis.engine.proactive.curator import _report_to_dict
+from jarvis.kernel.http_errors import raise_api_error
 
 router = APIRouter()
 
@@ -30,14 +31,14 @@ router = APIRouter()
 def _curator(request: Request):  # noqa: ANN202
     cur = getattr(request.app.state, "curator", None)
     if cur is None:
-        raise HTTPException(503, "Curator non disponible — main.py n'a pas câblé.")
+        raise_api_error("JRV-API-005", 503, "Curator non disponible — main.py n'a pas câblé.")
     return cur
 
 
 def _command_center(request: Request):  # noqa: ANN202
     cc = getattr(request.app.state, "command_center", None)
     if cc is None:
-        raise HTTPException(503, "Command Center non disponible.")
+        raise_api_error("JRV-API-005", 503, "Command Center non disponible.")
     return cc
 
 
@@ -51,7 +52,7 @@ async def curator_latest_report(request: Request) -> dict:
     cur = _curator(request)
     report = cur.latest_report()
     if report is None:
-        raise HTTPException(404, "Aucun rapport Curator disponible.")
+        raise_api_error("JRV-API-003", 404, "Aucun rapport Curator disponible.")
     return _report_to_dict(report)
 
 
@@ -90,7 +91,7 @@ async def curator_apply_patch(patch_index: int, request: Request) -> dict:
     cur = _curator(request)
     report = cur.latest_report()
     if report is None:
-        raise HTTPException(404, "Aucun rapport disponible.")
+        raise_api_error("JRV-API-003", 404, "Aucun rapport disponible.")
     applied, reason = cur.apply_patch(patch_index, report)
     if applied:
         # En MVP, apply_patch retourne TOUJOURS False — ce code path est mort
@@ -98,7 +99,8 @@ async def curator_apply_patch(patch_index: int, request: Request) -> dict:
         return {"applied": True, "reason": reason}
     # Refus systématique en MVP — code HTTP 403 (forbidden) plutôt que 409
     # pour signifier "interdit par politique", pas "conflit d'état".
-    raise HTTPException(
+    raise_api_error(
+        "JRV-PRM-001",
         403,
         f"Application refusée par politique PHASE 6 MVP. {reason} "
         "Pour appliquer effectivement, utiliser les endpoints des phases "

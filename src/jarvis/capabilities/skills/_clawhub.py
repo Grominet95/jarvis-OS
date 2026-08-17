@@ -11,6 +11,8 @@ from pathlib import Path
 import httpx
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 CLAWHUB_API = "https://clawhub.ai/api"
 _TIMEOUT = 30.0
 
@@ -23,6 +25,7 @@ async def search_skills(query: str) -> list[dict]:
             r.raise_for_status()
             return r.json()
     except httpx.HTTPError as e:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
         logger.error("ClawHub search error", error=str(e))
         return []
 
@@ -44,6 +47,7 @@ async def install_skill(slug: str, skills_dir: Path) -> tuple[bool, str]:
             r.raise_for_status()
             content = r.content
     except httpx.HTTPError as e:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
         return False, f"Erreur réseau ClawHub : {e}"
 
     dest.mkdir(parents=True, exist_ok=True)
@@ -56,6 +60,7 @@ async def install_skill(slug: str, skills_dir: Path) -> tuple[bool, str]:
                     continue
                 z.extract(member, dest)
     except zipfile.BadZipFile:
+        collector.error("JRV-SKL-001", "JRV-SKL-001")
         dest.rmdir()
         return False, "Le fichier téléchargé n'est pas un ZIP valide."
 

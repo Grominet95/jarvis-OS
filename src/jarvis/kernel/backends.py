@@ -25,6 +25,7 @@ from enum import StrEnum
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import CONFIG_DIR
 
 
@@ -79,6 +80,7 @@ def load_backends_config() -> BackendsConfig:
             remote_provider=raw.get("remote_provider", "modal"),
         )
     except Exception:
+        collector.error("JRV-KRN-002", "JRV-KRN-002")
         logger.warning("config/backends.json illisible — utilisation des valeurs par défaut")
         return BackendsConfig()
 

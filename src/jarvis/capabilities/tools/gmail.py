@@ -13,6 +13,7 @@ import httpx
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 _SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -27,6 +28,7 @@ try:
 
     _HAS_GOOGLE = True
 except ImportError:
+    collector.error("JRV-TOL-001", "JRV-TOL-001")
     _HAS_GOOGLE = False
 
 
@@ -89,6 +91,7 @@ class GmailListTool(Tool):
         try:
             creds = await asyncio.to_thread(_load_gmail_creds, self._creds, self._token)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             return ToolResult(content=f"Erreur credentials Gmail : {e}", is_error=True)
 
         label_ids = ["UNREAD", "INBOX"] if unread_only else ["INBOX"]
@@ -137,6 +140,7 @@ class GmailListTool(Tool):
             return ToolResult(content=content)
 
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(f"Gmail list error: {type(e).__name__}: {e}")
             return ToolResult(content=f"Erreur Gmail : {e}", is_error=True)
 

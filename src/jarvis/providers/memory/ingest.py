@@ -30,6 +30,7 @@ from typing import Any
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.events import EventBus, MemoryIngested
 from jarvis.kernel.vocab import CATEGORIES, PREDICATES
 from jarvis.providers.llm.base import LLMProvider
@@ -298,6 +299,7 @@ class MemoryIngest:
                 context="memory",
             )
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
             logger.warning("Ingest LLM extract error", error=str(exc))
             return []
 
@@ -417,6 +419,7 @@ class MemoryIngest:
                 context="memory",
             )
         except Exception as exc:  # noqa: BLE001 — erreur LLM = doute = new
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
             logger.warning("Arbiter LLM error → fallback 'new'", error=str(exc))
             return _ArbiterVerdict(kind="new", target_fact_id=None, notes=str(exc))
 
@@ -541,6 +544,7 @@ def _parse_arbiter_verdict(raw: str) -> _ArbiterVerdict:
     try:
         data = json.loads(match.group())
     except json.JSONDecodeError as exc:
+        collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
         return _ArbiterVerdict(kind="new", target_fact_id=None, notes=f"parse error: {exc}")
     if not isinstance(data, dict):
         return _ArbiterVerdict(kind="new", target_fact_id=None, notes="not a dict")
@@ -570,6 +574,7 @@ def _parse_extract_response(raw: str) -> list[_Candidate]:
     try:
         data = json.loads(match.group())
     except json.JSONDecodeError as exc:
+        collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=exc)
         logger.debug("Ingest: JSON parse error", error=str(exc), preview=raw[:120])
         return []
     if not isinstance(data, dict):
@@ -591,6 +596,7 @@ def _parse_extract_response(raw: str) -> list[_Candidate]:
         try:
             imp = float(imp_raw)
         except (TypeError, ValueError):
+            collector.warning("JRV-MEM-001", "JRV-MEM-001")
             imp = 0.5
         out.append(
             _Candidate(

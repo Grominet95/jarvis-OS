@@ -21,6 +21,7 @@ from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.approval import get_approval_checker
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 _ORCA_CLI = "/Applications/OrcaSlicer.app/Contents/MacOS/OrcaSlicer"
@@ -165,6 +166,7 @@ class Printer3DTool(Tool):
         try:
             _, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
         except TimeoutError:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             proc.kill()
             return ToolResult(content="Timeout slicing (>120s)", is_error=True)
 
@@ -213,6 +215,7 @@ class Printer3DTool(Tool):
                 return ToolResult(content=msg, is_error=True)
             return ToolResult(content=msg)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(f"Printer print error: {e}")
             return ToolResult(content=str(e), is_error=True)
 
@@ -258,6 +261,7 @@ class Printer3DTool(Tool):
                 return ToolResult(content=" | ".join(parts))
             return ToolResult(content=f"État BambuLab : {state}")
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(f"Printer status error: {e}")
             return ToolResult(content=str(e), is_error=True)
 
@@ -287,5 +291,6 @@ class Printer3DTool(Tool):
                 return ToolResult(content="Impression annulée.")
             return ToolResult(content="Échec annulation (stop_print=False)", is_error=True)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error(f"Printer cancel error: {e}")
             return ToolResult(content=str(e), is_error=True)

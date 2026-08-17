@@ -37,6 +37,7 @@ from jarvis.engine.budget import BudgetGuard
 from jarvis.engine.proactive.store import InitiativeStore
 from jarvis.kernel.contracts import MemoryStore as MemoryKernel
 from jarvis.kernel.contracts import SkillLifecycle
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import MEMORY_DATA_DIR
 from jarvis.kernel.schemas import DecayPolicy, Fact, FactStatus, SkillStatus
 
@@ -349,6 +350,7 @@ class Curator:
         try:
             status = self._budget.status()
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=exc)
             logger.warning("Curator: budget.status() échec", error=str(exc))
             report.budget_status = "error"
             return
@@ -374,6 +376,7 @@ class Curator:
         try:
             recent = self._initiatives.list_recent(days=7)
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=exc)
             logger.warning("Curator: initiatives load échec", error=str(exc))
             return
         report.initiatives_pending = sum(1 for i in recent if i.status == "pending")
@@ -449,6 +452,7 @@ class Curator:
         try:
             data = json.loads(reports[0].read_text(encoding="utf-8"))
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=exc)
             logger.warning("Curator: latest_report parse échec", error=str(exc))
             return None
         return _report_from_dict(data)

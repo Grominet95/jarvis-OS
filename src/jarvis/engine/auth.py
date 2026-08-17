@@ -9,10 +9,10 @@ from __future__ import annotations
 import hmac
 from collections.abc import Sequence
 
-from fastapi import HTTPException
 from loguru import logger
 from starlette.requests import HTTPConnection
 
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.settings import settings
 
 # Chemins exemptés de l'authentification Bearer.
@@ -78,7 +78,7 @@ async def verify_api_token(request: HTTPConnection) -> None:
             path=path,
             client=request.client.host if request.client else "?",
         )
-        raise HTTPException(status_code=401, detail="Token Bearer requis.")
+        raise_api_error("JRV-API-002", 401, "Token Bearer requis.")
 
     token = auth_header[len("Bearer ") :]
     expected = settings.api_token.get_secret_value()
@@ -91,4 +91,4 @@ async def verify_api_token(request: HTTPConnection) -> None:
             path=path,
             client=request.client.host if request.client else "?",
         )
-        raise HTTPException(status_code=401, detail="Token invalide.")
+        raise_api_error("JRV-API-002", 401, "Token invalide.")

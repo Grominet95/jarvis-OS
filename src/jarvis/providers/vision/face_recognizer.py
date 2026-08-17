@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import FACES_DIR  # noqa: F401
 from jarvis.kernel.settings import settings
 
@@ -53,6 +54,7 @@ class FaceRecognizer:
         try:
             import face_recognition as fr
         except ImportError:
+            collector.warning("JRV-VIS-001", "JRV-VIS-001")
             if settings.face_recognition_enabled:
                 logger.warning(
                     "FaceRecognizer: FACE_RECOGNITION_ENABLED=true mais la lib "
@@ -82,6 +84,7 @@ class FaceRecognizer:
                     logger.warning(
                         f"FaceRecognizer: aucun visage dans {img_path}")
             except Exception as e:
+                collector.warning("JRV-VIS-001", "JRV-VIS-001", cause=e)
                 logger.error(
                     f"FaceRecognizer: erreur chargement {img_path}: {e}")
 
@@ -157,6 +160,7 @@ class FaceRecognizer:
             return self._last_result
 
         except Exception as e:
+            collector.warning("JRV-VIS-001", "JRV-VIS-001", cause=e)
             logger.error(f"FaceRecognizer.process error: {e}")
             return _empty
 
@@ -176,5 +180,6 @@ class FaceRecognizer:
                 return True
             return False
         except Exception as e:
+            collector.warning("JRV-VIS-001", "JRV-VIS-001", cause=e)
             logger.error(f"FaceRecognizer add_face error: {e}")
             return False

@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import PROJECT_ROOT
 from jarvis.providers.memory.topics import TopicStore
 
@@ -80,6 +81,7 @@ class VectorIndex:
         try:
             from fastembed import TextEmbedding  # type: ignore[import-not-found]
         except ImportError as e:  # pragma: no cover — dépendance déclarée
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             raise RuntimeError(
                 "fastembed n'est pas installé. Ajoute 'fastembed' à pyproject.toml."
             ) from e
@@ -189,6 +191,7 @@ class VectorIndex:
             self._manifest = json.loads(self._manifest_path.read_text(encoding="utf-8"))
             logger.info("VectorIndex loaded", entries=len(self._manifest), dir=str(self._dir))
         except (OSError, ValueError, json.JSONDecodeError) as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("VectorIndex.load failed", error=str(e))
             self._vectors = None
             self._manifest = []
@@ -258,6 +261,7 @@ class VectorIndex:
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
         except OSError:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001")
             return ""
         parts: list[str] = []
         for raw in lines:
@@ -267,6 +271,7 @@ class VectorIndex:
             try:
                 obj = json.loads(raw)
             except json.JSONDecodeError:
+                collector.warning("JRV-MEM-001", "JRV-MEM-001")
                 continue
             role = obj.get("role", "")
             content = obj.get("content", "")
@@ -320,6 +325,7 @@ class FTSIndex:
                     (query, k),
                 ).fetchall()
         except sqlite3.OperationalError:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001")
             # Requête FTS5 malformée (guillemets non fermés, etc.)
             return []
         return [{"doc_id": row[0], "text": row[1], "score": float(row[2])} for row in rows]

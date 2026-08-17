@@ -18,6 +18,9 @@ import os
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.error_doc_lookup import format_jrv_reply, parse_jrv_command
+
 
 class _TelegramNetworkFilter(logging.Filter):
     """Réduit les NetworkError/ConnectError du polling loop en DEBUG (spam hors-ligne).
@@ -75,6 +78,7 @@ try:
 
     TELEGRAM_AVAILABLE = True
 except ImportError:
+    collector.warning("JRV-MSG-001", "JRV-MSG-001")
     TELEGRAM_AVAILABLE = False
 
 
@@ -121,6 +125,8 @@ class TelegramChannel(ChannelAdapter):
 
         self._app = Application.builder().token(self._token).build()
         self._app.add_handler(CommandHandler("start", self._cmd_start))
+        self._app.add_handler(CommandHandler("error", self._cmd_error))
+        self._app.add_handler(CommandHandler("jrv", self._cmd_error))
         self._app.add_handler(CommandHandler("status", self._cmd_status))
         self._app.add_handler(CommandHandler("initiatives", self._cmd_initiatives))
         self._app.add_handler(CommandHandler("help", self._cmd_help))
@@ -193,6 +199,11 @@ class TelegramChannel(ChannelAdapter):
         user_text = update.message.text
         logger.info("[Telegram] Message reçu", text=user_text[:60])
 
+        jrv_reply = parse_jrv_command(user_text)
+        if jrv_reply is not None:
+            await update.message.reply_text(jrv_reply, parse_mode="Markdown")
+            return
+
         await ctx.bot.send_chat_action(
             chat_id=update.effective_chat.id,
             action="typing",
@@ -234,6 +245,7 @@ class TelegramChannel(ChannelAdapter):
         await update.message.reply_text(
             f"🤖 *{settings.display_assistant_name} connecté.*\n\n"
             "Envoie-moi n'importe quel message ou utilise les commandes :\n"
+            "/error JRV-XXX-NNN — détail d'un code erreur\n"
             "/status — état du système\n"
             "/initiatives — tes initiatives en attente\n"
             "/help — toutes les commandes",
@@ -262,6 +274,7 @@ class TelegramChannel(ChannelAdapter):
                 lines.append(f"{emoji} *{name}* — {info['detail']}")
             text = f"🖥 *{settings.display_assistant_name} Doctor*\n\n" + "\n".join(lines)
         except Exception as e:  # noqa: BLE001
+            collector.warning("JRV-MSG-001", "JRV-MSG-001", cause=e)
             text = f"❌ Impossible de joindre {settings.display_assistant_name} : {e}"
         await update.message.reply_text(text, parse_mode="Markdown")
 
@@ -291,7 +304,21 @@ class TelegramChannel(ChannelAdapter):
                 lines.append(f"\n_+{len(initiatives) - 5} autres — voir le Command Center_")
             await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
         except Exception as e:  # noqa: BLE001
+            collector.warning("JRV-MSG-001", "JRV-MSG-001", cause=e)
             await update.message.reply_text(f"❌ Erreur : {e}")
+
+    async def _cmd_error(
+        self,
+        update: Update,  # type: ignore[name-defined]
+        ctx: ContextTypes.DEFAULT_TYPE,  # type: ignore[name-defined]
+    ) -> None:
+        if not self._is_owner(update):
+            return
+        args = ctx.args or []
+        if not args:
+            await update.message.reply_text("Usage : `/error JRV-XXX-NNN`", parse_mode="Markdown")
+            return
+        await update.message.reply_text(format_jrv_reply(args[0]), parse_mode="Markdown")
 
     async def _cmd_help(
         self,
@@ -303,6 +330,8 @@ class TelegramChannel(ChannelAdapter):
         text = (
             f"🤖 *{settings.display_assistant_name} — Commandes Telegram*\n\n"
             "*/status* — état de tous les composants\n"
+            "*/error* ou */jrv* — détail d'un code `[JRV-XXX-NNN]`\n"
+            "*(message exact `JRV-XXX-NNN` aussi accepté)*\n"
             "*/initiatives* — liste des initiatives en attente\n"
             "*/help* — cette aide\n\n"
             f"*Message libre* — parle à {settings.display_assistant_name} normalement :\n"

@@ -14,6 +14,7 @@ import yaml
 from loguru import logger
 
 from jarvis.kernel.contracts import LLMProvider
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import SKILLS_CANDIDATES_DIR, SKILLS_INSTALLED_DIR  # noqa: F401, E402
 
 # ── Prompts ───────────────────────────────────────────────────────────────────
@@ -260,6 +261,7 @@ class SkillSynthesizer:
         try:
             return yaml.safe_load(m.group(1)) or {}
         except yaml.YAMLError as exc:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=exc)
             logger.warning("Frontmatter YAML invalide", error=str(exc))
             return {}
 

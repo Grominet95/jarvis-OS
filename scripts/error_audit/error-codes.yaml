@@ -1,0 +1,749 @@
+JRV-UNK-001:
+  domain: UNK
+  severity: error
+  title_fr: Exception non gérée
+  message_fr: Une exception non interceptée a été levée.
+  resolution_fr: Consulte les logs %TEMP%\\jarvis\\api.log et le traceback complet en mode debug.
+  docs: ["09-operations/logs-and-doctor.md"]
+  since: "0.3.3"
+  modules: ["app.py"]
+
+JRV-ENG-000:
+  domain: ENG
+  severity: error
+  title_fr: Erreur générique engine
+  message_fr: Une erreur inattendue s'est produite dans le moteur.
+  resolution_fr: Relance .\\jarvis.ps1 run ; si persistant, note le code JRV et les logs.
+  docs: ["09-operations/troubleshooting.md"]
+  since: "0.3.3"
+  modules: []
+
+JRV-ENG-999:
+  domain: ENG
+  severity: error
+  title_fr: État impossible atteint
+  message_fr: Le programme a atteint une branche considérée comme impossible.
+  resolution_fr: Signale un bug avec le code JRV et les étapes de reproduction.
+  docs: ["09-operations/troubleshooting.md"]
+  since: "0.3.3"
+  modules: []
+
+JRV-KRN-001:
+  domain: KRN
+  severity: error
+  title_fr: Chemin OneDrive ou sync cloud
+  message_fr: Le projet semble dans un dossier synchronisé (OneDrive, etc.).
+  resolution_fr: Déplace le clone hors dossier cloud ou désactive la sync sur jarvis-OS.
+  docs: ["playbooks/install-windows.md", "02-kernel/paths-and-layout.md"]
+  since: "0.3.3"
+  modules: ["kernel/paths.py"]
+
+JRV-KRN-002:
+  domain: KRN
+  severity: error
+  title_fr: Bundle offline absent
+  message_fr: Le bundle Python embarqué est introuvable ou incomplet.
+  resolution_fr: Relance .\\jarvis.ps1 setup pour télécharger le bundle.
+  docs: ["playbooks/install-windows.md", "02-kernel/bundle-offline.md"]
+  since: "0.3.3"
+  modules: ["kernel/bundle.py"]
+
+JRV-KRN-003:
+  domain: KRN
+  severity: error
+  title_fr: Version Python trop ancienne
+  message_fr: Python 3.11+ requis pour Jarvis OS.
+  resolution_fr: Installe Python 3.11+ puis relance setup.
+  docs: ["01-entry-points/setup-flow.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-004:
+  domain: KRN
+  severity: error
+  title_fr: Dépendances manquantes ou cassées
+  message_fr: Des paquets critiques sont absents ou leurs binaires natifs sont invalides.
+  resolution_fr: "Dans le dossier projet, lance uv sync --extra vision ; supprime .venv si besoin."
+  docs: ["01-entry-points/setup-flow.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-005:
+  domain: KRN
+  severity: warning
+  title_fr: Fichier .env absent
+  message_fr: Aucun fichier .env détecté à la racine.
+  resolution_fr: Copie .env.example vers .env et remplis les clés API minimales.
+  docs: ["07-config/env-reference.md", "playbooks/api-keys.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-006:
+  domain: KRN
+  severity: warning
+  title_fr: Configuration .env suspecte
+  message_fr: Des lignes .env semblent contenir des commandes shell ou des guillemets invalides.
+  resolution_fr: "Corrige .env : une clé par ligne, valeur brute sans commande PowerShell."
+  docs: ["07-config/env-reference.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-007:
+  domain: KRN
+  severity: warning
+  title_fr: Clé LLM manquante ou placeholder
+  message_fr: La clé du backend LLM configuré est vide ou invalide.
+  resolution_fr: Remplis la variable API correspondante dans .env puis redémarre.
+  docs: ["playbooks/api-keys.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-008:
+  domain: KRN
+  severity: warning
+  title_fr: Clé LLM refusée par le fournisseur
+  message_fr: Le fournisseur LLM a rejeté la clé (401/403).
+  resolution_fr: Régénère la clé sur le dashboard du provider et mets à jour .env.
+  docs: ["playbooks/api-keys.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-009:
+  domain: KRN
+  severity: warning
+  title_fr: Quota LLM preflight (429)
+  message_fr: Le fournisseur LLM répond 429 lors de la vérification de clé.
+  resolution_fr: Vérifie le solde ou change de provider temporairement.
+  docs: ["playbooks/api-keys.md", "05-engine/budget.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-010:
+  domain: KRN
+  severity: error
+  title_fr: Port API déjà utilisé
+  message_fr: Le port configuré pour l'API est déjà occupé.
+  resolution_fr: Ferme l'instance précédente ou change PORT dans .env.
+  docs: ["01-entry-points/run-flow.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-011:
+  domain: KRN
+  severity: error
+  title_fr: Échec vérification preflight
+  message_fr: Une vérification preflight a levé une exception inattendue.
+  resolution_fr: Relance jarvis.ps1 ; consulte le message et les logs.
+  docs: ["09-operations/logs-and-doctor.md"]
+  since: "0.3.3"
+  modules: ["kernel/preflight.py"]
+
+JRV-KRN-012:
+  domain: KRN
+  severity: error
+  title_fr: Garde OneDrive au runtime
+  message_fr: Une opération a été bloquée car le projet est dans un dossier synchronisé cloud.
+  resolution_fr: Déplace jarvis-OS hors OneDrive ou exclue le dossier de la sync.
+  docs: ["02-kernel/paths-and-layout.md", "playbooks/install-windows.md"]
+  since: "0.3.3"
+  modules: ["kernel/paths.py"]
+
+JRV-SET-001:
+  domain: SET
+  severity: error
+  title_fr: Wizard setup inaccessible
+  message_fr: Le wizard setup sur le port 8765 ne répond pas.
+  resolution_fr: "Relance .\\jarvis.ps1 setup et ouvre http://127.0.0.1:8765/setup"
+  docs: ["playbooks/install-windows.md", "01-entry-points/setup-flow.md"]
+  since: "0.3.3"
+  modules: ["setup_app.py", "interfaces/api/setup_wizard.py"]
+
+JRV-BTS-001:
+  domain: BTS
+  severity: error
+  title_fr: Échec bootstrap container
+  message_fr: La construction du graphe de dépendances a échoué au démarrage.
+  resolution_fr: Vérifie .env, bundle et logs api.log ; relance après correction.
+  docs: ["00-meta/bootstrap-wiring.md"]
+  since: "0.3.3"
+  modules: ["bootstrap.py"]
+
+JRV-LLM-001:
+  domain: LLM
+  severity: error
+  title_fr: Quota API dépassé (429)
+  message_fr: Le fournisseur LLM renvoie Too Many Requests.
+  resolution_fr: Attends, change de tier, ou bascule sur Ollama local.
+  docs: ["playbooks/api-keys.md", "05-engine/budget.md"]
+  since: "0.3.3"
+  modules: ["providers/llm/api.py", "engine/llm_errors.py"]
+
+JRV-LLM-002:
+  domain: LLM
+  severity: error
+  title_fr: Timeout provider LLM
+  message_fr: Le provider LLM n'a pas répondu à temps.
+  resolution_fr: Vérifie la connexion, la clé API et le backend configuré.
+  docs: ["05-engine/gateway.md", "playbooks/api-keys.md"]
+  since: "0.3.3"
+  modules: ["providers/llm/api.py"]
+
+JRV-LLM-003:
+  domain: LLM
+  severity: error
+  title_fr: Clé ou config LLM invalide
+  message_fr: Authentification ou configuration LLM refusée.
+  resolution_fr: Corrige LLM_PROVIDER, API_BACKEND et les clés dans .env.
+  docs: ["playbooks/api-keys.md", "07-config/env-reference.md"]
+  since: "0.3.3"
+  modules: ["engine/llm_errors.py"]
+
+JRV-LLM-004:
+  domain: LLM
+  severity: warning
+  title_fr: Ollama local indisponible
+  message_fr: Ollama ne répond pas sur localhost:11434.
+  resolution_fr: Lance ollama serve ou bascule sur un provider API.
+  docs: ["03-providers/llm/local.md"]
+  since: "0.3.3"
+  modules: ["providers/llm/local.py"]
+
+JRV-API-001:
+  domain: API
+  severity: error
+  title_fr: Erreur route HTTP
+  message_fr: Une route API a renvoyé une erreur interne.
+  resolution_fr: Note le code JRV et l'endpoint ; consulte api.log.
+  docs: ["06-interfaces/api/"]
+  since: "0.3.3"
+  modules: ["interfaces/api/"]
+
+JRV-API-002:
+  domain: API
+  severity: error
+  title_fr: Authentification API refusée
+  message_fr: Token Bearer manquant ou invalide.
+  resolution_fr: Configure API_AUTH_TOKEN dans .env ou désactive API_AUTH_ENABLED pour usage local.
+  docs: ["05-engine/auth.md"]
+  since: "0.3.3"
+  modules: ["engine/auth.py"]
+
+JRV-API-003:
+  domain: API
+  severity: error
+  title_fr: Ressource introuvable (404)
+  message_fr: La ressource demandée n'existe pas ou n'est plus disponible.
+  resolution_fr: Vérifie l'identifiant (session, projet, fichier) et réessaie.
+  docs: ["06-interfaces/api/"]
+  since: "0.3.3"
+  modules: ["interfaces/api/memory.py", "interfaces/api/projects.py"]
+
+JRV-API-004:
+  domain: API
+  severity: error
+  title_fr: Requête invalide (400/422)
+  message_fr: Les paramètres ou le corps de la requête sont invalides.
+  resolution_fr: Corrige les champs envoyés selon la doc de l'endpoint.
+  docs: ["06-interfaces/api/"]
+  since: "0.3.3"
+  modules: ["interfaces/api/setup_wizard.py", "interfaces/api/memory.py"]
+
+JRV-API-005:
+  domain: API
+  severity: error
+  title_fr: Service indisponible (503)
+  message_fr: Un composant requis n'est pas initialisé ou est offline.
+  resolution_fr: Relance Jarvis ; vérifie que le sous-système concerné est câblé dans bootstrap.
+  docs: ["09-operations/troubleshooting.md"]
+  since: "0.3.3"
+  modules: ["interfaces/api/skills.py", "interfaces/api/curator.py"]
+
+JRV-API-006:
+  domain: API
+  severity: error
+  title_fr: Échec wizard setup
+  message_fr: Le wizard setup a rejeté une étape de configuration.
+  resolution_fr: Corrige les champs du formulaire setup et relance .\\jarvis.ps1 setup.
+  docs: ["01-entry-points/setup-flow.md"]
+  since: "0.3.3"
+  modules: ["interfaces/api/setup_wizard.py"]
+
+JRV-BGT-001:
+  domain: BGT
+  severity: error
+  title_fr: BudgetGuard dépassé
+  message_fr: Le budget LLM session ou mensuel est dépassé.
+  resolution_fr: Augmente le budget dans .env ou attends la reset ; voir budget.md.
+  docs: ["05-engine/budget.md"]
+  since: "0.3.3"
+  modules: ["engine/budget.py", "engine/mission/worker_agent.py"]
+
+JRV-GWY-001:
+  domain: GWY
+  severity: error
+  title_fr: Échec gateway chat
+  message_fr: Le gateway n'a pas pu traiter la requête utilisateur.
+  resolution_fr: Vérifie les logs api.log et la config LLM.
+  docs: ["05-engine/gateway.md"]
+  since: "0.3.3"
+  modules: ["engine/gateway.py"]
+
+JRV-GWY-002:
+  domain: GWY
+  severity: warning
+  title_fr: Cross-session recall dégradé
+  message_fr: Le rappel inter-session a échoué ; réponse sans contexte étendu.
+  resolution_fr: Non bloquant ; vérifie memory si récurrent.
+  docs: ["03-providers/memory/retrieval.md"]
+  since: "0.3.3"
+  modules: ["engine/gateway.py"]
+
+JRV-AGT-001:
+  domain: AGT
+  severity: error
+  title_fr: Échec boucle agent LLM
+  message_fr: L'agent a échoué pendant la boucle outils/LLM.
+  resolution_fr: Relance la conversation ; consulte api.log pour le détail.
+  docs: ["05-engine/agent.md"]
+  since: "0.3.3"
+  modules: ["engine/agent.py"]
+
+JRV-TOL-001:
+  domain: TOL
+  severity: error
+  title_fr: Échec exécution outil (générique)
+  message_fr: Un outil a retourné une erreur d'exécution.
+  resolution_fr: Vérifie les credentials et la doc de l'outil concerné.
+  docs: ["04-capabilities/tools-overview.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/registry.py"]
+
+JRV-TOL-002:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil Spotify
+  message_fr: L'outil Spotify n'a pas pu s'exécuter (auth, API ou réseau).
+  resolution_fr: Vérifie SPOTIFY_CLIENT_ID/SECRET dans .env et reconnecte via Réglages.
+  docs: ["04-capabilities/tools/spotify.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/spotify.py"]
+
+JRV-TOL-003:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil Gmail
+  message_fr: L'outil Gmail n'a pas pu lire ou envoyer de message.
+  resolution_fr: Vérifie OAuth Google et les scopes Gmail dans .env.
+  docs: ["04-capabilities/tools/gmail.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/gmail.py"]
+
+JRV-TOL-004:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil navigateur
+  message_fr: L'outil browser n'a pas pu charger ou interagir avec une page.
+  resolution_fr: Vérifie playwright/chromium et la connectivité réseau.
+  docs: ["04-capabilities/tools/browser.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/browser.py"]
+
+JRV-TOL-005:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil Notion
+  message_fr: L'outil Notion n'a pas pu accéder à l'API ou à une page.
+  resolution_fr: Vérifie NOTION_TOKEN et les permissions de la base.
+  docs: ["04-capabilities/tools/notion.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/notion.py"]
+
+JRV-TOL-006:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil calendrier
+  message_fr: L'outil calendar n'a pas pu lire ou modifier un événement.
+  resolution_fr: Vérifie OAuth Google Calendar et les scopes.
+  docs: ["04-capabilities/tools/calendar.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/calendar.py"]
+
+JRV-TOL-007:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil CLI
+  message_fr: L'exécution d'une commande CLI whitelistée a échoué.
+  resolution_fr: Vérifie tools.yaml, le binaire et les permissions sandbox.
+  docs: ["04-capabilities/tools/cli.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/cli.py"]
+
+JRV-TOL-008:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil filesystem
+  message_fr: L'outil filesystem n'a pas pu lire ou écrire un fichier.
+  resolution_fr: Vérifie le chemin, les permissions et les règles sandbox.
+  docs: ["04-capabilities/tools/filesystem.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/filesystem.py"]
+
+JRV-TOL-009:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil vision
+  message_fr: L'outil vision n'a pas pu capturer ou analyser une image.
+  resolution_fr: Vérifie la caméra, opencv et vision.log.
+  docs: ["04-capabilities/tools/vision.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/vision.py"]
+
+JRV-TOL-010:
+  domain: TOL
+  severity: error
+  title_fr: Échec outil Fusion 360
+  message_fr: L'API Fusion 360 locale n'a pas répondu.
+  resolution_fr: Vérifie que Fusion tourne et que le bridge local écoute.
+  docs: ["04-capabilities/tools/fusion.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/fusion.py"]
+
+JRV-TOL-011:
+  domain: TOL
+  severity: warning
+  title_fr: Échec outil mémoire (tool)
+  message_fr: L'outil memory tool n'a pas pu interroger le store.
+  resolution_fr: Vérifie memory_data/ et les permissions disque.
+  docs: ["capabilities/tools/memory.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/memory.py"]
+
+JRV-TOL-012:
+  domain: TOL
+  severity: warning
+  title_fr: Échec outil météo
+  message_fr: L'outil weather n'a pas pu joindre le provider météo.
+  resolution_fr: Vérifie OPENWEATHER_API_KEY ou la connectivité réseau.
+  docs: ["04-capabilities/tools/weather.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/weather.py"]
+
+JRV-TOL-013:
+  domain: TOL
+  severity: error
+  title_fr: Échec sous-agent
+  message_fr: Un sous-agent délégué par un outil a échoué.
+  resolution_fr: Consulte api.log pour la mission enfant et le tool parent.
+  docs: ["04-capabilities/tools/subagent.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/subagent.py"]
+
+JRV-TOL-014:
+  domain: TOL
+  severity: warning
+  title_fr: Échec contrôle carte
+  message_fr: L'outil map_control n'a pas pu piloter la vue globe.
+  resolution_fr: Vérifie que l'UI globe est ouverte et que l'API map répond.
+  docs: ["04-capabilities/tools/map_control.md"]
+  since: "0.3.3"
+  modules: ["capabilities/tools/map_control.py"]
+
+JRV-SKL-001:
+  domain: SKL
+  severity: error
+  title_fr: Échec chargement skill (générique)
+  message_fr: Un skill n'a pas pu être chargé ou instancié.
+  resolution_fr: Vérifie skills_data/installed et les logs skill.
+  docs: ["04-capabilities/skills/lifecycle.md"]
+  since: "0.3.3"
+  modules: ["capabilities/skills/registry.py"]
+
+JRV-SKL-002:
+  domain: SKL
+  severity: error
+  title_fr: ABI skill incompatible
+  message_fr: Le skill ne correspond pas à la version ABI attendue par Jarvis.
+  resolution_fr: Réinstalle ou recompile le skill pour la version courante.
+  docs: ["04-capabilities/skills/abi.md"]
+  since: "0.3.3"
+  modules: ["capabilities/skills/_loader.py"]
+
+JRV-SKL-003:
+  domain: SKL
+  severity: error
+  title_fr: Échec installation skill
+  message_fr: L'installation ou la promotion d'un skill a échoué.
+  resolution_fr: Vérifie skills_data/installed, les droits disque et installer.py logs.
+  docs: ["04-capabilities/skills/installer.md"]
+  since: "0.3.3"
+  modules: ["capabilities/skills/installer.py"]
+
+JRV-SKL-004:
+  domain: SKL
+  severity: warning
+  title_fr: Échec sandbox skill lab
+  message_fr: Le skill lab n'a pas pu exécuter ou valider un skill candidat.
+  resolution_fr: Consulte les logs lab ; vérifie le code du skill en sandbox.
+  docs: ["04-capabilities/skills/lab.md"]
+  since: "0.3.3"
+  modules: ["capabilities/skills/lab.py"]
+
+JRV-SKL-005:
+  domain: SKL
+  severity: warning
+  title_fr: Échec synthèse skill
+  message_fr: Le synthesizer n'a pas pu générer ou proposer un skill.
+  resolution_fr: Vérifie le LLM backend et les quotas ; réessaie avec un prompt plus court.
+  docs: ["04-capabilities/skills/synthesizer.md"]
+  since: "0.3.3"
+  modules: ["capabilities/skills/synthesizer.py"]
+
+JRV-MEM-001:
+  domain: MEM
+  severity: warning
+  title_fr: Échec ingest mémoire
+  message_fr: L'ingestion mémoire a échoué pour une session ou un fragment.
+  resolution_fr: Vérifie memory_data/ et les permissions disque.
+  docs: ["03-providers/memory/ingest.md"]
+  since: "0.3.3"
+  modules: ["providers/memory/ingest.py"]
+
+JRV-MEM-002:
+  domain: MEM
+  severity: warning
+  title_fr: Échec consolidation mémoire
+  message_fr: La consolidation nocturne ou manuelle a échoué.
+  resolution_fr: Consulte les logs ; relance si nécessaire.
+  docs: ["03-providers/memory/consolidation.md"]
+  since: "0.3.3"
+  modules: ["providers/memory/consolidation.py"]
+
+JRV-MEM-003:
+  domain: MEM
+  severity: warning
+  title_fr: Échec recherche FTS
+  message_fr: L'index FTS ou la recherche full-text a échoué.
+  resolution_fr: Relance Jarvis pour rebuild FTS ; vérifie memory_data/sessions/.
+  docs: ["03-providers/memory/search.md"]
+  since: "0.3.3"
+  modules: ["providers/memory/search.py"]
+
+JRV-MEM-004:
+  domain: MEM
+  severity: warning
+  title_fr: Échec store sessions
+  message_fr: Lecture ou écriture d'une session transcript a échoué.
+  resolution_fr: Vérifie memory_data/sessions/ et les permissions.
+  docs: ["03-providers/memory/sessions.md"]
+  since: "0.3.3"
+  modules: ["providers/memory/sessions.py"]
+
+JRV-MEM-005:
+  domain: MEM
+  severity: warning
+  title_fr: Échec index vectoriel
+  message_fr: Le reindex ou la recherche vectorielle a échoué.
+  resolution_fr: Vérifie l'espace disque et relance le reindex depuis l'admin.
+  docs: ["03-providers/memory/index.md"]
+  since: "0.3.3"
+  modules: ["providers/memory/index.py"]
+
+JRV-MEM-006:
+  domain: MEM
+  severity: warning
+  title_fr: Échec AutoDream
+  message_fr: La passe AutoDream (shallow ou deep) a échoué.
+  resolution_fr: Vérifie ingest_deep_enabled et les logs nocturnes.
+  docs: ["03-providers/memory/auto_dream.md"]
+  since: "0.3.3"
+  modules: ["providers/memory/auto_dream.py"]
+
+JRV-AUD-001:
+  domain: AUD
+  severity: warning
+  title_fr: Échec STT/TTS
+  message_fr: Le provider audio vocal a échoué.
+  resolution_fr: Vérifie DEEPGRAM/ELEVENLABS dans .env et voice.log.
+  docs: ["06-interfaces/voice-livekit.md"]
+  since: "0.3.3"
+  modules: ["providers/audio/stt.py", "providers/audio/tts.py"]
+
+JRV-VIS-001:
+  domain: VIS
+  severity: warning
+  title_fr: Échec daemon vision
+  message_fr: Le daemon vision ou la détection a échoué.
+  resolution_fr: Vérifie les deps vision et vision.log.
+  docs: ["03-providers/vision/daemon.md"]
+  since: "0.3.3"
+  modules: ["providers/vision/daemon.py"]
+
+JRV-MSN-001:
+  domain: MSN
+  severity: error
+  title_fr: Échec mission worker
+  message_fr: Le worker de mission a échoué sur une étape.
+  resolution_fr: Consulte mission control et les logs projet.
+  docs: ["05-engine/mission/overview.md"]
+  since: "0.3.3"
+  modules: ["engine/mission/worker_agent.py"]
+
+JRV-MSN-002:
+  domain: MSN
+  severity: warning
+  title_fr: Store projet corrompu
+  message_fr: Impossible de lire ou écrire l'état d'un projet mission.
+  resolution_fr: Vérifie le JSON projet ou recrée le projet.
+  docs: ["05-engine/mission/project_store.md"]
+  since: "0.3.3"
+  modules: ["engine/mission/project_store.py"]
+
+JRV-PRO-001:
+  domain: PRO
+  severity: warning
+  title_fr: Collecteur proactive dégradé (générique)
+  message_fr: Un collecteur proactive (email, news, etc.) est offline.
+  resolution_fr: Normal si service externe indisponible ; vérifie credentials si récurrent.
+  docs: ["05-engine/proactive/overview.md"]
+  since: "0.3.3"
+  modules: ["engine/proactive/collectors/"]
+
+JRV-PRO-002:
+  domain: PRO
+  severity: warning
+  title_fr: Échec store proactive
+  message_fr: Lecture/écriture du store proactive impossible.
+  resolution_fr: Vérifie les fichiers data proactive.
+  docs: ["05-engine/proactive/store.md"]
+  since: "0.3.3"
+  modules: ["engine/proactive/store.py"]
+
+JRV-PRO-003:
+  domain: PRO
+  severity: warning
+  title_fr: Collecteur email offline
+  message_fr: Le collecteur email proactive n'a pas pu synchroniser.
+  resolution_fr: Vérifie OAuth Gmail et les credentials IMAP si configuré.
+  docs: ["05-engine/proactive/collectors/email.md"]
+  since: "0.3.3"
+  modules: ["engine/proactive/collectors/email.py"]
+
+JRV-PRO-004:
+  domain: PRO
+  severity: warning
+  title_fr: Collecteur news offline
+  message_fr: Le collecteur news/RSS proactive a échoué.
+  resolution_fr: Vérifie les URLs RSS et la connectivité réseau.
+  docs: ["05-engine/proactive/collectors/news.md"]
+  since: "0.3.3"
+  modules: ["engine/proactive/collectors/news.py"]
+
+JRV-BG-001:
+  domain: BG
+  severity: warning
+  title_fr: Échec tâche background
+  message_fr: Une tâche background (scheduler, worker) a échoué.
+  resolution_fr: Consulte api.log ; relance Jarvis si récurrent.
+  docs: ["05-engine/background/overview.md"]
+  since: "0.3.3"
+  modules: ["engine/background/"]
+
+JRV-WS-001:
+  domain: WS
+  severity: error
+  title_fr: Erreur WebSocket chat
+  message_fr: Le flux WebSocket a rencontré une erreur protocolaire ou runtime.
+  resolution_fr: Reconnecte le client ; consulte api.log.
+  docs: ["06-interfaces/api/websocket.md"]
+  since: "0.3.3"
+  modules: ["interfaces/api/websocket.py"]
+
+JRV-VOI-001:
+  domain: VOI
+  severity: error
+  title_fr: LiveKit indisponible (7880)
+  message_fr: Connexion LiveKit locale refusée sur le port 7880.
+  resolution_fr: Relance .\\jarvis.ps1 run ; vérifie livekit.log.
+  docs: ["06-interfaces/voice-livekit.md"]
+  since: "0.3.3"
+  modules: ["interfaces/voice/agent.py"]
+
+JRV-VOI-002:
+  domain: VOI
+  severity: error
+  title_fr: Timeout publication piste audio
+  message_fr: La piste micro n'a pas pu être publiée dans LiveKit.
+  resolution_fr: Vérifie permissions micro et voice.log.
+  docs: ["06-interfaces/voice-livekit.md"]
+  since: "0.3.3"
+  modules: ["interfaces/voice/agent.py"]
+
+JRV-MSG-001:
+  domain: MSG
+  severity: warning
+  title_fr: Canal messaging dégradé (générique)
+  message_fr: Telegram/Discord/Slack a échoué sans bloquer l'API.
+  resolution_fr: Vérifie les tokens bot dans .env.
+  docs: ["06-interfaces/channels/"]
+  since: "0.3.3"
+  modules: ["interfaces/channels/"]
+
+JRV-MSG-002:
+  domain: MSG
+  severity: warning
+  title_fr: Bot Telegram offline
+  message_fr: Le bot Telegram n'a pas pu envoyer ou recevoir de message.
+  resolution_fr: Vérifie TELEGRAM_BOT_TOKEN et que le webhook/polling tourne.
+  docs: ["06-interfaces/channels/telegram.md"]
+  since: "0.3.3"
+  modules: ["interfaces/channels/telegram_bot.py"]
+
+JRV-MSG-003:
+  domain: MSG
+  severity: warning
+  title_fr: Bot Discord offline
+  message_fr: Le bot Discord n'a pas pu se connecter ou répondre.
+  resolution_fr: Vérifie DISCORD_BOT_TOKEN et les intents activés.
+  docs: ["06-interfaces/channels/discord.md"]
+  since: "0.3.3"
+  modules: ["interfaces/channels/discord_bot.py"]
+
+JRV-PRM-001:
+  domain: PRM
+  severity: error
+  title_fr: Permission refusée
+  message_fr: L'action demandée est refusée par la couche permissions.
+  resolution_fr: Vérifie les règles dans settings permissions ou approvals.
+  docs: ["02-kernel/permissions-approvals.md"]
+  since: "0.3.3"
+  modules: ["kernel/permissions.py", "interfaces/api/curator.py"]
+
+JRV-HW-001:
+  domain: HW
+  severity: warning
+  title_fr: Périphérique hardware dégradé (générique)
+  message_fr: Macropad ou Bluetooth hardware indisponible.
+  resolution_fr: Vérifie USB/drivers ; non bloquant pour le chat.
+  docs: ["hardware/"]
+  since: "0.3.3"
+  modules: ["hardware/"]
+
+JRV-HW-002:
+  domain: HW
+  severity: warning
+  title_fr: Échec flash macropad
+  message_fr: Le flash firmware du macropad 2K a échoué.
+  resolution_fr: Vérifie le câble USB, arduino-cli et les logs flasher.
+  docs: ["hardware/macropad_2k/flasher.md"]
+  since: "0.3.3"
+  modules: ["hardware/macropad_2k/flasher.py"]
+
+JRV-OPS-001:
+  domain: OPS
+  severity: warning
+  title_fr: Widget analytics dégradé
+  message_fr: Un widget analytics n'a pas pu charger ses données.
+  resolution_fr: Normal si service externe absent.
+  docs: ["analytics/"]
+  since: "0.3.3"
+  modules: ["analytics/"]

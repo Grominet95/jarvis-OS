@@ -11,6 +11,8 @@ from functools import lru_cache
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 PREMADE_FALLBACK_VOICE_ID = "hpp4J3VqNfWAUOO0d1Us"
 LIBRARY_VOICE_CATEGORIES = frozenset({"professional"})
 
@@ -61,5 +63,6 @@ def resolve_voice_id(api_key: str, voice_id: str) -> str:
             )
             return PREMADE_FALLBACK_VOICE_ID
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
+        collector.warning("JRV-AUD-001", "JRV-AUD-001", cause=exc)
         logger.warning("Validation de la voix ElevenLabs échouée ({}) — on garde {}", exc, voice_id)
     return voice_id

@@ -8,10 +8,12 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from jarvis.kernel.approvals import ApprovalMode, approval_config, save_approval_config
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.permissions import permissions as _perm_store
 
 router = APIRouter()
@@ -54,12 +56,13 @@ class ApprovalCategoryUpdate(BaseModel):
 async def update_approval_category(category: str, body: ApprovalCategoryUpdate) -> dict:
     """Met à jour le mode d'une catégorie d'approbation."""
     if not hasattr(approval_config, category):
-        raise HTTPException(404, f"Catégorie inconnue: {category}")
+        raise_api_error("JRV-API-003", 404, f"Catégorie inconnue: {category}")
     try:
         mode = ApprovalMode(body.mode)
     except ValueError:
+        collector.error("JRV-API-001", "JRV-API-001")
         msg = f"Mode invalide: {body.mode}. Valeurs: always, ask, never"
-        raise HTTPException(400, msg) from None
+        raise_api_error("JRV-API-004", 400, msg)
     object.__setattr__(approval_config, category, mode)
     save_approval_config(approval_config)
     return {"category": category, "mode": body.mode}
@@ -74,6 +77,6 @@ async def resolve_approval(action_id: str, body: ApprovalResolveBody, request: R
     """Résout une demande d'approbation en attente."""
     checker = getattr(request.app.state, "approval_checker", None)
     if checker is None:
-        raise HTTPException(503, "ApprovalChecker non disponible")
+        raise_api_error("JRV-API-005", 503, "ApprovalChecker non disponible")
     checker.resolve(action_id, body.approved)
     return {"status": "ok", "approved": body.approved}

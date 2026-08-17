@@ -13,6 +13,7 @@ from loguru import logger
 
 from jarvis.capabilities.skills.base import PresetSkill, SkillBase
 from jarvis.capabilities.skills.dev_extensions import iter_dev_skills_and_presets
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import SKILLS_INSTALLED_DIR  # noqa: F401, E402
 
 
@@ -95,6 +96,7 @@ class SkillRegistry:
                     break
 
         except Exception as e:
+            collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
             logger.error(f"Erreur chargement skill {skill_dir.name}: {e}")
 
     def get_combined_system_prompt(self) -> str:
@@ -142,6 +144,7 @@ class SkillRegistry:
             try:
                 tools.extend(skill.get_tools())
             except Exception as e:
+                collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
                 logger.error(f"Erreur get_tools() pour {skill.name}: {e}")
         return tools
 

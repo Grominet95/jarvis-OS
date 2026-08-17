@@ -18,6 +18,7 @@ from jarvis.capabilities.tools.spotify_auth import (
     _get_access_token,
     _save_token,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/spotify")
@@ -123,6 +124,7 @@ async def transfer_playback(request: Request) -> JSONResponse:
             )
         return JSONResponse({"ok": resp.status_code in (200, 204)})
     except httpx.RequestError as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.warning("Spotify transfer error", error=str(e))
         return JSONResponse({"ok": False})
 
@@ -142,9 +144,11 @@ async def _get_player_state() -> dict:
                 headers={"Authorization": f"Bearer {token}"},
             )
     except httpx.TimeoutException:
+        collector.error("JRV-API-001", "JRV-API-001")
         logger.debug("Spotify player timeout")
         return {"connected": True, "is_playing": False, "track": None}
     except httpx.RequestError as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.warning("Spotify player request error", error=str(e))
         return {"connected": False}
 
@@ -176,6 +180,7 @@ async def _get_player_state() -> dict:
                         "last_played": True,
                     }
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             pass
         return {"connected": True, "is_playing": False, "track": None}
 
@@ -222,9 +227,11 @@ async def _player_action(method: str, endpoint: str) -> JSONResponse:
             )
         return JSONResponse({"ok": resp.status_code in (200, 204)})
     except httpx.TimeoutException:
+        collector.error("JRV-API-001", "JRV-API-001")
         logger.debug("Spotify action timeout", endpoint=endpoint)
         return JSONResponse({"ok": False})
     except httpx.RequestError as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.warning("Spotify action error", endpoint=endpoint, error=str(e))
         return JSONResponse({"ok": False})
 

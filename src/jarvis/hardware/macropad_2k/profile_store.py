@@ -24,6 +24,7 @@ from jarvis.hardware.macropad_2k.paths import (
     profile_path,
     workspace_state_path,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 def _new_slot_id() -> str:
@@ -44,6 +45,7 @@ def merge_profile(raw: object, workspace: str) -> KeypadProfile:
         merged["workspaceRoot"] = workspace
         return KeypadProfile.model_validate(merged)
     except Exception as exc:
+        collector.warning("JRV-HW-001", "JRV-HW-001", cause=exc)
         logger.warning("merge_profile: validation failed, using defaults. error={}", exc)
         return base
 
@@ -83,6 +85,7 @@ def load_bundle(workspace: Path) -> WorkspaceProfileBundle:
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
+        collector.warning("JRV-HW-001", "JRV-HW-001")
         return default_bundle(str(workspace))
     return migrate_to_bundle(data, str(workspace))
 
@@ -109,6 +112,7 @@ def load_default_workspace() -> Path | None:
         try:
             data = json.loads(state_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
+            collector.warning("JRV-HW-001", "JRV-HW-001")
             data = {}
         path = data.get("workspace") if isinstance(data, dict) else None
         if isinstance(path, str) and is_valid_workspace(path):

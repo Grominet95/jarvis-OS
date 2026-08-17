@@ -16,6 +16,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 from jarvis.providers.llm.base import LLMProvider
 
@@ -50,6 +51,7 @@ class UserModel:
         try:
             await self._update(user_message, assistant_message)
         except Exception as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("UserModel update error", error=str(e))
 
     async def _update(self, user_message: str, assistant_message: str) -> None:

@@ -16,6 +16,7 @@ from loguru import logger
 from piper import PiperVoice
 
 from jarvis.kernel.contracts import UsageTracker
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.schemas import UsageEntry, calculate_cost
 from jarvis.kernel.settings import settings
 
@@ -98,6 +99,7 @@ class TTSEngine:
                     return response.content
                 logger.error(f"ElevenLabs error {response.status_code} — {response.text[:300]}")
         except Exception as e:
+            collector.warning("JRV-AUD-001", "JRV-AUD-001", cause=e)
             logger.error("ElevenLabs request failed", error=str(e))
         # Fallback Piper si ElevenLabs échoue
         logger.warning("Falling back to Piper TTS")
@@ -164,6 +166,7 @@ class TTSEngine:
             logger.debug(f"Gemini TTS done — {len(text)} chars, {len(pcm)} pcm bytes")
             return _pcm_to_wav(pcm, sample_rate=24000)
         except Exception as e:
+            collector.warning("JRV-AUD-001", "JRV-AUD-001", cause=e)
             msg = str(e)
             if "429" in msg or "RESOURCE_EXHAUSTED" in msg or "quota" in msg.lower():
                 logger.warning(

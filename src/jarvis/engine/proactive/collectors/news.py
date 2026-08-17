@@ -18,6 +18,7 @@ from loguru import logger
 from jarvis.engine.proactive.collectors.base import CollectorBase
 from jarvis.engine.proactive.schemas import ContextItem, ItemType, Priority
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 RSS_FEEDS = [
     {"url": "https://www.frandroid.com/feed", "category": "tech_fr"},
@@ -105,4 +106,5 @@ class NewsCollector(CollectorBase):
 
             return items
         except Exception:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001")
             return []

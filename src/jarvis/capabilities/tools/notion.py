@@ -8,6 +8,7 @@ import httpx
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -46,6 +47,7 @@ class NotionTasksTool(Tool):
             async with httpx.AsyncClient(timeout=10.0) as client:
                 tasks = await self._fetch_tasks(client, headers, page_id)
         except Exception as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error("NotionTasksTool error", error=str(e))
             return ToolResult(content=f"Erreur Notion : {e}", is_error=True)
 

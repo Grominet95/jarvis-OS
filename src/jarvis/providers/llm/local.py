@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 import httpx
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 from jarvis.providers.llm.base import LLMProvider
 
@@ -176,6 +177,7 @@ class OllamaProvider(LLMProvider):
                 result = await tool_executor(name, args)
                 return call_id, result
             except Exception as exc:
+                collector.error("JRV-LLM-002", "JRV-LLM-002", cause=exc)
                 logger.warning("Ollama tool_loop: erreur exécution", name=name, error=str(exc))
                 return call_id, f"Erreur lors de l'exécution de '{name}' : {exc}"
 
@@ -223,6 +225,7 @@ class OllamaProvider(LLMProvider):
                     try:
                         tc_args: dict = json.loads(raw_args)
                     except json.JSONDecodeError:
+                        collector.error("JRV-LLM-002", "JRV-LLM-002")
                         tc_args = {}
                 elif isinstance(raw_args, dict):
                     tc_args = raw_args
@@ -248,5 +251,6 @@ class OllamaProvider(LLMProvider):
                 response = await client.get(f"{self._base_url}/api/tags")
                 return response.status_code == 200
         except Exception as e:
+            collector.error("JRV-LLM-002", "JRV-LLM-002", cause=e)
             logger.error("Ollama health check failed", error=str(e))
             return False

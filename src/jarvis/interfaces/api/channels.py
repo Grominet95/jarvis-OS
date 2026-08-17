@@ -11,10 +11,11 @@ plutôt que de maintenir une connexion polling (Telegram/Discord).
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from loguru import logger
 
 from jarvis.interfaces.channels.base import IncomingMessage, Platform
+from jarvis.kernel.http_errors import raise_api_error
 
 router = APIRouter(prefix="/api/channels", tags=["channels"])
 
@@ -29,17 +30,18 @@ async def channel_webhook(platform: str, request: Request) -> dict:
     try:
         plat = Platform(platform.lower())
     except ValueError:
-        raise HTTPException(status_code=404, detail=f"Plateforme inconnue : {platform}") from None
+        raise_api_error("JRV-API-003", 404, f"Plateforme inconnue : {platform}")
 
     gateway = getattr(request.app.state, "messaging_gateway", None)
     if gateway is None:
-        raise HTTPException(status_code=503, detail="MessagingGateway non démarré.")
+        raise_api_error("JRV-API-005", 503, "MessagingGateway non démarré.")
 
     adapter = gateway._adapters.get(plat.value)
     if adapter is None:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Aucun adaptateur enregistré pour la plateforme '{platform}'.",
+        raise_api_error(
+            "JRV-API-005",
+            503,
+            f"Aucun adaptateur enregistré pour la plateforme '{platform}'.",
         )
 
     payload = await request.json()
@@ -50,9 +52,10 @@ async def channel_webhook(platform: str, request: Request) -> dict:
     # pas besoin.
     handle_fn = getattr(adapter, "handle_webhook", None)
     if handle_fn is None:
-        raise HTTPException(
-            status_code=501,
-            detail=f"L'adaptateur '{platform}' ne supporte pas les webhooks.",
+        raise_api_error(
+            "JRV-API-001",
+            501,
+            f"L'adaptateur '{platform}' ne supporte pas les webhooks.",
         )
 
     msg: IncomingMessage = await handle_fn(payload)

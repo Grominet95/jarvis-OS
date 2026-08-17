@@ -10,6 +10,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 
 class SessionStore:
     """Stockage append-only des transcripts en JSONL.
@@ -47,6 +49,7 @@ class SessionStore:
                 entry = json.loads(line)
                 messages.append({"role": entry["role"], "content": entry["content"]})
         except (OSError, json.JSONDecodeError) as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("SessionStore.load failed", session_id=session_id, error=str(e))
         return messages
 
@@ -58,6 +61,7 @@ class SessionStore:
             with path.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         except OSError as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("SessionStore.append failed", path=str(path), error=str(e))
 
     def list_recent(self, n: int = 20) -> list[Path]:

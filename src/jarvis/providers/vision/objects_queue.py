@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import asyncio
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 
 class VisionObjectsQueue:
     def __init__(self) -> None:
@@ -18,6 +20,7 @@ class VisionObjectsQueue:
             try:
                 q.put_nowait(objects)
             except asyncio.QueueFull:
+                collector.warning("JRV-VIS-001", "JRV-VIS-001")
                 pass  # le browser est trop lent, on lâche la frame
 
     def subscribe(self) -> asyncio.Queue[list[dict]]:
@@ -29,6 +32,7 @@ class VisionObjectsQueue:
         try:
             self._subscribers.remove(q)
         except ValueError:
+            collector.warning("JRV-VIS-001", "JRV-VIS-001")
             pass
 
 

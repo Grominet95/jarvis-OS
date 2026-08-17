@@ -63,6 +63,7 @@ règle est exécutable, pas juste de la convention.
 | `lint-imports` | 3 contrats `forbidden` qui encodent les RÈGLES 1/2/3 ci-dessus |
 | `mypy` scopé | Conformité des implémentations aux Protocols `kernel.contracts` |
 | `pytest -m "not integration"` | Suite unitaire (~587 tests, < 30s) |
+| `check_pr.py` (JRV) | Registre `error-codes.yaml` ↔ `_error_codes_generated.py` synchronisé ; 100 % des sites d'erreur mappés |
 | `snapshot_routes.py` diff | Les URLs HTTP n'ont pas dévié de la baseline |
 
 La lane lourde (CI déclenchée sur `main` + scheduled hebdo) installe les
@@ -117,7 +118,7 @@ Python système et LiveKit **ne sont pas requis** : le script de build les intè
 
 ### Parcours A : Utilisateur final (Windows)
 
-**Clone Git ou archive sans `bundle/`** : à l'étape 1 du setup, clique sur **Télécharger** — le wizard récupère `bundle.zip` (~628 Mo), l'extrait dans `bundle/` et vérifie les prérequis. **Aucune extraction manuelle.** **Release avec `bundle/` déjà inclus** : le bouton n'apparaît pas, tu passes directement à la configuration.
+**Clone Git sans `bundle/`** : double-clique `setup.bat` (ou `.\jarvis.ps1 setup`). **Aucun Python requis** : le lanceur télécharge le bundle (~700 Mo) depuis techalchemy.fr, puis ouvre l'assistant web. **Release avec `bundle/` déjà inclus** : configuration directe.
 
 > **OneDrive interdit.** Ne place pas `jarvis-OS` dans OneDrive (Documents synchronisés, etc.) : OneDrive casse les liens symboliques du venv Python embarqué. Au premier lancement, Jarvis **bloque l'installation** et propose soit un **déplacement automatique** vers un dossier local (Documents hors sync, ou `%USERPROFILE%\jarvis-OS`), soit des instructions pour déplacer manuellement puis relancer `setup.bat`.
 
@@ -127,7 +128,7 @@ Le plus simple : **double-clique sur `setup.bat`**, puis sur `run.bat`. Ou en li
 # 1. Cloner ou décompresser, puis ouvrir le dossier (hors OneDrive)
 cd C:\jarvis-OS
 
-# 2. Configuration web (navigateur — étape 1 : Télécharger si bundle/ absent)
+# 2. Setup (telecharge le bundle si absent, puis ouvre le navigateur)
 .\jarvis.bat setup
 
 # 3. Démarrage
@@ -152,6 +153,8 @@ L'assistant web configure l'identité, les clés API, les modules optionnels et 
 
 Les logs des runs sont dans `%TEMP%\jarvis` (`livekit.log`, `api.log`, `voice.log`). `.\jarvis.ps1 run` tue les process résiduels puis réinitialise ces trois fichiers à chaque démarrage.
 
+En cas d'échec, le terminal ou les logs affichent un code **`[JRV-DOM-NNN]`** (ex. `[JRV-KRN-011]`). Note ce code avec l'heure et le fichier de log concerné — il identifie le type d'erreur et la piste de résolution dans le registre (`scripts/error_audit/error-codes.yaml`).
+
 ### Parcours B : Construire le bundle (développeur)
 
 À faire **une fois**, avec réseau, avant de distribuer ou d'utiliser le parcours A.
@@ -175,6 +178,8 @@ bash scripts/release/build_bundle.sh
 ```
 
 Le script crée `bundle/` : `.venv`, modèles, `livekit-server`, `manifest.json`. Ensuite, la configuration et le démarrage suivent le même flux que le parcours A (sans nouveau téléchargement).
+
+Avant toute PR qui touche aux chemins d'erreur, exécute `uv run python scripts/error_audit/check_pr.py` (détails dans [CONTRIBUTING.md](./CONTRIBUTING.md)).
 
 ### Parcours C : Développement sans bundle (Linux / macOS / Windows)
 
@@ -406,6 +411,11 @@ documentés en [`docs/migration/BACKLOG.md`](docs/migration/BACKLOG.md).
 
 ---
 
+## Contribuer
+
+Issues et pull requests sont les bienvenues. Voir [CONTRIBUTING.md](./CONTRIBUTING.md) pour le workflow, la licence inbound/outbound, et la maintenance du **registre des codes JRV** (`error-codes.yaml` + `check_pr.py`).
+
+---
 
 ## Licence
 

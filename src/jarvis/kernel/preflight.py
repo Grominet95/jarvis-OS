@@ -2,19 +2,7 @@
 # This file is part of Jarvis OS, licensed under the GNU AGPL-3.0-or-later.
 # See the LICENSE file or <https://www.gnu.org/licenses/agpl-3.0.html>.
 
-"""preflight.py — Diagnostic de démarrage.
-
-Détecte les problèmes les plus courants AVANT de lancer l'API et les explique
-clairement (cause + fix), pour ne pas laisser l'utilisateur face à un traceback
-Python illisible ou à un « API timeout » opaque.
-
-Lancé par le launcher (`jarvis` / `jarvis.ps1`) juste avant `python -m jarvis.app`.
-N'IMPORTE QUE LA STDLIB au niveau module : il doit pouvoir tourner même si les
-dépendances du projet sont cassées — c'est précisément ce qu'il vérifie.
-
-Sortie : 0 si tout est OK (démarrage autorisé), 1 si un problème bloquant est
-détecté (le message d'explication est déjà affiché).
-"""
+"""preflight.py — Diagnostic de démarrage."""
 
 from __future__ import annotations
 
@@ -27,32 +15,51 @@ import urllib.request
 from pathlib import Path
 
 _USE_COLOR = sys.stderr.isatty() and os.name != "nt"
+_LEVEL_PREFIX = {"error": "ERROR", "warning": "WARN", "impossible": "IMPOSSIBLE"}
 
 
 def _c(code: str, s: str) -> str:
     return f"\033[{code}m{s}\033[0m" if _USE_COLOR else s
 
 
-def _block(marker: str, color: str, title: str, body: str) -> None:
+def _emit_stderr(code: str, message: str, *, level: str = "error") -> None:
+    prefix = _LEVEL_PREFIX.get(level, level.upper())
+    print(f"[{code}] {prefix}: {message}", file=sys.stderr, flush=True)
+
+
+def _block(jrv_code: str, level: str, marker: str, color: str, title: str, body: str) -> None:
+    text = f"{title}\n{body.strip()}"
+    _emit_stderr(jrv_code, text, level=level)
     print("\n" + _c(color, f"{marker} {title}"), file=sys.stderr)
     for line in body.strip("\n").splitlines():
         print("  " + line, file=sys.stderr)
 
 
-def _err(title: str, body: str) -> None:
-    _block("[ERREUR]", "91", title, body)
+def _err(jrv_code: str, title: str, body: str) -> None:
+    _block(jrv_code, "error", "[ERREUR]", "91", title, body)
 
 
-def _warn(title: str, body: str) -> None:
-    _block("[ATTENTION]", "93", title, body)
+def _warn(jrv_code: str, title: str, body: str) -> None:
+    _block(jrv_code, "warning", "[ATTENTION]", "93", title, body)
 
 
-# ── 1. Version de Python ──────────────────────────────────────────────────────
+_CRITICAL_DEPS: dict[str, str] = {
+    "fastapi": "le serveur web de l'API",
+    "uvicorn": "le moteur qui fait tourner l'API",
+    "pydantic": "la validation de la configuration",
+    "pydantic_core": "le cœur compilé de pydantic (binaire natif)",
+    "httpx": "les appels réseau (LLM, Notion, YouTube…)",
+    "numpy": "le calcul (mémoire vectorielle)",
+    "loguru": "les logs",
+}
+
+_SHELL_TOKENS = ("$env:", "Set-", "setx ", "export ", "&&", "|", "<", ">")
 
 
 def check_python() -> bool:
-    if sys.version_info < (3, 11):  # noqa: UP036 — détection runtime volontaire
+    if sys.version_info < (3, 11):  # noqa: UP036
         _err(
+            "JRV-KRN-003",
             "Version de Python trop ancienne",
             f"""
 Jarvis a besoin de Python 3.11 ou plus récent.
@@ -66,28 +73,12 @@ FIX : installe Python 3.11+ puis recrée l'environnement avec « uv sync ».
     return True
 
 
-# ── 2. Dépendances nécessaires au démarrage ───────────────────────────────────
-
-# module importable -> rôle (pour un message compréhensible). Ce sont les paquets
-# requis pour que l'API démarre ; les binaires natifs (pydantic_core) sont les
-# premiers suspects quand « uv sync » a échoué ou que le venv a été déplacé/copié.
-_CRITICAL_DEPS: dict[str, str] = {
-    "fastapi": "le serveur web de l'API",
-    "uvicorn": "le moteur qui fait tourner l'API",
-    "pydantic": "la validation de la configuration",
-    "pydantic_core": "le cœur compilé de pydantic (binaire natif)",
-    "httpx": "les appels réseau (LLM, Notion, YouTube…)",
-    "numpy": "le calcul (mémoire vectorielle)",
-    "loguru": "les logs",
-}
-
-
 def check_deps() -> bool:
     missing: list[tuple[str, str, str]] = []
     for mod, role in _CRITICAL_DEPS.items():
         try:
             importlib.import_module(mod)
-        except Exception as e:  # ImportError, mais aussi erreurs de binaire natif
+        except Exception as e:  # jrv: probe missing dep import
             missing.append((mod, role, type(e).__name__))
 
     if not missing:
@@ -99,40 +90,25 @@ def check_deps() -> bool:
     lines += [
         "",
         "POURQUOI : c'est presque toujours l'environnement Python (.venv), PAS l'API LLM.",
-        "Causes typiques : « uv sync » a échoué, le .venv a été copié/déplacé d'une",
-        "autre machine, ou un binaire natif (pydantic_core, onnxruntime) ne correspond",
-        "pas à ton OS/CPU.",
-        "",
         "FIX, dans le dossier du projet :",
         "    uv sync --extra vision",
-        "Si l'erreur persiste (typiquement sur pydantic_core / onnxruntime / dlib) :",
-        "    supprime le dossier .venv, puis relance « uv sync --extra vision ».",
     ]
-    _err("Dépendances manquantes ou cassées", "\n".join(lines))
+    _err("JRV-KRN-004", "Dépendances manquantes ou cassées", "\n".join(lines))
     return False
 
 
-# ── 3. Fichier .env ───────────────────────────────────────────────────────────
-
-# Marqueurs qui trahissent une COMMANDE shell collée dans une valeur (erreur très
-# fréquente : on copie un « setx KEY=... » ou un « $env:KEY=... » au lieu de la valeur).
-_SHELL_TOKENS = ("$env:", "Set-", "setx ", "export ", "&&", "|", "<", ">")
-
-
 def check_env() -> bool:
-    """Vérifie .env. Non bloquant (avertit) : un .env douteux n'empêche pas
-    forcément de démarrer, mais c'est la 2e cause de « ça capte mais rien ne marche »."""
     env_path = Path(".env")
     if not env_path.exists():
         _warn(
+            "JRV-KRN-005",
             "Fichier .env absent",
             """
 Jarvis lit ses clés API et sa config dans un fichier .env, introuvable ici.
-FIX : copie « .env.example » en « .env » et remplis au minimum la clé de ton LLM
-      (ANTHROPIC_API_KEY, ou OPENAI_API_KEY si API_BACKEND=openai).
+FIX : copie « .env.example » en « .env » et remplis au minimum la clé de ton LLM.
 """,
         )
-        return True  # non bloquant : l'app peut démarrer et le dira aussi
+        return True
 
     suspicious: list[tuple[int, str, str]] = []
     text = env_path.read_text(encoding="utf-8", errors="replace")
@@ -148,21 +124,11 @@ FIX : copie « .env.example » en « .env » et remplis au minimum la clé de to
             suspicious.append((i, key, "guillemets non équilibrés"))
 
     if suspicious:
-        lines = ["Des lignes de .env semblent cassées (cause fréquente de crash) :", ""]
+        lines = ["Des lignes de .env semblent cassées :", ""]
         for ln, key, why in suspicious:
             lines.append(f"  - ligne {ln}  ({key})  : {why}")
-        lines += [
-            "",
-            "POURQUOI : une valeur de .env doit être la clé BRUTE, sur une seule ligne,",
-            "sans guillemets ni commande. Exemple correct :",
-            "    DEEPGRAM_API_KEY=ab12cd34ef...",
-            "Exemple CASSÉ (commande PowerShell collée) :",
-            '    DEEPGRAM_API_KEY=$env:DEEPGRAM_API_KEY = "ab12..."',
-        ]
-        _warn("Configuration .env suspecte", "\n".join(lines))
+        _warn("JRV-KRN-006", "Configuration .env suspecte", "\n".join(lines))
 
-    # Clé LLM du backend choisi : présente et pas un placeholder ? Sinon Jarvis
-    # démarre mais ne peut PAS répondre — le cas « ça marche pas » le plus déroutant.
     env: dict[str, str] = {}
     for raw in text.splitlines():
         line = raw.strip()
@@ -179,10 +145,10 @@ FIX : copie « .env.example » en « .env » et remplis au minimum la clé de to
         val = env.get(key_name, "")
         if not val or "..." in val or len(val) < 20:
             _warn(
+                "JRV-KRN-007",
                 "Clé LLM manquante ou non remplie",
                 f"""
 API_BACKEND={backend} mais {key_name} est vide ou encore à sa valeur d'exemple.
-CONSÉQUENCE : Jarvis va démarrer, mais ne pourra PAS répondre (ni chat, ni voix).
 FIX : mets ta vraie clé {key_name} dans .env (la clé brute, sans guillemets).
 """,
             )
@@ -191,7 +157,6 @@ FIX : mets ta vraie clé {key_name} dans .env (la clé brute, sans guillemets).
     return True
 
 
-# Endpoint /models : valide la clé SANS consommer de crédits (≠ une vraie requête).
 _LLM_MODELS = {
     "anthropic": (
         "https://api.anthropic.com/v1/models",
@@ -203,12 +168,6 @@ _LLM_MODELS = {
 
 
 def _check_llm_key_live(backend: str, key_name: str, key: str) -> None:
-    """Valide la clé LLM en vrai (appel /models). Non bloquant, offline-safe.
-
-    Distingue la clé ERRONÉE (401/403) du QUOTA/CRÉDITS (429). Un /models ne
-    consomme pas de tokens : il valide la clé mais NE détecte PAS un solde épuisé
-    (ça, ça n'apparaît qu'à une vraie requête → on le précise dans le message 429).
-    """
     entry = _LLM_MODELS.get(backend)
     if entry is None:
         return
@@ -219,30 +178,18 @@ def _check_llm_key_live(backend: str, key_name: str, key: str) -> None:
     except urllib.error.HTTPError as e:
         if e.code in (401, 403):
             _warn(
+                "JRV-KRN-008",
                 "Clé LLM refusée par le fournisseur",
-                f"""
-{key_name} est remplie mais {backend} la REFUSE (HTTP {e.code}).
-CAUSE : clé erronée, révoquée, expirée, ou copiée incomplètement.
-CONSÉQUENCE : Jarvis démarre mais ne pourra PAS répondre.
-FIX : régénère une clé sur le tableau de bord {backend} et remplace {key_name} dans .env.
-""",
+                f"{key_name} est remplie mais {backend} la REFUSE (HTTP {e.code}).",
             )
         elif e.code == 429:
             _warn(
+                "JRV-KRN-009",
                 "Quota / crédits LLM atteints",
-                f"""
-{backend} répond 429 sur {key_name} : limite de débit atteinte, ou plus de crédits.
-FIX : vérifie ton solde / ta facturation sur le tableau de bord {backend}, ou change
-de backend (API_BACKEND) le temps de recharger.
-""",
+                f"{backend} répond 429 sur {key_name}.",
             )
-        # autres codes (5xx, etc.) : transitoire côté fournisseur, on n'alarme pas.
-    except Exception:
-        # Réseau coupé / offline / DNS : on NE bloque PAS (mode hors-ligne légitime).
+    except Exception:  # jrv: offline network — non-blocking
         pass
-
-
-# ── 4. Port de l'API ──────────────────────────────────────────────────────────
 
 
 def check_port() -> bool:
@@ -253,26 +200,16 @@ def check_port() -> bool:
         return True
     except OSError:
         _err(
+            "JRV-KRN-010",
             f"Port {port} déjà utilisé",
-            f"""
-Le port {port} est occupé : soit une instance de Jarvis tourne déjà, soit un
-autre programme l'utilise. L'API ne pourra pas démarrer dessus.
-
-FIX :
-  - ferme l'instance précédente (Ctrl-C dans son terminal), ou
-  - tue le processus qui écoute sur {port}, ou
-  - change PORT=… dans .env pour un autre port libre.
-""",
+            f"Le port {port} est occupé. Ferme l'instance précédente ou change PORT dans .env.",
         )
         return False
     finally:
         try:
             s.close()
-        except Exception:
+        except Exception:  # jrv: socket close best-effort
             pass
-
-
-# ── Orchestration ─────────────────────────────────────────────────────────────
 
 
 def main() -> int:
@@ -283,8 +220,8 @@ def main() -> int:
         try:
             if not chk():
                 fatal = True
-        except Exception as e:  # un check ne doit JAMAIS faire planter le préflight
-            _err(f"Échec de la vérification « {chk.__name__} »", str(e))
+        except Exception as e:
+            _err("JRV-KRN-011", f"Échec de la vérification « {chk.__name__} »", str(e))
             fatal = True
 
     if fatal:

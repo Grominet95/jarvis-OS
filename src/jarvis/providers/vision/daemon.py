@@ -22,6 +22,7 @@ import asyncio
 import httpx
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.permissions import permissions as _perm_store
 from jarvis.kernel.settings import settings
 from jarvis.providers.vision.face_recognizer import FaceRecognizer
@@ -51,6 +52,7 @@ async def run_vision_daemon() -> None:
     try:
         import cv2  # type: ignore[import-untyped]
     except ImportError:
+        collector.warning("JRV-VIS-001", "JRV-VIS-001")
         logger.error("Vision daemon: opencv-python non installé — daemon désactivé")
         return
 
@@ -187,4 +189,5 @@ async def _send_event(client: httpx.AsyncClient, event_type: str, data: dict) ->
     try:
         await client.post(f"{_JARVIS_WEBHOOK}/{event_type}", json=data)
     except Exception as e:
+        collector.warning("JRV-VIS-001", "JRV-VIS-001", cause=e)
         logger.debug("Vision event send failed", error=str(e))

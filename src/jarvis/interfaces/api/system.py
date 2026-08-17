@@ -9,10 +9,12 @@ import os
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 
 from jarvis.capabilities.skills.registry import skill_registry
 from jarvis.engine.mission.project_store import WORKSPACE_DIR
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.paths import MEMORY_DATA_DIR
 from jarvis.kernel.settings import settings
 
@@ -48,6 +50,7 @@ async def jarvis_doctor() -> dict:
                 "detail": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
             }
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             checks["anthropic"] = {"status": "error", "detail": "Inaccessible"}
 
         try:
@@ -60,6 +63,7 @@ async def jarvis_doctor() -> dict:
                 "detail": os.getenv("ELEVENLABS_MODEL", "—"),
             }
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             checks["elevenlabs"] = {"status": "error", "detail": "Inaccessible"}
 
         try:
@@ -72,6 +76,7 @@ async def jarvis_doctor() -> dict:
                 "detail": "Nova-2",
             }
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             checks["deepgram"] = {"status": "error", "detail": "Inaccessible"}
 
     token = os.getenv("MAPBOX_TOKEN", "")
@@ -93,6 +98,7 @@ async def jarvis_doctor() -> dict:
             "detail": "Disponible" if proc.returncode == 0 else "Non disponible",
         }
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         checks["docker"] = {"status": "error", "detail": "Non installé"}
 
     mem_topics = MEMORY_DATA_DIR / "topics"
@@ -103,6 +109,7 @@ async def jarvis_doctor() -> dict:
         skills = skill_registry.list_installed()
         checks["skills"] = {"status": "ok", "detail": f"{len(skills)} installés"}
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         checks["skills"] = {"status": "warning", "detail": "Registre indisponible"}
 
     checks["proactive"] = {"status": "ok", "detail": "Actif"}
@@ -137,6 +144,7 @@ async def system_stats(request: Request) -> dict:
             elif s == "done":
                 proj_done += 1
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             pass
 
     topics_count = len(list(topics_dir.glob("*.md"))) if topics_dir.exists() else 0
@@ -191,6 +199,7 @@ async def system_perf() -> dict:
                 "threads": p.num_threads(),
             }
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         pass
 
     return {
@@ -215,10 +224,10 @@ async def system_perf() -> dict:
 async def retry_project(project_id: str, request: Request) -> dict:
     orchestrator = getattr(request.app.state, "orchestrator", None)
     if not orchestrator:
-        raise HTTPException(status_code=503, detail="Orchestrateur non disponible")
+        raise_api_error("JRV-API-005", 503, "Orchestrateur non disponible")
     project = await orchestrator.retry_project(project_id)
     if not project:
-        raise HTTPException(status_code=404, detail="Projet non trouvé")
+        raise_api_error("JRV-API-003", 404, "Projet non trouvé")
     return {"ok": True, "project_id": project.id, "status": project.status}
 
 
@@ -234,6 +243,7 @@ async def cleanup_done_projects(request: Request) -> dict:  # noqa: ARG001
                 shutil.rmtree(workspace, ignore_errors=True)
                 removed += 1
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             pass
     return {"removed": removed}
 

@@ -25,6 +25,7 @@ from loguru import logger
 from jarvis.engine.mission.quality_checker import QualityChecker
 from jarvis.engine.mission.schemas import Project, Step
 from jarvis.kernel.contracts import LLMProvider
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 # Plafond de contenu inclus dans le prompt sémantique (caractères).
 # Au-dessus, on tronque pour ne pas exploser les tokens.
@@ -115,6 +116,7 @@ class Verifier:
         try:
             res = await self._cli(step.verification_command, 60)
         except Exception as exc:  # noqa: BLE001 — on capture tout exec error
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             logger.warning("Verifier couche 2 — erreur d'exécution", error=str(exc))
             return VerificationResult(
                 verified=False,
@@ -182,6 +184,7 @@ class Verifier:
                 context="verifier",
             )
         except Exception as exc:  # noqa: BLE001 — erreur LLM = doute = verified=false
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             logger.warning("Verifier couche 3 — erreur LLM", error=str(exc))
             return VerificationResult(
                 verified=False,
@@ -235,6 +238,7 @@ class Verifier:
         try:
             parsed = json.loads(clean)
         except json.JSONDecodeError:
+            collector.error("JRV-MSN-001", "JRV-MSN-001")
             return None
         if not isinstance(parsed, dict):
             return None
@@ -304,6 +308,7 @@ class Verifier:
             try:
                 content = (ws / path).read_text(encoding="utf-8", errors="replace")
             except Exception as exc:  # noqa: BLE001
+                collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
                 parts.append(f"\n=== {path} (illisible: {exc}) ===")
                 included += 1
                 continue

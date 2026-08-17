@@ -8,6 +8,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 
 class TopicStore:
     """Lecture/écriture des fichiers thématiques Markdown.
@@ -27,6 +29,7 @@ class TopicStore:
         try:
             return (self._dir / filename).read_text(encoding="utf-8")
         except OSError as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("TopicStore.load failed", file=filename, error=str(e))
             return ""
 
@@ -41,6 +44,7 @@ class TopicStore:
             path.write_text(content, encoding="utf-8")
             logger.info("TopicStore written", file=filename)
         except OSError as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("TopicStore.write failed", file=filename, error=str(e))
 
     def exists(self, filename: str) -> bool:

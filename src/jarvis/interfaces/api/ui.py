@@ -12,6 +12,7 @@ from fastapi import APIRouter
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 router = APIRouter()
@@ -63,6 +64,7 @@ def _versioned_html(html_path: Path, assets: list[tuple[str, str]]) -> str:
                 content,
             )
         except OSError:
+            collector.error("JRV-API-001", "JRV-API-001")
             pass
     return content
 

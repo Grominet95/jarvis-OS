@@ -33,6 +33,7 @@ from loguru import logger
 from jarvis.engine.approval_checker import get_approval_checker
 from jarvis.engine.mission.backends.base import ExecutionBackend
 from jarvis.kernel.contracts import ToolRegistry
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 # Sous-ensemble d'outils exposés dans le sandbox RPC.
 # Intersection avec les outils enregistrés au moment de l'exécution.
@@ -183,6 +184,7 @@ class ScriptRPCRunner:
                                     "is_error": result.is_error,
                                 }
                     except Exception as exc:
+                        collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
                         logger.warning("RPC dispatch error", error=str(exc))
                         response = {"error": str(exc)}
 
@@ -204,6 +206,7 @@ class ScriptRPCRunner:
             try:
                 await dispatch_task
             except asyncio.CancelledError:
+                collector.error("JRV-MSN-001", "JRV-MSN-001")
                 pass
             shutil.rmtree(rpc_dir, ignore_errors=True)
 

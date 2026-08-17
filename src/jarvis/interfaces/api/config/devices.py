@@ -27,6 +27,7 @@ from fastapi import APIRouter
 from jarvis.hardware.bluetooth import parse_bt_macos, parse_bt_windows
 from jarvis.hardware.macropad_2k.usb import usb_status
 from jarvis.interfaces.api.config._env import _read_env
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings as _s
 
 router = APIRouter()
@@ -54,6 +55,7 @@ async def get_devices() -> list:
                 ["sysctl", "-n", "hw.model"], text=True, timeout=3
             ).strip()
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             model = platform.node().replace(".local", "") or "Mac"
         chip = platform.processor() or platform.machine()
         host_id = f"mac · {chip}"
@@ -112,6 +114,7 @@ async def get_devices() -> list:
             },
         )
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         pass
 
     if sys_name == "Darwin":
@@ -121,11 +124,13 @@ async def get_devices() -> list:
             )
             parse_bt_macos(out, devices)
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             pass
     elif sys_name == "Windows":
         try:
             parse_bt_windows(devices)
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             pass
 
     return devices
@@ -155,6 +160,7 @@ async def get_connectors() -> list:
                     return "expired"
             return "on"
         except Exception:
+            collector.error("JRV-API-001", "JRV-API-001")
             return "on"
 
     connectors = [

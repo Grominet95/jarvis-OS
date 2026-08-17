@@ -28,6 +28,7 @@ from loguru import logger
 from jarvis.engine.mission.schemas import Project, ProjectStatus, StepStatus
 from jarvis.kernel.contracts import LLMProvider, MemoryIngest
 from jarvis.kernel.contracts import MemoryStore as MemoryKernel
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 # Statuts considérés comme "fin de mission" (§5.1).
 # PAUSED est exclu : la mission est reprenable, ce n'est pas une fin.
@@ -109,6 +110,7 @@ class Reflexion:
                 )
                 lesson.lesson_event_id = result.event.id
             except Exception as exc:  # noqa: BLE001 — la mission est close, on dégrade
+                collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
                 logger.warning("Reflexion: ingest échec", error=str(exc))
         elif self._kernel is not None:
             try:
@@ -120,6 +122,7 @@ class Reflexion:
                 )
                 lesson.lesson_event_id = evt.id
             except Exception as exc:  # noqa: BLE001
+                collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
                 logger.warning("Reflexion: log_event échec", error=str(exc))
 
         # Signal Skill Lab (PHASE 4) — Event séparé sur le bus immuable.
@@ -135,6 +138,7 @@ class Reflexion:
                     },
                 )
             except Exception as exc:  # noqa: BLE001
+                collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
                 logger.warning("Reflexion: skill_candidate signal échec", error=str(exc))
 
         return lesson
@@ -151,6 +155,7 @@ class Reflexion:
                 context="reflexion",
             )
         except Exception as exc:  # noqa: BLE001 — pas de leçon vaut mieux qu'un crash
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             logger.warning("Reflexion: LLM échec", error=str(exc))
             return None
 
@@ -292,6 +297,7 @@ def _parse_lesson_json(raw: str) -> dict | None:
     try:
         data = json.loads(match.group())
     except json.JSONDecodeError:
+        collector.error("JRV-MSN-001", "JRV-MSN-001")
         return None
     if not isinstance(data, dict):
         return None

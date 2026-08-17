@@ -60,6 +60,9 @@ jobs:
       - name: Mypy (conformité Protocols, CDC §F.1.3bis)
         run: uv run mypy
 
+      - name: Error audit (JRV codes)
+        run: uv run python scripts/error_audit/check_pr.py
+
       - name: Unit tests (sans deps lourdes ni intégration)
         # `pytest -m "not integration"` — les tests qui ont besoin de deps
         # lourdes (livekit, sounddevice, opencv chargé en bg) sont marqués

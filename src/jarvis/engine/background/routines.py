@@ -26,6 +26,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 # ── Flag module ───────────────────────────────────────────────────────────────
 # Lu depuis l'env — default OFF pour ne pas impacter les installations existantes.
 ROUTINES_ENABLED: bool = os.getenv("ROUTINES_ENABLED", "false").lower() == "true"
@@ -170,6 +172,7 @@ class RoutineStore:
                 run.audit_log = steps
                 self._runs.append(run)
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-BG-001", "JRV-BG-001", cause=exc)
             logger.warning(f"RoutineStore: échec du chargement : {exc}")
 
     def _save(self) -> None:
@@ -181,6 +184,7 @@ class RoutineStore:
             }
             self._path.write_text(json.dumps(data, indent=2, default=str))
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-BG-001", "JRV-BG-001", cause=exc)
             logger.warning(f"RoutineStore: échec de la sauvegarde : {exc}")
 
     # ── CRUD Routines ─────────────────────────────────────────────────────────

@@ -8,10 +8,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from jarvis.engine.mission.project_store import WORKSPACE_DIR
+from jarvis.kernel.http_errors import raise_api_error
 
 router = APIRouter()
 
@@ -55,7 +56,7 @@ async def get_project(project_id: str, request: Request) -> dict:
     orch = _orch(request)
     project = orch.get_project(project_id)
     if not project:
-        raise HTTPException(404, f"Projet non trouvé : {project_id}")
+        raise_api_error("JRV-API-003", 404, f"Projet non trouvé : {project_id}")
     return orch._project_summary(project)
 
 
@@ -80,7 +81,7 @@ async def kill_project(project_id: str, request: Request) -> dict:
     orch = _orch(request)
     ok = orch.kill(project_id)
     if not ok:
-        raise HTTPException(404, f"Worker actif non trouvé : {project_id}")
+        raise_api_error("JRV-API-003", 404, f"Worker actif non trouvé : {project_id}")
     return {"killed": True}
 
 
@@ -89,7 +90,7 @@ async def retry_project(project_id: str, request: Request) -> dict:
     orch = _orch(request)
     project = await orch.retry_project(project_id)
     if not project:
-        raise HTTPException(404, f"Projet non trouvé : {project_id}")
+        raise_api_error("JRV-API-003", 404, f"Projet non trouvé : {project_id}")
     return {"ok": True, "project_id": project.id, "status": project.status}
 
 
@@ -104,7 +105,7 @@ async def reset_steps(project_id: str, body: ResetStepsBody, request: Request) -
 
     state_file = WORKSPACE_DIR / project_id / ".jarvis" / "state.json"
     if not state_file.exists():
-        raise HTTPException(404, f"Projet non trouvé : {project_id}")
+        raise_api_error("JRV-API-003", 404, f"Projet non trouvé : {project_id}")
     d = json.loads(state_file.read_text(encoding="utf-8"))
     reset = []
     for s in d["steps"]:
@@ -139,9 +140,9 @@ async def read_file(project_id: str, path: str, request: Request) -> dict:
         content = orch.read_workspace_file(project_id, path)
         return {"path": path, "content": content}
     except FileNotFoundError as e:
-        raise HTTPException(404, str(e)) from e
+        raise_api_error("JRV-API-003", 404, str(e), cause=e)
     except ValueError as e:
-        raise HTTPException(403, str(e)) from e
+        raise_api_error("JRV-PRM-001", 403, str(e), cause=e)
 
 
 @router.delete("/api/projects/{project_id}")
@@ -151,7 +152,7 @@ async def delete_project(project_id: str, request: Request) -> dict:
     orch = _orch(request)
     project = orch.get_project(project_id)
     if not project:
-        raise HTTPException(404, f"Projet non trouvé : {project_id}")
+        raise_api_error("JRV-API-003", 404, f"Projet non trouvé : {project_id}")
     orch.kill(project_id)
     workspace = Path(project.workspace_path)
     if workspace.exists():

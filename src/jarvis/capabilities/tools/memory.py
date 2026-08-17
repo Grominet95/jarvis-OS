@@ -8,6 +8,7 @@ from pathlib import Path
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.kernel.contracts import FTSIndex, TopicStore, VectorIndex
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 
@@ -146,6 +147,7 @@ class MemorySearchTool(Tool):
         try:
             k_int = max(1, min(20, int(k)))
         except (TypeError, ValueError):
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             k_int = 5
         results = await self._index.search(query=query, k=k_int)
         if not results:

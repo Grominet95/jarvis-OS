@@ -26,12 +26,14 @@ from jarvis.interfaces.channels.base import (
     MessageTarget,
     Platform,
 )
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 try:
     import discord
 
     DISCORD_AVAILABLE = True
 except ImportError:
+    collector.warning("JRV-MSG-001", "JRV-MSG-001")
     DISCORD_AVAILABLE = False
 
 
@@ -121,4 +123,5 @@ class DiscordChannel(ChannelAdapter):
             user = await self._client.fetch_user(int(target.user_id))  # type: ignore[union-attr]
             await user.send(text)
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-MSG-001", "JRV-MSG-001", cause=exc)
             logger.warning("[Discord] Erreur envoi message", error=str(exc))

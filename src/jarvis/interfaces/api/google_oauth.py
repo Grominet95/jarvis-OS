@@ -17,6 +17,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/google")
@@ -135,9 +136,11 @@ async def google_auth(service: str, request: Request) -> RedirectResponse:
         return RedirectResponse(auth_url)
 
     except ImportError:
+        collector.error("JRV-API-001", "JRV-API-001")
         logger.error("google-auth-oauthlib non installé")
         return RedirectResponse("/capabilities?google_error=missing_lib")
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         logger.exception("Google auth error", error=str(exc))
         return RedirectResponse("/capabilities?google_error=1")
 
@@ -177,5 +180,6 @@ async def google_callback(
         return RedirectResponse("/capabilities?google_ok=" + service)
 
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         logger.exception("Google callback error", service=service, error=str(exc))
         return RedirectResponse("/capabilities?google_error=1")

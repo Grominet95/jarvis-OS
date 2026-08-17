@@ -27,6 +27,7 @@ from jarvis.engine.agent import Agent
 from jarvis.engine.mission.backend_factory import get_backend
 from jarvis.engine.mission.backends.rpc import ScriptRPCRunner
 from jarvis.kernel.approval import get_approval_checker
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.schemas import Session
 
 
@@ -81,6 +82,7 @@ class SpawnSubagentTool(Tool):
             logger.info("SpawnSubagent terminé", chars=len(summary))
             return ToolResult(content=f"[Sous-agent terminé]\n{summary}")
         except Exception as exc:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=exc)
             logger.error("SpawnSubagent erreur", error=str(exc))
             return ToolResult(
                 content=f"[Sous-agent erreur] {exc}",

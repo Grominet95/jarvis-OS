@@ -19,6 +19,7 @@ from fastapi import APIRouter, Request
 
 from jarvis.analytics.registry import analytics_registry
 from jarvis.engine.mission.project_store import ProjectStore
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import MEMORY_DATA_DIR
 
 router = APIRouter()
@@ -41,6 +42,7 @@ async def get_jarvis_stats(days: int = 30) -> dict:
                     if mtime >= cutoff:
                         session_count += 1
                 except OSError:
+                    collector.error("JRV-API-001", "JRV-API-001")
                     pass
 
     # Projects / Missions
@@ -55,10 +57,12 @@ async def get_jarvis_stats(days: int = 30) -> dict:
                     try:
                         created = datetime.fromisoformat(created.replace("Z", "+00:00"))
                     except ValueError:
+                        collector.error("JRV-API-001", "JRV-API-001")
                         created = None
                 if created and created >= cutoff:
                     mission_count += 1
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         pass
 
     # Tokens + coût depuis les fichiers JSONL conso
@@ -74,6 +78,7 @@ async def get_jarvis_stats(days: int = 30) -> dict:
                 if file_date < cutoff:
                     continue
             except ValueError:
+                collector.error("JRV-API-001", "JRV-API-001")
                 continue
             try:
                 for line in f.read_text(encoding="utf-8").splitlines():
@@ -86,6 +91,7 @@ async def get_jarvis_stats(days: int = 30) -> dict:
                     if tool:
                         tool_calls[tool] = tool_calls.get(tool, 0) + 1
             except Exception:
+                collector.error("JRV-API-001", "JRV-API-001")
                 continue
 
     top_model = max(tool_calls, key=tool_calls.get) if tool_calls else "—"
@@ -179,6 +185,7 @@ async def get_youtube_stats(days: int = 7) -> dict:
         }
 
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         return {"configured": False, "error": str(exc)}
 
 
@@ -250,6 +257,7 @@ async def add_widget(widget_id: str, request: Request) -> dict:
     try:
         body = await request.json()
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         body = {}
     return analytics_registry.add(widget_id, settings=body)
 

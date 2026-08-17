@@ -20,6 +20,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings as _s
 
 router = APIRouter()
@@ -74,6 +75,7 @@ async def get_ollama_models() -> dict:
             data = resp.json()
             return {"available": True, "models": data.get("models", [])}
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         return {"available": False, "models": []}
 
 
@@ -98,6 +100,7 @@ async def pull_ollama_model(body: OllamaPullBody) -> StreamingResponse:
                         if line.strip():
                             yield f"data: {line}\n\n"
         except Exception as exc:
+            collector.error("JRV-API-001", "JRV-API-001", cause=exc)
             yield f"data: {_json.dumps({'error': str(exc)})}\n\n"
         yield 'data: {"done":true}\n\n'
 

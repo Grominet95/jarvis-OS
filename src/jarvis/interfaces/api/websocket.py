@@ -17,6 +17,7 @@ from jarvis.engine.background.worker import BackgroundTask, BackgroundWorker
 from jarvis.engine.gateway import Gateway, _fallback
 from jarvis.engine.router import RouteEnum
 from jarvis.interfaces.api.logs import _log_buffer
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 from jarvis.providers.memory.auto_dream import AutoDream
 from jarvis.providers.memory.consolidation import ConsolidationAgent
@@ -59,11 +60,14 @@ async def websocket_logs(websocket: WebSocket) -> None:
                 try:
                     await websocket.send_json(msg)
                 except Exception:
+                    collector.error("JRV-WS-001", "JRV-WS-001")
                     return
             last_sent = len(buf)
     except WebSocketDisconnect:
+        collector.error("JRV-WS-001", "JRV-WS-001")
         pass
     except Exception as e:
+        collector.error("JRV-WS-001", "JRV-WS-001", cause=e)
         logger.warning("ws/logs error", error=str(e))
 
 
@@ -169,6 +173,7 @@ async def _handle_vision_event(
                     full += chunk
                     await websocket.send_json({"type": "chunk", "content": chunk})
             except Exception as e:
+                collector.error("JRV-WS-001", "JRV-WS-001", cause=e)
                 logger.error("Vision gesture stream error", error=str(e))
                 full = _fallback(e)
                 await websocket.send_json({"type": "chunk", "content": full})
@@ -213,6 +218,7 @@ async def websocket_chat(websocket: WebSocket) -> None:
                 else:
                     await websocket.send_json({"type": "notification", "content": item})
             except Exception as e:
+                collector.error("JRV-WS-001", "JRV-WS-001", cause=e)
                 logger.warning("Proactive push failed", error=str(e))
 
     async def _push_vision_objects() -> None:
@@ -221,6 +227,7 @@ async def websocket_chat(websocket: WebSocket) -> None:
             try:
                 await websocket.send_json({"type": "vision_objects", "objects": objects})
             except Exception:
+                collector.error("JRV-WS-001", "JRV-WS-001")
                 pass
 
     pusher_task = asyncio.create_task(_push_proactive(), name="ws-proactive-pusher")
@@ -233,6 +240,7 @@ async def websocket_chat(websocket: WebSocket) -> None:
             try:
                 data = json.loads(raw)
             except json.JSONDecodeError:
+                collector.error("JRV-WS-001", "JRV-WS-001")
                 await websocket.send_json({"type": "error", "content": "JSON invalide."})
                 continue
 
@@ -274,6 +282,7 @@ async def websocket_chat(websocket: WebSocket) -> None:
                         full += chunk
                         await websocket.send_json({"type": "chunk", "content": chunk})
                 except Exception as e:
+                    collector.error("JRV-WS-001", "JRV-WS-001", cause=e)
                     logger.error("Stream error", error=str(e))
                     full = _fallback(e)
                     await websocket.send_json({"type": "chunk", "content": full})
@@ -299,6 +308,7 @@ async def websocket_chat(websocket: WebSocket) -> None:
                         try:
                             await _orch.create_and_run(msg)
                         except Exception as exc:
+                            collector.error("JRV-WS-001", "JRV-WS-001", cause=exc)
                             logger.error("Project creation failed", error=str(exc))
                             proactive.broadcast_event(
                                 {
@@ -327,12 +337,15 @@ async def websocket_chat(websocket: WebSocket) -> None:
                 _user_model.fire(user_message=message, assistant_message=full)
 
     except WebSocketDisconnect:
+        collector.error("JRV-WS-001", "JRV-WS-001")
         logger.info("WebSocket connection closed")
     except Exception as e:
+        collector.error("JRV-WS-001", "JRV-WS-001", cause=e)
         logger.error("WebSocket fatal error", error=str(e))
         try:
             await websocket.send_json({"type": "error", "content": "Erreur serveur."})
         except Exception:
+            collector.error("JRV-WS-001", "JRV-WS-001")
             pass
     finally:
         pusher_task.cancel()

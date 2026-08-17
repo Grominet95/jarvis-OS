@@ -7,6 +7,40 @@ from __future__ import annotations
 from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector
+
+_TOOL_CODES: dict[str, str] = {
+    "spotify": "JRV-TOL-002",
+    "gmail": "JRV-TOL-003",
+    "browser": "JRV-TOL-004",
+    "notion": "JRV-TOL-005",
+    "calendar": "JRV-TOL-006",
+    "cli_runner": "JRV-TOL-007",
+    "execute_cli": "JRV-TOL-007",
+    "filesystem": "JRV-TOL-008",
+    "vision": "JRV-TOL-009",
+    "fusion360": "JRV-TOL-010",
+    "memory": "JRV-TOL-011",
+    "weather": "JRV-TOL-012",
+    "subagent": "JRV-TOL-013",
+    "map_control": "JRV-TOL-014",
+}
+
+_DEFAULT_TOOL_CODE = "JRV-TOL-001"
+
+
+def _tool_code(name: str) -> str:
+    key = name.lower()
+    for prefix, code in _TOOL_CODES.items():
+        if key == prefix or key.startswith(prefix):
+            return code
+    return _DEFAULT_TOOL_CODE
+
+
+def _prefix_error_content(code: str, content: str) -> str:
+    if content.startswith("[JRV-"):
+        return content
+    return f"[{code}] {content}"
 
 
 class ToolRegistry:
@@ -22,7 +56,6 @@ class ToolRegistry:
             logger.debug("Tool registered", name=tool.name)
 
     def replace_skill_tools(self, *tools: Tool) -> None:
-        """Remplace atomiquement les outils venant des skills."""
         for name in list(self._skill_tool_names):
             self._tools.pop(name, None)
         self._skill_tool_names = set()
@@ -36,11 +69,9 @@ class ToolRegistry:
         return bool(self._tools)
 
     def schemas(self) -> list[dict]:
-        """Retourne les schémas Claude de tous les outils enregistrés."""
         return [t.to_claude_schema() for t in self._tools.values()]
 
     def core_schemas(self) -> list[dict]:
-        """Retourne uniquement les schémas des outils natifs (hors skills)."""
         return [
             t.to_claude_schema()
             for name, t in self._tools.items()
@@ -48,22 +79,35 @@ class ToolRegistry:
         ]
 
     async def call(self, name: str, inputs: dict) -> ToolResult:
-        """Exécute un outil par nom. Retourne une ToolResult d'erreur si inconnu."""
         tool = self._tools.get(name)
+        code = _tool_code(name)
         if tool is None:
             logger.warning("Unknown tool called", name=name)
-            return ToolResult(content=f"Outil inconnu: {name}", is_error=True)
+            collector.error(code, f"Unknown tool: {name}")
+            return ToolResult(
+                content=_prefix_error_content(code, f"Outil inconnu: {name}"),
+                is_error=True,
+            )
         try:
             result = await tool.execute(**inputs)
+            if result.is_error:
+                collector.error(code, f"Tool {name} returned error")
+                return ToolResult(
+                    content=_prefix_error_content(code, result.content),
+                    is_error=True,
+                )
             logger.info("Tool executed", name=name, is_error=result.is_error)
             return result
         except Exception as e:
+            collector.error(code, f"Tool {name} failed", cause=e)
             logger.error("Tool execution error", name=name, error=str(e))
-            return ToolResult(content=f"Erreur outil {name}: {e}", is_error=True)
+            return ToolResult(
+                content=_prefix_error_content(code, f"Erreur outil {name}: {e}"),
+                is_error=True,
+            )
 
     async def call_str(self, name: str, inputs: dict) -> str:
-        """Wrapper call() → str pour le tool_loop du LLM provider."""
         result = await self.call(name, inputs)
         if result.is_error:
-            return f"[ERREUR] {result.content}"
+            return result.content
         return result.content

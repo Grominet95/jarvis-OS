@@ -14,7 +14,7 @@ import sys
 for _stream in (sys.stdout, sys.stderr):
     try:
         _stream.reconfigure(encoding="utf-8", errors="backslashreplace")  # type: ignore[union-attr]
-    except (AttributeError, ValueError, OSError):
+    except (AttributeError, ValueError, OSError):  # jrv: stream reconfigure best-effort
         pass
 
 import asyncio
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI  # ── [AUTH] ──
+from fastapi import Depends, FastAPI, HTTPException  # ── [AUTH] ──
 from fastapi.middleware.cors import CORSMiddleware  # ── [AUTH] ──
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -56,6 +56,14 @@ from jarvis.interfaces.api.websocket import router as ws_router
 from jarvis.interfaces.api.widgets import router as widgets_router
 from jarvis.interfaces.channels.setup import setup_channels
 from jarvis.interfaces.channels.telegram_bot import get_telegram_channel
+from jarvis.kernel.error_collector import collector
+from jarvis.kernel.error_handlers import (
+    http_exception_handler,
+    jarvis_error_handler,
+    unhandled_error_handler,
+)
+from jarvis.kernel.error_hooks import install_asyncio_handler, install_error_hooks
+from jarvis.kernel.errors import JarvisError
 from jarvis.kernel.paths import UI_STATIC_DIR
 from jarvis.kernel.settings import settings
 from jarvis.providers.audio.clap_detector import ClapDetector
@@ -64,6 +72,7 @@ from jarvis.providers.vision.daemon import run_vision_daemon
 
 # load_dotenv() doit tourner avant toute logique module-level qui consomme os.environ
 load_dotenv()
+install_error_hooks()
 
 # ── Logging ──────────────────────────────────────────────────
 _LOG_FORMAT = (
@@ -84,6 +93,7 @@ async def _fts_rebuild_if_empty(fts_index: FTSIndex, sessions_dir: Path) -> None
 # ── Lifespan ─────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    install_asyncio_handler()
     # Phase C — Étape 2 (a) : app.py utilise bootstrap.build() pour construire
     # le graphe complet. Plus aucune instanciation directe ici.
 
@@ -229,7 +239,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     worker_task.cancel()
     try:
         await worker_task
-    except asyncio.CancelledError:
+    except asyncio.CancelledError:  # jrv: expected worker shutdown
         pass
     if _messaging_gw is not None:
         await _messaging_gw.stop_all()
@@ -239,9 +249,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             try:
                 await telegram.stop()
             except RuntimeError as e:
-                # Bug pré-existant : telegram.stop() lève si updater jamais démarré.
-                # Cf. BACKLOG Phase C — résolution future hors-périmètre étape 2.
-                logger.warning("Telegram shutdown ignored: %s", e)
+                collector.warning("JRV-MSG-001", "Telegram shutdown ignored", cause=e)
     logger.info("Jarvis arrêté")
 
 
@@ -252,6 +260,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(JarvisError, jarvis_error_handler)
+app.add_exception_handler(Exception, unhandled_error_handler)
 
 # ── [AUTH] ───────────────────────────────────────────────────
 # CORS : origines explicites si configurées, localhost par défaut en mode local.

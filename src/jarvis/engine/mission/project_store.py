@@ -13,6 +13,7 @@ from pathlib import Path
 
 from jarvis.engine.mission.schemas import LogEntry, Project, ProjectStatus, Step, StepStatus
 from jarvis.engine.vocab import AccessLevel
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.file_lock import exclusive_file_lock
 from jarvis.kernel.paths import WORKSPACE_DIR as _WORKSPACE
 
@@ -53,6 +54,7 @@ class ProjectStore:
             data = json.loads(state_file.read_text(encoding="utf-8"))
             return self._from_dict(data)
         except Exception:
+            collector.warning("JRV-MSN-002", "JRV-MSN-002")
             return None
 
     def list_projects(self) -> list[Project]:
@@ -98,6 +100,7 @@ class ProjectStore:
                     )
                 )
             except Exception:
+                collector.warning("JRV-MSN-002", "JRV-MSN-002")
                 pass
         return entries
 
@@ -120,6 +123,7 @@ class ProjectStore:
                 try:
                     claims = json.loads(claims_file.read_text(encoding="utf-8"))
                 except Exception:
+                    collector.warning("JRV-MSN-002", "JRV-MSN-002")
                     pass
 
             if step_id in claims:
@@ -141,6 +145,7 @@ class ProjectStore:
             try:
                 claims = json.loads(claims_file.read_text(encoding="utf-8"))
             except Exception:
+                collector.warning("JRV-MSN-002", "JRV-MSN-002")
                 pass
             claims.pop(step_id, None)
             claims_file.write_text(json.dumps(claims, indent=2), encoding="utf-8")

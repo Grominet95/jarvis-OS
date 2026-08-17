@@ -8,6 +8,8 @@ from pathlib import Path
 
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 
 class MemoryIndex:
     """Lecture/écriture de MEMORY.md — l'index des pointeurs mémoire.
@@ -22,6 +24,7 @@ class MemoryIndex:
         try:
             return self._path.read_text(encoding="utf-8")
         except OSError as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("MemoryIndex.read failed", error=str(e))
             return ""
 
@@ -69,4 +72,5 @@ class MemoryIndex:
         try:
             self._path.write_text(content + "\n", encoding="utf-8")
         except OSError as e:
+            collector.warning("JRV-MEM-001", "JRV-MEM-001", cause=e)
             logger.error("MemoryIndex.write failed", error=str(e))

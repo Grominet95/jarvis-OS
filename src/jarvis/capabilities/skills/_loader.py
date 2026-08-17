@@ -13,6 +13,8 @@ from pathlib import Path
 import yaml
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*)", re.DOTALL)
 
 
@@ -21,6 +23,7 @@ def _parse_skill_md(path: Path) -> dict | None:
     try:
         raw = path.read_text(encoding="utf-8")
     except OSError:
+        collector.error("JRV-SKL-001", "JRV-SKL-001")
         logger.warning("Cannot read skill", path=str(path))
         return None
 
@@ -32,6 +35,7 @@ def _parse_skill_md(path: Path) -> dict | None:
     try:
         meta = yaml.safe_load(m.group(1)) or {}
     except yaml.YAMLError as e:
+        collector.error("JRV-SKL-001", "JRV-SKL-001", cause=e)
         logger.warning("Skill YAML invalide", path=str(path), error=str(e))
         return None
 

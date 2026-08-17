@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import PROJECT_ROOT
 
 BUNDLE_DIR = PROJECT_ROOT / "bundle"
@@ -36,6 +37,7 @@ def _rel_project(path: Path) -> str:
     try:
         return str(path.relative_to(PROJECT_ROOT)).replace("\\", "/")
     except ValueError:
+        collector.error("JRV-KRN-002", "JRV-KRN-002")
         return str(path)
 
 
@@ -59,6 +61,7 @@ def _python_version(exe: Path) -> str | None:
             version = (proc.stdout or "").strip()
             return version or None
     except (OSError, subprocess.TimeoutExpired):
+        collector.error("JRV-KRN-002", "JRV-KRN-002")
         pass
     return None
 
@@ -83,6 +86,7 @@ def _detect_system_python() -> dict[str, Any]:
                 if raw:
                     candidates.append(Path(raw))
         except OSError:
+            collector.error("JRV-KRN-002", "JRV-KRN-002")
             pass
     else:
         for name in ("python3", "python"):
@@ -96,6 +100,7 @@ def _detect_system_python() -> dict[str, Any]:
         try:
             resolved = str(candidate.resolve())
         except OSError:
+            collector.error("JRV-KRN-002", "JRV-KRN-002")
             resolved = str(candidate)
         if resolved in seen:
             continue
@@ -147,6 +152,7 @@ def inspect_bundle() -> dict[str, Any]:
         try:
             manifest = load_manifest()
         except json.JSONDecodeError:
+            collector.error("JRV-KRN-002", "JRV-KRN-002")
             missing.append("manifest.json (invalid JSON)")
 
     venv_py = _venv_python()
@@ -320,6 +326,7 @@ def prerequisites_status() -> dict[str, Any]:
         elif monorepo_python["present"] and runtime == _monorepo_python():
             runtime_source = "monorepo"
     except FileNotFoundError:
+        collector.error("JRV-KRN-002", "JRV-KRN-002")
         pass
 
     yolo_bundle = _bundle_model_path(manifest, "yolo", "models/yolov8n.pt")

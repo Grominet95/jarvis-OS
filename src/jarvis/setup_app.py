@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from jarvis.interfaces.api.setup_wizard import router as setup_router
+from jarvis.kernel.error_hooks import install_error_hooks
 from jarvis.kernel.paths import PROJECT_ROOT, UI_STATIC_DIR
 from jarvis.kernel.setup_layout import ensure_runtime_layout
 
@@ -22,6 +23,7 @@ SETUP_HOST = "127.0.0.1"
 
 load_dotenv(PROJECT_ROOT / ".env", override=False)
 ensure_runtime_layout()
+install_error_hooks()
 
 app = FastAPI(title="Jarvis Setup", docs_url=None, redoc_url=None)
 app.include_router(setup_router)

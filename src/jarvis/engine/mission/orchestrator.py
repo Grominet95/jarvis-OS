@@ -25,6 +25,7 @@ from jarvis.engine.mission.schemas import (
 )
 from jarvis.engine.mission.worker_agent import WorkerAgent
 from jarvis.kernel.contracts import LLMProvider
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.events import EventBus
 
 
@@ -72,6 +73,7 @@ class ProjectOrchestrator:
             for step in project.steps:
                 validate_step(step)
         except ValueError as exc:
+            collector.error("JRV-MSN-001", "JRV-MSN-001", cause=exc)
             project.status = ProjectStatus.FAILED
             self._store.save_project(project)
             logger.error(
@@ -249,6 +251,7 @@ class ProjectOrchestrator:
         try:
             return await asyncio.wait_for(asyncio.shield(future), timeout=600)
         except TimeoutError:
+            collector.error("JRV-MSN-001", "JRV-MSN-001")
             self._pending_approvals.pop(key, None)
             logger.warning("Approval timeout", key=key)
             return False

@@ -8,6 +8,7 @@ import json
 from collections.abc import Callable
 from datetime import date, timedelta
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import MEMORY_DATA_DIR
 
 # UsageEntry, PRICING et calculate_cost descendus dans kernel/schemas.py
@@ -57,6 +58,7 @@ class UsageTracker:
         try:
             self._on_usage(entry)
         except Exception:
+            collector.error("JRV-ENG-000", "JRV-ENG-000")
             pass  # le tracking ne doit jamais lever d'exception
 
     def _read_day(self, d: date) -> list[dict]:
@@ -72,6 +74,7 @@ class UsageTracker:
                 try:
                     entries.append(json.loads(line))
                 except json.JSONDecodeError:
+                    collector.error("JRV-ENG-000", "JRV-ENG-000")
                     pass
         return entries
 
@@ -325,5 +328,6 @@ class UsageTracker:
                 hour = int(ts[11:13])
                 hours[hour] += e.get("cost_usd", 0.0)
             except (ValueError, IndexError):
+                collector.error("JRV-ENG-000", "JRV-ENG-000")
                 pass
         return [round(h, 6) for h in hours]

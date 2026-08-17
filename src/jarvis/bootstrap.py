@@ -83,6 +83,7 @@ from jarvis.engine.proactive.store import InitiativeStore
 from jarvis.engine.session import SessionManager
 from jarvis.engine.tracking import UsageEntry, UsageTracker
 from jarvis.kernel.approval import set_approval_checker
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.events import (
     BudgetThresholdReached,
     EventBus,
@@ -649,6 +650,7 @@ def _wire_events(
         try:
             await reflexion.reflect(project)
         except Exception as exc:  # noqa: BLE001 — la mission est close, on dégrade
+            collector.error("JRV-BTS-001", "JRV-BTS-001", cause=exc)
             from loguru import logger as _lg
 
             _lg.warning("Reflexion handler échec", error=str(exc))

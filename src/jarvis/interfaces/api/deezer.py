@@ -13,6 +13,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from loguru import logger
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/deezer")
@@ -132,9 +133,11 @@ async def _get_player_state() -> dict:
                 params={"access_token": token, "limit": 1},
             )
     except httpx.TimeoutException:
+        collector.error("JRV-API-001", "JRV-API-001")
         logger.debug("Deezer player timeout")
         return {"connected": True, "is_playing": False, "track": None}
     except httpx.RequestError as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.warning("Deezer player request error", error=str(e))
         return {"connected": False}
 
@@ -180,6 +183,7 @@ async def _action(method: str, endpoint: str) -> JSONResponse:
             )
         return JSONResponse({"ok": resp.status_code in (200, 204)})
     except (httpx.TimeoutException, httpx.RequestError) as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         logger.warning("Deezer action error", endpoint=endpoint, error=str(e))
         return JSONResponse({"ok": False})
 

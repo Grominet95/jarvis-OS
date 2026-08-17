@@ -30,6 +30,7 @@ from jarvis.engine.mission.project_store import ProjectStore
 from jarvis.engine.mission.schemas import StepStatus
 from jarvis.engine.proactive.store import InitiativeStore
 from jarvis.kernel.contracts import SkillLifecycle
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.schemas import SkillStatus
 
 
@@ -132,6 +133,7 @@ class CommandCenter:
         try:
             recent = self._initiatives.list_recent(days=days)
         except Exception as exc:  # noqa: BLE001 — un store défaillant n'arrête pas la vue
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=exc)
             logger.warning("CommandCenter: initiatives load échec", error=str(exc))
             recent = []
         snap.initiatives = [self._initiative_to_summary(i) for i in recent]
@@ -140,6 +142,7 @@ class CommandCenter:
         try:
             projects = self._projects.list_projects()
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=exc)
             logger.warning("CommandCenter: missions load échec", error=str(exc))
             projects = []
         snap.missions = [self._project_to_summary(p) for p in projects[:20]]
@@ -203,6 +206,7 @@ class CommandCenter:
         try:
             status = self._budget.status()
         except Exception as exc:  # noqa: BLE001
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=exc)
             logger.warning("CommandCenter: budget.status() échec", error=str(exc))
             return BudgetSummary(enabled=False)
         global_block = status.get("global", {})
@@ -225,15 +229,18 @@ class CommandCenter:
             try:
                 by_status[st.value] = self._skills.count_by_status(st)
             except Exception:  # noqa: BLE001
+                collector.warning("JRV-PRO-001", "JRV-PRO-001")
                 by_status[st.value] = 0
         # Candidates en attente de validation humaine (SANDBOXED_PASS)
         try:
             pending = self._skills.list_by_status(SkillStatus.SANDBOXED_PASS)
         except Exception:  # noqa: BLE001
+            collector.warning("JRV-PRO-001", "JRV-PRO-001")
             pending = []
         try:
             stale = self._skills.list_by_status(SkillStatus.STALE)
         except Exception:  # noqa: BLE001
+            collector.warning("JRV-PRO-001", "JRV-PRO-001")
             stale = []
         return SkillSummary(
             by_status=by_status,

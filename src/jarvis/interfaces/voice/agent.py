@@ -39,6 +39,7 @@ from livekit.plugins.google.beta import gemini_tts
 
 from jarvis.bootstrap import build
 from jarvis.capabilities.skills.registry import SkillRegistry
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.paths import PROJECT_ROOT  # noqa: E402
 from jarvis.kernel.settings import settings
 from jarvis.providers.audio.elevenlabs_voices import resolve_voice_id
@@ -61,6 +62,7 @@ try:
         colorize=True,
     )
 except Exception:
+    collector.error("JRV-VOI-001", "JRV-VOI-001")
     pass
 
 
@@ -105,6 +107,7 @@ def _build_voice_instructions() -> str:
         if skill_prompt:
             return base + "\n\n# SKILLS ACTIFS\n\n" + skill_prompt
     except Exception as e:
+        collector.error("JRV-VOI-001", "JRV-VOI-001", cause=e)
         logger.warning("Skills non chargés pour les instructions vocales: %s", e)
     return base
 
@@ -134,6 +137,7 @@ def _load_user_profile() -> str:
         if path.exists():
             return path.read_text(encoding="utf-8").strip()
     except Exception as e:
+        collector.error("JRV-VOI-001", "JRV-VOI-001", cause=e)
         logger.warning("Profil utilisateur non chargé: %s", e)
     return ""
 
@@ -185,6 +189,7 @@ def _voice_broadcast(event: dict) -> None:
         try:
             urllib.request.urlopen(req, timeout=2)
         except Exception as e:
+            collector.error("JRV-VOI-001", "JRV-VOI-001", cause=e)
             logger.debug("Voice broadcast HTTP fail: %s", e)
 
     threading.Thread(target=_post, daemon=True).start()
@@ -231,6 +236,7 @@ class _ProxyMemoryTool:
             )
             return ToolResult(content=content, is_error=is_error)
         except Exception as e:
+            collector.error("JRV-VOI-001", "JRV-VOI-001", cause=e)
             logger.warning(
                 "Proxy mémoire '%s' -> API injoignable (%s), repli local", self.name, e
             )
@@ -345,6 +351,7 @@ def _build_voice_stt(env: dict) -> object:
             logger.info("STT pipeline = Google Cloud Speech (latest_long)")
             return stt
     except Exception as e:
+        collector.error("JRV-VOI-001", "JRV-VOI-001", cause=e)
         logger.warning("STT '%s' indisponible (%s) -> repli Deepgram", provider, e)
 
     dg_key = env.get("DEEPGRAM_API_KEY", os.getenv("DEEPGRAM_API_KEY", "")).strip()
@@ -461,6 +468,7 @@ def _build_voice_llm(env: dict) -> object:
             logger.info("Voice LLM — Anthropic %s", model)
             return lk_anthropic.LLM(model=model, temperature=0.7)
     except ImportError as exc:
+        collector.error("JRV-VOI-001", "JRV-VOI-001", cause=exc)
         logger.warning(
             "Plugin LiveKit pour backend '%s' manquant (%s) — fallback Gemini. "
             "Installer le plugin correspondant via uv sync pour router le vocal sur ce backend.",
@@ -497,6 +505,7 @@ async def entrypoint(ctx: object) -> None:
             ctx._connected = True  # empêche la double connexion dans session.start()
             logger.info("Room pre-connected: %s", ctx.room.name)
         except Exception as e:
+            collector.error("JRV-VOI-001", "JRV-VOI-001", cause=e)
             logger.warning("Pre-connect failed (%s), session.start() va réessayer", e)
 
     # Récupère les données pré-chargées par prewarm (fallback si prewarm non exécuté)
@@ -546,6 +555,9 @@ def main() -> None:
     - `python -m jarvis.interfaces.voice.agent <args>` (entry point cible)
     - `python voice_agent.py <args>` (shim racine pendant la migration)
     """
+    from jarvis.kernel.error_hooks import install_error_hooks
+
+    install_error_hooks()
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,

@@ -8,9 +8,11 @@ import asyncio
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.settings import settings
 
 router = APIRouter()
@@ -32,6 +34,7 @@ def _load_titles(request: Request) -> dict[str, str]:
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         return {}
 
 
@@ -63,6 +66,7 @@ async def list_sessions(request: Request) -> list[dict]:
         try:
             lines = [ln for ln in f.read_text(encoding="utf-8").splitlines() if ln.strip()]
         except OSError:
+            collector.error("JRV-API-001", "JRV-API-001")
             pass
         first_user: str | None = None
         msg_count = 0
@@ -73,6 +77,7 @@ async def list_sessions(request: Request) -> list[dict]:
                 if first_user is None and e.get("role") == "user":
                     first_user = (e.get("content") or "")[:60]
             except (json.JSONDecodeError, KeyError):
+                collector.error("JRV-API-001", "JRV-API-001")
                 pass
         default_preview = first_user or f"Session {date_str}"
         result.append(
@@ -91,7 +96,7 @@ async def list_sessions(request: Request) -> list[dict]:
 async def rename_session(session_id: str, body: _TitleBody, request: Request) -> dict:
     """Renomme une session (stocké dans session_titles.json)."""
     if not body.title.strip():
-        raise HTTPException(400, "Le titre ne peut pas être vide.")
+        raise_api_error("JRV-API-004", 400, "Le titre ne peut pas être vide.")
     titles = _load_titles(request)
     titles[session_id] = body.title.strip()
     _save_titles(request, titles)
@@ -103,10 +108,10 @@ async def delete_session(session_id: str, request: Request) -> dict:
     """Supprime une session (fichier JSONL + titre associé)."""
     store = getattr(request.app.state, "session_store", None)
     if store is None:
-        raise HTTPException(503, "Session store unavailable.")
+        raise_api_error("JRV-API-005", 503, "Session store unavailable.")
     path = store._find(session_id)
     if path is None:
-        raise HTTPException(404, "Session introuvable.")
+        raise_api_error("JRV-API-003", 404, "Session introuvable.")
     filename = path.name
     path.unlink(missing_ok=True)
     titles = _load_titles(request)

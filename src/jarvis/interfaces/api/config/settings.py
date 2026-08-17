@@ -33,6 +33,7 @@ from jarvis.interfaces.api.config._env import (
     _write_env,
 )
 from jarvis.kernel.approvals import approval_config as _approval_cfg
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.settings import settings as _s
 from jarvis.providers.llm.factory import create_background_llm, get_llm_provider
 
@@ -69,11 +70,13 @@ async def get_settings_endpoint() -> dict:
             try:
                 return int(raw)
             except (ValueError, TypeError):
+                collector.error("JRV-API-001", "JRV-API-001")
                 return getattr(_s, field)
         if ann is float:
             try:
                 return float(raw)
             except (ValueError, TypeError):
+                collector.error("JRV-API-001", "JRV-API-001")
                 return getattr(_s, field)
         return raw
 
@@ -169,6 +172,7 @@ async def update_setting(request: Request, body: SettingUpdateBody) -> dict:
                 converted = body.value
             object.__setattr__(_s, field_name, converted)
         except (ValueError, TypeError):
+            collector.error("JRV-API-001", "JRV-API-001")
             object.__setattr__(_s, field_name, body.value)
 
     needs_restart = env_key in _RESTART_KEYS
@@ -225,6 +229,7 @@ async def update_setting(request: Request, body: SettingUpdateBody) -> dict:
                 logger.warning("LLM hot-swap skipped — gateway not in app.state")
                 needs_restart = True
         except Exception as exc:
+            collector.error("JRV-API-001", "JRV-API-001", cause=exc)
             logger.warning("LLM hot-swap failed — redémarrage requis", error=str(exc))
             needs_restart = True
 
@@ -258,6 +263,7 @@ async def get_voices() -> list[dict]:
                 for v in voices
             ]
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         pass
     return []
 
@@ -299,5 +305,6 @@ async def test_api_key(body: TestKeyBody) -> dict:
                 )
                 return {"ok": r.status_code == 200}
     except Exception as exc:
+        collector.error("JRV-API-001", "JRV-API-001", cause=exc)
         return {"ok": False, "error": str(exc)}
     return {"ok": False, "error": "Provider inconnu"}

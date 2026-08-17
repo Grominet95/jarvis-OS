@@ -9,6 +9,7 @@ from loguru import logger
 
 from jarvis.capabilities.tools.base import Tool, ToolResult
 from jarvis.capabilities.tools.spotify_auth import _get_access_token
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 _API_BASE = "https://api.spotify.com/v1"
 
@@ -233,8 +234,10 @@ class SpotifyTool(Tool):
                 return ToolResult(content=f"Action inconnue : {action}", is_error=True)
 
         except httpx.TimeoutException:
+            collector.error("JRV-TOL-001", "JRV-TOL-001")
             logger.warning("SpotifyTool timeout", action=action)
             return ToolResult(content="Timeout Spotify. Réessaie dans un instant.", is_error=True)
         except httpx.RequestError as e:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
             logger.error("SpotifyTool request error", error=str(e))
             return ToolResult(content=f"Erreur réseau Spotify : {e}", is_error=True)

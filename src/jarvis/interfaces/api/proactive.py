@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Query, Request
 from loguru import logger as _log
 from pydantic import BaseModel
 
@@ -14,6 +14,8 @@ from jarvis.capabilities.tools.gmail import send_gmail_draft
 from jarvis.engine.proactive.initiative_generator import InitiativeGenerator
 from jarvis.engine.proactive.schemas import InitiativeType
 from jarvis.engine.proactive.store import InitiativeStore
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.settings import settings as _s
 
 router = APIRouter()
@@ -75,7 +77,7 @@ async def approve_initiative(initiative_id: str, request: Request) -> dict:
     store = InitiativeStore()
     init = store.get_by_id(initiative_id)
     if not init:
-        raise HTTPException(404, "Initiative introuvable")
+        raise_api_error("JRV-API-003", 404, "Initiative introuvable")
 
     result: dict = {"status": "approved", "type": str(init.type)}
 
@@ -107,6 +109,7 @@ async def approve_initiative(initiative_id: str, request: Request) -> dict:
             _log.info(f"Initiative {initiative_id} approuvée", type=init.type, title=init.title)
 
     except Exception as e:
+        collector.error("JRV-API-001", "JRV-API-001", cause=e)
         _log.error(f"Initiative approve error ({init.type}): {e}")
         result["error"] = str(e)
 
@@ -127,7 +130,7 @@ async def rectify_initiative(initiative_id: str, body: RectifyBody, request: Req
     store = InitiativeStore()
     init = store.get_by_id(initiative_id)
     if not init:
-        raise HTTPException(404, "Initiative introuvable")
+        raise_api_error("JRV-API-003", 404, "Initiative introuvable")
 
     _container = request.app.state.container
     generator = InitiativeGenerator(
@@ -137,7 +140,7 @@ async def rectify_initiative(initiative_id: str, body: RectifyBody, request: Req
     )
     new_init = await generator.rectify(init, body.correction)
     if not new_init:
-        raise HTTPException(500, "Régénération échouée")
+        raise_api_error("JRV-API-001", 500, "Régénération échouée")
 
     store.update_initiative(
         initiative_id,
@@ -208,7 +211,7 @@ async def run_initiative(initiative_id: str, request: Request) -> dict:
     """Déclenche l'exécution pilotée d'une initiative (étape 1/2 pour les actions sensibles)."""
     executor = getattr(request.app.state, "initiative_executor", None)
     if not executor:
-        raise HTTPException(503, "InitiativeExecutor non disponible")
+        raise_api_error("JRV-API-005", 503, "InitiativeExecutor non disponible")
     return await executor.run(initiative_id)
 
 
@@ -217,7 +220,7 @@ async def confirm_initiative(initiative_id: str, body: ConfirmBody, request: Req
     """2e confirmation pour les actions sensibles (envoi mail après brouillon prêt)."""
     executor = getattr(request.app.state, "initiative_executor", None)
     if not executor:
-        raise HTTPException(503, "InitiativeExecutor non disponible")
+        raise_api_error("JRV-API-005", 503, "InitiativeExecutor non disponible")
     return await executor.confirm(initiative_id, body.draft_content)
 
 
@@ -228,7 +231,7 @@ async def dismiss_initiative(initiative_id: str) -> dict:
     store = InitiativeStore()
     init = store.get_by_id(initiative_id)
     if not init:
-        raise HTTPException(404, "Initiative introuvable")
+        raise_api_error("JRV-API-003", 404, "Initiative introuvable")
     store.update_status(initiative_id, "dismissed")
     return {"status": "dismissed"}
 
@@ -243,7 +246,7 @@ async def run_proactive_now(request: Request) -> dict:
 
     engine = getattr(request.app.state, "proactive_engine", None)
     if not engine:
-        raise HTTPException(503, "ProactiveEngine non disponible")
+        raise_api_error("JRV-API-005", 503, "ProactiveEngine non disponible")
     asyncio.create_task(engine.run_now(), name="proactive-manual")
     return {"triggered": True}
 

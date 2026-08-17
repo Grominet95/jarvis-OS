@@ -10,6 +10,7 @@ from jarvis.capabilities.skills.lab import SkillLab
 from jarvis.capabilities.skills.registry import skill_registry
 from jarvis.capabilities.skills.synthesizer import SkillSynthesizer
 from jarvis.capabilities.tools.base import Tool, ToolResult
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 class SkillCreateTool(Tool):
@@ -81,6 +82,7 @@ class SkillCreateTool(Tool):
         try:
             record = await self._lab.propose_from_trajectory(trajectory)
         except Exception as exc:  # noqa: BLE001
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=exc)
             return ToolResult(content=f"Erreur Lab : {exc}", is_error=True)
 
         if record is None:
@@ -152,8 +154,10 @@ class SkillImproveTool(Tool):
             await self._synthesizer.improve_skill(skill_name, new_experience)
             return ToolResult(content=f"Skill '{skill_name}' amélioré avec la nouvelle expérience.")
         except FileNotFoundError as exc:
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=exc)
             return ToolResult(content=str(exc), is_error=True)
         except Exception as exc:  # noqa: BLE001
+            collector.error("JRV-TOL-001", "JRV-TOL-001", cause=exc)
             return ToolResult(content=f"Erreur amélioration : {exc}", is_error=True)
 
 

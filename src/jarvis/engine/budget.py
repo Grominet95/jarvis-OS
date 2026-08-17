@@ -21,6 +21,7 @@ from typing import Literal
 from loguru import logger
 
 from jarvis.engine.tracking import UsageTracker
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 from jarvis.kernel.events import BudgetThresholdReached, EventBus
 from jarvis.kernel.settings import Settings
 
@@ -77,6 +78,7 @@ class BudgetGuard:
                 d += timedelta(days=1)
             logger.debug("BudgetGuard amorcé", projects=len(self._project_spent))
         except Exception as exc:
+            collector.error("JRV-BGT-001", "JRV-BGT-001", cause=exc)
             logger.warning("BudgetGuard: impossible de charger l'historique", error=str(exc))
 
     # ── Lecture des dépenses ──────────────────────────────────────────────────
@@ -86,6 +88,7 @@ class BudgetGuard:
         try:
             return self._tracker.get_monthly_totals()["cost_usd"]
         except Exception:
+            collector.error("JRV-BGT-001", "JRV-BGT-001")
             return 0.0
 
     def _spent(self, scope: str) -> float:

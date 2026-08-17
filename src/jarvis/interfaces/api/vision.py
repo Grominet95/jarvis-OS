@@ -4,9 +4,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from jarvis.kernel.error_collector import collector  # jrv: autofix
+from jarvis.kernel.http_errors import raise_api_error
 from jarvis.kernel.settings import settings
 from jarvis.providers.vision.daemon import get_face_recognizer
 from jarvis.providers.vision.face_recognizer import FaceRecognizer
@@ -49,6 +51,7 @@ async def verify_face() -> dict:
         try:
             import cv2
         except ImportError:
+            collector.error("JRV-API-001", "JRV-API-001")
             return {"recognized": False, "name": "error", "confidence": 0.0}
         cap = cv2.VideoCapture(0)
         for _ in range(5):
@@ -112,16 +115,18 @@ async def verify_face_frame(request: Request) -> dict:
     try:
         import cv2
     except ImportError:
+        collector.error("JRV-API-001", "JRV-API-001")
         return {"recognized": False, "name": "error_no_cv2", "confidence": 0.0}
 
     data = await request.json()
     img_b64 = data.get("image_b64", "").strip()
     if not img_b64:
-        raise HTTPException(400, "image_b64 manquant")
+        raise_api_error("JRV-API-004", 400, "image_b64 manquant")
 
     try:
         img_bytes = base64.b64decode(img_b64, validate=True)
     except Exception:
+        collector.error("JRV-API-001", "JRV-API-001")
         return {"recognized": False, "name": "error_decode", "confidence": 0.0}
 
     img_array = np.frombuffer(img_bytes, dtype=np.uint8)
@@ -152,11 +157,15 @@ async def add_face(request: Request) -> dict:
     path = data.get("path", "").strip()
 
     if not name or not path:
-        raise HTTPException(400, "name et path requis")
+        raise_api_error("JRV-API-004", 400, "name et path requis")
 
     recognizer = get_face_recognizer()
     if recognizer is None:
-        raise HTTPException(503, "FaceRecognizer non actif (FACE_RECOGNITION_ENABLED=false ?)")
+        raise_api_error(
+            "JRV-API-005",
+            503,
+            "FaceRecognizer non actif (FACE_RECOGNITION_ENABLED=false ?)",
+        )
 
     ok = recognizer.add_face(name, path)
     return {"success": ok, "name": name}

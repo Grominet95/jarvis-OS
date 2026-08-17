@@ -10,6 +10,7 @@ from loguru import logger
 
 from jarvis.engine.proactive.schemas import ContextItem
 from jarvis.kernel.connectivity import is_offline_mode
+from jarvis.kernel.error_collector import collector  # jrv: autofix
 
 
 class CollectorBase(ABC):
@@ -23,6 +24,7 @@ class CollectorBase(ABC):
             logger.debug(f"Collector {self.name}: {len(items)} items")
             return items
         except Exception as e:
+            collector.warning("JRV-PRO-001", "JRV-PRO-001", cause=e)
             if is_offline_mode():
                 logger.debug(f"Collector {self.name} ignoré — mode local ({type(e).__name__})")
             else:
