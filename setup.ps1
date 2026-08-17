@@ -114,7 +114,7 @@ if (-not $python) {
     }
     Write-Host "Aucun runtime pre-packaged detecte." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "Option A (recommandee) : telecharge une release Jarvis avec bundle offline" -ForegroundColor White
+    Write-Host "Option A (recommandee) : .\jarvis.ps1 setup puis Telecharger dans le wizard (bundle.zip CDN)" -ForegroundColor White
     Write-Host "Option B (maintainer)    : scripts\release\build_bundle.ps1 (une fois, avec reseau)" -ForegroundColor White
     Write-Host "Option C (dev)           : uv sync puis relance .\setup.ps1" -ForegroundColor White
     Write-Host ""
