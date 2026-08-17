@@ -57,7 +57,7 @@ dependencies = [
     # Recherche sémantique (couche 3 mémoire) — ONNX offline, multilingue
     "fastembed>=0.4.0",
     # Musique locale Linux : MPRIS via D-Bus (pur Python, sans binaire système)
-    "jeepney>=0.8.0",
+    "jeepney>=0.9.0",
 ]
 
 [project.optional-dependencies]
