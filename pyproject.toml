@@ -16,7 +16,7 @@ dependencies = [
     # Config
     "pydantic>=2.9.0",
     "pydantic-settings>=2.6.0",
-    "python-dotenv>=1.0.0",
+    "python-dotenv>=1.2.3",
     # LLM providers
     "anthropic>=0.40.0",
     "google-genai>=1.0.0",
