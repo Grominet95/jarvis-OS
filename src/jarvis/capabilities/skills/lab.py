@@ -211,6 +211,25 @@ _SANDBOX_TEST_SCRIPT = textwrap.dedent(
 # ── Lab ───────────────────────────────────────────────────────────────────────
 
 
+def _venv_site_packages() -> Path:
+    """Chemin du site-packages du venv projet, selon la disposition de l'OS.
+
+    Windows range les paquets dans `.venv/Lib/site-packages`, les autres
+    plateformes dans `.venv/lib/pythonX.Y/site-packages`. Coder la variante
+    POSIX en dur donnait un chemin inexistant sur Windows : le test direct
+    tournait alors sans les dépendances et rejetait toutes les candidates.
+    """
+    venv_root = PROJECT_ROOT / ".venv"
+    if sys.platform == "win32":
+        return venv_root / "Lib" / "site-packages"
+    return (
+        venv_root
+        / "lib"
+        / f"python{sys.version_info.major}.{sys.version_info.minor}"
+        / "site-packages"
+    )
+
+
 class SkillLab:
     """Pilote du cycle Génération → Sandbox → Validation humaine → Installation.
 
@@ -453,13 +472,7 @@ class SkillLab:
         container_name = f"jarvis-skill-lab-{uuid.uuid4().hex[:8]}"
         cand_abs = cand_dir.resolve()
         jarvis_root = PROJECT_ROOT / "src"
-        venv_site_packages = (
-            PROJECT_ROOT
-            / ".venv"
-            / "lib"
-            / f"python{sys.version_info.major}.{sys.version_info.minor}"
-            / "site-packages"
-        )
+        venv_site_packages = _venv_site_packages()
 
         # Crée le script de test dans un tmpdir local et le mount aussi
         script_path = cand_abs / "_skill_sandbox_test.py"
@@ -534,13 +547,7 @@ class SkillLab:
         """
         cand_abs = cand_dir.resolve()
         jarvis_root = PROJECT_ROOT / "src"
-        venv_site_packages = (
-            PROJECT_ROOT
-            / ".venv"
-            / "lib"
-            / f"python{sys.version_info.major}.{sys.version_info.minor}"
-            / "site-packages"
-        )
+        venv_site_packages = _venv_site_packages()
         script_path = cand_abs / "_skill_sandbox_test.py"
         # Remplace /workspace/candidate par cand_abs et /jarvis_src par jarvis_root
         # On crée un script adapté au mode direct.
