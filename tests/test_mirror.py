@@ -24,6 +24,19 @@ from jarvis.providers.memory.mirror import MemoryMirror
 from jarvis.providers.memory.schemas import DecayPolicy, Fact, FactStatus
 
 
+def _sans_horodatage(contenu: str) -> str:
+    """Retire la ligne "Mis à jour", seule partie volatile du miroir.
+
+    mirror.py l'écrit avec `datetime.now()` à la seconde près. Comparer deux
+    exports en incluant cette ligne rend le test dépendant de l'horloge : il
+    tombe dès que les deux appels à export() encadrent un changement de
+    seconde, ce qui arrive sur une machine lente.
+    """
+    return "\n".join(
+        ligne for ligne in contenu.splitlines() if not ligne.startswith("_Mis à jour :")
+    )
+
+
 def _make_fact(
     fid: str,
     subject: str = "barth",
@@ -96,7 +109,7 @@ def test_edition_manuelle_ecrasee_a_la_regeneration(tmp_path: Path, kernel: Memo
     mirror.export()
     regen = prefs_md.read_text(encoding="utf-8")
     assert "Détourné" not in regen
-    assert regen == original
+    assert _sans_horodatage(regen) == _sans_horodatage(original)
 
     # DB n'a JAMAIS bougé (count facts inchangé)
     assert kernel.count_facts(FactStatus.ACTIVE) == 1
