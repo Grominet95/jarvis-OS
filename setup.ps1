@@ -79,13 +79,26 @@ Repair-BundleVenv
 if ($Ci) {
     Write-Host "JARVIS V3 - setup --Ci (mode non-interactif)" -ForegroundColor Cyan
     $py = Get-JarvisPython
+    if ($py) {
+        # Trouver un python ne prouve pas que les deps sont installees : un
+        # .venv peut exister vide (cree par un autre outil, ou un uv sync
+        # interrompu). Sans ce controle la synchro etait sautee et l'import
+        # de jarvis echouait juste apres.
+        & $py -c "import jarvis" 2>$null
+        if ($LASTEXITCODE -ne 0) { $py = $null }
+    }
     if (-not $py) {
         Ensure-Uv
         uv sync --frozen --group dev
+        if ($LASTEXITCODE -ne 0) { throw "uv sync a echoue." }
         $py = Get-JarvisPython
     }
     if (-not $py) { throw "Python runtime introuvable." }
+    # PowerShell n'interrompt pas le script sur le code retour d'un executable
+    # natif : sans ce controle, un echec ici passait inapercu et setup.ps1 -Ci
+    # sortait en 0 apres avoir affiche "setup --Ci OK".
     & $py -c "from jarvis.kernel.setup_layout import ensure_runtime_layout; ensure_runtime_layout()"
+    if ($LASTEXITCODE -ne 0) { throw "Creation de la disposition runtime echouee." }
     if (-not (Test-Path ".env")) {
         @"
 LLM_PROVIDER=api

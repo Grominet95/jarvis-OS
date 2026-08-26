@@ -59,7 +59,10 @@ def test_session_store_list_recent(tmp_path: Path) -> None:
 
 def test_memory_index_read(tmp_path: Path) -> None:
     md = tmp_path / "MEMORY.md"
-    md.write_text("# Index\n\n## Utilisateur\n- profile: `topics/user.md` — Barth\n")
+    md.write_text(
+        "# Index\n\n## Utilisateur\n- profile: `topics/user.md` — Barth\n",
+        encoding="utf-8",
+    )
     idx = MemoryIndex(tmp_path)
     content = idx.read()
     assert "profile" in content
@@ -67,11 +70,11 @@ def test_memory_index_read(tmp_path: Path) -> None:
 
 def test_memory_index_add_pointer_new_section(tmp_path: Path) -> None:
     md = tmp_path / "MEMORY.md"
-    md.write_text("# Index\n")
+    md.write_text("# Index\n", encoding="utf-8")
     idx = MemoryIndex(tmp_path)
     idx.add_pointer("Projets actifs", "ipod", "topics/project_ipod.md", "DAP iPod PCM5102A")
 
-    content = md.read_text()
+    content = md.read_text(encoding="utf-8")
     assert "ipod" in content
     assert "project_ipod.md" in content
     assert "DAP iPod PCM5102A" in content
@@ -79,11 +82,14 @@ def test_memory_index_add_pointer_new_section(tmp_path: Path) -> None:
 
 def test_memory_index_update_existing_pointer(tmp_path: Path) -> None:
     md = tmp_path / "MEMORY.md"
-    md.write_text("# Index\n\n## Projets actifs\n- ipod: `topics/old.md` — Ancienne description\n")
+    md.write_text(
+        "# Index\n\n## Projets actifs\n- ipod: `topics/old.md` — Ancienne description\n",
+        encoding="utf-8",
+    )
     idx = MemoryIndex(tmp_path)
     idx.add_pointer("Projets actifs", "ipod", "topics/project_ipod.md", "Nouvelle description")
 
-    content = md.read_text()
+    content = md.read_text(encoding="utf-8")
     assert "Nouvelle description" in content
     assert "Ancienne description" not in content
     # Un seul pointeur ipod
@@ -93,11 +99,11 @@ def test_memory_index_update_existing_pointer(tmp_path: Path) -> None:
 def test_memory_index_add_pointer_existing_section(tmp_path: Path) -> None:
     md = tmp_path / "MEMORY.md"
     initial = "# Index\n\n## Projets actifs\n- jarvis: `topics/jarvis.md` — Jarvis\n\n## Autre\n"
-    md.write_text(initial)
+    md.write_text(initial, encoding="utf-8")
     idx = MemoryIndex(tmp_path)
     idx.add_pointer("Projets actifs", "alfred", "topics/alfred.md", "Bras robotisé")
 
-    content = md.read_text()
+    content = md.read_text(encoding="utf-8")
     assert "alfred" in content
     assert "Bras robotisé" in content
 
@@ -178,7 +184,7 @@ def test_agent_build_system_lists_topics_only(tmp_path: Path) -> None:
     store.write("user_prefs.md", "# Préférences\nSecret: PCM5102A_iPod")
     store.write("spotify.md", "# Spotify\nID: SECRET_TOKEN_42")
 
-    (tmp_path / "MEMORY.md").write_text("# Index\n")
+    (tmp_path / "MEMORY.md").write_text("# Index\n", encoding="utf-8")
     memory_index = MemoryIndex(tmp_path)
 
     class _DummyLLM:

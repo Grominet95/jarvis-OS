@@ -22,8 +22,15 @@ jobs:
   # mypy-conformité + pytest unit + snapshot-routes diff.
   # ───────────────────────────────────────────────────────────────────────────
   fast:
-    name: Lane rapide (ruff + import-linter + mypy + unit)
-    runs-on: ubuntu-latest
+    name: Lane rapide (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Pas de fail-fast : une régression Windows ne doit pas masquer le
+      # verdict Linux, et inversement. Les deux résultats sont utiles
+      # séparément quand on debugge un problème d'install.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -32,7 +39,9 @@ jobs:
       # `uv sync` plante sur `portaudio.h: No such file or directory`. dlib
       # et opencv-python ont des wheels linux x86_64, donc pas besoin de
       # cmake/openblas/libgl1 ici (réservés à la lane `full`).
+      # Sur Windows, pyaudio publie un wheel officiel : rien à installer.
       - name: System dependencies (minimum pour pyaudio sdist)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
@@ -69,7 +78,12 @@ jobs:
         # `@pytest.mark.integration` et exclus ici.
         run: uv run pytest -m "not integration" -q
 
+      # Linux uniquement : l'étape installe `--extra vision` (dlib, aucun
+      # wheel Windows) et la table des routes ne dépend pas de l'OS. La
+      # rejouer sur Windows coûterait une compilation dlib pour un diff
+      # identique.
       - name: Snapshot routes — diff vs baseline
+        if: runner.os == 'Linux'
         # Routes byte-identiques à la baseline — gate inchangé depuis B.
         # Skip si le projet n'est pas installé (ce qui est le cas ici).
         run: |
@@ -204,3 +218,83 @@ jobs:
 
       - name: B9 verdict
         run: echo "GATE B9 ✅ — install OK, layout OK, boot OK"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # B9 WINDOWS - INSTALL À FROID
+  # Même contrat que `b9_cold_install`, mais sur le parcours réellement
+  # emprunté par les utilisateurs finaux : `setup.ps1 -Ci` au lieu de
+  # `setup.sh --ci`. Aucune lane ne passait jusqu'ici par PowerShell, alors
+  # que c'est ce chemin qui casse dans les rapports d'installation.
+  #
+  # Différence assumée avec la lane Linux : pas de `--extra vision`. dlib
+  # n'a pas de wheel Windows et se compilerait depuis les sources. Les
+  # imports cv2/face_recognition étant tous locaux aux fonctions,
+  # `bootstrap.build()` n'en a pas besoin : le smoke reste probant.
+  #
+  # Déclenchement : identique à `b9_cold_install` (main + scheduled +
+  # workflow_dispatch).
+  # ───────────────────────────────────────────────────────────────────────────
+  b9_cold_install_windows:
+    name: B9 Windows - Install à froid (setup.ps1 -Ci + smoke_runtime --fake-llm)
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout NEUF (pas de cache, pas de state local)
+        uses: actions/checkout@v4
+
+      - name: Install uv (pas de cache pour vraiment partir à froid)
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+
+      - name: État initial - vérifier qu'AUCUN dossier de données n'existe encore
+        run: |
+          foreach ($d in @("memory_data", "vision_data", "skills_data")) {
+            if (Test-Path $d) {
+              Write-Host "FAIL : '$d' existe DEJA avant setup.ps1 (checkout non neuf ?)"
+              exit 1
+            }
+          }
+          Write-Host "OK avant setup : memory_data/ vision_data/ skills_data/ absents"
+
+      - name: Run setup.ps1 -Ci (mode non-interactif, exit code 0 exigé)
+        # Passe aussi par scripts/onedrive_guard.ps1 : le répertoire de travail
+        # d'un runner n'est pas sous OneDrive, le garde doit donc rendre la
+        # main sans rien faire. Une régression du garde ferait échouer l'étape.
+        run: .\setup.ps1 -Ci
+
+      - name: Vérifier la NOUVELLE disposition (memory_data/, vision_data/, skills_data/)
+        run: |
+          $ok = $true
+          $attendus = @(
+            "memory_data",
+            "memory_data\topics",
+            "memory_data\sessions",
+            "vision_data\faces",
+            "skills_data\installed"
+          )
+          foreach ($d in $attendus) {
+            if (Test-Path $d) { Write-Host "OK   $d cree" }
+            else { Write-Host "FAIL $d MANQUANT"; $ok = $false }
+          }
+          # Anti-régression : l'ANCIENNE disposition ne doit pas exister.
+          foreach ($old in @("src\jarvis\capabilities\skills\installed", "vision\faces")) {
+            if (Test-Path $old) {
+              Write-Host "FAIL ancienne disposition '$old' presente, regression layout"
+              $ok = $false
+            }
+          }
+          if (-not $ok) {
+            Write-Host "FAIL B9 Windows : layout incorrect"
+            exit 1
+          }
+          Write-Host "Layout B9 Windows OK"
+
+      - name: Smoke runtime - bootstrap.build() + 3 hot-paths + BOOT OK
+        run: uv run python scripts/validation/smoke_runtime.py --fake-llm
+
+      - name: B9 Windows verdict
+        run: Write-Host "GATE B9 Windows OK - install OK, layout OK, boot OK"
