@@ -9,7 +9,8 @@ import base64
 import shutil
 import sys
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -142,7 +143,11 @@ def _resolve_art(art_url: str) -> str | None:
         return art_url
     if art_url.startswith("file://"):
         try:
-            path = Path(unquote(urlparse(art_url).path))
+            # url2pathname et pas unquote : sur Windows urlparse laisse la
+            # lettre de lecteur dans le chemin (/C:/...), que Path ne sait pas
+            # résoudre. url2pathname gère les deux plateformes et décode aussi
+            # les %XX.
+            path = Path(url2pathname(urlparse(art_url).path))
             if not path.is_file() or path.stat().st_size > _ART_MAX_BYTES:
                 return None
             data = path.read_bytes()
