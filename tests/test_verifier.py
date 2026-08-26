@@ -333,7 +333,7 @@ async def test_couche3_prompt_contient_contenu_des_fichiers_nouveaux(
         "<article><h2>Pulsars</h2><p>...</p></article>"
         "</body></html>"
     )
-    (Path(project.workspace_path) / "index.html").write_text(contenu)
+    (Path(project.workspace_path) / "index.html").write_text(contenu, encoding="utf-8")
 
     llm = _FakeLLM(raw=_verdict_json(True, notes="Trois articles trouvés."))
     quality = QualityChecker(project.workspace_path)
