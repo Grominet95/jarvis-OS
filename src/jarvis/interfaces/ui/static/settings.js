@@ -10,6 +10,7 @@
     { id: "modeles",     label: "Modèles" },
     { id: "conso",       label: "Conso" },
     { id: "systeme",     label: "Système" },
+    { id: "jeux",        label: "Jeux" },
     { id: "apparence",   label: "Apparence" },
     { id: "apropos",     label: "À propos" },
   ];
@@ -1119,6 +1120,203 @@
     root.innerHTML = ""; root.appendChild(page);
   }
 
+  /* ───────── Jeux ─────────
+     Liste + ajout/suppression des jeux/apps lançables par Jarvis
+     (alias auto-généré côté serveur, fusionné à chaud dans l'outil run_script). */
+  async function renderJeux() {
+    let games = [];
+    try { games = (await J.api.get("/api/games")).games || []; } catch (_) {}
+
+    const wrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "40px" } });
+
+    const list = el("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } });
+    let editingAlias = null;
+
+    function renderEditCard(g) {
+      const row = el("div", { class: "game-card game-card--edit" });
+
+      const nameIn = el("input", { class: "input-mono", style: { width: "100%" }, value: g.name });
+      const pathIn = el("input", { class: "input-mono", style: { width: "100%" }, value: g.path });
+      const descIn = el("input", { class: "input-mono", style: { width: "100%" }, value: g.description || "" });
+      const posterIn = el("input", { class: "input-mono", style: { width: "100%" }, value: g.poster_url || "" });
+
+      const form = el("div", { style: { display: "flex", flexDirection: "column", gap: "10px", flex: "1" } });
+      form.appendChild(settingRow("Nom", "", nameIn));
+      form.appendChild(settingRow("Emplacement", "", pathIn));
+      form.appendChild(settingRow("Description", "", descIn));
+      form.appendChild(settingRow("Jaquette", "", posterIn));
+
+      const saveBtn = el("button", { class: "m-btn", text: "Enregistrer" });
+      const cancelBtn = el("button", { class: "m-btn", text: "Annuler" });
+      const status = el("div", { style: { fontSize: "11px", opacity: "0.7" } });
+      saveBtn.addEventListener("click", async () => {
+        saveBtn.disabled = true;
+        status.textContent = "";
+        try {
+          const res = await J.api.patch("/api/games/" + encodeURIComponent(g.alias), {
+            name: nameIn.value.trim(),
+            path: pathIn.value.trim(),
+            description: descIn.value.trim(),
+            poster_url: posterIn.value.trim(),
+          });
+          Object.assign(g, res);
+          editingAlias = null;
+          renderList();
+          J.notify({ kind: "success", text: res.name + " modifié" });
+        } catch (e) {
+          status.textContent = e.message;
+          saveBtn.disabled = false;
+        }
+      });
+      cancelBtn.addEventListener("click", () => { editingAlias = null; renderList(); });
+
+      const acts = el("div", { style: { display: "flex", flexDirection: "column", gap: "8px" } });
+      acts.appendChild(saveBtn);
+      acts.appendChild(cancelBtn);
+      acts.appendChild(status);
+
+      row.appendChild(form);
+      row.appendChild(acts);
+      return row;
+    }
+
+    function renderViewCard(g) {
+      const row = el("div", { class: "game-card" });
+
+      const poster = g.poster_url
+        ? el("img", { class: "game-poster", src: g.poster_url, alt: g.name, referrerpolicy: "no-referrer" })
+        : el("div", { class: "game-poster game-poster--empty", text: "🎮" });
+      if (g.poster_url) {
+        poster.addEventListener("error", () => {
+          const fallback = el("div", { class: "game-poster game-poster--empty", text: "🎮" });
+          poster.replaceWith(fallback);
+        }, { once: true });
+      }
+      row.appendChild(poster);
+
+      const txt = el("div", { class: "game-card-info" });
+      txt.appendChild(el("div", { class: "setting-label", text: g.name }));
+      if (g.description) txt.appendChild(el("div", { class: "game-desc", text: g.description }));
+      txt.appendChild(el("div", { class: "setting-sub", text: g.path }));
+      row.appendChild(txt);
+
+      const acts = el("div", { style: { display: "flex", gap: "8px" } });
+      const editBtn = el("button", { class: "m-btn", text: "Modifier" });
+      editBtn.addEventListener("click", () => { editingAlias = g.alias; renderList(); });
+      acts.appendChild(editBtn);
+
+      const delBtn = el("button", { class: "btn-danger", text: "Supprimer" });
+      delBtn.addEventListener("click", async () => {
+        delBtn.disabled = true;
+        try {
+          await J.api.delete("/api/games/" + encodeURIComponent(g.alias));
+          games = games.filter(x => x.alias !== g.alias);
+          renderList();
+          J.notify({ kind: "success", text: g.name + " supprimé" });
+        } catch (e) {
+          J.notify({ kind: "error", text: e.message });
+          delBtn.disabled = false;
+        }
+      });
+      acts.appendChild(delBtn);
+      row.appendChild(acts);
+      return row;
+    }
+
+    function renderList() {
+      list.innerHTML = "";
+      if (!games.length) {
+        list.appendChild(el("div", { class: "j-empty", text: "Aucun jeu ajouté pour l'instant." }));
+        return;
+      }
+      games.forEach(g => {
+        list.appendChild(g.alias === editingAlias ? renderEditCard(g) : renderViewCard(g));
+      });
+    }
+    renderList();
+    wrap.appendChild(ghostSec("Jeux ajoutés", games.length + " configuré(s)", null, list));
+
+    // ── Ajouter un jeu ──
+    const addWrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "16px" } });
+    const nameInput = el("input", {
+      class: "input-mono", style: { width: "280px" },
+      placeholder: "Nom (ex : Assassin's Creed Shadows)",
+    });
+    const pathInput = el("input", {
+      class: "input-mono", style: { width: "340px" },
+      placeholder: "Dossier du jeu ou chemin de l'exe (ex : D:\\Jeux\\NomDuJeu)",
+    });
+    const browseBtn = el("button", { class: "m-btn", text: "Parcourir" });
+    browseBtn.addEventListener("click", async () => {
+      browseBtn.disabled = true;
+      browseBtn.textContent = "…";
+      try {
+        const res = await J.api.post("/api/games/browse", {});
+        if (res.path) pathInput.value = res.path;
+      } catch (e) {
+        J.notify({ kind: "error", text: e.message });
+      }
+      browseBtn.disabled = false;
+      browseBtn.textContent = "Parcourir";
+    });
+    const pathCtrl = el("div", { style: { display: "flex", gap: "8px" } });
+    pathCtrl.appendChild(pathInput);
+    pathCtrl.appendChild(browseBtn);
+
+    const descInput = el("input", {
+      class: "input-mono", style: { width: "440px" },
+      placeholder: "Description (optionnel) — genre, résumé…",
+    });
+    const posterInput = el("input", {
+      class: "input-mono", style: { width: "440px" },
+      placeholder: "URL de la jaquette (optionnel) — https://...",
+    });
+
+    addWrap.appendChild(settingRow("Nom", "comment tu veux l'appeler à l'oral", nameInput));
+    addWrap.appendChild(settingRow("Emplacement", "dossier d'installation, ou chemin exact du .exe", pathCtrl));
+    addWrap.appendChild(settingRow("Description", "affichée sous le nom dans la liste", descInput));
+    addWrap.appendChild(settingRow("Jaquette", "lien vers une image (ex : SteamGridDB)", posterInput));
+
+    const addBtn = el("button", { class: "m-btn", text: "Ajouter" });
+    const addStatus = el("div", { style: { fontSize: "11px", opacity: "0.7" } });
+    addBtn.addEventListener("click", async () => {
+      const name = nameInput.value.trim();
+      const path = pathInput.value.trim();
+      const description = descInput.value.trim();
+      const poster_url = posterInput.value.trim();
+      if (!name || !path) {
+        addStatus.textContent = "Nom et chemin requis.";
+        return;
+      }
+      addBtn.disabled = true;
+      addStatus.textContent = "";
+      try {
+        const res = await J.api.post("/api/games", { name, path, description, poster_url });
+        games.push({
+          alias: res.alias, name: res.name, path: res.path,
+          description: res.description, poster_url: res.poster_url,
+        });
+        renderList();
+        nameInput.value = "";
+        pathInput.value = "";
+        descInput.value = "";
+        posterInput.value = "";
+        J.notify({ kind: "success", text: res.name + " ajouté" });
+      } catch (e) {
+        addStatus.textContent = e.message;
+      }
+      addBtn.disabled = false;
+    });
+    addWrap.appendChild(addBtn);
+    addWrap.appendChild(addStatus);
+
+    wrap.appendChild(ghostSec("Ajouter un jeu", "nom + chemin de l'exécutable", null, addWrap));
+
+    const page = pageWrapper("jeux", "Tes jeux", null, wrap);
+    root.innerHTML = "";
+    root.appendChild(page);
+  }
+
   function renderApparence() {
     const current = J.currentTheme();
     const themes = J.THEMES || {};
@@ -1163,6 +1361,7 @@
     modeles:     renderModeles,
     conso:       renderConso,
     systeme:     renderSysteme,
+    jeux:        renderJeux,
     apparence:   renderApparence,
     apropos:     renderApropos,
   };

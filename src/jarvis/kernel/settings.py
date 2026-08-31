@@ -171,6 +171,10 @@ class Settings(BaseSettings):
         default="config/tools.yaml",
         description="Chemin vers le fichier YAML de scripts CLI whitelistés.",
     )
+    games_path: str = Field(
+        default="config/games.yaml",
+        description="Chemin vers le fichier YAML des jeux/apps gérés depuis les Réglages.",
+    )
     allow_unsandboxed_exec: bool = Field(
         default=False,
         description=(

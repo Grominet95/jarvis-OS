@@ -41,6 +41,7 @@ from jarvis.interfaces.api.admin import router as admin_router
 from jarvis.interfaces.api.briefing import router as briefing_router
 from jarvis.interfaces.api.budget import router as budget_router
 from jarvis.interfaces.api.deezer import router as deezer_router
+from jarvis.interfaces.api.games import router as games_router
 from jarvis.interfaces.api.globe import router as globe_router
 from jarvis.interfaces.api.google_oauth import router as google_oauth_router
 from jarvis.interfaces.api.http import _log_sink
@@ -296,6 +297,7 @@ app.include_router(deezer_router)
 app.include_router(local_music_router)
 app.include_router(music_router)
 app.include_router(globe_router)
+app.include_router(games_router)
 app.include_router(briefing_router)
 app.include_router(macropad_router)
 app.include_router(macropad_ui_router)

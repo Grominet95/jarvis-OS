@@ -7,6 +7,8 @@ from __future__ import annotations
 import asyncio
 import re
 import shlex
+import subprocess
+import sys
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -155,31 +157,87 @@ class CLIRunnerTool(Tool):
 
     name = "run_script"
 
-    def __init__(self, whitelist_path: Path) -> None:
-        self._scripts: dict[str, dict] = {}
+    def __init__(self, whitelist_path: Path, games_path: Path | None = None) -> None:
+        self._whitelist_path = whitelist_path
+        self._games_path = games_path
         self._pending: dict[str, _PendingApproval] = {}
 
-        if whitelist_path.exists():
-            data = yaml.safe_load(whitelist_path.read_text(encoding="utf-8"))
-            self._scripts = data or {}
+    def _load_scripts(self) -> dict[str, dict]:
+        """Relit tools.yaml + games.yaml à chaque appel : un jeu ajouté depuis
+        Réglages → Jeux est utilisable immédiatement, sans redémarrer Jarvis."""
+        scripts: dict[str, dict] = {}
+        if self._whitelist_path.exists():
+            data = yaml.safe_load(self._whitelist_path.read_text(encoding="utf-8"))
+            scripts.update(data or {})
 
-        safe_names = [k for k, v in self._scripts.items() if v.get("tier", "safe") == "safe"]
-        confirm_names = [k for k, v in self._scripts.items() if v.get("tier") == "confirm"]
-        aliases = ", ".join(self._scripts) if self._scripts else "aucun — édite config/tools.yaml"
+        if self._games_path and self._games_path.exists():
+            games = yaml.safe_load(self._games_path.read_text(encoding="utf-8")) or {}
+            for alias, g in games.items():
+                path = g.get("path", "")
+                scripts[alias] = {
+                    "command": [path],
+                    "cwd": str(Path(path).parent) if path else None,
+                    "description": f"Lance {g.get('name', alias)}",
+                    "name": g.get("name", alias),
+                    "tier": "safe",
+                    "detached": True,
+                }
+        return scripts
 
-        self.description = (
-            f"Lance un script whitelisté. Alias disponibles : {aliases}. "
+    def match_alias(self, text: str) -> str | None:
+        """Trouve l'alias correspondant à un texte libre (nom du jeu/script
+        demandé par l'utilisateur) — pour le filet de rattrapage du Gateway
+        quand le modèle décrit un lancement sans appeler l'outil.
+
+        Tolère un mot manquant ou tronqué (ex: "fnaf" pour "fnaf9", "assassin's
+        creed" pour "assassin's creed shadows"), mais ne matche jamais plus
+        d'un candidat à la fois — en cas d'ambiguïté, on préfère ne rien deviner.
+        """
+        scripts = self._load_scripts()
+        text_low = text.lower()
+        text_tokens = [t for t in re.findall(r"[\w']+", text_low) if len(t) >= 3]
+
+        def word_hit(word: str) -> bool:
+            if word in text_low:
+                return True
+            return any(word.startswith(tok) or tok.startswith(word) for tok in text_tokens)
+
+        matches = []
+        for alias, script in scripts.items():
+            name = script.get("name") or alias.replace("_", " ")
+            cand_words = [w for w in re.findall(r"[\w']+", name.lower()) if len(w) >= 3]
+            if not cand_words:
+                continue
+            hits = sum(1 for w in cand_words if word_hit(w))
+            if hits >= max(1, len(cand_words) - 1):
+                matches.append(alias)
+
+        return matches[0] if len(matches) == 1 else None
+
+    @property
+    def description(self) -> str:  # type: ignore[override]
+        scripts = self._load_scripts()
+        safe_names = [k for k, v in scripts.items() if v.get("tier", "safe") == "safe"]
+        confirm_names = [k for k, v in scripts.items() if v.get("tier") == "confirm"]
+        aliases = ", ".join(scripts) if scripts else "aucun — édite config/tools.yaml"
+        return (
+            f"Lance un script whitelisté ou un jeu/app ajouté depuis Réglages → Jeux. "
+            f"Alias disponibles : {aliases}. "
             f"Niveaux : safe (auto)={safe_names or 'aucun'}, "
             f"confirm (approbation requise)={confirm_names or 'aucun'}. "
             "Pour confirmer un script en attente, passe action='confirm'."
         )
-        self.input_schema = {
+
+    @property
+    def input_schema(self) -> dict:  # type: ignore[override]
+        scripts = self._load_scripts()
+        return {
             "type": "object",
             "properties": {
                 "alias": {
                     "type": "string",
                     "description": (
-                        f"Alias du script. Disponibles : {', '.join(self._scripts) or 'aucun'}"
+                        f"Alias du script/jeu. Disponibles : {', '.join(scripts) or 'aucun'}"
                     ),
                 },
                 "action": {
@@ -206,14 +264,16 @@ class CLIRunnerTool(Tool):
         args: list[str] | None = None,
         **_: object,
     ) -> ToolResult:
+        scripts = self._load_scripts()
+
         # ── Confirmation d'un script en attente ──────────────────────────────
         if action == "confirm":
             return await self._confirm_pending(alias)
 
         # ── Lookup whitelist ──────────────────────────────────────────────────
-        script = self._scripts.get(alias)
+        script = scripts.get(alias)
         if script is None:
-            available = ", ".join(self._scripts) or "aucun"
+            available = ", ".join(scripts) or "aucun"
             return ToolResult(
                 content=f"Script inconnu : '{alias}'. Disponibles : {available}",
                 is_error=True,
@@ -262,7 +322,9 @@ class CLIRunnerTool(Tool):
 
         # ── Tier safe : exécution (avec sandbox optionnelle) ──────────────────
         sandboxed = bool(script.get("sandboxed", False))
-        return await self._run(cmd, alias, sandboxed=sandboxed)
+        detached = bool(script.get("detached", False))
+        cwd = script.get("cwd")
+        return await self._run(cmd, alias, sandboxed=sandboxed, detached=detached, cwd=cwd)
 
     async def _confirm_pending(self, alias: str) -> ToolResult:
         """Exécute un script préalablement mis en attente de confirmation."""
@@ -287,8 +349,69 @@ class CLIRunnerTool(Tool):
         logger.info("CLIRunner confirmed and executing", alias=alias)
         return await self._run(pending.cmd, alias, sandboxed=False)
 
-    async def _run(self, cmd: list[str], alias: str, *, sandboxed: bool) -> ToolResult:
-        """Exécute le subprocess, en sandbox si demandé."""
+    async def _run(
+        self,
+        cmd: list[str],
+        alias: str,
+        *,
+        sandboxed: bool,
+        detached: bool = False,
+        cwd: str | None = None,
+    ) -> ToolResult:
+        """Exécute le subprocess, en sandbox si demandé, ou détaché pour les apps
+        longue durée (jeux, GUI) qu'on ne veut pas attendre ni tuer après le timeout."""
+        if detached:
+            # Sur Windows, les apps GUI (jeux, launchers) doivent être ouvertes via
+            # ShellExecute (comme un double-clic) plutôt que CreateProcess
+            # (asyncio.create_subprocess_exec) : certains exécutables — notamment les
+            # jeux avec protection anti-tampering — se lancent puis se ferment
+            # silencieusement en quelques secondes quand ils détectent un lancement
+            # "brut" via CreateProcess, mais tournent normalement via ShellExecute.
+            #
+            # On passe par `cmd /c start` plutôt qu'un os.startfile() direct : `start`
+            # utilise aussi ShellExecute (même bénéfice anti-tampering), MAIS cmd.exe
+            # se termine aussitôt après avoir lancé le jeu, qui devient orphelin en
+            # <1s — au lieu d'avoir pour parent le process Jarvis appelant, dont la
+            # durée de vie peut être limitée (ex: le pipeline vocal LiveKit tourne
+            # dans un sous-process de job qui se termine après la session). Certains
+            # jeux protégés surveillent leur parent et s'auto-ferment quand il meurt ;
+            # sans cet intermédiaire, un jeu lancé par la voix se fermait 3-5 min
+            # après la fin du job vocal, alors qu'il tournait sans souci lancé par le
+            # texte (process serveur long-vivant qui ne meurt jamais).
+            if sys.platform == "win32":
+                # noqa justifiés : ASYNC220 (subprocess.Popen dans une fonction async) est
+                # volontaire — Popen est fire-and-forget ici (pas d'attente du résultat), et
+                # S602/S603/S607 car le chemin vient de tools.yaml/games.yaml, pas d'entrée
+                # utilisateur libre.
+                flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+                try:
+                    subprocess.Popen(  # noqa: ASYNC220,S602,S603,S607
+                        ["cmd", "/c", "start", "", cmd[0], *cmd[1:]],
+                        cwd=cwd or None,
+                        creationflags=flags,
+                        close_fds=True,
+                    )
+                except OSError as e:
+                    collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
+                    return ToolResult(content=f"Erreur de lancement : {e}", is_error=True)
+                logger.info("CLIRunner launched detached (cmd start)", alias=alias, cmd=cmd)
+                return ToolResult(content=f"'{alias}' lancé.")
+
+            extra_kwargs: dict = {
+                "stdout": asyncio.subprocess.DEVNULL,
+                "stderr": asyncio.subprocess.DEVNULL,
+                "stdin": asyncio.subprocess.DEVNULL,
+            }
+            if cwd:
+                extra_kwargs["cwd"] = cwd
+            try:
+                await asyncio.create_subprocess_exec(*cmd, **extra_kwargs)
+            except OSError as e:
+                collector.error("JRV-TOL-001", "JRV-TOL-001", cause=e)
+                return ToolResult(content=f"Erreur de lancement : {e}", is_error=True)
+            logger.info("CLIRunner launched detached", alias=alias, cmd=cmd)
+            return ToolResult(content=f"'{alias}' lancé.")
+
         extra_kwargs: dict = {
             "stdout": asyncio.subprocess.PIPE,
             "stderr": asyncio.subprocess.STDOUT,

@@ -535,3 +535,26 @@ body[data-mode="config"] { overflow-y: auto; overflow-x: hidden; }
 }
 .theme-name { font-size: 0.78rem; color: var(--fg-2, #aaa); letter-spacing: 0.02em; }
 .theme-swatch[data-active="true"] .theme-name { color: var(--fg-0, #fff); }
+
+/* ── Jeux : cartes jeu/app lançable par Jarvis ── */
+.game-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-2, rgba(255,255,255,0.08));
+  border-radius: 12px;
+}
+.game-card--edit { align-items: flex-start; }
+.game-poster {
+  width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+}
+.game-poster--empty {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.game-card-info { min-width: 0; flex: 1; }
+.game-desc {
+  max-width: 100%;
+  font-size: 12px; color: var(--fg-2, #aaa); margin: 3px 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

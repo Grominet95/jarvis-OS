@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import AsyncIterator
 
 from loguru import logger
@@ -17,6 +18,15 @@ from jarvis.engine.router import RouteEnum, SpeedRouter
 from jarvis.engine.session import Session, SessionManager
 from jarvis.kernel.contracts import CrossSessionRecall
 from jarvis.kernel.error_collector import collector  # jrv: autofix
+
+# Filet de rattrapage étroit "lancer un jeu/script" (cf. Gateway._rescue_launch_intent) :
+# certains modèles décrivent parfois un lancement en langage naturel ("Je lance
+# FNAF9.") sans jamais appeler l'outil run_script. Ne se déclenche que si le
+# message utilisateur contient un verbe de lancement ET qu'aucun tool_call n'a
+# eu lieu ce tour-ci.
+_LAUNCH_VERB_RE = re.compile(
+    r"\b(lance|lancer|ouvre|ouvrir|d[ée]marre|d[ée]marrer|start)\w*\b", re.IGNORECASE
+)
 
 
 def _fallback(exc: BaseException | None = None) -> str:
@@ -118,6 +128,17 @@ class Gateway:
                         name="cf-tools",
                     )
 
+                # Filet de rattrapage : aucun tool_call ce tour-ci, mais le message de
+                # l'utilisateur décrit un lancement de jeu/script (cf. _LAUNCH_VERB_RE) —
+                # certains modèles narrent l'action sans jamais appeler run_script.
+                if tool_task is None:
+                    rescued = await self._rescue_launch_intent(message)
+                    if rescued is not None:
+                        if ack_text.strip():
+                            yield " "
+                        yield rescued
+                        return
+
                 # Second appel LLM pour synthétiser les résultats — avant "done"
                 if tool_task is not None:
                     try:
@@ -147,6 +168,32 @@ class Gateway:
                 "Gateway error", error=type(e).__name__, detail=str(e), session_id=str(session.id)
             )
             return session, RouteEnum.INSTANT, _fallback(e)
+
+    async def _rescue_launch_intent(self, user_message: str) -> str | None:
+        """Filet de rattrapage étroit : demande de lancer un jeu/script décrite en
+        langage naturel ("Je lance FNAF9.") sans jamais appeler run_script. Se base
+        sur la phrase de l'utilisateur, matchée via CLIRunnerTool.match_alias qui
+        refuse de deviner en cas d'ambiguïté."""
+        if not _LAUNCH_VERB_RE.search(user_message):
+            return None
+        tool_registry = getattr(self._agent, "_tool_registry", None)
+        if tool_registry is None:
+            return None
+        run_script_tool = tool_registry.get("run_script")
+        match_alias = getattr(run_script_tool, "match_alias", None)
+        if match_alias is None:
+            return None
+        alias = match_alias(user_message)
+        if alias is None:
+            return None
+
+        logger.warning("Rescued launch intent from user message", alias=alias)
+        try:
+            return await tool_registry.call_str("run_script", {"alias": alias})
+        except Exception as e:
+            collector.error("JRV-GWY-001", "JRV-GWY-001", cause=e)
+            logger.opt(exception=True).error("Launch intent rescue failed", error=str(e))
+            return None
 
     async def _finalize(
         self,

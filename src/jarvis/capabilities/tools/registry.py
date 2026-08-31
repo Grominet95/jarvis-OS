@@ -69,6 +69,9 @@ class ToolRegistry:
     def has_tools(self) -> bool:
         return bool(self._tools)
 
+    def get(self, name: str) -> Tool | None:
+        return self._tools.get(name)
+
     def schemas(self) -> list[dict]:
         """Retourne les schémas Claude de tous les outils enregistrés."""
         return [t.to_claude_schema() for t in self._tools.values()]

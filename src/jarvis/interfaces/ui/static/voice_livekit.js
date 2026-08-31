@@ -22,6 +22,7 @@ class JarvisLiveKitClient {
   constructor() {
     this._room = null;
     this._connected = false;
+    this._roomJoined = false; // vrai dès la connexion WebRTC, jusqu'à une vraie déconnexion réseau (≠ _connected, qui reflète juste l'état "micro actif" affiché à l'utilisateur)
     this._isSpeaking = false;
     this._agentBubble = null;
     this._btn = document.getElementById("perm-microphone") || document.getElementById("hc-mic");
@@ -65,6 +66,21 @@ class JarvisLiveKitClient {
 
   async _start() {
     if (this._connected) return;
+
+    if (this._roomJoined && this._room) {
+      // Room déjà connectée (micro juste coupé via _stop) : on réactive la
+      // piste locale sans rien reconnecter. Ne jamais recréer la Room ici —
+      // voir le commentaire dans _stop() sur pourquoi on ne déconnecte plus.
+      showVoiceStatus("Connexion…");
+      await this._room.localParticipant.setMicrophoneEnabled(true, this._micCaptureOptions());
+      this._connected = true;
+      this._setState("listening");
+      showVoiceStatus((window.JARVIS_ASSISTANT_NAME || "Jarvis") + " en ligne");
+      setTimeout(() => showVoiceStatus(""), 2000);
+      if (this._onActiveChange) this._onActiveChange(true);
+      return;
+    }
+
     if (typeof LivekitClient === "undefined") {
       throw new Error("Client LiveKit non chargé — vérifie ta connexion réseau.");
     }
@@ -75,9 +91,21 @@ class JarvisLiveKitClient {
     const { token, url } = await this._fetchToken();
     const { Room, RoomEvent, Track } = LivekitClient;
 
-    this._room = new Room({ adaptiveStream: true, reconnectPolicy: { maxRetries: 5 } });
+    // stopMicTrackOnMute: false (déjà la valeur par défaut de livekit-client,
+    // explicité ici pour ne pas dépendre d'un futur changement de défaut) :
+    // couper le micro (setMicrophoneEnabled(false) dans _stop) ne doit
+    // JAMAIS relâcher le flux audio au niveau OS — un relâchement peut faire
+    // changer le rôle du périphérique audio par défaut sous Windows et
+    // perturber une appli tierce utilisant le même périphérique (typiquement
+    // un jeu lancé par Jarvis avec un casque gaming à canaux jeu/chat).
+    this._room = new Room({
+      adaptiveStream: true,
+      reconnectPolicy: { maxRetries: 5 },
+      stopMicTrackOnMute: false,
+    });
 
     this._room.on(RoomEvent.Connected, () => {
+      this._roomJoined = true;
       this._setState("listening");
       showVoiceStatus((window.JARVIS_ASSISTANT_NAME || "Jarvis") + " en ligne");
       setTimeout(() => showVoiceStatus(""), 2000);
@@ -85,6 +113,11 @@ class JarvisLiveKitClient {
     });
 
     this._room.on(RoomEvent.Disconnected, () => {
+      // Vraie déconnexion réseau (perte de connexion, room fermée côté
+      // serveur...) — jamais déclenché par le bouton micro depuis le fix
+      // ci-dessus (_stop() ne déconnecte plus). Il faudra une reconnexion
+      // complète au prochain _start().
+      this._roomJoined = false;
       this._setState("idle");
       this._isSpeaking = false;
       this._setSphereState("IDLE");
@@ -163,8 +196,14 @@ class JarvisLiveKitClient {
   }
 
   _stop() {
-    if (this._room) this._room.disconnect();
-    this._room = null;
+    // Ne PAS appeler room.disconnect() ici : ça relâcherait le flux audio
+    // WebRTC au niveau OS (voir le commentaire dans _start()), ce qui peut
+    // perturber une appli tierce (jeu) utilisant le même périphérique audio.
+    // On coupe juste l'envoi du micro — la connexion reste active en
+    // arrière-plan, réactivée instantanément par _start() sans reconnexion.
+    if (this._room && this._roomJoined) {
+      this._room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
+    }
     this._connected = false;
     this._isSpeaking = false;
     this._agentBubble = null;
