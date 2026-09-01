@@ -28,13 +28,49 @@ from jarvis.kernel.settings import settings
 
 router = APIRouter(prefix="/api/games")
 
-_BROWSE_SCRIPT = (
-    "Add-Type -AssemblyName System.Windows.Forms; "
-    "$f = New-Object System.Windows.Forms.OpenFileDialog; "
-    "$f.Filter = 'Executable (*.exe)|*.exe'; "
-    "$f.Title = \"Choisis l'exécutable du jeu\"; "
-    "if ($f.ShowDialog() -eq 'OK') { Write-Output $f.FileName }"
-)
+_BROWSE_SCRIPT = r"""
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class JarvisFocus {
+    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+}
+"@
+
+# Jarvis tourne en arrière-plan (pas l'appli au premier plan) : sans ce qui suit,
+# Windows refuse de donner le focus au dialogue, qui s'ouvre caché derrière les
+# autres fenêtres (protection anti-vol-de-focus de Windows). On "emprunte"
+# temporairement le focus de la fenêtre active via AttachThreadInput -- seule
+# méthode fiable pour qu'un process d'arrière-plan puisse s'afficher au premier
+# plan.
+$owner = New-Object System.Windows.Forms.Form
+$owner.StartPosition = 'Manual'
+$owner.Location = New-Object System.Drawing.Point(-2000, -2000)
+$owner.Size = New-Object System.Drawing.Size(1, 1)
+$owner.ShowInTaskbar = $false
+$owner.Show()
+
+$fgWindow = [JarvisFocus]::GetForegroundWindow()
+$fgThread = 0
+[JarvisFocus]::GetWindowThreadProcessId($fgWindow, [ref]$fgThread) | Out-Null
+$curThread = [JarvisFocus]::GetCurrentThreadId()
+[JarvisFocus]::AttachThreadInput($curThread, $fgThread, $true) | Out-Null
+[JarvisFocus]::SetForegroundWindow($owner.Handle) | Out-Null
+[JarvisFocus]::AttachThreadInput($curThread, $fgThread, $false) | Out-Null
+$owner.Activate()
+
+$f = New-Object System.Windows.Forms.OpenFileDialog
+$f.Filter = 'Executable (*.exe)|*.exe'
+$f.Title = "Choisis l'exécutable du jeu"
+$result = $f.ShowDialog($owner)
+$owner.Close()
+if ($result -eq 'OK') { Write-Output $f.FileName }
+"""
 
 
 def _pick_file_sync() -> str:

@@ -1250,6 +1250,10 @@
     browseBtn.addEventListener("click", async () => {
       browseBtn.disabled = true;
       browseBtn.textContent = "…";
+      // La fenêtre peut s'ouvrir derrière le navigateur (Windows refuse parfois
+      // le focus à une fenêtre ouverte par un programme en arrière-plan) —
+      // Alt+Tab pour la retrouver si elle n'apparaît pas directement.
+      J.notify({ kind: "info", text: "Regarde la barre des tâches si la fenêtre n'apparaît pas (Alt+Tab)" });
       try {
         const res = await J.api.post("/api/games/browse", {});
         if (res.path) pathInput.value = res.path;
@@ -1273,7 +1277,11 @@
     });
 
     addWrap.appendChild(settingRow("Nom", "comment tu veux l'appeler à l'oral", nameInput));
-    addWrap.appendChild(settingRow("Emplacement", "dossier d'installation, ou chemin exact du .exe", pathCtrl));
+    addWrap.appendChild(settingRow(
+      "Emplacement",
+      "dossier d'installation, ou chemin exact du .exe — la fenêtre \"Parcourir\" peut s'ouvrir derrière les autres (Alt+Tab si tu ne la vois pas)",
+      pathCtrl,
+    ));
     addWrap.appendChild(settingRow("Description", "affichée sous le nom dans la liste", descInput));
     addWrap.appendChild(settingRow("Jaquette", "lien vers une image (ex : SteamGridDB)", posterInput));
 
