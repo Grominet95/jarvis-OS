@@ -11,10 +11,13 @@ Test console (sans browser) : uv run python voice_agent.py console
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
+import re
 import sys
 import warnings
+from collections.abc import AsyncIterable as AsyncIterableABC
 from datetime import datetime
 from pathlib import Path
 
@@ -23,6 +26,7 @@ from livekit import rtc as lk_rtc
 from livekit.agents import (
     Agent,
     AgentSession,
+    ModelSettings,
     WorkerOptions,
     cli,
     tts,
@@ -243,8 +247,13 @@ class _ProxyMemoryTool:
             return await self._real.execute(**kwargs)  # type: ignore[attr-defined]
 
 
-def _build_voice_tools() -> list:
-    """Retourne les LiveKit tools en miroir du mode texte (jarvis.app).
+def _build_voice_tools() -> tuple[list, object]:
+    """Retourne (tools LiveKit, tool_registry brut) en miroir du mode texte (jarvis.app).
+
+    Le tool_registry brut (en plus des wrappers LiveKit) est nécessaire au
+    filet de rattrapage de JarvisVoiceAgent.llm_node : match_alias() et
+    l'exécution directe de run_script exigent le VRAI objet Tool (CLIRunnerTool),
+    pas le wrapper LiveKit qui l'encapsule.
 
     Phase C — Étape 1B : re-câblé sur bootstrap.build() partagé. Le process
     voix appelle son PROPRE `bootstrap.build()` (second composition root —
@@ -285,15 +294,101 @@ def _build_voice_tools() -> list:
 
     tools = [_make_livekit_tool(t) for t in jarvis_tools]
     logger.info("Voice tools chargés: %s", [t._info.name for t in tools])
-    return tools
+    return tools, container.tool_registry
 
 
 # ─── Agent Jarvis ──────────────────────────────────────────────────────────────
 
+# Même filet de rattrapage que le chat texte (jarvis.engine.gateway::
+# _rescue_launch_intent) : le modèle décrit parfois un lancement de jeu/script en
+# texte ("Je lance FNAF9.") sans jamais appeler l'outil. Portée volontairement
+# étroite : ne se déclenche que si le message utilisateur contient un verbe de
+# lancement.
+_VOICE_LAUNCH_VERB_RE = re.compile(
+    r"\b(lance|lancer|ouvre|ouvrir|d[ée]marre|d[ée]marrer|start)\w*\b", re.IGNORECASE
+)
+
+
+def _last_user_text(chat_ctx: lk_llm.ChatContext) -> str | None:
+    for item in reversed(chat_ctx.items):
+        if isinstance(item, lk_llm.ChatMessage) and item.role == "user":
+            return item.text_content
+    return None
+
 
 class JarvisVoiceAgent(Agent):
-    def __init__(self, instructions: str, tools: list) -> None:
+    def __init__(self, instructions: str, tools: list, tool_registry: object | None = None) -> None:
         super().__init__(instructions=instructions, tools=tools)
+        self._tool_registry = tool_registry
+
+    async def llm_node(
+        self,
+        chat_ctx: lk_llm.ChatContext,
+        tools: list,
+        model_settings: ModelSettings,
+    ):
+        """Filet de rattrapage "lancer un jeu/script" pour la voix.
+
+        Ne bufferise (perd le streaming token-par-token) QUE pour les tours où
+        le message utilisateur contient un verbe de lancement ET matche un
+        jeu/script configuré (CLIRunnerTool.match_alias) — tous les autres
+        tours restent streamés normalement, sans coût de latence ajouté.
+        Pour ceux-là, on attend la fin de la réponse pour vérifier qu'un vrai
+        tool_call a eu lieu ; sinon on exécute l'outil pour de vrai à la place
+        du texte narré.
+        """
+        default_stream = Agent.default.llm_node(self, chat_ctx, tools, model_settings)
+        if asyncio.iscoroutine(default_stream):
+            default_stream = await default_stream
+
+        candidate_alias = None
+        if self._tool_registry is not None:
+            user_text = _last_user_text(chat_ctx)
+            if user_text and _VOICE_LAUNCH_VERB_RE.search(user_text):
+                run_script_tool = self._tool_registry.get("run_script")
+                match_alias = getattr(run_script_tool, "match_alias", None)
+                if match_alias is not None:
+                    candidate_alias = match_alias(user_text)
+
+        if candidate_alias is None or not isinstance(default_stream, AsyncIterableABC):
+            async for chunk in default_stream:
+                yield chunk
+            return
+
+        saw_tool_call = False
+        text_parts: list[str] = []
+        buffered = []
+        async for chunk in default_stream:
+            buffered.append(chunk)
+            if isinstance(chunk, str):
+                text_parts.append(chunk)
+            elif isinstance(chunk, lk_llm.ChatChunk) and chunk.delta:
+                if chunk.delta.tool_calls:
+                    saw_tool_call = True
+                if chunk.delta.content:
+                    text_parts.append(chunk.delta.content)
+
+        if saw_tool_call:
+            for chunk in buffered:
+                yield chunk
+            return
+
+        logger.warning("Rescued launch intent from voice user message: %s", candidate_alias)
+        try:
+            result_text = await self._tool_registry.call_str(
+                "run_script", {"alias": candidate_alias}
+            )
+        except Exception as e:
+            collector.error("JRV-VOI-001", "JRV-VOI-001", cause=e)
+            logger.opt(exception=True).error("Voice launch intent rescue failed", error=str(e))
+            for chunk in buffered:
+                yield chunk
+            return
+
+        yield lk_llm.ChatChunk(
+            id="rescue-launch-intent",
+            delta=lk_llm.ChoiceDelta(role="assistant", content=result_text),
+        )
 
     async def on_enter(self) -> None:
         _name = settings.display_name
@@ -313,7 +408,9 @@ class JarvisVoiceAgent(Agent):
 def prewarm(proc: object) -> None:
     """Pré-charge les skills, outils et le modèle VAD avant l'arrivée d'un job."""
     proc.userdata["instructions"] = _build_voice_instructions()  # type: ignore[attr-defined]
-    proc.userdata["tools"] = _build_voice_tools()  # type: ignore[attr-defined]
+    tools, tool_registry = _build_voice_tools()
+    proc.userdata["tools"] = tools  # type: ignore[attr-defined]
+    proc.userdata["tool_registry"] = tool_registry  # type: ignore[attr-defined]
     # Le modèle ONNX silero met ~300-800ms à charger ; le faire ici évite de payer
     # ce coût au premier clic micro.
     proc.userdata["vad"] = silero.VAD.load(  # type: ignore[attr-defined]
@@ -516,7 +613,10 @@ async def entrypoint(ctx: object) -> None:
     # instructions de base sont préchauffées une fois, mais la date/heure doit être
     # fraîche et le profil disponible directement (pas via memory_search).
     instructions = _dynamic_context() + "\n\n" + instructions
-    tools = userdata.get("tools") or _build_voice_tools()
+    tools = userdata.get("tools")
+    tool_registry = userdata.get("tool_registry")
+    if tools is None or tool_registry is None:
+        tools, tool_registry = _build_voice_tools()
     vad = userdata.get("vad") or silero.VAD.load(
         min_speech_duration=0.05,
         min_silence_duration=0.4,
@@ -536,7 +636,7 @@ async def entrypoint(ctx: object) -> None:
         turn_handling={"interruption": {"mode": "vad"}},
     )
 
-    agent = JarvisVoiceAgent(instructions=instructions, tools=tools)
+    agent = JarvisVoiceAgent(instructions=instructions, tools=tools, tool_registry=tool_registry)
 
     await session.start(
         room=ctx.room,

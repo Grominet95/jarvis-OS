@@ -73,3 +73,4 @@ tools/arduino-cli/*
 !tools/arduino-cli/.gitkeep
 
 keypad/firmware/Object File1/
+config/games.yaml

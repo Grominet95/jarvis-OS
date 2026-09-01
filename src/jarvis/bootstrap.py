@@ -300,7 +300,10 @@ def build(
         VisionTool(visual_memory=_visual_memory),
         ReadFileTool(allowed_roots=allowed_roots),
         FindFilesTool(allowed_roots=allowed_roots),
-        CLIRunnerTool(whitelist_path=Path(settings.cli_whitelist_path)),
+        CLIRunnerTool(
+            whitelist_path=Path(settings.cli_whitelist_path),
+            games_path=Path(settings.games_path),
+        ),
         ExecuteCLITool(),
         calendar_list_tool,
         CalendarCreateTool(credentials_path=_google_creds, token_path=_calendar_token),
