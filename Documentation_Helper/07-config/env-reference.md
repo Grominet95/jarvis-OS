@@ -49,6 +49,15 @@ Full `.env.example` grouped by section. Never commit real `.env`.
 - `MISTRAL_API_KEY`
 - `MISTRAL_MODEL`
 
+## Custom OpenAI-compatible API
+
+- `CUSTOM_API_KEY`
+- `CUSTOM_BASE_URL`
+- `CUSTOM_MODEL`
+
+`API_BACKEND=custom` utilise toute API compatible avec le endpoint OpenAI
+`/chat/completions`, avec function calling et streaming.
+
 ## TTS / Voix
 
 - `TTS_PROVIDER`

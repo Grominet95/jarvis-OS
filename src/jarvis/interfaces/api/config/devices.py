@@ -242,6 +242,11 @@ async def get_connectors() -> list:
             "sub": "LLM alternatif",
             "status": "on" if _env_ok("MISTRAL_API_KEY") else "off",
         },
+        {
+            "name": "Custom API",
+            "sub": "LLM OpenAI-compatible",
+            "status": "on" if _env_ok("CUSTOM_API_KEY", "CUSTOM_BASE_URL", "CUSTOM_MODEL") else "off",
+        },
         # ── Messagerie ───────────────────────────────────────────────────────
         {
             "name": "Telegram",

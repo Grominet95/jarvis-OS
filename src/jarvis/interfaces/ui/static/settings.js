@@ -64,6 +64,20 @@
     return row;
   }
 
+  function makeInput(current, key) {
+    const input = el("input", {
+      class: "input-mono",
+      value: current || "",
+      style: { minWidth: "240px" },
+    });
+    const saveBtn = el("button", { class: "m-btn", text: "Sauv." });
+    saveBtn.addEventListener("click", () => saveSetting(key, input.value.trim(), saveBtn));
+    const ctrl = el("div", { style: { display: "flex", gap: "8px", alignItems: "center" } });
+    ctrl.appendChild(input);
+    ctrl.appendChild(saveBtn);
+    return ctrl;
+  }
+
   function makeSelect(options, current, key, onchange) {
     let selected = options.includes(current) ? current : (options[0] || "");
 
@@ -476,6 +490,7 @@
       mistral:   ["mistral-large-latest", "mistral-small-latest", "open-mistral-7b"],
       openai:    ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
       gemini:    ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro"],
+      custom:    [],
     };
     const CLAUDE = MODELS_BY_BACKEND.anthropic;
     const VISION = ["gpt-4o", "gpt-4o-mini", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"];
@@ -493,11 +508,18 @@
       function refreshModelRow(backend) {
         const models = MODELS_BY_BACKEND[backend] || CLAUDE;
         modelDiv.innerHTML = "";
-        modelDiv.appendChild(settingRow("Modèle", "ANTHROPIC_MODEL",
-          makeSelect(models, llm.anthropic_model, "ANTHROPIC_MODEL")));
+        const key = backend === "custom" ? "CUSTOM_MODEL" : "ANTHROPIC_MODEL";
+        const value = backend === "custom" ? llm.custom_model : llm.anthropic_model;
+        modelDiv.appendChild(backend === "custom"
+          ? settingRow("Modèle custom", key, makeInput(value, key))
+          : settingRow("Modèle", key, makeSelect(models, value, key)));
+        if (backend === "custom") {
+          modelDiv.appendChild(settingRow("URL de base", "CUSTOM_BASE_URL",
+            makeInput(llm.custom_base_url || "https://api.openai.com/v1", "CUSTOM_BASE_URL")));
+        }
       }
       d.appendChild(settingRow("Backend", "API_BACKEND",
-        makeSelect(["anthropic", "mistral", "openai", "gemini"], liveBackend, "API_BACKEND",
+        makeSelect(["anthropic", "mistral", "openai", "gemini", "custom"], liveBackend, "API_BACKEND",
           v => { liveBackend = v; refreshModelRow(v); })));
       refreshModelRow(liveBackend);
       d.appendChild(modelDiv);

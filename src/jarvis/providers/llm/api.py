@@ -1148,6 +1148,43 @@ class OpenAIProvider(LLMProvider):
             return False
 
 
+class CustomProvider(OpenAIProvider):
+    """Provider OpenAI-compatible configurable (endpoint, clé et modèle)."""
+
+    def __init__(
+        self,
+        model: str | None = None,
+        tracker: UsageTracker | None = None,
+    ) -> None:
+        self._client = AsyncOpenAI(
+            api_key=settings.custom_api_key.get_secret_value(),
+            base_url=settings.custom_base_url.rstrip("/"),
+        )
+        self._model = model or settings.custom_model
+        self._tracker = tracker
+
+    def _track(self, response: Any, context: str) -> None:  # noqa: ANN401
+        usage = getattr(response, "usage", None)
+        if usage is None or self._tracker is None:
+            return
+        self._tracker.track(
+            UsageEntry(
+                timestamp=datetime.now().isoformat(),
+                provider="custom",
+                model=self._model,
+                input_tokens=usage.prompt_tokens,
+                output_tokens=usage.completion_tokens,
+                cost_usd=calculate_cost(
+                    "openai",
+                    self._model,
+                    input_tokens=usage.prompt_tokens,
+                    output_tokens=usage.completion_tokens,
+                ),
+                context=context,
+            )
+        )
+
+
 def get_api_provider(
     backend: str = "anthropic",
     max_tokens: int = 2048,
@@ -1166,4 +1203,6 @@ def get_api_provider(
         return MistralProvider()
     if backend == "openai":
         return OpenAIProvider(model=model, tracker=tracker)
+    if backend == "custom":
+        return CustomProvider(model=model, tracker=tracker)
     return AnthropicProvider(max_tokens=max_tokens, model=model, tracker=tracker)

@@ -41,12 +41,14 @@ def llm_config_error(cfg: Settings | None = None) -> str | None:
         "openai": "openai_api_key",
         "mistral": "mistral_api_key",
         "gemini": "google_api_key",
+        "custom": "custom_api_key",
     }.get(backend)
     env_name = {
         "anthropic": "ANTHROPIC_API_KEY",
         "openai": "OPENAI_API_KEY",
         "mistral": "MISTRAL_API_KEY",
         "gemini": "GOOGLE_API_KEY",
+        "custom": "CUSTOM_API_KEY",
     }.get(backend, "API_KEY")
     if key_field is None:
         return None

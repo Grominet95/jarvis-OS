@@ -142,6 +142,8 @@ FIX : copie « .env.example » en « .env » et remplis au minimum la clé de to
         "anthropic": "ANTHROPIC_API_KEY",
         "openai": "OPENAI_API_KEY",
         "mistral": "MISTRAL_API_KEY",
+        "gemini": "GOOGLE_API_KEY",
+        "custom": "CUSTOM_API_KEY",
     }.get(backend)
     if key_name:
         val = env.get(key_name, "")
