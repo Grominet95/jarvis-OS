@@ -7,6 +7,7 @@
 | Elevenlabs | ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID | TTS + LiveKit plugin |
 | Anthropic | ANTHROPIC_API_KEY, ANTHROPIC_MODEL | LLM api backend |
 | Openai | OPENAI_API_KEY | LLM / STT / Whisper |
+| Custom API | CUSTOM_API_KEY, CUSTOM_BASE_URL, CUSTOM_MODEL | OpenAI-compatible LLM backend |
 | Google | GOOGLE_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET | Gemini, Calendar, Gmail |
 | Spotify | SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET | Music provider |
 | Deezer | DEEZER_APP_ID, DEEZER_APP_SECRET | Music provider |

@@ -63,6 +63,7 @@ def is_setup_complete(env_path: Path | None = None) -> bool:
         "openai": "OPENAI_API_KEY",
         "mistral": "MISTRAL_API_KEY",
         "gemini": "GEMINI_API_KEY",
+        "custom": "CUSTOM_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
     }
     backend = env.get("API_BACKEND", "anthropic")

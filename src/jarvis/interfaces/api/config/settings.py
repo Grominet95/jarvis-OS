@@ -94,6 +94,8 @@ async def get_settings_endpoint() -> dict:
         "llm": {
             "llm_provider": _ev("LLM_PROVIDER", "llm_provider"),
             "api_backend": _ev("API_BACKEND", "api_backend"),
+            "custom_model": _ev("CUSTOM_MODEL", "custom_model"),
+            "custom_base_url": _ev("CUSTOM_BASE_URL", "custom_base_url"),
             "anthropic_model": _ev("ANTHROPIC_MODEL", "anthropic_model"),
             "voice_anthropic_model": _ev("VOICE_ANTHROPIC_MODEL", "voice_anthropic_model"),
             "vision_model": _ev("VISION_MODEL", "vision_model"),

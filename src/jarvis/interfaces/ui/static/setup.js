@@ -22,6 +22,7 @@
     { value: "openai", label: "OpenAI (GPT)" },
     { value: "mistral", label: "Mistral" },
     { value: "gemini", label: "Google Gemini" },
+    { value: "custom", label: "Custom API (OpenAI-compatible)" },
     { value: "local", label: "Local (Ollama)" },
   ];
 
@@ -39,6 +40,9 @@
     openai_api_key: "",
     mistral_api_key: "",
     gemini_api_key: "",
+    custom_api_key: "",
+    custom_base_url: "https://api.openai.com/v1",
+    custom_model: "gpt-4o-mini",
     ollama_model: "mistral",
     ollama_base_url: "http://localhost:11434",
     proactive_city: "Paris",
@@ -570,6 +574,13 @@
       card.appendChild(secretField("Clé API Mistral", "mistral_api_key"));
     } else if (form.api_backend === "gemini") {
       card.appendChild(secretField("Clé API Gemini", "gemini_api_key"));
+    } else if (form.api_backend === "custom") {
+      card.appendChild(secretField("Clé API custom", "custom_api_key"));
+      card.appendChild(field("URL de base", "custom_base_url", { placeholder: "https://api.example.com/v1" }));
+      card.appendChild(field("Nom du modèle", "custom_model", { placeholder: "mon-modele" }));
+      card.appendChild(moduleHint(
+        "Toute API compatible avec /chat/completions OpenAI fonctionne. L'URL doit généralement se terminer par /v1.",
+      ));
     } else if (form.api_backend === "local") {
       card.appendChild(field("Modèle Ollama", "ollama_model", { placeholder: "mistral, llama3..." }));
       card.appendChild(field("URL Ollama", "ollama_base_url", { placeholder: "http://localhost:11434" }));
@@ -695,6 +706,8 @@
       if (cfg.proactive_lon) form.proactive_lon = cfg.proactive_lon;
       if (cfg.ollama_model) form.ollama_model = cfg.ollama_model;
       if (cfg.ollama_base_url) form.ollama_base_url = cfg.ollama_base_url;
+      if (cfg.custom_base_url) form.custom_base_url = cfg.custom_base_url;
+      if (cfg.custom_model) form.custom_model = cfg.custom_model;
       if (cfg.elevenlabs_voice_id) form.elevenlabs_voice_id = cfg.elevenlabs_voice_id;
       if (cfg.livekit_url) form.livekit_url = cfg.livekit_url;
       form.elevenlabs_enabled = !!cfg.elevenlabs_enabled;
@@ -805,6 +818,9 @@
         openai_api_key: form.openai_api_key,
         mistral_api_key: form.mistral_api_key,
         gemini_api_key: form.gemini_api_key,
+        custom_api_key: form.custom_api_key,
+        custom_base_url: form.custom_base_url,
+        custom_model: form.custom_model,
         ollama_model: form.ollama_model,
         ollama_base_url: form.ollama_base_url,
         proactive_city: form.proactive_city,

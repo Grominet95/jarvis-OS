@@ -48,7 +48,7 @@ class Settings(BaseSettings):
         default="api",
         description="'api' pour Anthropic/Mistral, 'local' pour Ollama.",
     )
-    api_backend: Literal["anthropic", "mistral", "openai", "gemini"] = Field(
+    api_backend: Literal["anthropic", "mistral", "openai", "gemini", "custom"] = Field(
         default="anthropic",
         description="Backend API principal quand LLM_PROVIDER=api.",
     )
@@ -67,6 +67,12 @@ class Settings(BaseSettings):
         default="gpt-4o-mini",
         description="Modèle OpenAI à utiliser pour le LLM principal.",
     )
+    custom_api_key: SecretStr = Field(default=SecretStr(""), description="Clé API du provider custom.")
+    custom_base_url: str = Field(
+        default="https://api.openai.com/v1",
+        description="URL de base d'une API OpenAI-compatible.",
+    )
+    custom_model: str = Field(default="gpt-4o-mini", description="Modèle du provider custom.")
 
     # Mistral
     mistral_api_key: SecretStr = Field(default=SecretStr(""), description="Clé API Mistral.")

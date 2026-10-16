@@ -29,7 +29,7 @@ class SetupCompletePayload(BaseModel):
     user_firstname: str
     assistant_name: str = "Jarvis"
     # « local » = Ollama (LLM_PROVIDER=local) ; les autres = backends API.
-    api_backend: Literal["anthropic", "openai", "mistral", "gemini", "local"] = "anthropic"
+    api_backend: Literal["anthropic", "openai", "mistral", "gemini", "custom", "local"] = "anthropic"
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-6"
     openai_api_key: str = ""
@@ -38,6 +38,9 @@ class SetupCompletePayload(BaseModel):
     mistral_model: str = "mistral-large-latest"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
+    custom_api_key: str = ""
+    custom_base_url: str = "https://api.openai.com/v1"
+    custom_model: str = "gpt-4o-mini"
     ollama_model: str = "mistral"
     ollama_base_url: str = "http://localhost:11434"
     proactive_city: str = "Paris"
@@ -98,6 +101,8 @@ async def setup_status() -> dict:
             "proactive_lon": env.get("PROACTIVE_LON", "2.35"),
             "ollama_model": env.get("OLLAMA_MODEL", "mistral"),
             "ollama_base_url": env.get("OLLAMA_BASE_URL", "http://localhost:11434"),
+            "custom_base_url": env.get("CUSTOM_BASE_URL", "https://api.openai.com/v1"),
+            "custom_model": env.get("CUSTOM_MODEL", "gpt-4o-mini"),
             "elevenlabs_enabled": env.get("TTS_PROVIDER", "") == "elevenlabs",
             "elevenlabs_voice_id": env.get("ELEVENLABS_VOICE_ID", ""),
             "voice_enabled": _has("DEEPGRAM_API_KEY"),
@@ -111,6 +116,7 @@ async def setup_status() -> dict:
             "openai_api_key": _has("OPENAI_API_KEY"),
             "mistral_api_key": _has("MISTRAL_API_KEY"),
             "gemini_api_key": _has("GEMINI_API_KEY"),
+            "custom_api_key": _has("CUSTOM_API_KEY"),
             "elevenlabs_api_key": _has("ELEVENLABS_API_KEY"),
             "deepgram_api_key": _has("DEEPGRAM_API_KEY"),
             "livekit_api_key": _has("LIVEKIT_API_KEY"),
@@ -159,6 +165,7 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
     openai_api_key = _secret(body.openai_api_key, "OPENAI_API_KEY")
     mistral_api_key = _secret(body.mistral_api_key, "MISTRAL_API_KEY")
     gemini_api_key = _secret(body.gemini_api_key, "GEMINI_API_KEY")
+    custom_api_key = _secret(body.custom_api_key, "CUSTOM_API_KEY")
 
     # Le LLM est FACULTATIF à l'onboarding : on peut terminer sans clé et la
     # renseigner plus tard dans les réglages. Seul le prénom reste requis.
@@ -237,6 +244,9 @@ async def setup_complete(body: SetupCompletePayload) -> dict:
         "MISTRAL_MODEL": body.mistral_model,
         "GEMINI_API_KEY": gemini_api_key,
         "GEMINI_MODEL": body.gemini_model,
+        "CUSTOM_API_KEY": custom_api_key,
+        "CUSTOM_BASE_URL": body.custom_base_url.strip().rstrip("/") or "https://api.openai.com/v1",
+        "CUSTOM_MODEL": body.custom_model.strip() or "gpt-4o-mini",
         "OLLAMA_BASE_URL": body.ollama_base_url.strip() or "http://localhost:11434",
         "OLLAMA_MODEL": body.ollama_model.strip() or "mistral",
         "GOOGLE_API_KEY": existing.get("GOOGLE_API_KEY", ""),

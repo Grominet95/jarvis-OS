@@ -458,6 +458,16 @@ def _build_voice_llm(env: dict) -> object:
                 api_key=env.get("MISTRAL_API_KEY", os.getenv("MISTRAL_API_KEY", "")),
             )
 
+        if backend == "custom":
+            model = env.get("VOICE_LLM_MODEL") or env.get("CUSTOM_MODEL") or "gpt-4o-mini"
+            logger.info("Voice LLM — Custom API %s", model)
+            return lk_openai.LLM(
+                model=model,
+                temperature=0.7,
+                base_url=env.get("CUSTOM_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
+                api_key=env.get("CUSTOM_API_KEY", os.getenv("CUSTOM_API_KEY", "")),
+            )
+
         if backend == "anthropic":
             model = (
                 env.get("VOICE_LLM_MODEL")

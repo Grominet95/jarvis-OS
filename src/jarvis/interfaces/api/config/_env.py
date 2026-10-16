@@ -27,6 +27,7 @@ _SENSITIVE_KEYS = {
     "LIVEKIT_API_SECRET",
     "NOTION_TOKEN",
     "MISTRAL_API_KEY",
+    "CUSTOM_API_KEY",
     "AISSTREAM_KEY",
     "SPOTIFY_CLIENT_ID",
     "SPOTIFY_CLIENT_SECRET",
@@ -59,7 +60,15 @@ _RESTART_KEYS = {
 }
 
 # Ces clés déclenchent un hot-swap du provider LLM sans redémarrage.
-_LLM_HOT_SWAP_KEYS = {"LLM_PROVIDER", "API_BACKEND", "OLLAMA_MODEL", "OLLAMA_BASE_URL"}
+_LLM_HOT_SWAP_KEYS = {
+    "LLM_PROVIDER",
+    "API_BACKEND",
+    "OLLAMA_MODEL",
+    "OLLAMA_BASE_URL",
+    "CUSTOM_API_KEY",
+    "CUSTOM_BASE_URL",
+    "CUSTOM_MODEL",
+}
 
 _SETTINGS_FIELD_MAP: dict[str, str] = {
     "TTS_PROVIDER": "tts_provider",
@@ -101,6 +110,9 @@ _SETTINGS_FIELD_MAP: dict[str, str] = {
     "API_BACKEND": "api_backend",
     "OLLAMA_MODEL": "ollama_model",
     "OLLAMA_BASE_URL": "ollama_base_url",
+    "CUSTOM_API_KEY": "custom_api_key",
+    "CUSTOM_BASE_URL": "custom_base_url",
+    "CUSTOM_MODEL": "custom_model",
     "HOME_ASSISTANT_URL": "home_assistant_url",
     "HOME_ASSISTANT_TOKEN": "home_assistant_token",
 }
